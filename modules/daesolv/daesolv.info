@@ -1,0 +1,13 @@
+Source Information
+  ddassl.f and mebdfi.f from www.netlib.org/ode
+  auxiliary files from www.netlib.org/linpack
+
+Local Changes
+  remove dec() and sol() from mebdfi.f
+  use versions in radaua.f
+  
+  compile mebdfi.f without opimization
+  because of broken implementation
+
+Comment
+  successor to DASSL in sundials (IDA)

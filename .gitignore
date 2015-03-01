@@ -1,0 +1,6 @@
+# exclude standard auto-generated files
+*.[oa]
+*.py[co]
+*~
+# release header
+release.h

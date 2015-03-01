@@ -1,0 +1,38 @@
+Source Information
+  Missing (original) author information and source, search online for
+    bacol.f
+    bacolr.f
+    bacolnoblas.f
+    bacolrnoblas.f
+  auxiliary files from www.netlib.org/linpack
+
+Local Changes
+  modify BACOL(RADAU) to link together with
+  BACOL(DASSL) to avoid conflicting symbols
+    bacolrnoblas.f -> bacolrr.f
+  
+  rename:
+    reinit -> reinitr
+    remesh -> remeshr
+    caljac -> caljacr
+  
+  remove (shared with bacol.f):
+    bsplvd
+    bsplvn
+    
+    colpnt
+    crdcmp
+    crslve
+    
+    errest
+    errval
+    
+    eval
+    gauleg
+    iniy
+    interv
+    meshsq
+    
+    values
+    imtql1
+    imtql2

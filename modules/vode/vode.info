@@ -1,0 +1,6 @@
+Source Information
+  vode.f from www.netlib.org/ode
+  auxiliary files from www.netlib.org/linpack
+
+Comment
+  successor in sundials (CVODE)
