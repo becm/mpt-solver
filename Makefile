@@ -28,12 +28,12 @@ libinfo.o : base/libinfo.h base/version.h release.h
 include base/mpt.release.mk
 #
 # preocess solver modules
-.PHONY : modules_clean modules_shared modules_static
+.PHONY : modules_%
 devel  : modules_devel
 shared : modules_shared
 static : modules_static ranlib
 clean  : modules_clean
-modules_devel modules_shared modules_static modules_clean :
+modules_% :
 	${MAKE} -C modules $(@:modules_%=%)
 #
 # final static library update

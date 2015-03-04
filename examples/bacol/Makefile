@@ -1,13 +1,16 @@
 # Makefile: MPT bacol examples
 #
-PROGS = sys4 bacol
-OBJS  = main.o bacolWrap.o $(PROGS:%=%.o)
+TESTS = sys4
+OBJS  = main.o $(TESTS:%=%.o)
+
+# general creation rules
+all : ${PROGS} ${TESTS}
+
+# equotations, wrapper settings
+${TESTS} : sys4.o
 
 # general targets and definitions
 include ../solver.example.mk
-
-# equotations, wrapper settings
-${PROGS} : sys4.o
 
 # PDE client main
 sys4 : LDFLAGS += -Wl,--export-dynamic

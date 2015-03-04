@@ -1,16 +1,19 @@
 # Makefile: PDE client programs
 #
-PROGS = flame diff htrans twoeq makzo
-OBJS  = main.o $(PROGS:%=%.o)
+TESTS = flame diff htrans twoeq makzo
+OBJS  = main.o $(TESTS:%=%.o)
+
+# general creation rules
+all : ${PROGS} ${TESTS}
+
+# use math library targets
+twoeq flame : LDLIBS+= -lm
 
 # general targets and definitions
 include ../solver.example.mk
 
-# use math library for twoeq target
-twoeq flame : LDLIBS+= -lm
-
 # main skeleton for PDE
-${PROGS} : main.o
+${TESTS} : main.o
 flame  : flame.o
 diff   : diff.o
 htrans : htrans.o

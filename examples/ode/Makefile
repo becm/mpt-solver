@@ -1,10 +1,10 @@
 # Makefile: ODE client programs
 #
-PROGS = crackoil
-OBJS  = main.o $(PROGS:%=%.o)
+TESTS = crackoil
+OBJS  = main.o $(TESTS:%=%.o)
 
 # general targets and definitions
 include ../solver.example.mk
 
-${PROGS} : main.o
+${TESTS} : main.o
 crackoil : crackoil.o

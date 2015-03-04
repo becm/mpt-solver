@@ -1,0 +1,14 @@
+# mpt solver package configuration
+version=2015.02
+prefix=${pc_top_builddir} # /opt/mpt-${version}
+arch=x86_64
+sys=linux-gnu
+libdir=${prefix}/lib/${arch}-${sys}
+includedir=${prefix}/include
+
+Name: mptsolver
+Description: Message Passing Toolkit solver interface library
+Version: ${version}
+Libs: -L${libdir} -lmptsolver
+Cflags: -I${includedir}
+Requires: mptclient mptplot
