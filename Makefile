@@ -12,7 +12,7 @@ SHLIB_MAJOR = 1
 SHLIB_MINOR = 0
 SHLIB_TEENY = 0
 SHLIB_OBJS := libinfo.o
-LDLIBS = -lmptclient -lmptcore -ldl
+LDLIBS = -lmptio -lmptplot -lmptcore -ldl
 #
 # source summary
 SRCS := $(wildcard util/*.c) client_ivp.c client_nls.c
@@ -27,10 +27,12 @@ libinfo.o : base/libinfo.h base/version.h release.h
 include base/mpt.release.mk
 #
 # preocess solver modules
-.PHONY : modules_%
+.PHONY : modules_% examples_% examples
+examples : examples_all
 devel  : modules_devel
-shared : modules_shared
-static : modules_static
-clean  : modules_clean
+clear  : modules_clear examples_clear
+clean  : modules_clean examples_clean
 modules_% :
 	${MAKE} -C modules $(@:modules_%=%)
+examples_% :
+	${MAKE} -C examples $(@:examples_%=%)

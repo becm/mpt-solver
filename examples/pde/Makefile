@@ -6,7 +6,8 @@ OBJS  = main.o $(TESTS:%=%.o)
 # general creation rules
 all : ${PROGS} ${TESTS}
 
-# use math library targets
+# additional libraries for targets
+twoeq : LDLIBS+=-lmptcore
 twoeq flame : LDLIBS+= -lm
 
 # general targets and definitions

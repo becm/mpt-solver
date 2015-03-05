@@ -18,6 +18,10 @@ __MPT_NAMESPACE_BEGIN
 MPT_INTERFACE(client);
 MPT_INTERFACE(output);
 
+MPT_STRUCT(dispatch);
+MPT_STRUCT(message);
+MPT_STRUCT(event);
+
 #ifndef __cplusplus
 # ifndef __MPT_IVP_RTOL
 #  define __MPT_IVP_RTOL  1e-4
@@ -319,6 +323,14 @@ extern MPT_INTERFACE(client) *mpt_client_dae(int (*)(MPT_SOLVER_STRUCT(ivpfcn) *
 extern MPT_INTERFACE(client) *mpt_client_pde(int (*)(MPT_SOLVER_STRUCT(ivpfcn) *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(output) *));
 extern MPT_INTERFACE(client) *mpt_client_nls(int (*)(MPT_SOLVER_STRUCT(nlsfcn) *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(output) *));
 
+/* register events on notifier */
+extern int mpt_solver_events(MPT_STRUCT(dispatch) *, MPT_INTERFACE(client) *);
+
+/* read files, initialize and prepare solver, set default handler */
+extern int mpt_solver_start(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
+
+/* read files to configuration */
+extern const char *mpt_solver_read(MPT_STRUCT(node) *, MPT_STRUCT(message) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* initialize solver memory */
 extern void mpt_data_init(MPT_SOLVER_STRUCT(data) *);

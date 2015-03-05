@@ -8,6 +8,7 @@ OBJS  = $(PROGS:%=%.o)
 all : ${PROGS} sub_all
 
 config : config.o
+config : LDLIBS+=-lmptcore
 
 include solver.example.mk
 

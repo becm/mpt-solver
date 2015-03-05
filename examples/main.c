@@ -28,14 +28,16 @@ extern int main(int argc, char *argv[])
 	
 	/* create event handling */
 	if (!(n = mpt_init(argc, argv))) {
-		perror("mpt_init failed"); return 1;
+		perror("mpt_init failed");
+		return 1;
 	}
 	/* setup problem type client */
 	c = CREATE_CLIENT();
 	
 	/* setup event controller for client */
-	if (mpt_client_events(n->_disp.arg, c) < 0) {
-		perror("event setup failed"); return 2;
+	if (mpt_solver_events(n->_disp.arg, c) < 0) {
+		perror("event setup failed");
+		return 2;
 	}
 	/* start event loop */
 	mpt_loop(n);

@@ -4,5 +4,5 @@
 include $(dir $(lastword $(MAKEFILE_LIST)))../base/examples/mpt.example.mk
 #
 # default libraries for solver examples
-libs = solver client io plot core
+libs = solver io
 LDLIBS ?= $(libs:%=-lmpt%)

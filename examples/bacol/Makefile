@@ -14,5 +14,4 @@ include ../solver.example.mk
 
 # PDE client main
 sys4 : LDFLAGS += -Wl,--export-dynamic
-sys4 : LDLIBS += -lmptsolver -lmptclient -lmptplot -lmptcore
 sys4 : main.o
