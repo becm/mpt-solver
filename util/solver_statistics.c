@@ -7,16 +7,16 @@
 
 /*!
  * \ingroup mptSolver
- * \brief output client report
+ * \brief output solver statistics
  * 
- * Print solver report and ellapsed time to output
+ * Print solver report and ellapsed time to log target
  * 
  * \param gen  solver descriptor
  * \param out  output descriptor
  * \param usr  time spent in solver (userspace)
  * \param sys  time spent in solver (system)
  */
-extern void mpt_client_report(MPT_INTERFACE(logger) *out, MPT_SOLVER_INTERFACE *gen, const struct timeval *usr, const struct timeval *sys)
+extern void mpt_solver_statistics(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out, const struct timeval *usr, const struct timeval *sys)
 {
 	static const char *units[] = { "sec", "msec", "µsec" };
 	int unit = 0;

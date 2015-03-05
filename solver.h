@@ -360,8 +360,8 @@ extern void mpt_solver_param(MPT_INTERFACE(metatype) *, const MPT_STRUCT(node) *
 extern int mpt_solver_info  (const MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern int mpt_solver_status(const MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern int mpt_solver_report(const MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-/* final client report */
-extern void mpt_client_report(MPT_INTERFACE(logger) *, MPT_SOLVER_INTERFACE *, const struct timeval *, const struct timeval *);
+/* final solver statistics */
+extern void mpt_solver_statistics(MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) *, const struct timeval *, const struct timeval *);
 
 
 /* solver module data management */

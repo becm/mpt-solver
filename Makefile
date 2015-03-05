@@ -15,8 +15,7 @@ SHLIB_OBJS := libinfo.o
 LDLIBS = -lmptclient -lmptcore -ldl
 #
 # source summary
-elements = client conf data solver step
-SRCS := $(wildcard $(elements:%=%_*.c)) residuals_cdiff.c
+SRCS := $(wildcard util/*.c) client_ivp.c client_nls.c
 #
 # import library creation settings
 include base/mpt.lib.mk
@@ -31,13 +30,7 @@ include base/mpt.release.mk
 .PHONY : modules_%
 devel  : modules_devel
 shared : modules_shared
-static : modules_static ranlib
+static : modules_static
 clean  : modules_clean
 modules_% :
 	${MAKE} -C modules $(@:modules_%=%)
-#
-# final static library update
-.PHONY : ranlib
-ranlib :
-	${AR} s "${LIB_FULLNAME}.a"
-

@@ -46,7 +46,7 @@ static int deleteNLS(MPT_INTERFACE(client) *gen)
 
 static int initNLS(MPT_INTERFACE(client) *cl)
 {
-	static const char from[] = "client::init/NLS";
+	static const char from[] = "mpt::client::init/NLS";
 	struct NLS *nls = (void *) cl;
 	MPT_STRUCT(node) *node = mpt_node_find(cl->conf, "solver", 1);
 	MPT_INTERFACE(logger) *log = MPT_LOGGER((MPT_INTERFACE(metatype) *) cl->out);
@@ -95,7 +95,7 @@ static int initNLS(MPT_INTERFACE(client) *cl)
 
 static int prepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(source) *args)
 {
-	static const char from[] = "client::prep/NLS";
+	static const char from[] = "mpt::client::prep/NLS";
 	const struct NLS *nls = (void *) cl;
 	MPT_SOLVER_STRUCT(data) *dat;
 	MPT_SOLVER_STRUCT(nlsfcn) *ufcn;
@@ -267,10 +267,10 @@ static int reportNLS(const MPT_INTERFACE(client) *cl, MPT_INTERFACE(logger) *out
 		return -2;
 	}
 	if ((dat = nls->sd)) {
-		mpt_client_report(out, nls->sol, &dat->ru_usr, &dat->ru_sys);
+		mpt_solver_statistics(nls->sol, out, &dat->ru_usr, &dat->ru_sys);
 		return 2;
 	}
-	mpt_client_report(out, nls->sol, 0, 0);
+	mpt_solver_statistics(nls->sol, out, 0, 0);
 	return 1;
 }
 
@@ -298,10 +298,10 @@ extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER_STRUCT(nlsf
 		return 0;
 	}
 	mpt_client_init(&nls->cl);
-	
+	nls->sd = 0;
+	(void) memset(&nls->pr, 0, sizeof(nls->pr));
+	nls->sol = 0;
 	nls->uinit = uinit;
-	
-	(void) memset(&nls->sol, 0, sizeof(nls->sol));
 	
 	nls->cl._vptr = &ctlNLS;
 	return &nls->cl;

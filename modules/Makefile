@@ -18,14 +18,19 @@ OBJS = $(SRCS:%.c=%.o)
 CPPFLAGS += -I ${DIR_BASE}/mptcore
 #
 # general library rules
-.PHONY : ${SOLVER} shared distclean header static
+.PHONY : ${SOLVER} shared distclean header static clear_static
 shared : ${SOLVER}
 shared : EXVAR+=shared
+clear  : clear_static
+
+clear_static :
+	${RM} "${DIR_LIB}/libmptsolver-modules.a"
 
 static :
 	@for s in ${SOLVER}; do \
-		if ! ${MAKE} -C "$${s}" "${DIR_LIB}/libmptsolver.a" LIB=mptsolver SOL=both; then break ; fi ; \
+		if ! ${MAKE} -C "$${s}" "${DIR_LIB}/libmptsolver-modules.a" LIB=mptsolver-modules SOL=both; then break ; fi ; \
 	done
+	${AR} s "${DIR_LIB}/libmptsolver-modules.a"
 
 ${OBJS} : ${HEADER}
 
@@ -33,7 +38,7 @@ ${SOLVER} :
 	@cd ${@} && ${MAKE} ${EXVAR}
 #
 # pass target to solver makefiles
-.DEFAULT header :
+.DEFAULT header clear :
 	@for i in ${SOLVER}; do \
 		if ! ${MAKE} -C "$${i}" ${@} ${EXVAR}; then break ; fi ; \
 	done
