@@ -68,7 +68,7 @@ static int procProp(void *ptr, MPT_INTERFACE(property) *pr)
 }
 
 /*!
- * \ingroup mptClient
+ * \ingroup mptSolver
  * \brief set solver property
  * 
  * Set parameters from configuration elements.

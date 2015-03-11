@@ -14,8 +14,9 @@
 #include "message.h"
 #include "event.h"
 #include "config.h"
-
 #include "client.h"
+
+#include "solver.h"
 
 static char *stripFilename(char *base)
 {
@@ -48,7 +49,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	MPT_INTERFACE(logger) *log;
 	MPT_STRUCT(msgtype) mt = MPT_MSGTYPE_INIT;
 	MPT_STRUCT(message) msg = MPT_MESSAGE_INIT;
-	ssize_t	part = -1;
+	ssize_t part = -1;
 	const char *fname;
 	
 	if (!ev) return 0;
@@ -90,7 +91,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	log = MPT_LOGGER((MPT_INTERFACE(metatype) *) solv->out);
 	
 	/* read configuration files */
-	if ((fname = mpt_client_read(solv->conf, &msg, mt.arg, log))) {
+	if ((fname = mpt_solver_read(solv->conf, &msg, mt.arg, log))) {
 		return MPT_event_fail(ev, fname);
 	}
 	if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("reading configuration files completed"));
@@ -99,8 +100,8 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	if (!mpt_node_next(solv->conf->children, "solconf")) {
 		MPT_STRUCT(node) *conf;
 		static const char defName[] = "solver.conf";
-		const char	*format;
-		char		*rname, buf[1024];
+		const char *format;
+		char *rname, buf[1024];
 		
 		snprintf(buf, sizeof(buf), "%s [%s]: ", MPT_tr("solver parameter"), defName);
 		

@@ -31,7 +31,7 @@ static int solevtRead(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	log = MPT_LOGGER((MPT_INTERFACE(metatype) *) solv->out);
 	
 	if (!ev->msg) {
-		err = mpt_client_read(solv->conf, 0, 0, log);
+		err = mpt_solver_read(solv->conf, 0, 0, log);
 	}
 	else {
 		MPT_STRUCT(message) msg = *ev->msg;
@@ -44,7 +44,7 @@ static int solevtRead(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		if ((part = mpt_message_argv(&msg, mt.arg)) > 0) {
 			mpt_message_read(&msg, part, 0);
 		}
-		err = mpt_client_read(solv->conf, &msg, mt.arg, log);
+		err = mpt_solver_read(solv->conf, &msg, mt.arg, log);
 	}
 	if (err) {
 		return MPT_event_fail(ev, err);
