@@ -1,3 +1,7 @@
+/*!
+ * sys4.c: BACOL user functions for PDE system
+ */
+
 void derivf_(
 	double *t, double *x,
 	double *u, double *ux, double *uxx,
@@ -212,9 +216,6 @@ void f_(
 	fval[2] = 0.01 * uxx[2] + 30. * u[0] * t1 - 1.5 * u[2] - 1000. * u[2] * u[3]* t2;
 	fval[3] = 0.01 * uxx[3] + 30. * u[1] * t1 - 1.2 * u[3] - 1000. * u[2] * u[3]* t2;
 }
-
-// #include <mpt/client.h>
-#include <mpt/solver/bacol.h>
 
 /* map functions to bacol parameters */
 extern int user_init(void)

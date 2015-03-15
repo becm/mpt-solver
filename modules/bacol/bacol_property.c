@@ -88,13 +88,13 @@ static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source) *src
 	if (!(len = src->_vptr->conv(src, 'k', &val))) val = "d";
 	if (len < 0) return len;
 	switch (*val) {
-#ifdef _MPT_BACOL_DASSL
+#ifdef MPT_BACOL_DASSL
 	  case 'd': case 'D': if (tolower(data->backend) == tolower(*val)) return 0;
 	    *((short *) &data->backend) = 'd';
 	    if (data->bd.cpar.iov_base) free(data->bd.cpar.iov_base);
 	    break;
 #endif
-#ifdef _MPT_BACOL_RADAU
+#ifdef MPT_BACOL_RADAU
 	  case 'r': case 'R': if (tolower(data->backend) == tolower(*val)) return 0;
 	    *((short *) &data->backend) = 'r';
 	    data->bd.cpar.iov_base = 0; data->bd.cpar.iov_len = 0;
@@ -104,10 +104,10 @@ static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source) *src
 	}
 	return len;
 }
-#ifdef _MPT_BACOL_DASSL
+#ifdef MPT_BACOL_DASSL
 static int setTStop(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	
 	if (!src) return data->mflag.tstop;
 	if (!(len = src->_vptr->conv(src, 'd', &data->bd.tstop))) data->mflag.tstop = 0;
@@ -116,7 +116,7 @@ static int setTStop(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source) *src)
 }
 static int setMaxStep(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	
 	if (!src) return data->mflag.mstep;
 	if (!(len = src->_vptr->conv(src, 'i', &data->mflag.mstep))) data->mflag.mstep = 0;
@@ -124,7 +124,7 @@ static int setMaxStep(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source) *src
 }
 static int setDasslBdf(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	
 	if (!src) return data->mflag.dbmax;
 	if (!(len = src->_vptr->conv(src, 'i', &data->mflag.dbmax))) data->mflag.dbmax = 0;
@@ -209,17 +209,17 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 		prop->fmt  = 0; prop->data = 0;
 		if (!data) return id;
 		switch (data->backend) {
-#ifdef _MPT_BACOL_DASSL
+#ifdef MPT_BACOL_DASSL
 		  case 'd': case 'D': prop->data = "dassl"; break;
 #endif
-#ifdef _MPT_BACOL_RADAU
+#ifdef MPT_BACOL_RADAU
 		  case 'r': case 'R': prop->data = "radau"; break;
 #endif
 		  default: prop->data = "<unknown>";
 		}
 		return id;
 	}
-#ifdef _MPT_BACOL_DASSL
+#ifdef MPT_BACOL_DASSL
 	/* dassl parameter */
 	if (data->backend == 'd' || data->backend == 'D') {
 	if (name ? !strcasecmp(name, "tstop") : pos == id++) {
