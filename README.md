@@ -1,6 +1,6 @@
 # MPT solver interface
 
-Create an operate on numeric solvers implementing MPT
+Create and operate on numeric solvers implementing MPT
 client interface.
 
 ## Solver utilities
@@ -17,7 +17,7 @@ element `mpt.client.solver`.
 
 ## Solver modules
 Each module library supports creation of instances conforming
-to MPT solver interface.
+to MPT generic solver interface.
 
 To create solver modules additional `math` sources/objects
 are required, infos on how to obtain these files, special build instructions
