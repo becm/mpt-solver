@@ -1,18 +1,13 @@
 Source Information
-  SUNDIALS library (computation.llnl.gov/casc/sundials)
+  SUNDIALS library (https://computation.llnl.gov/casc/sundials)
 
 Local Build
-  cmake offers not enough options -> use configure
-    ./configure --prefix=${MPT_PREFIX} --with-pic
-
-  parallel vector implementation is excluded to avoid MPI dependency, reimplement
+  set DIR_SUNDIALS to CMake build directory
+  
+  to use shared SUNDIALS libraries remove MATH_OBJS and add libraries
+  to linker arguments
+  
+  parallel vector implementation is excluded by default to avoid MPI
+  dependency, reimplement
     sundials_nvector_empty()
   and link in before libmpt_sundials.so to use parallel implementation
-
-Direct Links
-# 2.5.0
-  https://computation.llnl.gov/casc/sundials/download/code/sundials-2.5.0.tar.gz
-# 2.4.0
-  https://computation.llnl.gov/casc/sundials/download/code/sundials-2.4.0.tar.gz
-# 2.3.0
-  https://computation.llnl.gov/casc/sundials/download/code/sundials-2.3.0.tar.gz

@@ -3,9 +3,9 @@ LIB ?= mpt_sundials
 SOL ?= both
 #
 # additional build flags
-DEFINES = _MPT_SUNDIALS_LAPACK_H=1
-DIR_SUNDIALS  = ${DIR_MATH}/sundials-2.5.0
-sundials_dirs = cvode ida kinsol nvec_ser sundials
+# DEFINES += SUNDIALS_WITH_LAPACK=1
+DIR_SUNDIALS ?= ${DIR_MATH}/sundials-2.6.0/build
+sundials_elements = cvode ida kinsol nvec_ser
 INC = . ${MPT_PREFIX}/include ${DIR_SUNDIALS}/include/
 #
 # shared library version
@@ -13,7 +13,8 @@ SHLIB_MAJOR = 1
 SHLIB_MINOR = 0
 SHLIB_TEENY = 0
 # linker settings
-LDLIBS = -lm
+# LDLIBS += -llapack -lblas
+LDLIBS += -lm
 LINK   = ${CC}
 #
 # objects
@@ -23,9 +24,8 @@ ida_sources      = $(wildcard ida/ida_*.c)
 
 SRCS := ${sundials_sources} ${cvode_sources} ${ida_sources}
 
-MATH_OBJS = \
-	$(wildcard $(sundials_dirs:%=${DIR_SUNDIALS}/src/%/*.o)) \
-	$(ivp_objects:%=../%) $(nls_objects:%=../%) $(gen_objects:%=../%)
+MATH_OBJS = $(shell ./sundials_collect.sh "${DIR_SUNDIALS}" ${sundials_elements})
+CLEAR_FILES += sundials_objs.sha256sum
 #
 # headers to export
 HEADER = sundials.h

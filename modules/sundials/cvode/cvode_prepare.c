@@ -17,7 +17,7 @@
 
 #include "sundials.h"
 
-#ifdef _MPT_SUNDIALS_LAPACK_H
+#ifdef SUNDIALS_WITH_LAPACK
 # include <cvode/cvode_lapack.h>
 /* set lapack solver jacobian method */
 static int setLapack(CVodeMem cv, MPT_SOLVER_STRUCT(sundials) *sd, long neqs)
@@ -141,7 +141,7 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *data, double *val)
 	  case MPT_ENUM(SundialsSpilsGMR):   return CVSpgmr(cv_mem, PREC_BOTH, 0);
 	  case MPT_ENUM(SundialsSpilsBCG):   return CVSpbcg(cv_mem, PREC_BOTH, 0);
 	  case MPT_ENUM(SundialsSpilsTFQMR): return CVSptfqmr(cv_mem, PREC_BOTH, 0);
-#ifdef _MPT_SUNDIALS_LAPACK_H
+#ifdef SUNDIALS_WITH_LAPACK
 	  case MPT_ENUM(SundialsLapack):     return setLapack(cv_mem, &data->sd, neqs);
 #endif
 	  default: return -1;

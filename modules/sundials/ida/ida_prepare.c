@@ -16,7 +16,7 @@
 
 #include "sundials.h"
 
-#ifdef _MPT_SUNDIALS_LAPACK_H
+#ifdef SUNDIALS_WITH_LAPACK
 # include <ida/ida_lapack.h>
 /* set lapack solver jacobian method */
 static int setLapack(IDAMem ida, MPT_SOLVER_STRUCT(sundials) *sd, long neqs)
@@ -128,7 +128,7 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *data, double *val)
 	  case MPT_ENUM(SundialsSpilsGMR):   return IDASpgmr(ida_mem, 0);
 	  case MPT_ENUM(SundialsSpilsBCG):   return IDASpbcg(ida_mem, 0);
 	  case MPT_ENUM(SundialsSpilsTFQMR): return IDASptfqmr(ida_mem, 0);
-#ifdef _MPT_SUNDIALS_LAPACK_H
+#ifdef SUNDIALS_WITH_LAPACK
 	  case MPT_ENUM(SundialsLapack):     return setLapack(ida_mem, &data->sd, neqs);
 #endif
 	  default: return -1;

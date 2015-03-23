@@ -64,8 +64,8 @@ public:
 	MPT_SOLVER_STRUCT(ivppar) ivp;  /* inherit IVP parameter */
 	MPT_TYPE(dvecpar) rtol, atol;   /* tolerances */
 	
-	MPT_SOLVER_STRUCT(sundials) sd;    /* general sundials data */
-	void *mem;  /* CVode memory block */
+	MPT_SOLVER_STRUCT(sundials) sd; /* general sundials data */
+	void *mem;                      /* CVode memory block */
 	
 	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn;
 };
@@ -82,16 +82,16 @@ protected:
 	MPT_TYPE(dvecpar) rtol, atol;   /* tolerances */
 	
 	MPT_SOLVER_STRUCT(sundials) sd; /* general sundials data */
-	void *mem;    /* IDA memory block */
+	void *mem;                      /* IDA memory block */
 	
 	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn;
 	
-	N_Vector yp;  /* deviation vector */
+	N_Vector yp;                    /* deviation vector */
 	
 	struct {
 		void   *base;
 		size_t  size;
-	} tmp;
+	} tmp;                          /* temporary data buffer */
 };
 
 #define SUNDIALS_flags_jac(f,s)	(f = ((f) & ~0xfL) | ((s) & 0xfL))
