@@ -25,7 +25,6 @@ ida_sources      = $(wildcard ida/ida_*.c)
 SRCS := ${sundials_sources} ${cvode_sources} ${ida_sources}
 
 MATH_OBJS = $(shell ./sundials_collect.sh "${DIR_SUNDIALS}" ${sundials_elements})
-CLEAR_FILES += sundials_objs.sha256sum
 #
 # headers to export
 HEADER = sundials.h

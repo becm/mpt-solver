@@ -1,16 +1,15 @@
 # Makefile: nonlinear system client programs
 #
-TESTS = neter
-OBJS  = main.o $(TESTS:%=%.o)
+PROGS = neter
+OBJS  = main.o $(PROGS:%=%.o)
 
 # general creation rules
-all : ${PROGS} ${TESTS}
-
-# use math library for neter target
-neter : LDLIBS+= -lm
+all : ${PROGS}
 
 # general targets and definitions
 include ../solver.example.mk
 
-${TESTS} : main.o
+${PROGS} : main.o
+
+neter : LDLIBS+= -lm
 neter : neter.o

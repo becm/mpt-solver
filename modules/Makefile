@@ -1,5 +1,8 @@
 # Makefile: create solver libraries
 #
+# solver collection library
+LIB = mpt_solvers
+#
 # include global configuration
 include ../base/mpt.conf.mk
 #
@@ -24,13 +27,13 @@ shared : EXVAR+=shared
 clear  : clear_static
 
 clear_static :
-	${RM} "${DIR_LIB}/libmptsolver-modules.a"
+	${RM} "${DIR_LIB}/lib${LIB}.a"
 
 static :
 	@for s in ${SOLVER}; do \
-		if ! ${MAKE} -C "$${s}" "${DIR_LIB}/libmptsolver-modules.a" LIB=mptsolver-modules SOL=both; then break ; fi ; \
+		if ! ${MAKE} -C "$${s}" "${DIR_LIB}/lib${LIB}.a" LIB=${LIB} SOL=both; then break ; fi ; \
 	done
-	${AR} s "${DIR_LIB}/libmptsolver-modules.a"
+	${AR} s "${DIR_LIB}/lib${LIB}.a"
 
 ${OBJS} : ${HEADER}
 

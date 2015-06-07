@@ -236,12 +236,17 @@ static int outNLS(const MPT_INTERFACE(client) *cl, int state)
 			pbase = pbase->children;
 		}
 		for (i = 0; i < dat->npar; ++i) {
-			const char *name, *desc = MPT_tr("parameter");
-			if (pbase && (name = mpt_node_ident(pbase))) {
-				mpt_output_log(out, 0, MPT_ENUM(LogMessage), "%s %2d: %16g (%s)", desc, i+1, p[i], name);
-			} else {
-				mpt_output_log(out, 0, MPT_ENUM(LogMessage), "%s %2d: %16g",      desc, i+1, p[i]);
+			const char *desc = MPT_tr("parameter");
+			
+			if (pbase) {
+				const char *name = mpt_node_ident(pbase);
+				pbase = pbase->next;
+				if (name) {
+					mpt_output_log(out, 0, MPT_ENUM(LogMessage), "%s %2d: %16g (%s)", desc, i+1, p[i], name);
+					continue;
+				}
 			}
+			mpt_output_log(out, 0, MPT_ENUM(LogMessage), "%s %2d: %16g",      desc, i+1, p[i]);
 		}
 		for (i = 0; i < ld; i++) {
 			if (mpt_bitmap_get(dat->mask, sizeof(dat->mask), i+1) > 0) {

@@ -1,17 +1,17 @@
 # Makefile: DAE client programs
 #
-TESTS = robertson cakzo
-OBJS  = main.o $(TESTS:%=%.o)
+PROGS = robertson cakzo
+OBJS  = main.o $(PROGS:%=%.o)
 
 # general creation rules
-all : ${PROGS} ${TESTS}
-
-# library requirements
-cakzo: LDLIBS+=-lm
+all : ${PROGS}
 
 # general targets and definitions
 include ../solver.example.mk
 
-${TESTS}  : main.o
-cakzo     : cakzo.o
+${PROGS} : main.o
+
+cakzo : LDLIBS+=-lm
+cakzo : cakzo.o
+
 robertson : robertson.o
