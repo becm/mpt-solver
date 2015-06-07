@@ -19,8 +19,8 @@ extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_
 	
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";
-	pr.fmt  = 0;
-	pr.data = jac;
+	pr.val.fmt = 0;
+	pr.val.ptr = jac;
 	out(usr, &pr);
 	++line;
 	}

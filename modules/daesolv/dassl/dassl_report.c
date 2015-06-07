@@ -16,12 +16,12 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";
-	pr.fmt  = "ss";
-	pr.data = &d;
+	pr.val.fmt = "ss";
+	pr.val.ptr = &d;
 	
 	d.jac = "full";
 	d.val = data->info[4] ? "(user)" : "(numerical)";
-	if (data->info[5]) { d.jac = "banded"; pr.fmt = "ssii"; }
+	if (data->info[5]) { d.jac = "banded"; pr.val.fmt = "ssii"; }
 	
 	d.ml = iwork[0];
 	d.mu = iwork[1];
@@ -32,8 +32,8 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	pr.fmt  = "G";
-	pr.data = &rwork[3];
+	pr.val.fmt = "G";
+	pr.val.ptr = &rwork[3];
 	out(usr, &pr);
 	++line;
 	}
@@ -41,8 +41,8 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	if (show & (MPT_SOLVER_ENUM(Report) | MPT_SOLVER_ENUM(Status))) {
 	pr.name = "n";
 	pr.desc = "integration steps";
-	pr.fmt  = "i";
-	pr.data = &iwork[10];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwork[10];
 	out(usr, &pr);
 	++line;
 	}
@@ -50,8 +50,8 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = "current step size";
-	pr.fmt  = "G";
-	pr.data = &rwork[2];
+	pr.val.fmt = "G";
+	pr.val.ptr = &rwork[2];
 	out(usr, &pr);
 	++line;
 	}
@@ -60,29 +60,29 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	
 	pr.name = "reval";
 	pr.desc = "residual evaluations";
-	pr.fmt  = "i";
-	pr.data = &iwork[11];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwork[11];
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jeval";
 	pr.desc = "jacobian evaluations";
-	pr.fmt  = "i";
-	pr.data = &iwork[12];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwork[12];
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "etfail";
 	pr.desc = "error test failures";
-	pr.fmt  = "i";
-	pr.data = &iwork[13];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwork[13];
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "cvfail";
 	pr.desc = "convergence failures";
-	pr.fmt  = "i";
-	pr.data = &iwork[14];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwork[14];
 	out(usr, &pr);
 	++line;
 	}

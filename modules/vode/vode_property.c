@@ -210,7 +210,7 @@ extern int mpt_vode_property(MPT_SOLVER_STRUCT(vode) *data, MPT_STRUCT(property)
 		id = MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
 		if (data && src && (id = setIvp(data, src)) < 0) return id;
 		prop->name = "vode"; prop->desc = "implicit DAE solver with BDF";
-		prop->fmt  = "iid"; prop->data = &data->ivp;
+		prop->val.fmt  = "iid"; prop->val.ptr = &data->ivp;
 		return id;
 	}
 	id = 0;
@@ -218,7 +218,7 @@ extern int mpt_vode_property(MPT_SOLVER_STRUCT(vode) *data, MPT_STRUCT(property)
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;
 	}
 	
@@ -235,57 +235,57 @@ extern int mpt_vode_property(MPT_SOLVER_STRUCT(vode) *data, MPT_STRUCT(property)
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == id++)) {
 		if (data && (id = setJacobian(data, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
-		prop->fmt  = "b"; prop->data = &data->miter;
+		prop->val.fmt  = "b"; prop->val.ptr = &data->miter;
 		return id;
 	}
 	if (name ? !strncasecmp(name, "itask", 2) : (pos == id++)) {
 		if (data && (id = setStepType(data, src)) < 0) return id;
 		prop->name = "itask"; prop->desc = "step control";
-		prop->fmt  = "h"; prop->data = &data->itask;
+		prop->val.fmt  = "h"; prop->val.ptr = &data->itask;
 		return id;
 	}
 	if (name ? !strncasecmp(name, "method", 4) : (pos == id++)) {
 		if (data && (id = setMethod(data, src)) < 0) return id;
 		prop->name = "method"; prop->desc = "iteration method";
-		prop->fmt  = "b"; prop->data = &data->meth;
+		prop->val.fmt  = "b"; prop->val.ptr = &data->meth;
 		return id;
 	}
 	/* integer array parameter */
 	if (name ? (!strcasecmp(name, "maxord") || !strcasecmp(name, "iwork5")) : (pos == id++)) {
 		if (data && (id = setMaxOrd(data, src)) < 0) return id;
 		prop->name = "maxord"; prop->desc = "maximum order to be allowed";
-		prop->fmt  = "i"; prop->data = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base) + 4 : 0;
+		prop->val.fmt  = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base) + 4 : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "iwork6")) : (pos == id++)) {
 		if (data && (id = setMaxNSteps(data, src)) < 0) return id;
 		prop->name = "mxstep"; prop->desc = "max. internal steps per call";
-		prop->fmt  = "i"; prop->data = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base) + 5 : 0;
+		prop->val.fmt  = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base) + 5 : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "mxhnil") || !strcasecmp(name, "iwork7")) : (pos == id++)) {
 		if (data && (id = setMaxHNil(data, src)) < 0) return id;
 		prop->name = "mxhnil"; prop->desc = "max. warnings for 't + h = t'";
-		prop->fmt  = "i"; prop->data = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base) + 6 : 0;
+		prop->val.fmt  = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base) + 6 : 0;
 		return id;
 	}
 	/* real array parameter */
 	if (name ? (!strcasecmp(name, "h0") || !strcasecmp(name, "rwork5")) : (pos == id++)) {
 		if (data && (id = setInitStep(data, src)) < 0) return id;
 		prop->name = "h0"; prop->desc = "explicit initial steps size";
-		prop->fmt  = "d"; prop->data = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 4 : 0;
+		prop->val.fmt  = "d"; prop->val.ptr = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 4 : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "rwork6")) : (pos == id++)) {
 		if (data && (id = setMaxStep(data, src)) < 0) return id;
 		prop->name = "hmax"; prop->desc = "maximal internal steps size";
-		prop->fmt  = "d"; prop->data = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 5 : 0;
+		prop->val.fmt = "d"; prop->val.ptr = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 5 : 0;
 		return setMaxStep(data, src);
 	}
 	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "rwork7")) : (pos == id++)) {
 		if (data && (id = setMinStep(data, src)) < 0) return id;
 		prop->name = "hmin"; prop->desc = "maximal internal steps size";
-		prop->fmt  = "d"; prop->data = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 5 : 0;
+		prop->val.fmt  = "d"; prop->val.ptr = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 5 : 0;
 		return id;
 	}
 	

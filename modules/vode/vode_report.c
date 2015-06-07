@@ -19,13 +19,13 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	
 	pr.name = "method";
 	pr.desc = MPT_tr("method for solver step");
-	pr.fmt  = "ss";
-	pr.data = &d;
+	pr.val.fmt = "ss";
+	pr.val.ptr = &d;
 	
 	d.jac = (data->meth == 2) ? "BDF" : "Adams";
 	d.val = MPT_tr("(saved)");
 	
-	if (!data->miter || data->jsv < 0) pr.fmt = "s";
+	if (!data->miter || data->jsv < 0) pr.val.fmt = "s";
 	
 	out(usr, &pr);
 	++line;
@@ -38,17 +38,17 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("type of jacobian");
-	pr.fmt  = "ss";
-	pr.data = &d;
+	pr.val.fmt = "ss";
+	pr.val.ptr = &d;
 	
 	switch (data->miter) {
 		case 1: if (data->jac) break;
 		case 2: d.val = "(numerical)"; break;
-		case 3: d.jac = "diagonal"; pr.fmt = "s"; break;
-		case 4: d.jac = "banded"; pr.fmt = "ssii";
+		case 3: d.jac = "diagonal"; pr.val.fmt = "s"; break;
+		case 4: d.jac = "banded"; pr.val.fmt = "ssii";
 			if (data->jac) break;
-		case 5: d.jac = "banded"; d.val = "(numerical)"; pr.fmt = "ssii"; break;
-		default: d.jac = "none"; pr.fmt = "s";
+		case 5: d.jac = "banded"; d.val = "(numerical)"; pr.val.fmt = "ssii"; break;
+		default: d.jac = "none"; pr.val.fmt = "s";
 	}
 	d.jac = MPT_tr(d.jac);
 	d.val = MPT_tr(d.val);
@@ -60,8 +60,8 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	pr.fmt  = "G";
-	pr.data = &rwk[12];
+	pr.val.fmt = "G";
+	pr.val.ptr = &rwk[12];
 	out(usr, &pr);
 	++line;
 	}
@@ -69,8 +69,8 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	if (show & (MPT_SOLVER_ENUM(Status) | MPT_SOLVER_ENUM(Report))) {
 	pr.name = "n";
 	pr.desc = MPT_tr("integration steps");
-	pr.fmt  = "i";
-	pr.data = &iwk[10];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwk[10];
 	out(usr, &pr);
 	++line;
 	}
@@ -78,8 +78,8 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	pr.fmt  = "G";
-	pr.data = &rwk[10];
+	pr.val.fmt = "G";
+	pr.val.ptr = &rwk[10];
 	out(usr, &pr);
 	++line;
 	}
@@ -87,16 +87,16 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	if ((show & MPT_SOLVER_ENUM(Report))) {
 	pr.name = "feval";
 	pr.desc = MPT_tr("f evaluations");
-	pr.fmt  = "i";
-	pr.data = &iwk[11];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwk[11];
 	out(usr, &pr);
 	++line;
 	
 	if (iwk[12]) {
 	pr.name = "jeval";
 	pr.desc = MPT_tr("jacobian evaluations");
-	pr.fmt  = "i";
-	pr.data = &iwk[12];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwk[12];
 	out(usr, &pr);
 	++line;
 	}
@@ -104,8 +104,8 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	if (iwk[18]) {
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
-	pr.fmt  = "i";
-	pr.data = &iwk[18];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwk[18];
 	out(usr, &pr);
 	++line;
 	}
@@ -113,8 +113,8 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	if (iwk[19]) {
 	pr.name = "niter";
 	pr.desc = MPT_tr("nonlinear (Newton) iterations");
-	pr.fmt  = "i";
-	pr.data = &iwk[19];
+	pr.val.fmt = "i";
+	pr.val.ptr = &iwk[19];
 	out(usr, &pr);
 	++line;
 	}

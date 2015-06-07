@@ -120,13 +120,13 @@ extern int sundials_ida_property(MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(propert
 		id = MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 		if (ida && src && (id = setIvp(ida, src)) < 0) return id;
 		prop->name = "ida"; prop->desc = "DAE solver from Sundials Library";
-		prop->fmt  = "iid"; prop->data = &ida->ivp;
+		prop->val.fmt = "iid"; prop->val.ptr = &ida->ivp;
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt= 0; prop->val.ptr = version;
 		return 0;
 	}
 	
@@ -144,38 +144,38 @@ extern int sundials_ida_property(MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(propert
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == id++)) {
 		if (ida && (id = sundials_jacobian(&ida->sd, ida->ivp.neqs, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "jacobian type";
-		prop->fmt  = "B"; prop->data = &ida->sd.jacobian;
+		prop->val.fmt = "B"; prop->val.ptr = &ida->sd.jacobian;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "maxord") : (pos == id++)) {
 		if (ida && (id = setMaxOrd(ida, src)) < 0) return id;
 		prop->name = "maxord"; prop->desc = "maximum order";
-		prop->fmt  = "i"; prop->data = ida_mem ? &ida_mem->ida_maxord : 0;
+		prop->val.fmt = "i"; prop->val.ptr = ida_mem ? &ida_mem->ida_maxord : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "maxnumsteps") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "mxstep")) : (pos == id++)) {
 		if (ida && (id = setMaxNSteps(ida, src)) < 0) return id;
 		prop->name = "maxnumsteps"; prop->desc = "maximum steps per call";
-		prop->fmt  = "l"; prop->data = ida_mem ? &ida_mem->ida_mxstep : 0;
+		prop->val.fmt = "l"; prop->val.ptr = ida_mem ? &ida_mem->ida_mxstep : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "hin") || !strcasecmp(name, "h") || !strcasecmp(prop->name, "h0")) : (pos == id++)) {
 		if (ida && (id = setInitStep(ida, src)) < 0) return id;
 		prop->name = "hin"; prop->desc = "initial stepsize";
-		prop->fmt  = "d"; prop->data = ida_mem ? &ida_mem->ida_hin : 0;
+		prop->val.fmt = "d"; prop->val.ptr = ida_mem ? &ida_mem->ida_hin : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) : (pos == id++)) {
 		if (ida && (id = setMaxStep(ida, src)) < 0) return id;
 		prop->name = "hmax"; prop->desc = "maximal stepsize";
-		prop->data = 0; prop->fmt = ""; /* saved as inverse */
+		prop->val.fmt= ""; prop->val.ptr = 0; /* saved as inverse */
 		return id;
 	}
 	/* user supplied initial (dy/dt) */
 	if (name ? !strncasecmp(name, "yp", 2) : (pos == id++)) {
 		if (ida && (id = setYP(ida, src)) < 0) return id;
 		prop->name = "yp"; prop->desc = "deviation at current time";
-		prop->data = 0; prop->fmt = "";
+		prop->val.fmt= ""; prop->val.ptr = 0;
 		return id;
 	}
 	

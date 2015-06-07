@@ -19,15 +19,15 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	
 	pr.name = "method";
 	pr.desc = MPT_tr("method for jacobian");
-	pr.fmt  = "s";
-	pr.data = &miter;
+	pr.val.fmt = "s";
+	pr.val.ptr = &miter;
 	
 	neqs = data->ivp.neqs * (data->ivp.pint + 1);
 	
 	if ((miter.ml = data->mljac) >= 0 && miter.ml < neqs) {
 		miter.mu   = data->mujac;
 		miter.type = data->jac ? "banded(user)" : "banded";
-		pr.fmt = "sii";
+		pr.val.fmt = "sii";
 	}
 	else {
 		miter.type = data->jac ? "full(user)" : "full";
@@ -40,16 +40,16 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	pr.fmt  = "G";
-	pr.data = &data->ivp.last;
+	pr.val.fmt = "G";
+	pr.val.ptr = &data->ivp.last;
 	out(usr, &pr);
 	++line;
 	}
 	if ((show & MPT_SOLVER_ENUM(Report)) || (show & MPT_SOLVER_ENUM(Report))) {
 	pr.name = "n";
 	pr.desc = "integration steps";
-	pr.fmt  = "i";
-	pr.data = &data->count.st.nsteps;
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->count.st.nsteps;
 	out(usr, &pr);
 	++line;
 	}
@@ -57,8 +57,8 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = "current step size";
-	pr.fmt  = "G";
-	pr.data = &data->h;
+	pr.val.fmt = "G";
+	pr.val.ptr = &data->h;
 	out(usr, &pr);
 	++line;
 	}
@@ -69,29 +69,29 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	if (data->count.st.nsteps != data->count.st.naccpt) {
 		pr.name = "nacc";
 		pr.desc = MPT_tr("accepted steps");
-		pr.fmt  = "i";
-		pr.data = &data->count.st.naccpt;
+		pr.val.fmt = "i";
+		pr.val.ptr = &data->count.st.naccpt;
 		out(usr, &pr);
 		++line;
 	}
 	pr.name = "feval";
 	pr.desc = MPT_tr("f evaluations");
-	pr.fmt  = "i";
-	pr.data = &data->count.st.nfev;
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->count.st.nfev;
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jeval";
 	pr.desc = MPT_tr("Jacobian evaluations");
-	pr.fmt  = "i";
-	pr.data = &data->count.st.njac;
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->count.st.njac;
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
-	pr.fmt  = "i";
-	pr.data = &data->count.st.nlud;
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->count.st.nlud;
 	out(usr, &pr);
 	++line;
 	

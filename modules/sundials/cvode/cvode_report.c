@@ -36,12 +36,12 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	
 	pr.name = "method";
 	pr.desc = MPT_tr("method for solver step");
-	pr.fmt  = 0;
+	pr.val.fmt = 0;
 	
 	switch (cv_mem->cv_lmm) {
-	  case CV_ADAMS: pr.data = "Adams"; break;
-	  case CV_BDF:   pr.data = "BDF";   break;
-	  default:       pr.data = "";
+	  case CV_ADAMS: pr.val.ptr = "Adams"; break;
+	  case CV_BDF:   pr.val.ptr = "BDF";   break;
+	  default:       pr.val.ptr = "";
 	}
 	if (out(usr, &pr) > 0) ++line;
 	
@@ -53,8 +53,8 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	    && (CVodeGetCurrentTime(data->mem, &dval) == CV_SUCCESS)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	pr.fmt  = "G";
-	pr.data = &dval;
+	pr.val.fmt = "G";
+	pr.val.ptr = &dval;
 	out(usr, &pr);
 	++line;
 	}
@@ -64,8 +64,8 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	val = lval;
 	pr.name = "n";
 	pr.desc = MPT_tr("integration steps");
-	pr.fmt  = "l";
-	pr.data = &val;
+	pr.val.fmt = "l";
+	pr.val.ptr = &val;
 	out(usr, &pr);
 	++line;
 	}
@@ -74,8 +74,8 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	    && (CVodeGetLastStep(data->mem, &dval) == CV_SUCCESS)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	pr.fmt  = "G";
-	pr.data = &dval;
+	pr.val.fmt = "G";
+	pr.val.ptr = &dval;
 	out(usr, &pr);
 	++line;
 	}
@@ -86,8 +86,8 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	val = lval;
 	pr.name = "feval";
 	pr.desc = MPT_tr("f evaluations");
-	pr.fmt  = "l";
-	pr.data = &val;
+	pr.val.fmt = "l";
+	pr.val.ptr = &val;
 	out(usr, &pr);
 	++line;
 	}
@@ -97,8 +97,8 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	val = lval;
 	pr.name = "lsetup";
 	pr.desc = MPT_tr("linear solver setups");
-	pr.fmt  = "l";
-	pr.data = &val;
+	pr.val.fmt = "l";
+	pr.val.ptr = &val;
 	out(usr, &pr);
 	++line;
 	}
@@ -107,8 +107,8 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	val = lval;
 	pr.name = "nliter";
 	pr.desc = MPT_tr("nonlinear solver iterations");
-	pr.fmt  = "l";
-	pr.data = &val;
+	pr.val.fmt = "l";
+	pr.val.ptr = &val;
 	out(usr, &pr);
 	++line;
 	}
@@ -116,8 +116,8 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	if (CVodeGetNumNonlinSolvConvFails(data->mem, &lval) == CV_SUCCESS && (val = lval)) {
 	pr.name = "nlfail";
 	pr.desc = MPT_tr("nonlinear solver conv. fail");
-	pr.fmt  = "l";
-	pr.data = &val;
+	pr.val.fmt = "l";
+	pr.val.ptr = &val;
 	out(usr, &pr);
 	++line;
 	}

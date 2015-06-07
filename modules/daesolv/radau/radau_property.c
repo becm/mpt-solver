@@ -98,13 +98,13 @@ extern int mpt_radau_property(MPT_SOLVER_STRUCT(radau) *data, MPT_STRUCT(propert
 		id = MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 		if (data && src && (id = setIvp(data, src)) < 0) return id;
 		prop->name = "radau"; prop->desc = "implicit Runge-Kutta DAE solver";
-		prop->fmt  = "iid"; prop->data = &data->ivp;
+		prop->val.fmt  = "iid"; prop->val.ptr = &data->ivp;
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;
 	}
 	
@@ -122,14 +122,14 @@ extern int mpt_radau_property(MPT_SOLVER_STRUCT(radau) *data, MPT_STRUCT(propert
 	if (name ? !strncasecmp(name, "jac", 3) : pos == id++) {
 		if (data && (id = setJacobian(data, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
-		prop->fmt  = "i"; prop->data = &data->ijac;
+		prop->val.fmt  = "i"; prop->val.ptr = &data->ijac;
 		return id;
 	}
 	/* set initial stepsize */
 	if (name ? !strcasecmp(name, "stepinit") : pos == id++) {
 		if (data && (id = setInitStep(data, src)) < 0) return id;
 		prop->name = "stepinit"; prop->desc = "explicit initial stepsize";
-		prop->fmt = "d"; prop->data = &data->h;
+		prop->val.fmt = "d"; prop->val.ptr = &data->h;
 		return id;
 	}
 	/* set integer parameter

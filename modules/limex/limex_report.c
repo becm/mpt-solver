@@ -19,8 +19,8 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *data, int show, MPT_
 	
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";
-	pr.fmt  = "ss";
-	pr.data = &d;
+	pr.val.fmt = "ss";
+	pr.val.ptr = &d;
 	
 	neqs = data->ivp.neqs * (data->ivp.pint + 1);
 	
@@ -30,7 +30,7 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *data, int show, MPT_
 	d.ml = data->iopt[7];
 	d.mu = data->iopt[8];
 	
-	if (d.ml >= 0 && d.ml < neqs) { d.jac = "banded"; pr.fmt = "ssii"; }
+	if (d.ml >= 0 && d.ml < neqs) { d.jac = "banded"; pr.val.fmt = "ssii"; }
 	
 	out(usr, &pr);
 	++line;
@@ -39,8 +39,8 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	pr.fmt  = "G";
-	pr.data = &data->ivp.last;
+	pr.val.fmt = "G";
+	pr.val.ptr = &data->ivp.last;
 	out(usr, &pr);
 	++line;
 	}
@@ -48,8 +48,8 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *data, int show, MPT_
 	if (show & (MPT_SOLVER_ENUM(Status) | MPT_SOLVER_ENUM(Report))) {
 	pr.name = "n";
 	pr.desc = "integration steps";
-	pr.fmt  = "i";
-	pr.data = &data->iopt[27];
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->iopt[27];
 	out(usr, &pr);
 	++line;
 	}
@@ -57,8 +57,8 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = "current step size";
-	pr.fmt  = "G";
-	pr.data = &data->h;
+	pr.val.fmt = "G";
+	pr.val.ptr = &data->h;
 	out(usr, &pr);
 	++line;
 	}
@@ -67,32 +67,32 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *data, int show, MPT_
 	
 	pr.name = "feval";
 	pr.desc = MPT_tr("f evaluations");
-	pr.fmt  = "i";
-	pr.data = &data->iopt[23];
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->iopt[23];
 	out(usr, &pr);
 	
 	pr.name = "jeval";
 	pr.desc = MPT_tr("Jacobian evaluations");
-	pr.fmt  = "i";
-	pr.data = &data->iopt[28];
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->iopt[28];
 	out(usr, &pr);
 	
 	pr.name = "jfeval";
 	pr.desc = "Jacobian f eval.";
-	pr.fmt  = "i";
-	pr.data = &data->iopt[24];
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->iopt[24];
 	out(usr, &pr);
 	
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
-	pr.fmt  = "i";
-	pr.data = &data->iopt[25];
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->iopt[25];
 	out(usr, &pr);
 	
 	pr.name = "lubsub";
 	pr.desc = MPT_tr("LU back-subst.");
-	pr.fmt  = "i";
-	pr.data = &data->iopt[26];
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->iopt[26];
 	out(usr, &pr);
 	
 	return line + 6;

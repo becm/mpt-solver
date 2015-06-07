@@ -35,29 +35,29 @@ static int setNls(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 }
 static int setXTol(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	if (!src) return data->xtol ? 1 : 0;
 	if (!(len = src->_vptr->conv(src, 'd', &data->xtol))) data->xtol = 0.0;
 	return len;
 }
 static int setFTol(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	if (!src) return (data->ftol != 1e-7) ? 1 : 0;
 	if (!(len = src->_vptr->conv(src, 'd', &data->ftol))) data->xtol = 1e-7;
 	return len;
 }
 static int setGTol(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	if (!src) return data->gtol ? 1 : 0;
 	if (!(len = src->_vptr->conv(src, 'd', &data->gtol))) data->gtol = 0.0;
 	return len;
 }
 static int setJacobian(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 {
-	char	*key;
-	int	l1, l2, l3;
+	char *key;
+	int l1, l2, l3;
 	
 	if (!src) return (data->mu || data->ml) ? 0 : 1;
 	
@@ -83,36 +83,36 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *
 }
 static int setMaxFev(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	if (!src) return data->maxfev;
 	if (!(len = src->_vptr->conv(src, 'i', &data->maxfev))) data->maxfev = 0;
 	return len;
 }
 static int setFactor(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	if (!src) return (data->factor == 200.) ? 0 : 1;
 	if (!(len = src->_vptr->conv(src, 'd', &data->factor))) data->factor = 200.0;
 	return len;
 }
 static int setEpsFcn(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	if (!src) return data->epsfcn ? 1 : 0;
 	if (!(len = src->_vptr->conv(src, 'd', &data->epsfcn))) data->epsfcn = 0.0;
 	return len;
 }
 static int setNPrint(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 {
-	int	len;
+	int len;
 	if (!src) return data->nprint;
 	if (!(len = src->_vptr->conv(src, 'c', &data->nprint))) data->nprint = 0;
 	return len;
 }
 static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 {
-	int	total = 0, curr, nd;
-	double	*diag;
+	double *diag;
+	int total = 0, curr, nd;
 	
 	if (!src) return data->diag.iov_len / sizeof(double);
 	
@@ -145,13 +145,13 @@ extern int mpt_minpack_property(MPT_SOLVER_STRUCT(minpack) *data, MPT_STRUCT(pro
 		id = MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverDet);
 		if (data && src && (id = setNls(data, src)) < 0) return id;
 		prop->name = "minpack"; prop->desc = "solver for (overdetermined) nonlinear equotations";
-		prop->fmt  = "ii"; prop->data = &data->nls;
+		prop->val.fmt = "ii"; prop->val.ptr = &data->nls;
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;
 	}
 	
@@ -159,56 +159,56 @@ extern int mpt_minpack_property(MPT_SOLVER_STRUCT(minpack) *data, MPT_STRUCT(pro
 	if (name ? !strcasecmp(name, "xtol") : (pos == id++)) {
 		if (data && (id = setXTol(data, src)) < 0) return id;
 		prop->name = "xtol"; prop->desc = "desired relative error";
-		prop->fmt  = "d"; prop->data = &data->xtol;
+		prop->val.fmt = "d"; prop->val.ptr = &data->xtol;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "ftol") : (pos == id++)) {
 		if (data && (id = setFTol(data, src)) < 0) return id;
 		prop->name = "ftol"; prop->desc = "desired residual";
-		prop->fmt  = "d"; prop->data = &data->ftol;
+		prop->val.fmt = "d"; prop->val.ptr = &data->ftol;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "gtol") : (pos == id++)) {
 		if (data && (id = setGTol(data, src)) < 0) return id;
 		prop->name = "gtol"; prop->desc = "desired orthogonality";
-		prop->fmt  = "d"; prop->data = &data->gtol; prop->fmt = "d";
+		prop->val.fmt = "d"; prop->val.ptr = &data->gtol; prop->val.fmt= "d";
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == id++)) {
 		if (data && (id = setJacobian(data, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "(user) jacobian settings";
-		prop->fmt  = "ii"; prop->data = &data->mu;
+		prop->val.fmt = "ii"; prop->val.ptr = &data->mu;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "maxfev") : (pos == id++)) {
 		if (data && (id = setMaxFev(data, src)) < 0) return id;
 		prop->name = "maxfev"; prop->desc = "max. function evaluations per call";
-		prop->fmt  = "i"; prop->data = &data->maxfev;
+		prop->val.fmt = "i"; prop->val.ptr = &data->maxfev;
 		return id;
 	}
 	if (name ? !strncasecmp(name, "fac", 3) : (pos == id++)) {
 		if (data && (id = setFactor(data, src)) < 0) return id;
 		prop->name = "factor"; prop->desc = "initial step bound";
-		prop->fmt  = "d"; prop->data = &data->factor;
+		prop->val.fmt = "d"; prop->val.ptr = &data->factor;
 		return id;
 	}
 	if (name ? !strncasecmp(name, "eps", 3) : (pos == id++)) {
 		if (data && (id = setEpsFcn(data, src)) < 0) return id;
 		prop->name = "epsfcn"; prop->desc = "initial forward-difference step length";
-		prop->fmt  = "d"; prop->data = &data->epsfcn; prop->fmt = "d";
+		prop->val.fmt = "d"; prop->val.ptr = &data->epsfcn; prop->val.fmt= "d";
 		return id;
 	}
 	if (name ? !strncasecmp(name, "eps", 3) : (pos == id++)) {
 		if (data && (id = setNPrint(data, src)) < 0) return id;
 		prop->name = "nprint"; prop->desc = "iteration output";
-		prop->fmt  = "c"; prop->data = &data->nprint;
+		prop->val.fmt = "c"; prop->val.ptr = &data->nprint;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "diag") : (pos == id++)) {
 		static const char fmt[] = { 'd' | (char) MPT_ENUM(TypeVector) };
 		if (data && (id = setDiag(data, src)) < 0) return id;
 		prop->name = "diag"; prop->desc = "scale factor for variables";
-		prop->fmt  = fmt; prop->data = &data->diag;
+		prop->val.fmt = fmt; prop->val.ptr = &data->diag;
 		return id;
 	}
 	

@@ -205,12 +205,12 @@ protected:
 };
 
 inline Ivp::operator const ivppar *()
-{ struct property p; return property(&p) < 0 ? 0 : (struct ivppar *) p.data; }
+{ struct property p; return property(&p) < 0 ? 0 : (struct ivppar *) p.val.ptr; }
 inline Ivp::operator ivpfcn *() const
 { return 0; }
 
 inline Nls::operator const nlspar *()
-{ struct property p; return property(&p) < 0 ? 0 : (struct nlspar *) p.data; }
+{ struct property p; return property(&p) < 0 ? 0 : (struct nlspar *) p.val.ptr; }
 inline Nls::operator nlsfcn *() const
 { return 0; }
 

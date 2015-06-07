@@ -28,7 +28,7 @@ static int procProp(void *ptr, MPT_INTERFACE(property) *pr)
 	/* complain on missing name */
 	if (!pr->name) {
 		if (o->log) {
-			(void) mpt_log(o->log, fcn, MPT_ENUM(LogError), "%s: %s: <%p>", o->name, MPT_tr("no property name"), pr->data);
+			(void) mpt_log(o->log, fcn, MPT_ENUM(LogError), "%s: %s: <%p>", o->name, MPT_tr("no property name"), pr->val.ptr);
 		}
 		o->err |= 8;
 		return 4;
@@ -53,10 +53,10 @@ static int procProp(void *ptr, MPT_INTERFACE(property) *pr)
 		if (!o->log) {
 			return 2;
 		}
-		if ((tmp = pr->fmt)) {
+		if ((tmp = pr->val.fmt)) {
 			(void) mpt_log(o->log, fcn, MPT_ENUM(LogError), "%s: %s: %s <%s>", o->name, MPT_tr("bad property value"), pr->name, tmp);
 		} else {
-			if (!(tmp = pr->data)) tmp = "";
+			if (!(tmp = pr->val.ptr)) tmp = "";
 			(void) mpt_log(o->log, fcn, MPT_ENUM(LogError), "%s: %s: %s = %s", o->name, MPT_tr("bad property value"), pr->name, tmp);
 		}
 		return 2;

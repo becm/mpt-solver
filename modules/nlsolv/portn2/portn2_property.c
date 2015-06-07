@@ -51,14 +51,14 @@ extern int mpt_portn2_property(MPT_SOLVER_STRUCT(portn2) *data, MPT_STRUCT(prope
 		id = MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverDet);
 		if (data && src && (pos = setNls(data, src)) < 0) return pos;
 		prop->name = "portn2"; prop->desc = "solver for overdetermined nonlinear equotations";
-		prop->data = &data->nls; prop->fmt  = "ii";
+		prop->val.fmt = "ii"; prop->val.ptr = &data->nls;
 		return id;
 	}
 	
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;
 	}
 	

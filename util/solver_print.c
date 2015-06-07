@@ -79,7 +79,7 @@ static int wrapInfo(void *ptr, MPT_STRUCT(property) *pr)
 	vec.iov_base = buf;
 	vec.iov_len  = sizeof(buf) - 1;
 	
-	if (mpt_tostring(pr->data, pr->fmt, appendString, &vec) < 0) return -2;
+	if (mpt_tostring(&pr->val, appendString, &vec) < 0) return -2;
 	if (!(len = sizeof(buf) - vec.iov_len)) return 0;
 	++vec.iov_len;
 	appendString(&vec, "", 1);
@@ -121,7 +121,7 @@ static int wrapStatus(void *ptr, MPT_STRUCT(property) *pr)
 	appendString(vec, " = ", 3);
 	
 	/* print property data */
-	mpt_tostring(pr->data, pr->fmt, appendString, vec);
+	mpt_tostring(&pr->val, appendString, vec);
 	
 	/* add delimiter */
 	appendString(vec, ", ", 2);
@@ -173,7 +173,7 @@ static int wrapReport(void *ptr, MPT_STRUCT(property) *pr)
 	vec.iov_base = buf;
 	vec.iov_len  = sizeof(buf) - 1;
 	
-	if ((len = mpt_tostring(pr->data, pr->fmt, appendString, &vec)) <= 0) {
+	if ((len = mpt_tostring(&pr->val, appendString, &vec)) <= 0) {
 		return len;
 	}
 	++vec.iov_len;

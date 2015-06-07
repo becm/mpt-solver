@@ -21,15 +21,15 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *data, int show, MPT_
 	
 	pr.name = "backend";
 	pr.desc = "used single step backend";
-	pr.fmt  = 0;
-	pr.data = backend;
+	pr.val.fmt = 0;
+	pr.val.ptr = backend;
 	out(usr, &pr);
 	++lines;
 	
 	pr.name = "kcol";
 	pr.desc = "collocations";
-	pr.fmt  = "i";
-	pr.data = &kcol;
+	pr.val.fmt = "i";
+	pr.val.ptr = &kcol;
 	out(usr, &pr);
 	++lines;
 	}
@@ -38,15 +38,15 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	pr.fmt  = "d";
-	pr.data = &data->ivp.last;
+	pr.val.fmt = "d";
+	pr.val.ptr = &data->ivp.last;
 	out(usr, &pr);
 	++lines;
 	
 	pr.name = "nint";
 	pr.desc = "intervals";
-	pr.fmt  = "i";
-	pr.data = &data->nint;
+	pr.val.fmt = "i";
+	pr.val.ptr = &data->nint;
 	out(usr, &pr);
 	++lines;
 	}

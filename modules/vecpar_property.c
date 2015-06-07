@@ -4,9 +4,6 @@
 
 #include "solver.h"
 
-static const char name[] = "value";
-static const char desc[] = "generic array value";
-
 extern int getValues(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(source) *src)
 {
 	double	v1 = 0.0, v2, *dest;
@@ -46,6 +43,9 @@ extern int getValues(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(source) *src)
 
 extern int mpt_vecpar_property(MPT_TYPE(dvecpar) *tol, MPT_STRUCT(property) *pr, MPT_INTERFACE(source) *src)
 {
+	static const char name[] = "value";
+	static const char desc[] = "generic array value";
+	
 	int len = 0;
 	
 	if (!pr) {
@@ -64,12 +64,12 @@ extern int mpt_vecpar_property(MPT_TYPE(dvecpar) *tol, MPT_STRUCT(property) *pr,
 	
 	if (tol->base) {
 		static const char fmt[2] = { (char) (MPT_ENUM(TypeVector) | 'd') };
-		pr->data = &tol;
-		pr->fmt  = fmt;
+		pr->val.fmt = fmt;
+		pr->val.ptr = &tol;
 	} else {
 		static const char fmt[2] = "d";
-		pr->data = &tol->d.val;
-		pr->fmt  = fmt;
+		pr->val.fmt = fmt;
+		pr->val.ptr = &tol->d.val;
 	}
 	return len;
 }

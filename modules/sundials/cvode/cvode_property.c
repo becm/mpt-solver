@@ -130,13 +130,13 @@ extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(prop
 		id = MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
 		if (cv && src && (id = setIvp(cv, src)) < 0) return id;
 		prop->name = "cvode"; prop->desc = "ODE solver from Sundials Library";
-		prop->fmt  = "iid"; prop->data = &cv->ivp;
+		prop->val.fmt = "iid"; prop->val.ptr = &cv->ivp;
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;
 	}
 	
@@ -154,55 +154,55 @@ extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(prop
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == id++)) {
 		if (cv && (id = sundials_jacobian(&cv->sd, cv->ivp.neqs, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "jacobian type";
-		prop->data = &cv->sd.jacobian; prop->fmt = "B";
+		prop->val.fmt = "B"; prop->val.ptr = &cv->sd.jacobian;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "method") : (pos == id++)) {
 		if (cv && (id = setMethod(cv, src)) < 0) return id;
 		prop->name = "method"; prop->desc = "solver method";
-		prop->fmt = prop->data = 0;
+		prop->val.fmt = prop->val.ptr = 0;
 		if (!cv) return id;
 		switch (cv_mem->cv_lmm) {
-		  case CV_BDF: prop->data = bdfText; break;
-		  case CV_ADAMS: prop->data = adamsText; break;
-		  default: prop->data = "";
+		  case CV_BDF: prop->val.ptr = bdfText; break;
+		  case CV_ADAMS: prop->val.ptr = adamsText; break;
+		  default: prop->val.ptr = "";
 		}
 		return id;
 	}
 	if (name ? !strcasecmp(name, "maxord") : (pos == id++)) {
 		if (cv && (id = setMaxOrd(cv, src)) < 0) return id;
 		prop->name = "maxord"; prop->desc = "maximum order of steps";
-		prop->fmt  = "i"; prop->data = 0;
+		prop->val.fmt = "i"; prop->val.ptr = 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) : (pos == id++)) {
 		if (cv && (id = setMaxNSteps(cv, src)) < 0) return id;
 		prop->name = "mxstep"; prop->desc = "allowed function evaluations per call";
-		prop->fmt  = "l"; prop->data = cv_mem ? &cv_mem->cv_mxstep : 0;
+		prop->val.fmt = "l"; prop->val.ptr = cv_mem ? &cv_mem->cv_mxstep : 0;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "hnilwarns") : (pos == id++)) {
 		if (cv && (id = setMaxHNil(cv, src)) < 0) return id;
 		prop->name = "hnilwarns"; prop->desc = "max. warnings for 't + h == t'";
-		prop->fmt  = "i"; prop->data = cv_mem ? &cv_mem->cv_mxhnil : 0;
+		prop->val.fmt = "i"; prop->val.ptr = cv_mem ? &cv_mem->cv_mxhnil : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "hin") || !strcasecmp(name, "h0")) : (pos == id++)) {
 		if (cv && (id = setInitStep(cv, src)) < 0) return id;
 		prop->name = "hin"; prop->desc = "initial stepsize";
-		prop->fmt  = "d"; prop->data = cv_mem ? &cv_mem->cv_hin : 0;
+		prop->val.fmt = "d"; prop->val.ptr = cv_mem ? &cv_mem->cv_hin : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "stepmin")) : (pos == id++)) {
 		if (cv && (id = setMinStep(cv, src)) < 0) return id;
 		prop->name = "hmin"; prop->desc = "minimal stepsize";
-		prop->fmt  = "d"; prop->data = cv_mem ? &cv_mem->cv_hmin : 0;
+		prop->val.fmt = "d"; prop->val.ptr = cv_mem ? &cv_mem->cv_hmin : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) : (pos == id++)) {
 		if (cv && (id = setMaxStep(cv, src)) < 0) return id;
 		prop->name = "hmax"; prop->desc = "maximal stepsize";
-		prop->data = 0; prop->fmt = ""; /* saved as inverse */
+		prop->val.fmt= ""; prop->val.ptr = 0; /* saved as inverse */
 		return id;
 	}
 	

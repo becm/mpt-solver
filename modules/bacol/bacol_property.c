@@ -149,13 +149,13 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 		id = MPT_SOLVER_ENUM(PDE);
 		if (data && src && (id = setIvp(data, src)) < 0) return id;
 		prop->name = "bacol"; prop->desc = "SPline PDE solver";
-		prop->fmt  = "iid"; prop->data = &data->ivp;
+		prop->val.fmt = "iid"; prop->val.ptr = &data->ivp;
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;
 	}
 	
@@ -174,48 +174,48 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 	if (name ? !strcasecmp(name, "kcol") : pos == id++) {
 		if (data && (id = setKollocations(data, src)) < 0) return id;
 		prop->name = "kcol"; prop->desc = "collocations per interval";
-		prop->fmt  = "h"; prop->data = &data->kcol;
+		prop->val.fmt = "h"; prop->val.ptr = &data->kcol;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "nint") : pos == id++) {
 		if (data && (id = setIntervals(data, src)) < 0) return id;
 		prop->name = "nint"; prop->desc = "number of internal intervals";
-		prop->fmt  = "i"; prop->data = &data->nint;
+		prop->val.fmt = "i"; prop->val.ptr = &data->nint;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "nintmx") : pos == id++) {
 		if (data && (id = setMaxIntervals(data, src)) < 0) return id;
 		prop->name = "nintmx"; prop->desc = "maximum internal intervals";
-		prop->fmt  = "i"; prop->data = &data->nintmx;
+		prop->val.fmt = "i"; prop->val.ptr = &data->nintmx;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "dirichlet") : pos == id++) {
 		if (data && (id = setDirichlet(data, src)) < 0) return id;
 		prop->name = "dirichlet"; prop->desc = "boundaries of dirichlet type";
-		prop->fmt  = "i"; prop->data = &data->mflag.bdir;
+		prop->val.fmt = "i"; prop->val.ptr = &data->mflag.bdir;
 		return id;
 	}
 	/* ode parameter */
 	if (name ? !strcasecmp(name, "stepinit") : pos == id++) {
 		if (data && (id = setStepInit(data, src)) < 0) return id;
 		prop->name = "stepinit"; prop->desc = "expl. initial stepsize";
-		prop->fmt  = "d"; prop->data = &data->initstep;
+		prop->val.fmt = "d"; prop->val.ptr = &data->initstep;
 		return id;
 	}
 	/* solving backend */
 	if (name ? !strcasecmp(name, "backend") : pos == id++) {
 		if (data && (id = setBackend(data, src)) < 0) return id;
 		prop->name = "backend"; prop->desc = "solver step backend";
-		prop->fmt  = 0; prop->data = 0;
+		prop->val.fmt = 0; prop->val.ptr = 0;
 		if (!data) return id;
 		switch (data->backend) {
 #ifdef MPT_BACOL_DASSL
-		  case 'd': case 'D': prop->data = "dassl"; break;
+		  case 'd': case 'D': prop->val.ptr = "dassl"; break;
 #endif
 #ifdef MPT_BACOL_RADAU
-		  case 'r': case 'R': prop->data = "radau"; break;
+		  case 'r': case 'R': prop->val.ptr = "radau"; break;
 #endif
-		  default: prop->data = "<unknown>";
+		  default: prop->val.ptr = "<unknown>";
 		}
 		return id;
 	}
@@ -225,20 +225,20 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 	if (name ? !strcasecmp(name, "tstop") : pos == id++) {
 		if (data && (id = setTStop(data, src)) < 0) return id;
 		prop->name = "tstop"; prop->desc = "max. time allowed";
-		prop->fmt  = "d"; prop->data = &data->mflag.bdir;
+		prop->val.fmt = "d"; prop->val.ptr = &data->mflag.bdir;
 		return id;
 	}
 	/* dassl parameter */
 	if (name ? !strcasecmp(name, "maxstep") : pos == id++) {
 		if (data && (id = setMaxStep(data, src)) < 0) return id;
 		prop->name = "maxstep"; prop->desc = "max. steps per call";
-		prop->fmt  = "d"; prop->data = &data->bd.tstop;
+		prop->val.fmt = "d"; prop->val.ptr = &data->bd.tstop;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "dasslbdf") || !strcasecmp(name, "bdf")) : pos == id++) {
 		if (data && (id = setDasslBdf(data, src)) < 0) return id;
 		prop->name = "dasslbdf"; prop->desc = "max. number of BDF order";
-		prop->fmt  = "i"; prop->data = &data->mflag.bdir;
+		prop->val.fmt = "i"; prop->val.ptr = &data->mflag.bdir;
 		return id;
 	}
 	}

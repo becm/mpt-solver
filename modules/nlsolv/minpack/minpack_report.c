@@ -30,15 +30,15 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	
 	pr.name = "method";
 	pr.desc = MPT_tr("minpack solver type");
-	pr.fmt  = 0;
-	pr.data = solv;
+	pr.val.fmt = 0;
+	pr.val.ptr = solv;
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("jacobian matrix type");
-	pr.fmt  = 0;
-	pr.data = jac;
+	pr.val.fmt = 0;
+	pr.val.ptr = jac;
 	out(usr, &pr);
 	++line;
 	}
@@ -47,15 +47,15 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	
 	pr.name = "feval";
 	pr.desc = MPT_tr("f evaluations");
-	pr.fmt  = "i";
-	pr.data = &mpack->nfev;
+	pr.val.fmt = "i";
+	pr.val.ptr = &mpack->nfev;
 	out(usr, &pr);
 	
 	if (!mpack->njev) return line + 1;
 	pr.name = "jeval";
 	pr.desc = MPT_tr("jacobian evaluations");
-	pr.fmt  = "i";
-	pr.data = &mpack->njev;
+	pr.val.fmt = "i";
+	pr.val.ptr = &mpack->njev;
 	out(usr, &pr);
 	return line + 2;
 }

@@ -136,13 +136,13 @@ extern int mpt_mebdfi_property(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_STRUCT(prope
 		id = MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 		if (data && src && (id = setIvp(data, src)) < 0) return id;
 		prop->name = "mebdfi"; prop->desc = "implicit DAE solver with BDF";
-		prop->fmt  = "iid"; prop->data = &data->ivp;
+		prop->val.fmt = "iid"; prop->val.ptr = &data->ivp;
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt= 0; prop->val.ptr = version;
 		return 0;
 	}
 	
@@ -160,44 +160,44 @@ extern int mpt_mebdfi_property(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_STRUCT(prope
 	if (name ? !strncasecmp(name, "jac", 3) : pos == id++) {
 		if (data && (id = setJacobian(data, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
-		prop->fmt  = "ii"; prop->data = data->mbnd;
+		prop->val.fmt = "ii"; prop->val.ptr = data->mbnd;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "h0") || !strcasecmp(name, "stepinit")) : pos == id++) {
 		if (data && (id = setH0(data, src)) < 0) return id;
 		prop->name = "stepinit"; prop->desc = "explicit initial step size";
-		prop->fmt  = "d"; prop->data = &data->h;
+		prop->val.fmt = "d"; prop->val.ptr = &data->h;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "maxstp") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "iwork14")) : pos == id++) {
 		if (data && (id = setMaxNSteps(data, src)) < 0) return id;
 		prop->name = "maxstep"; prop->desc = "max. internal steps per call";
-		prop->fmt  = "i"; prop->data = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base)+13 : 0;
+		prop->val.fmt = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base)+13 : 0;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "nind1") : pos == id++) {
 		if (data && (id = setNind1(data, src)) < 0) return id;
 		prop->name = "nind1"; prop->desc = "index1 variables";
-		prop->fmt  = "i"; prop->data = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base) : 0;
+		prop->val.fmt = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base) : 0;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "nind2") : pos == id++) {
 		if (data && (id = setNind2(data, src)) < 0) return id;
 		prop->name = "nind2"; prop->desc = "index2 variables";
-		prop->fmt  = "i"; prop->data = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base)+1 : 0;
+		prop->val.fmt = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base)+1 : 0;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "nind3") : pos == id++) {
 		if (data && (id = setNind3(data, src)) < 0) return id;
 		prop->name = "nind3"; prop->desc = "index3 variables";
-		prop->fmt  = "i"; prop->data = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base)+2 : 0;
+		prop->val.fmt = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base)+2 : 0;
 		return id;
 	}
 	if (name ? !strncasecmp(name, "yp", 2) : pos == id++) {
 		static const char fmt[] = { 'd' | (char) MPT_ENUM(TypeVector) };
 		if (data && (id = setYP(data, src)) < 0) return id;
 		prop->name = "yp"; prop->desc = "max. internal steps per call";
-		prop->fmt  = fmt; prop->data = data ? &data->yp : 0;
+		prop->val.fmt = fmt; prop->val.ptr = data ? &data->yp : 0;
 		return id;
 	}
 	

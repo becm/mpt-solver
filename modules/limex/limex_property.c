@@ -112,13 +112,13 @@ extern int mpt_limex_property(MPT_SOLVER_STRUCT(limex) *data, MPT_STRUCT(propert
 		id = MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 		if (data && src && (id = setIvp(data, src)) < 0) return id;
 		prop->name = "limex"; prop->desc = "extrapolation integrator for linearly-implicit DAE";
-		prop->fmt  = "iid"; prop->data = &data->ivp;
+		prop->val.fmt = "iid"; prop->val.ptr = &data->ivp;
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt= 0; prop->val.ptr = version;
 		return 0;
 	}
 	
@@ -136,81 +136,81 @@ extern int mpt_limex_property(MPT_SOLVER_STRUCT(limex) *data, MPT_STRUCT(propert
 	if ( name ? !strncasecmp(name, "jac", 3) : pos == id++) {
 		if (data && (id = setJacobian(data, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "(user) jacobian settings";
-		prop->fmt  = "iii"; prop->data = data->iopt + 6;
+		prop->val.fmt = "iii"; prop->val.ptr = data->iopt + 6;
 		return id;
 	}
 	if ( name ? (!strcasecmp(name, "h") || !strcasecmp(name, "initstep")) : pos == id++) {
 		if (data && (id = setStepSize(data, src)) < 0) return id;
 		prop->name = "h"; prop->desc = "initial/next stepsize";
-		prop->fmt  = "d"; prop->data = &data->h;
+		prop->val.fmt = "d"; prop->val.ptr = &data->h;
 		return id;
 	}
 	/* integer parameter */
 	if (name ? (!strcasecmp(name, "monitor") || !strcasecmp(name, "iopt1")) : pos == id++) {
 		if (src) return -1;
 		prop->name = "monitor"; prop->desc = "integration monitor output";
-		prop->fmt  = "i"; prop->data = data->iopt;
+		prop->val.fmt = "i"; prop->val.ptr = data->iopt;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "solout") || !strcasecmp(name, "iopt3")) : pos == id++) {
 		if (src) return -1;
 		prop->name = "solout"; prop->desc = "(intermediate) solution output";
-		prop->fmt  = "i"; prop->data = data->iopt+2;
+		prop->val.fmt = "i"; prop->val.ptr = data->iopt+2;
 		return id;
 	}
 	if (name ? (!strncasecmp(name, "bnos", 4) || !strcasecmp(name, "iopt5")) : pos == id++) {
 		if (src) return -1;
 		prop->name = "bnosingular"; prop->desc = "B-matrix may not be singular";
-		prop->fmt  = "i"; prop->data = data->iopt+4;
+		prop->val.fmt = "i"; prop->val.ptr = data->iopt+4;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "jacreuse") || !strcasecmp(name, "iopt10")) : pos == id++) {
 		if (src) return -1;
 		prop->name = "jacreuse"; prop->desc = "try to reuse jacobian";
-		prop->fmt  = "i"; prop->data = data->iopt+9;
+		prop->val.fmt = "i"; prop->val.ptr = data->iopt+9;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "single") || !strcasecmp(name, "iopt12")) : pos == id++) {
 		if (src) return -1;
 		prop->name = "single"; prop->desc = "enable single step modes";
-		prop->fmt  = "i"; prop->data = data->iopt+11;
+		prop->val.fmt = "i"; prop->val.ptr = data->iopt+11;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "denseout") : pos == id++) {
 		if (src) return -1;
 		prop->name = "denseout"; prop->desc = "dense output settings";
-		prop->fmt  = "ii"; prop->data = data->iopt+12;
+		prop->val.fmt = "ii"; prop->val.ptr = data->iopt+12;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "tend") || !strcasecmp(name, "ropt3")) : pos == id++) {
 		if (src) return -1;
 		prop->name = "tend"; prop->desc = "dense output settings";
-		prop->fmt  = "d"; prop->data = data->ropt+2;
+		prop->val.fmt = "d"; prop->val.ptr = data->ropt+2;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "plotjac") || !strcasecmp(name, "iopt18")) : pos == id++) {
 		if (src) return -1;
 		prop->name = "plotjac"; prop->desc = "dense output settings";
-		prop->fmt  = "i"; prop->data = data->iopt+17;
+		prop->val.fmt = "i"; prop->val.ptr = data->iopt+17;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "maxstep") || !strcasecmp(name, "ropt1")) : pos == id++) {
 		if (src) return -1;
 		prop->name = "ipos"; prop->desc = "maximum internal step size";
-		prop->fmt  = "d"; prop->data = data->ropt;
+		prop->val.fmt = "d"; prop->val.ptr = data->ropt;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "ipos") : pos == id++) {
 		if (src) return -1;
 		prop->name = "ipos"; prop->desc = "maximum internal step size";
-		prop->fmt  = "i"; prop->data = data->ipos.iov_base;
+		prop->val.fmt = "i"; prop->val.ptr = data->ipos.iov_base;
 		return id;
 	}
 	if (name ? !strncasecmp(name, "yprime", 2) : pos == id++) {
 		static const char fmt[] = { 'd' | (char) MPT_ENUM(TypeVector) };
 		if (data && (id = setYS(data, src)) < 0) return id;
 		prop->name = "yprime"; prop->desc = "deviation at initial/current point";
-		prop->fmt  = fmt; prop->data = &data->ipos;
+		prop->val.fmt = fmt; prop->val.ptr = &data->ipos;
 		return id;
 	}
 	

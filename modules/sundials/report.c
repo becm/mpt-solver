@@ -16,8 +16,8 @@ extern int sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(P
 	
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";
-	pr.fmt  = "s";
-	pr.data = &val;
+	pr.val.fmt = "s";
+	pr.val.ptr = &val;
 	
 	switch (sd->jacobian) {
 		case MPT_ENUM(SundialsJacDiag):
@@ -28,11 +28,11 @@ extern int sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(P
 		case MPT_ENUM(SundialsJacDense) | MPT_ENUM(SundialsJacNumeric):
 			val.type = "full"; break;
 		case MPT_ENUM(SundialsJacBand):
-			val.type = "banded(user)"; pr.fmt = "sii";
+			val.type = "banded(user)"; pr.val.fmt = "sii";
 			val.mu = sd->mu; val.ml = sd->ml;
 			break;
 		case MPT_ENUM(SundialsJacBand) | MPT_ENUM(SundialsJacNumeric):
-			val.type = "banded"; pr.fmt = "sii";
+			val.type = "banded"; pr.val.fmt = "sii";
 			val.mu = sd->mu; val.ml = sd->ml;
 			break;
 		default:

@@ -168,13 +168,13 @@ extern int mpt_dassl_property(MPT_SOLVER_STRUCT(dassl) *data, MPT_STRUCT(propert
 		id = MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 		if (data && src && (id = setIvp(data, src)) < 0) return id;
 		prop->name = "dassl"; prop->desc = "implicit DAE solver with BDF";
-		prop->fmt  = "iid"; prop->data = &data->ivp;
+		prop->val.fmt = "iid"; prop->val.ptr = &data->ivp;
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->fmt = 0; prop->data = version;
+		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;
 	}
 	
@@ -192,56 +192,56 @@ extern int mpt_dassl_property(MPT_SOLVER_STRUCT(dassl) *data, MPT_STRUCT(propert
 	if (name ? !strncasecmp(name, "jac", 3) : pos == id++) {
 		if (data && (id = setJacobian(data, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
-		prop->fmt  = "ii"; prop->data = data ? data->info+4 : 0;
+		prop->val.fmt = "ii"; prop->val.ptr = data ? data->info+4 : 0;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "info3") : pos == id++) {
 		if (data && (id = setInfo3(data, src)) < 0) return id;
 		prop->name = "info3"; prop->desc = "output only at tout";
-		prop->fmt  = "i"; prop->data = data ? data->info+2 : 0;
+		prop->val.fmt = "i"; prop->val.ptr = data ? data->info+2 : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "info4") || !strcasecmp(name, "tstop")) : pos == id++) {
 		if (data && (id = setTStop(data, src)) < 0) return id;
 		prop->name = "tstop"; prop->desc = "do not step past 'tstop'";
-		prop->fmt  = "d"; prop->data = data ? data->rwork.iov_base : 0;
+		prop->val.fmt = "d"; prop->val.ptr = data ? data->rwork.iov_base : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "info7") || !strcasecmp(name, "hmax")) : pos == id++) {
 		if (data && (id = setHMax(data, src)) < 0) return id;
 		prop->name = "hmax"; prop->desc = "maximum step size";
-		prop->fmt  = "d"; prop->data = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 1 : 0;
+		prop->val.fmt = "d"; prop->val.ptr = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 1 : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "info8") || !strcasecmp(name, "h0") || !strcasecmp(name, "initstep")) : pos == id++) {
 		if (data && (id = setH0(data, src)) < 0) return id;
 		prop->name = "h0"; prop->desc = "explicit initial step size";
-		prop->fmt  = "d"; prop->data = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 2 : 0;
+		prop->val.fmt = "d"; prop->val.ptr = (data && data->rwork.iov_base) ? ((double *) data->rwork.iov_base) + 2 : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "info9") || !strcasecmp(name, "maxord")) : pos == id++) {
 		if (data && (id = setMaxOrd(data, src)) < 0) return id;
 		prop->name = "maxord"; prop->desc = "maximum order";
-		prop->fmt  = "i"; prop->data = data ? data->info + 8 : 0;
+		prop->val.fmt = "i"; prop->val.ptr = data ? data->info + 8 : 0;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "info10") : pos == id++) {
 		if (data && (id = setInfo10(data, src)) < 0) return id;
 		prop->name = "info10"; prop->desc = "restrict to nonnegative solutions";
-		prop->fmt  = "i"; prop->data = data ? data->info + 9 : 0;
+		prop->val.fmt = "i"; prop->val.ptr = data ? data->info + 9 : 0;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "info11") : pos == id++) {
 		if (data && (id = setInfo11(data, src)) < 0) return id;
 		prop->name = "info11"; prop->desc = "consistent initial values";
-		prop->fmt  = "i"; prop->data = data ? data->info + 10 : 0;
+		prop->val.fmt = "i"; prop->val.ptr = data ? data->info + 10 : 0;
 		return id;
 	}
 	if (name ? !strncasecmp(name, "yp", 2) : pos == id++) {
 		static const char fmt[] = { 'd' | (char) MPT_ENUM(TypeVector) };
 		if (data && (id = setYP(data, src))) return id;
 		prop->name = "yprime"; prop->desc = "deviation at current time";
-		prop->fmt = fmt; prop->data = data ? &data->yp : 0;
+		prop->val.fmt = fmt; prop->val.ptr = data ? &data->yp : 0;
 		return id;
 	}
 	
