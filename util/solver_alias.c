@@ -8,29 +8,6 @@
 
 #include "client.h"
 
-static const struct
-{
-	const char *name;
-	const char *sym;
-}
-assign[] = {
-	{ "bacol",    "mpt_bacol_create@libmpt_bacol.so.1" },
-	
-	{ "vode",     "mpt_vode_create@libmpt_vode.so.1" },
-	
-	{ "dassl",    "mpt_dassl_create@libmpt_daesolv.so.1" },
-	{ "radau",    "mpt_radau_create@libmpt_daesolv.so.1" },
-	{ "mebdfi",   "mpt_mebdfi_create@libmpt_daesolv.so.1" },
-	
-	{ "limex",    "mpt_limex_create@libmpt_limex.so.1" },
-	
-	{ "cvode",    "sundials_cvode_create@libmpt_sundials.so.1" },
-	{ "ida",      "sundials_ida_create@libmpt_sundials.so.1" },
-	
-	{ "minpack",  "mpt_minpack_create@libmpt_nlsolv.so.1" },
-	{ "portn2",   "mpt_portn2_create@libmpt_nlsolv.so.1" }
-};
-
 /*!
  * \ingroup mptClient
  * \brief real solver creator
@@ -43,11 +20,33 @@ assign[] = {
  */
 extern const char *mpt_solver_alias(const char *descr)
 {
-	size_t	i, vis;
+	static const struct
+	{
+		const char name[8];
+		const char sym[56];
+	}
+	assign[] = {
+		{ "bacol",    "mpt_bacol_create@libmpt_bacol.so.1" },
+		
+		{ "vode",     "mpt_vode_create@libmpt_vode.so.1" },
+		
+		{ "dassl",    "mpt_dassl_create@libmpt_daesolv.so.1" },
+		{ "radau",    "mpt_radau_create@libmpt_daesolv.so.1" },
+		{ "mebdfi",   "mpt_mebdfi_create@libmpt_daesolv.so.1" },
+		
+		{ "limex",    "mpt_limex_create@libmpt_limex.so.1" },
+		
+		{ "cvode",    "sundials_cvode_create@libmpt_sundials.so.1" },
+		{ "ida",      "sundials_ida_create@libmpt_sundials.so.1" },
+		
+		{ "minpack",  "mpt_minpack_create@libmpt_nlsolv.so.1" },
+		{ "portn2",   "mpt_portn2_create@libmpt_nlsolv.so.1" }
+	};
+	size_t i, vis;
 	
-	if (!descr)
+	if (!descr) {
 		return 0;
-
+	}
 	/* compare first non-space block */
 	vis = 0;
 	while (*descr && isspace(*descr)) descr++;
@@ -55,11 +54,11 @@ extern const char *mpt_solver_alias(const char *descr)
 	
 	/* find library and initsymbol */
 	i = 0;
-	while (i < (int) (sizeof(assign)/sizeof(*assign))) {
-		if (vis != strlen(assign[i].name) || strncasecmp(assign[i].name, descr, vis)) {
-			i++; continue;
+	while (i < (sizeof(assign)/sizeof(*assign))) {
+		if (vis == strlen(assign[i].name) && !strncasecmp(assign[i].name, descr, vis)) {
+			return assign[i].sym;
 		}
-		return assign[i].sym;
+		i++;
 	}
 	return 0;
 }
