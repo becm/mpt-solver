@@ -28,8 +28,8 @@ include base/mpt.release.mk
 #
 # preocess solver modules
 .PHONY : modules_% examples_% examples
-examples : examples_all
-devel  : modules_devel
+devel : modules_devel
+examples : devel examples_all
 clear  : modules_clear examples_clear
 clean  : modules_clean examples_clean
 modules_% :

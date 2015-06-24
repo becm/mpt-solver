@@ -116,9 +116,15 @@ static int prepIVP(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(source) *arg, MPT_SO
 {
 	static const char from[] = "mpt::client::prep/IVP";
 	const MPT_INTERFACE_VPTR(Ivp) *ictl;
+	MPT_STRUCT(property) prop;
 	MPT_INTERFACE(logger) *log = MPT_LOGGER((MPT_INTERFACE(metatype) *) out);
 	
-	if (mpt_meta_set((void *) gen, 0, "iid", ivp) <= 0) {
+	prop.name = "";
+	prop.desc = 0;
+	prop.val.fmt = "iid";
+	prop.val.ptr = ivp;
+	
+	if (mpt_meta_pset((void *) gen, &prop, 0) <= 0) {
 		mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("unable to save problem parameter to solver"));
 		return -3;
 	}

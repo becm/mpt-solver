@@ -91,7 +91,7 @@ extern int mpt_radau_property(MPT_SOLVER_STRUCT(radau) *data, MPT_STRUCT(propert
 	if (!(name = prop->name)) {
 		if (src || ((pos = (intptr_t) prop->desc) < 0)) {
 			errno = EINVAL;
-			return -3;
+			return -1;
 		}
 	}
 	else if (!*name) {
@@ -110,12 +110,12 @@ extern int mpt_radau_property(MPT_SOLVER_STRUCT(radau) *data, MPT_STRUCT(propert
 	
 	id = 0;
 	if (name ? !strcasecmp(name, "atol") : pos == id++) {
-		if (data && (id = mpt_vecpar_property(&data->atol, prop, src)) < 0) return id;
+		if (data && (id = mpt_vecpar_value(&data->atol, &prop->val, src)) < 0) return id;
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == id++) {
-		if (data && (id = mpt_vecpar_property(&data->rtol, prop, src)) < 0) return id;
+		if (data && (id = mpt_vecpar_value(&data->rtol, &prop->val, src)) < 0) return id;
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

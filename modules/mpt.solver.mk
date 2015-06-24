@@ -18,7 +18,7 @@ FFLAGS ?= -fpic -O5 -Wall
 MATH_OBJS ?= $(MATH:%=${DIR_MATH}/%)
 #
 # vecpar and shared objects
-src_gen = vecpar_alloc.c vecpar_property.c
+src_gen = vecpar_alloc.c vecpar_value.c
 src_ivp = ivppar_set.c vecpar_cktol.c
 src_nls = nlspar_set.c
 #

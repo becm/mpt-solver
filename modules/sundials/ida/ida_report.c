@@ -41,7 +41,7 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	    && (IDAGetCurrentTime(ida->mem, &dval) == IDA_SUCCESS)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	pr.val.fmt = "G";
+	pr.val.fmt = "D";
 	pr.val.ptr = &dval;
 	out(usr, &pr);
 	++line;
@@ -62,7 +62,7 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	val = lval;
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	pr.val.fmt = "G";
+	pr.val.fmt = "D";
 	pr.val.ptr = &dval;
 	out(usr, &pr);
 	++line;

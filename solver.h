@@ -380,7 +380,7 @@ extern void mpt_solver_statistics(MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) 
 extern void *mpt_vecpar_alloc(struct iovec *, size_t len, size_t size);
 
 extern int mpt_vecpar_cktol(MPT_TYPE(dvecpar) *val, int len, int repeat, double def);
-extern int mpt_vecpar_property(MPT_TYPE(dvecpar) *val, MPT_STRUCT(property) *pr, MPT_INTERFACE(source) *);
+extern int mpt_vecpar_value(MPT_TYPE(dvecpar) *val, MPT_STRUCT(value) *pr, MPT_INTERFACE(source) *);
 extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *, MPT_INTERFACE(source) *);
 extern int mpt_nlspar_set(MPT_SOLVER_STRUCT(nlspar) *, MPT_INTERFACE(source) *);
 

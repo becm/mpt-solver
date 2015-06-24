@@ -65,7 +65,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
 	
 	if ((len = ida->ivp.neqs * (ida->ivp.pint + 1)) < 0) {
 		errno = EOVERFLOW;
-		return -1;
+		return -2;
 	}
 	if (!ida->sd.y && !(ida->sd.y = sundials_nvector_empty(len))) {
 		return IDA_MEM_NULL;
@@ -126,18 +126,18 @@ extern int sundials_ida_property(MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(propert
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = MPT_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
-		prop->val.fmt= 0; prop->val.ptr = version;
+		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;
 	}
 	
 	id = 0;
 	if (name ? !strcasecmp(name, "atol") : (pos == id++)) {
-		if (ida && (id = mpt_vecpar_property(&ida->atol, prop, src)) < 0) return id;
+		if (ida && (id = mpt_vecpar_value(&ida->atol, &prop->val, src)) < 0) return id;
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == id++)) {
-		if (ida && (id = mpt_vecpar_property(&ida->rtol, prop, src)) < 0) return id;
+		if (ida && (id = mpt_vecpar_value(&ida->rtol, &prop->val, src)) < 0) return id;
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

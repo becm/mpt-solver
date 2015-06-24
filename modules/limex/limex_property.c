@@ -21,7 +21,7 @@ static int setIvp(MPT_SOLVER_STRUCT(limex) *data, MPT_INTERFACE(source) *src)
 		MPT_SOLVER_STRUCT(ivppar) ivp = data->ivp;
 		int ret;
 		
-		if ((ret =  mpt_ivppar_set(&ivp, src)) < 0) {
+		if ((ret = mpt_ivppar_set(&ivp, src)) < 0) {
 			return ret;
 		}
 		mpt_limex_reset(data);
@@ -59,7 +59,9 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *data, MPT_INTERFACE(source) *sr
 				l3 = 0; data->iopt[8] = data->iopt[7];
 			}
 			return l1 + l2 + l3;
-		default:  errno = EINVAL; return -3;
+		default: 
+			errno = EINVAL;
+			return -2;
 	}
 }
 static int setStepSize(MPT_SOLVER_STRUCT(limex) *data, MPT_INTERFACE(source) *src)
@@ -79,10 +81,10 @@ static int setYS(MPT_SOLVER_STRUCT(limex) *data, MPT_INTERFACE(source) *src)
 	
 	if ((ny = data->ivp.neqs * (data->ivp.pint + 1)) < 0) {
 		errno = EOVERFLOW;
-		return -1;
+		return -2;
 	}
 	if (!(ys = mpt_vecpar_alloc(&data->ys, ny, sizeof(*ys)))) {
-		return -1;
+		return -2;
 	}
 	while ((curr = src->_vptr->conv(src, 'd', ys)) > 0) {
 		total += curr; ys++;
@@ -105,7 +107,7 @@ extern int mpt_limex_property(MPT_SOLVER_STRUCT(limex) *data, MPT_STRUCT(propert
 	if (!(name = prop->name)) {
 		if (src || ((pos = (intptr_t) prop->desc) < 0)) {
 			errno = EINVAL;
-			return -3;
+			return -1;
 		}
 	}
 	else if (!*name) {
@@ -124,12 +126,12 @@ extern int mpt_limex_property(MPT_SOLVER_STRUCT(limex) *data, MPT_STRUCT(propert
 	
 	id = 0;
 	if (name ? !strcasecmp(name, "atol") : pos == id++) {
-		if (data && (id = mpt_vecpar_property(&data->atol, prop, src)) < 0) return id;
+		if (data && (id = mpt_vecpar_value(&data->atol, &prop->val, src)) < 0) return id;
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if ( name ? !strcasecmp(name, "rtol") : pos == id++) {
-		if (data && (id = mpt_vecpar_property(&data->rtol, prop, src)) < 0) return id;
+		if (data && (id = mpt_vecpar_value(&data->rtol, &prop->val, src)) < 0) return id;
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}
@@ -215,5 +217,5 @@ extern int mpt_limex_property(MPT_SOLVER_STRUCT(limex) *data, MPT_STRUCT(propert
 	}
 	
 	errno = EINVAL;
-	return -3;
+	return -1;
 }

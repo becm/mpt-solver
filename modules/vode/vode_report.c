@@ -60,7 +60,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	pr.val.fmt = "G";
+	pr.val.fmt = "D";
 	pr.val.ptr = &rwk[12];
 	out(usr, &pr);
 	++line;
@@ -78,7 +78,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *data, int show, MPT_TY
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	pr.val.fmt = "G";
+	pr.val.fmt = "D";
 	pr.val.ptr = &rwk[10];
 	out(usr, &pr);
 	++line;

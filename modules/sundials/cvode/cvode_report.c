@@ -53,7 +53,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	    && (CVodeGetCurrentTime(data->mem, &dval) == CV_SUCCESS)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	pr.val.fmt = "G";
+	pr.val.fmt = "D";
 	pr.val.ptr = &dval;
 	out(usr, &pr);
 	++line;
@@ -74,7 +74,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	    && (CVodeGetLastStep(data->mem, &dval) == CV_SUCCESS)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	pr.val.fmt = "G";
+	pr.val.fmt = "D";
 	pr.val.ptr = &dval;
 	out(usr, &pr);
 	++line;

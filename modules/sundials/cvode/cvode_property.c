@@ -142,12 +142,12 @@ extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(prop
 	
 	id = 0;
 	if (name ? !strcasecmp(name, "atol") : (pos == id++)) {
-		if (cv && (id = mpt_vecpar_property(&cv->atol, prop, src)) < 0) return id;
+		if (cv && (id = mpt_vecpar_value(&cv->atol, &prop->val, src)) < 0) return id;
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == id++)) {
-		if (cv && (id = mpt_vecpar_property(&cv->rtol, prop, src)) < 0) return id;
+		if (cv && (id = mpt_vecpar_value(&cv->rtol, &prop->val, src)) < 0) return id;
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

@@ -6,8 +6,8 @@
 
 extern int getValues(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(source) *src)
 {
-	double	v1 = 0.0, v2, *dest;
-	int	len, pos, full;
+	double v1 = 0.0, v2, *dest;
+	int len, pos, full;
 	
 	if (!src) return val->base ? val->d.len/sizeof(double) : 0;
 	
@@ -41,14 +41,11 @@ extern int getValues(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(source) *src)
 	return pos;
 }
 
-extern int mpt_vecpar_property(MPT_TYPE(dvecpar) *tol, MPT_STRUCT(property) *pr, MPT_INTERFACE(source) *src)
+extern int mpt_vecpar_value(MPT_TYPE(dvecpar) *tol, MPT_STRUCT(value) *val, MPT_INTERFACE(source) *src)
 {
-	static const char name[] = "value";
-	static const char desc[] = "generic array value";
-	
 	int len = 0;
 	
-	if (!pr) {
+	if (!val) {
 		if (src && (len = getValues(tol, src)) < 0) return 0;
 		return tol->base ? tol->d.len / sizeof(double) : 0;
 	}
@@ -57,19 +54,16 @@ extern int mpt_vecpar_property(MPT_TYPE(dvecpar) *tol, MPT_STRUCT(property) *pr,
 		return -1;
 	}*/
 	
-	pr->name = name;
-	pr->desc = desc;
-	
 	if (src) len = getValues(tol, src);
 	
 	if (tol->base) {
 		static const char fmt[2] = { (char) (MPT_ENUM(TypeVector) | 'd') };
-		pr->val.fmt = fmt;
-		pr->val.ptr = &tol;
+		val->fmt = fmt;
+		val->ptr = tol;
 	} else {
 		static const char fmt[2] = "d";
-		pr->val.fmt = fmt;
-		pr->val.ptr = &tol->d.val;
+		val->fmt = fmt;
+		val->ptr = &tol->d.val;
 	}
 	return len;
 }

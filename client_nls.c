@@ -99,11 +99,10 @@ static int prepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(source) *args)
 	const struct NLS *nls = (void *) cl;
 	MPT_SOLVER_STRUCT(data) *dat;
 	MPT_SOLVER_STRUCT(nlsfcn) *ufcn;
-	MPT_SOLVER_STRUCT(nlspar) par;
 	MPT_INTERFACE(logger) *log = MPT_LOGGER((MPT_INTERFACE(metatype) *) cl->out);
 	MPT_SOLVER_INTERFACE *gen;
 	const MPT_INTERFACE_VPTR(Nls) *nctl;
-	int nval;
+	int32_t ret;
 	
 	if (!(gen = nls->sol)) {
 		mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("no solver assigned"));
@@ -122,23 +121,20 @@ static int prepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(source) *args)
 	nctl = (void *) gen->_vptr;
 	ufcn = nctl->ufcn(gen);
 	
-	if ((par.nval = mpt_conf_nls(dat, cl->conf->children, log)) < 0) {
+	if ((ret = mpt_conf_nls(dat, cl->conf->children, log)) < 0) {
 		mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("solver preparation failed"));
 		return -2;
 	}
 	/* call user init function */
-	if ((nval = nls->uinit(ufcn, dat, cl->out)) < 0) {
-		return nval;
+	if ((ret = nls->uinit(ufcn, dat, cl->out)) < 0) {
+		return ret;
 	}
-	if (dat->npar < nval) {
-		mpt_log(log, from, MPT_ENUM(LogError), "%s: %i < %i", MPT_tr("not enough parameter"), dat->npar, nval);
+	if (dat->nval < dat->npar) {
+		mpt_log(log, from, MPT_ENUM(LogError), "%s: %i < %i", MPT_tr("not enough parameters"), dat->nval, dat->npar);
 		return -2;
 	}
 	
-	if (nval) par.nval = nval;
-	par.nres = dat->nval;
-	
-	if (mpt_meta_set((void *) gen, 0, "ii", &par) <= 0) {
+	if (mpt_meta_set((void *) gen, 0, "ii", dat->npar, dat->nval) <= 0) {
 		mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("unable to save problem dimensions to solver"));
 		return -3;
 	}

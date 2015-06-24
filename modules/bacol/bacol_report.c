@@ -38,7 +38,7 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	pr.val.fmt = "d";
+	pr.val.fmt = "D";
 	pr.val.ptr = &data->ivp.last;
 	out(usr, &pr);
 	++lines;
