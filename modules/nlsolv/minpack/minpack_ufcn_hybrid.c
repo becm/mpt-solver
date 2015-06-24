@@ -51,6 +51,7 @@ extern int mpt_minpack_ufcn_hybrid(MPT_SOLVER_STRUCT(minpack) *mp)
 	}
 	switch (mp->solv) {
 	    case 0:
+		mp->solv = MPT_ENUM(MinpackHybrj);
 	    case MPT_ENUM(MinpackHybrj):
 		mp->fcn.hj = hybrj_fcn;
 		if (mp->ufcn->jac) break;
