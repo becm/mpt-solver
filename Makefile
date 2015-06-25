@@ -27,12 +27,11 @@ libinfo.o : base/libinfo.h base/version.h release.h
 include base/mpt.release.mk
 #
 # preocess solver modules
-.PHONY : modules_% examples_% examples
+.PHONY : modules_% examples_% examples examples_all
 devel : modules_devel
-examples : devel examples_all
-clear  : modules_clear examples_clear
-clean  : modules_clean examples_clean
-modules_% :
-	${MAKE} -C modules $(@:modules_%=%)
-examples_% :
-	${MAKE} -C examples $(@:examples_%=%)
+examples : examples_all
+examples_all : devel
+clear : modules_clear examples_clear
+clean : modules_clean examples_clean
+modules_% :;  ${MAKE} -C modules $(@:modules_%=%)
+examples_% :; ${MAKE} -C examples $(@:examples_%=%)
