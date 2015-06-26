@@ -42,9 +42,13 @@ extern int mpt_portn2_property(MPT_SOLVER_STRUCT(portn2) *data, MPT_STRUCT(prope
 	if (!prop) return (src && data) ? setNls(data, src) : MPT_ENUM(TypeSolver);
 	
 	if (!(name = prop->name)) {
-		if (src || ((pos = (intptr_t) prop->desc)) < 0) {
+		if (src) {
 			errno = EINVAL;
-			return -3;
+			return MPT_ERROR(BadOperation);
+		}
+		if ((pos = (intptr_t) prop->desc) < 0) {
+			errno = EINVAL;
+			return MPT_ERROR(BadArgument);
 		}
 	}
 	else if (!*name) {
@@ -63,6 +67,5 @@ extern int mpt_portn2_property(MPT_SOLVER_STRUCT(portn2) *data, MPT_STRUCT(prope
 	}
 	
 	errno = EINVAL;
-	
-	return -1;
+	return MPT_ERROR(BadArgument);
 }

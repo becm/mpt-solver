@@ -28,15 +28,15 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 	int len;
 	CVodeMem cv_mem = cv->mem;
 	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'k', &val)) < 0) return -2;
+	if ((len = src->_vptr->conv(src, 'k', &val)) < 0) return len;
 	if (!val) return -2;
 	if (*val && !len) len = strlen(val);
 	if (!len || !strncasecmp(adamsText, val, len)) {
-		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_ADAMS) return -4;
+		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_ADAMS) return MPT_ERROR(BadOperation);
 		cv_mem->cv_lmm  = CV_ADAMS; cv_mem->cv_qmax = ADAMS_Q_MAX;
 	}
 	else if (!strncasecmp(bdfText, val, len)) {
-		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_BDF) return -4;
+		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_BDF) return MPT_ERROR(BadOperation);
 		cv_mem->cv_lmm  = CV_BDF;   cv_mem->cv_qmax = BDF_Q_MAX;
 	}
 	return len;
@@ -48,7 +48,7 @@ static int setMaxOrd(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 	CVodeMem cv_mem = cv->mem;
 	if (!src) return 0;
 	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
-	else if (CVodeSetMaxOrd(cv->mem, len ? val : cv_mem->cv_qmax) < 0) return -2;
+	else if (CVodeSetMaxOrd(cv->mem, len ? val : cv_mem->cv_qmax) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setMaxNSteps(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
@@ -57,7 +57,7 @@ static int setMaxNSteps(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src
 	int len;
 	if (!src) return 0;
 	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
-	if (CVodeSetMaxNumSteps(cv->mem, len ? val : 0) < 0) return -2;
+	if (CVodeSetMaxNumSteps(cv->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setMaxHNil(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
@@ -66,7 +66,7 @@ static int setMaxHNil(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 	int len;
 	if (!src) return 0;
 	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
-	if (CVodeSetMaxHnilWarns(cv->mem, len ? val : 0) < 0) return -2;
+	if (CVodeSetMaxHnilWarns(cv->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setInitStep(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
@@ -75,7 +75,7 @@ static int setInitStep(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 	int len;
 	if (!src) return 0;
 	if ((len = src->_vptr->conv(src, 'd', &val)) < 0) return len;
-	if (CVodeSetInitStep(cv->mem, len ? val : 0) < 0) return -2;
+	if (CVodeSetInitStep(cv->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setMinStep(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
@@ -84,7 +84,7 @@ static int setMinStep(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 	int len;
 	if (!src) return 0;
 	if ((len = src->_vptr->conv(src, 'd', &val)) < 0) return len;
-	if (CVodeSetMinStep(cv->mem, len ? val : 0) < 0) return -2;
+	if (CVodeSetMinStep(cv->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setMaxStep(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
@@ -93,7 +93,7 @@ static int setMaxStep(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 	int len;
 	if (!src) return 0;
 	if ((len = src->_vptr->conv(src, 'd', &val)) < 0) return len;
-	if (CVodeSetMaxStep(cv->mem, len ? val : 0) < 0) return -2;
+	if (CVodeSetMaxStep(cv->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 
@@ -121,9 +121,13 @@ extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(prop
 		return (src && cv) ? setIvp(cv, src) : MPT_ENUM(TypeSolver);
 	}
 	if (!(name = prop->name)) {
-		if (src || ((pos = (intptr_t) prop->desc)) < 0) {
+		if (src) {
 			errno = EINVAL;
-			return -3;
+			return MPT_ERROR(BadOperation);
+		}
+		if ((pos = (intptr_t) prop->desc) < 0) {
+			errno = EINVAL;
+			return MPT_ERROR(BadArgument);
 		}
 	}
 	else if (!*name) {
@@ -140,24 +144,24 @@ extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(prop
 		return 0;
 	}
 	
-	id = 0;
-	if (name ? !strcasecmp(name, "atol") : (pos == id++)) {
+	id = -1;
+	if (name ? !strcasecmp(name, "atol") : (pos == ++id)) {
 		if (cv && (id = mpt_vecpar_value(&cv->atol, &prop->val, src)) < 0) return id;
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
-	if (name ? !strcasecmp(name, "rtol") : (pos == id++)) {
+	if (name ? !strcasecmp(name, "rtol") : (pos == ++id)) {
 		if (cv && (id = mpt_vecpar_value(&cv->rtol, &prop->val, src)) < 0) return id;
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}
-	if (name ? !strncasecmp(name, "jac", 3) : (pos == id++)) {
+	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
 		if (cv && (id = sundials_jacobian(&cv->sd, cv->ivp.neqs, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "jacobian type";
 		prop->val.fmt = "B"; prop->val.ptr = &cv->sd.jacobian;
 		return id;
 	}
-	if (name ? !strcasecmp(name, "method") : (pos == id++)) {
+	if (name ? !strcasecmp(name, "method") : (pos == ++id)) {
 		if (cv && (id = setMethod(cv, src)) < 0) return id;
 		prop->name = "method"; prop->desc = "solver method";
 		prop->val.fmt = prop->val.ptr = 0;
@@ -169,37 +173,37 @@ extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(prop
 		}
 		return id;
 	}
-	if (name ? !strcasecmp(name, "maxord") : (pos == id++)) {
+	if (name ? !strcasecmp(name, "maxord") : (pos == ++id)) {
 		if (cv && (id = setMaxOrd(cv, src)) < 0) return id;
 		prop->name = "maxord"; prop->desc = "maximum order of steps";
 		prop->val.fmt = "i"; prop->val.ptr = 0;
 		return id;
 	}
-	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) : (pos == id++)) {
+	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) : (pos == ++id)) {
 		if (cv && (id = setMaxNSteps(cv, src)) < 0) return id;
 		prop->name = "mxstep"; prop->desc = "allowed function evaluations per call";
 		prop->val.fmt = "l"; prop->val.ptr = cv_mem ? &cv_mem->cv_mxstep : 0;
 		return id;
 	}
-	if (name ? !strcasecmp(name, "hnilwarns") : (pos == id++)) {
+	if (name ? !strcasecmp(name, "hnilwarns") : (pos == ++id)) {
 		if (cv && (id = setMaxHNil(cv, src)) < 0) return id;
 		prop->name = "hnilwarns"; prop->desc = "max. warnings for 't + h == t'";
 		prop->val.fmt = "i"; prop->val.ptr = cv_mem ? &cv_mem->cv_mxhnil : 0;
 		return id;
 	}
-	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "hin") || !strcasecmp(name, "h0")) : (pos == id++)) {
+	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "hin") || !strcasecmp(name, "h0")) : (pos == ++id)) {
 		if (cv && (id = setInitStep(cv, src)) < 0) return id;
 		prop->name = "hin"; prop->desc = "initial stepsize";
 		prop->val.fmt = "d"; prop->val.ptr = cv_mem ? &cv_mem->cv_hin : 0;
 		return id;
 	}
-	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "stepmin")) : (pos == id++)) {
+	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "stepmin")) : (pos == ++id)) {
 		if (cv && (id = setMinStep(cv, src)) < 0) return id;
 		prop->name = "hmin"; prop->desc = "minimal stepsize";
 		prop->val.fmt = "d"; prop->val.ptr = cv_mem ? &cv_mem->cv_hmin : 0;
 		return id;
 	}
-	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) : (pos == id++)) {
+	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) : (pos == ++id)) {
 		if (cv && (id = setMaxStep(cv, src)) < 0) return id;
 		prop->name = "hmax"; prop->desc = "maximal stepsize";
 		prop->val.fmt= ""; prop->val.ptr = 0; /* saved as inverse */
@@ -207,6 +211,5 @@ extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(prop
 	}
 	
 	errno = EINVAL;
-	
-	return -1;
+	return MPT_ERROR(BadArgument);
 }

@@ -54,7 +54,7 @@ static int setKollocations(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source)
 	
 	if (!src) return data->kcol;
 	if ((len = src->_vptr->conv(src, 'i', &kcol)) < 0) return len;
-	if (kcol < 2 || kcol > 10) return -2;
+	if (kcol < 2 || kcol > 10) return MPT_ERROR(BadValue);
 	data->kcol = kcol;
 	return len;
 }
@@ -64,7 +64,7 @@ static int setIntervals(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source) *s
 	
 	if (!src) return data->nint;
 	if ((len = src->_vptr->conv(src, 'i', &nint)) < 0) return len;
-	if (nint < 2 || nint > data->nintmx) return -2;
+	if (nint < 2 || nint > data->nintmx) return MPT_ERROR(BadValue);
 	data->nint = nint;
 	return len;
 }
@@ -74,7 +74,7 @@ static int setMaxIntervals(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source)
 	
 	if (!src) return data->nintmx;
 	if ((len = src->_vptr->conv(src, 'i', &nintmx)) < 0) return len;
-	if (nintmx < data->nint) return -2;
+	if (nintmx < data->nint) return MPT_ERROR(BadValue);
 	data->nintmx = nintmx;
 	return len;
 }
@@ -100,7 +100,7 @@ static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(source) *src
 	    data->bd.cpar.iov_base = 0; data->bd.cpar.iov_len = 0;
 	    break;
 #endif
-	  default: return -2;
+	  default: return MPT_ERROR(BadValue);
 	}
 	return len;
 }
@@ -140,9 +140,12 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 	if (!prop) return (src && data) ? setIvp(data, src) : MPT_ENUM(TypeSolver);
 	
 	if (!(name = prop->name)) {
-		if (src || ((pos = (intptr_t) prop->desc)) < 0) {
+		if (src) {
+			return MPT_ERROR(BadOperation);
+		}
+		if ((pos = (intptr_t) prop->desc) < 0) {
 			errno = EINVAL;
-			return -3;
+			return MPT_ERROR(BadArgument);
 		}
 	}
 	else if (!*name) {
@@ -159,51 +162,51 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 		return 0;
 	}
 	
-	id = 0;
-	if (name ? !strcasecmp(name, "atol") : pos == id++) {
+	id = -1;
+	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
 		if (data && (id = mpt_vecpar_value(&data->atol, &prop->val, src)) < 0) return id;
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
-	if (name ? !strcasecmp(name, "rtol") : pos == id++) {
+	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		if (data && (id = mpt_vecpar_value(&data->rtol, &prop->val, src)) < 0) return id;
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}
 	/* bacol parameters */
-	if (name ? !strcasecmp(name, "kcol") : pos == id++) {
+	if (name ? !strcasecmp(name, "kcol") : pos == ++id) {
 		if (data && (id = setKollocations(data, src)) < 0) return id;
 		prop->name = "kcol"; prop->desc = "collocations per interval";
 		prop->val.fmt = "h"; prop->val.ptr = &data->kcol;
 		return id;
 	}
-	if (name ? !strcasecmp(name, "nint") : pos == id++) {
+	if (name ? !strcasecmp(name, "nint") : pos == ++id) {
 		if (data && (id = setIntervals(data, src)) < 0) return id;
 		prop->name = "nint"; prop->desc = "number of internal intervals";
 		prop->val.fmt = "i"; prop->val.ptr = &data->nint;
 		return id;
 	}
-	if (name ? !strcasecmp(name, "nintmx") : pos == id++) {
+	if (name ? !strcasecmp(name, "nintmx") : pos == ++id) {
 		if (data && (id = setMaxIntervals(data, src)) < 0) return id;
 		prop->name = "nintmx"; prop->desc = "maximum internal intervals";
 		prop->val.fmt = "i"; prop->val.ptr = &data->nintmx;
 		return id;
 	}
-	if (name ? !strcasecmp(name, "dirichlet") : pos == id++) {
+	if (name ? !strcasecmp(name, "dirichlet") : pos == ++id) {
 		if (data && (id = setDirichlet(data, src)) < 0) return id;
 		prop->name = "dirichlet"; prop->desc = "boundaries of dirichlet type";
 		prop->val.fmt = "i"; prop->val.ptr = &data->mflag.bdir;
 		return id;
 	}
 	/* ode parameter */
-	if (name ? !strcasecmp(name, "stepinit") : pos == id++) {
+	if (name ? !strcasecmp(name, "stepinit") : pos == ++id) {
 		if (data && (id = setStepInit(data, src)) < 0) return id;
 		prop->name = "stepinit"; prop->desc = "expl. initial stepsize";
 		prop->val.fmt = "d"; prop->val.ptr = &data->initstep;
 		return id;
 	}
 	/* solving backend */
-	if (name ? !strcasecmp(name, "backend") : pos == id++) {
+	if (name ? !strcasecmp(name, "backend") : pos == ++id) {
 		if (data && (id = setBackend(data, src)) < 0) return id;
 		prop->name = "backend"; prop->desc = "solver step backend";
 		prop->val.fmt = 0; prop->val.ptr = 0;
@@ -222,20 +225,20 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 #ifdef MPT_BACOL_DASSL
 	/* dassl parameter */
 	if (data->backend == 'd' || data->backend == 'D') {
-	if (name ? !strcasecmp(name, "tstop") : pos == id++) {
+	if (name ? !strcasecmp(name, "tstop") : pos == ++id) {
 		if (data && (id = setTStop(data, src)) < 0) return id;
 		prop->name = "tstop"; prop->desc = "max. time allowed";
 		prop->val.fmt = "d"; prop->val.ptr = &data->mflag.bdir;
 		return id;
 	}
 	/* dassl parameter */
-	if (name ? !strcasecmp(name, "maxstep") : pos == id++) {
+	if (name ? !strcasecmp(name, "maxstep") : pos == ++id) {
 		if (data && (id = setMaxStep(data, src)) < 0) return id;
 		prop->name = "maxstep"; prop->desc = "max. steps per call";
 		prop->val.fmt = "d"; prop->val.ptr = &data->bd.tstop;
 		return id;
 	}
-	if (name ? (!strcasecmp(name, "dasslbdf") || !strcasecmp(name, "bdf")) : pos == id++) {
+	if (name ? (!strcasecmp(name, "dasslbdf") || !strcasecmp(name, "bdf")) : pos == ++id) {
 		if (data && (id = setDasslBdf(data, src)) < 0) return id;
 		prop->name = "dasslbdf"; prop->desc = "max. number of BDF order";
 		prop->val.fmt = "i"; prop->val.ptr = &data->mflag.bdir;
@@ -244,5 +247,5 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 	}
 #endif
 	errno = EINVAL;
-	return -1;
+	return MPT_ERROR(BadArgument);
 }

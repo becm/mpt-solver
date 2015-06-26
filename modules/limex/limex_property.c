@@ -31,17 +31,17 @@ static int setIvp(MPT_SOLVER_STRUCT(limex) *data, MPT_INTERFACE(source) *src)
 }
 static int setJacobian(MPT_SOLVER_STRUCT(limex) *data, MPT_INTERFACE(source) *src)
 {
-	int	l1, l2, l3;
-	char	*key = "F";
+	char *key;
+	int l1, l2, l3;
 	
 	if (!src) return data->iopt[6];
 	
 	if ((l1 = src->_vptr->conv(src, 'k', &key)) < 0) {
-		return -2;
+		return l1;
 	}
-	if (!l1) return data->iopt[6] = 0;
+	if (!l1 || !key) return data->iopt[6] = 0;
 	
-	switch ( key[0] ) {
+	switch (key[0]) {
 		case 'F':
 			data->iopt[6] = 1;
 		case 'f':
@@ -61,7 +61,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *data, MPT_INTERFACE(source) *sr
 			return l1 + l2 + l3;
 		default: 
 			errno = EINVAL;
-			return -2;
+			return MPT_ERROR(BadValue);
 	}
 }
 static int setStepSize(MPT_SOLVER_STRUCT(limex) *data, MPT_INTERFACE(source) *src)
@@ -81,10 +81,10 @@ static int setYS(MPT_SOLVER_STRUCT(limex) *data, MPT_INTERFACE(source) *src)
 	
 	if ((ny = data->ivp.neqs * (data->ivp.pint + 1)) < 0) {
 		errno = EOVERFLOW;
-		return -2;
+		return MPT_ERROR(BadValue);
 	}
 	if (!(ys = mpt_vecpar_alloc(&data->ys, ny, sizeof(*ys)))) {
-		return -2;
+		return MPT_ERROR(BadOperation);
 	}
 	while ((curr = src->_vptr->conv(src, 'd', ys)) > 0) {
 		total += curr; ys++;
@@ -105,9 +105,13 @@ extern int mpt_limex_property(MPT_SOLVER_STRUCT(limex) *data, MPT_STRUCT(propert
 	if (!prop) return (data && src) ? setIvp(data, src) : MPT_ENUM(TypeSolver);
 	
 	if (!(name = prop->name)) {
-		if (src || ((pos = (intptr_t) prop->desc) < 0)) {
+		if (src) {
 			errno = EINVAL;
-			return -1;
+			return MPT_ERROR(BadOperation);
+		}
+		if ((pos = (intptr_t) prop->desc) < 0) {
+			errno = EINVAL;
+			return MPT_ERROR(BadArgument);
 		}
 	}
 	else if (!*name) {
@@ -149,61 +153,61 @@ extern int mpt_limex_property(MPT_SOLVER_STRUCT(limex) *data, MPT_STRUCT(propert
 	}
 	/* integer parameter */
 	if (name ? (!strcasecmp(name, "monitor") || !strcasecmp(name, "iopt1")) : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "monitor"; prop->desc = "integration monitor output";
 		prop->val.fmt = "i"; prop->val.ptr = data->iopt;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "solout") || !strcasecmp(name, "iopt3")) : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "solout"; prop->desc = "(intermediate) solution output";
 		prop->val.fmt = "i"; prop->val.ptr = data->iopt+2;
 		return id;
 	}
 	if (name ? (!strncasecmp(name, "bnos", 4) || !strcasecmp(name, "iopt5")) : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "bnosingular"; prop->desc = "B-matrix may not be singular";
 		prop->val.fmt = "i"; prop->val.ptr = data->iopt+4;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "jacreuse") || !strcasecmp(name, "iopt10")) : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "jacreuse"; prop->desc = "try to reuse jacobian";
 		prop->val.fmt = "i"; prop->val.ptr = data->iopt+9;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "single") || !strcasecmp(name, "iopt12")) : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "single"; prop->desc = "enable single step modes";
 		prop->val.fmt = "i"; prop->val.ptr = data->iopt+11;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "denseout") : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "denseout"; prop->desc = "dense output settings";
 		prop->val.fmt = "ii"; prop->val.ptr = data->iopt+12;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "tend") || !strcasecmp(name, "ropt3")) : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "tend"; prop->desc = "dense output settings";
 		prop->val.fmt = "d"; prop->val.ptr = data->ropt+2;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "plotjac") || !strcasecmp(name, "iopt18")) : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "plotjac"; prop->desc = "dense output settings";
 		prop->val.fmt = "i"; prop->val.ptr = data->iopt+17;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "maxstep") || !strcasecmp(name, "ropt1")) : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "ipos"; prop->desc = "maximum internal step size";
 		prop->val.fmt = "d"; prop->val.ptr = data->ropt;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "ipos") : pos == id++) {
-		if (src) return -1;
+		if (src) return MPT_ERROR(BadOperation);
 		prop->name = "ipos"; prop->desc = "maximum internal step size";
 		prop->val.fmt = "i"; prop->val.ptr = data->ipos.iov_base;
 		return id;
@@ -217,5 +221,5 @@ extern int mpt_limex_property(MPT_SOLVER_STRUCT(limex) *data, MPT_STRUCT(propert
 	}
 	
 	errno = EINVAL;
-	return -1;
+	return MPT_ERROR(BadArgument);
 }

@@ -26,7 +26,7 @@ static int setMaxOrd(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
 	int len;
 	if (!src) return 0;
 	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
-	if (IDASetMaxOrd(ida->mem, len ? val : 0) < 0) return -2;
+	if (IDASetMaxOrd(ida->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setMaxNSteps(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
@@ -34,8 +34,8 @@ static int setMaxNSteps(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
 	int64_t val;
 	int len;
 	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return -2;
-	if (IDASetMaxNumSteps(ida->mem, len ? val : 0) < 0) return -1;
+	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
+	if (IDASetMaxNumSteps(ida->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setInitStep(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
@@ -43,8 +43,8 @@ static int setInitStep(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
 	double val;
 	int len;
 	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'd', &val)) < 0) return -2;
-	if (IDASetInitStep(ida->mem, len ? val : 0) < 0) return -1;
+	if ((len = src->_vptr->conv(src, 'd', &val)) < 0) return len;
+	if (IDASetInitStep(ida->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setMaxStep(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
@@ -52,8 +52,8 @@ static int setMaxStep(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
 	double val;
 	int len;
 	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'd', &val)) < 0) return -2;
-	if (IDASetMaxStep(ida->mem, len ? val : 0) < 0) return -2;
+	if ((len = src->_vptr->conv(src, 'd', &val)) < 0) return len;
+	if (IDASetMaxStep(ida->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
@@ -68,10 +68,10 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
 		return -2;
 	}
 	if (!ida->sd.y && !(ida->sd.y = sundials_nvector_empty(len))) {
-		return IDA_MEM_NULL;
+		return MPT_ERROR(BadOperation);
 	}
 	if (!ida->yp && !(ida->yp = N_VClone(ida->sd.y))) {
-		return IDA_MEM_NULL;
+		return MPT_ERROR(BadOperation);
 	}
 	yp = N_VGetArrayPointer(ida->yp);
 	
@@ -111,9 +111,13 @@ extern int sundials_ida_property(MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(propert
 		return (src && ida) ? setIvp(ida, src) : MPT_ENUM(TypeSolver);
 	}
 	if (!(name = prop->name)) {
-		if (src || ((pos = (intptr_t) prop->desc) < 0)) {
+		if (src) {
 			errno = EINVAL;
-			return -3;
+			return MPT_ERROR(BadOperation);
+		}
+		if ((pos = (intptr_t) prop->desc) < 0) {
+			errno = EINVAL;
+			return MPT_ERROR(BadArgument);
 		}
 	}
 	else if (!*name) {
@@ -130,7 +134,7 @@ extern int sundials_ida_property(MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(propert
 		return 0;
 	}
 	
-	id = 0;
+	id = -1;
 	if (name ? !strcasecmp(name, "atol") : (pos == id++)) {
 		if (ida && (id = mpt_vecpar_value(&ida->atol, &prop->val, src)) < 0) return id;
 		prop->name = "atol"; prop->desc = "absolute tolerances";
@@ -180,6 +184,5 @@ extern int sundials_ida_property(MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(propert
 	}
 	
 	errno = EINVAL;
-	
-	return -1;
+	return MPT_ERROR(BadArgument);
 }

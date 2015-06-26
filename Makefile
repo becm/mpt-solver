@@ -28,9 +28,9 @@ include base/mpt.release.mk
 #
 # preocess solver modules
 .PHONY : modules_% examples_% examples examples_all
-devel : modules_devel
-examples : examples_all
-examples_all : devel
+all : shared modules_shared
+test : examples_test
+examples_test : devel modules_shared
 clear : modules_clear examples_clear
 clean : modules_clean examples_clean
 modules_% :;  ${MAKE} -C modules $(@:modules_%=%)
