@@ -3,9 +3,11 @@
 TESTS ?= ${PROGS}
 #
 # include general example rules
-include $(dir $(lastword $(MAKEFILE_LIST)))../base/examples/mpt.example.mk
+DIR_TOP = ${MPT_PREFIX}
+include $(dir $(lastword $(MAKEFILE_LIST)))../base/examples/example.mk
 CLEAR_FILES += $(TESTS:%=%.out)
 #
-# default libraries for solver examples
-libs = solver io
-LDLIBS ?= $(libs:%=-lmpt%)
+# default libraries for static/shared builds
+${STATIC} : libs=mptsolver mpt dl
+${PROGS} : libs=mptsolver mptio
+LDLIBS ?= $(libs:%=-l%)

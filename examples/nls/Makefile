@@ -3,13 +3,11 @@
 PROGS = neter
 OBJS  = main.o $(PROGS:%=%.o)
 
-# general creation rules
-all : ${PROGS}
-
 # general targets and definitions
 include ../solver.example.mk
 
-${PROGS} : main.o
+${PROGS} ${STATIC} : main.o
 
-neter : LDLIBS+= -lm
 neter : neter.o
+neter neter_static : LDLIBS+=-lm
+test_neter : ARGS=neter.conf
