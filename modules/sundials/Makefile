@@ -4,7 +4,7 @@ SOL ?= both
 #
 # additional build flags
 # DEFINES += SUNDIALS_WITH_LAPACK=1
-DIR_SUNDIALS ?= ${DIR_MATH}/sundials-2.6.1/build
+DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-2.6.1/build
 sundials_elements = cvode ida kinsol nvec_ser
 INC = . ${MPT_PREFIX}/include ${DIR_SUNDIALS}/include/
 #
@@ -24,7 +24,7 @@ ida_sources      = $(wildcard ida/ida_*.c)
 
 SRCS := ${sundials_sources} ${cvode_sources} ${ida_sources}
 
-MATH_OBJS = $(shell ./sundials_collect.sh "${DIR_SUNDIALS}" ${sundials_elements})
+MATH_OBJS != ./sundials_collect.sh "${DIR_SUNDIALS}" ${sundials_elements}
 #
 # headers to export
 HEADER = sundials.h

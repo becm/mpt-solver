@@ -11,20 +11,21 @@ HEADER = solver.h
 SHLIB_MAJOR = 1
 SHLIB_MINOR = 0
 SHLIB_TEENY = 0
-SHLIB_OBJS := libinfo.o
+SHLIB_OBJS = libinfo.o ${OBJS}
 LDLIBS = -lmptio -lmptplot -lmptcore -ldl
 #
 # source summary
 SRCS := $(wildcard util/*.c) client_ivp.c client_nls.c
 #
 # import library creation settings
-include base/mpt.lib.mk
+DIR_TOP = ${MPT_PREFIX}
+include base/lib.mk
+# release information
+include base/release.mk
 #
 # additional dependencies
 libinfo.o : base/libinfo.h base/version.h release.h
-#
-# release information
-include base/mpt.release.mk
+CLEAN_FILES += libinfo.o
 #
 # preocess solver modules
 .PHONY : modules_% examples_% examples examples_all
