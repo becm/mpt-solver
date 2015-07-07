@@ -10,7 +10,7 @@ HEADER ?= ${LIB}.h
 DIR_SOLVER := $(dir $(lastword $(MAKEFILE_LIST)))
 #
 # add core to global include
-INC += ${DIR_SOLVER} ${DIR_BASE} ${DIR_BASE}mptcore
+INC += ${DIR_SOLVER}.. ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and shared objects
 src_gen = vecpar_alloc.c vecpar_value.c

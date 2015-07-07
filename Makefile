@@ -31,6 +31,7 @@ CLEAN_FILES += libinfo.o
 .PHONY : modules_% examples_% examples examples_all
 all : shared modules_shared
 test : examples_test
+install : modules_install
 examples_test : devel modules_shared
 clear : modules_clear examples_clear
 clean : modules_clean examples_clean

@@ -22,9 +22,8 @@ OBJS = $(SRCS:%.c=%.o)
 CPPFLAGS += -I ${DIR_BASE}/mptcore
 #
 # general library rules
-.PHONY : ${SOLVER} shared distclean header static clear_static
-shared : ${SOLVER}
-shared : EXVAR+=shared
+.PHONY : static clear_static
+install : static
 clear  : clear_static
 
 clear_static :
@@ -37,12 +36,10 @@ static :
 	${AR} s "${DIR_LIB}/lib${LIB}.a"
 
 ${OBJS} : ${HEADER}
-
-${SOLVER} :
-	@cd ${@} && ${MAKE} ${EXVAR}
 #
 # pass target to solver makefiles
-.DEFAULT header clear :
+.PHONY : install header clear
+.DEFAULT install header clear :
 	@for i in ${SOLVER}; do \
-		if ! ${MAKE} -C "$${i}" ${@} ${EXVAR}; then break ; fi ; \
+		if ! ${MAKE} -C "$${i}" ${@}; then break ; fi ; \
 	done

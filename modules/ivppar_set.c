@@ -13,8 +13,8 @@ extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *ivp, MPT_INTERFACE(source) 
 	
 	if (!src) {
 		l1 = 0;
-		if (ivp->neqs < 0) return MPT_ENUM(BadArgument);
-		if (ivp->pint < 0) return MPT_ENUM(BadValue);
+		if (ivp->neqs < 0) return MPT_ERROR(BadArgument);
+		if (ivp->pint < 0) return MPT_ERROR(BadValue);
 		if (ivp->neqs != 1)   l1 |= 1;
 		if (ivp->pint != 0)   l1 |= 2;
 		if (ivp->last != 0.0) l1 |= 4;
@@ -23,7 +23,7 @@ extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *ivp, MPT_INTERFACE(source) 
 	if ((l1 = src->_vptr->conv(src, 'i', &l2)) > 0) {
 		int32_t pi;
 		if (l2 == 0) {
-			return MPT_ENUM(BadValue);
+			return MPT_ERROR(BadValue);
 		}
 		if (l2 > 0) {
 			ivp->neqs = l2;

@@ -3,6 +3,7 @@
 DIRS  = ode dae pde nls bacol
 PROGS = config
 TESTS =
+OBJS  = $(PROGS:%=%.o)
 
 include solver.example.mk
 

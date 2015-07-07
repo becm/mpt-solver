@@ -1,6 +1,6 @@
 # mpt solver package configuration
 version=2015.02
-prefix=${pc_top_builddir} # /opt/mpt-${version}
+prefix=${pc_top_builddir}
 arch=x86_64
 sys=linux-gnu
 libdir=${prefix}/lib/${arch}-${sys}

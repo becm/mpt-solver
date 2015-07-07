@@ -20,24 +20,28 @@
 
 int wrap_fw(void *out, MPT_STRUCT(property) *pr)
 {
+	const uint8_t *data;
+	const char *fmt;
 	char buf[64];
 	
 	fwrite(pr->name, strlen(pr->name), 1, out);
 	fwrite(" =", 2, 1, out);
 	
-	if (!pr->val.fmt) {
+	data = pr->val.ptr;
+	if (!(fmt = pr->val.fmt)) {
 		fputc(' ', out);
-		fwrite(pr->val.ptr, strlen(pr->val.ptr), 1, out);
+		fwrite(data, strlen((char *) data), 1, out);
 		fputc('\n', out);
 		return 0;
 	}
 	
-	while (*pr->val.fmt) {
+	while (*fmt) {
 		int len;
 		fputc(' ', out);
-		if ((len = mpt_data_print(buf, sizeof(buf), *(pr->val.fmt++), &pr->val.ptr)) < 0) {
+		if ((len = mpt_data_print(buf, sizeof(buf), *fmt, data)) < 0) {
 			return -1;
 		}
+		data += mpt_valsize(*fmt++);
 		fwrite(buf, len, 1, out);
 	}
 	fputc('\n', out);
