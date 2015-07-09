@@ -43,3 +43,4 @@ ${OBJS} : ${HEADER}
 	@for i in ${SOLVER}; do \
 		if ! ${MAKE} -C "$${i}" ${@}; then break ; fi ; \
 	done
+#
