@@ -9,6 +9,9 @@ void derivf_(
 	int *npde)
 {
 	double t1, t2, t4;
+	
+	(void) t; (void) x; (void) ux; (void) uxx; (void) npde;
+	
 	t1 = 1. - u[2] - u[3];
 	t2 = t1 * t1;
 	t4 = -30. * u[0] -1.5 -1000. * u[3] * t2 + 2000. * u[2] * u[3] * t1;
@@ -79,6 +82,7 @@ void difbxa_(
 	double *dbdt,
 	int *npde)
 {
+	(void) t; (void) u; (void) ux; (void) npde;
 	
 	dbdu[0] = -100.;
 	dbdu[4] = 0.;
@@ -133,6 +137,7 @@ void difbxb_(
 	double *dbdt,
 	int *npde)
 {
+	(void) t; (void) u; (void) ux; (void) npde;
 	
 	dbdu[0] = 0.;
 	dbdu[4] = 0.;
@@ -181,6 +186,8 @@ void difbxb_(
 }
 void bndxa_(double *t, double *u, double *ux, double *bval, int *npde)
 {
+	(void) t; (void) npde;
+	
 	bval[0] = ux[0] + 100. * (2. - .96 - u[0]);
 	bval[1] = ux[1] + 100. * (.96 - u[1]);
 	bval[2] = ux[2];
@@ -188,6 +195,8 @@ void bndxa_(double *t, double *u, double *ux, double *bval, int *npde)
 }
 void bndxb_(double *t, double *u, double *ux, double *bval, int *npde)
 {
+	(void) t; (void) u; (void) npde;
+	
 	bval[0] = ux[0];
 	bval[1] = ux[1];
 	bval[2] = ux[2];
@@ -195,6 +204,8 @@ void bndxb_(double *t, double *u, double *ux, double *bval, int *npde)
 }
 void uinit_(double *x, double *u, int *npde)
 {
+	(void) x; (void) u; (void) npde;
+	
 	u[0] = 1.04;
 	u[1] = 0.96;
 	u[2] = 0.0;
@@ -208,6 +219,8 @@ void f_(
 	int *npde)
 {
 	double t1, t2;
+	
+	(void) t; (void) x; (void) npde;
 	
 	t1 = 1. - u[2] - u[3];
 	t2 = t1 * t1;

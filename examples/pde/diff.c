@@ -6,6 +6,8 @@ static double *grid, *param, diff;
 
 static int rfcn(int npde, double t, const double *u, double x, double *f, double *d, double *v)
 {
+	(void) npde; (void) t; (void) u; (void) x;
+	
 	d[0] = diff;
 	v[0] = 0;
 	f[0] = 0;
@@ -44,6 +46,8 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	int npde = 1;
+	
+	(void) out;
 	
 	usr->fcn = rs_pde;
 	

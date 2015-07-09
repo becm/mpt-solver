@@ -5,13 +5,13 @@ LIB = mpt_solvers
 #
 # include global configuration
 DIR_TOP = ${MPT_PREFIX}
-include ../base/config.mk
+DIR_INC = ${MPT_PREFIX}/include/mpt
+include ../base/mpt.config.mk
 #
 SOLIVP = vode daesolv limex bacol
 SOLVER = ${SOLIVP} nlsolv nlblas sundials
 #
 # headers to export
-DIR_INC = ${MPT_PREFIX}/include/mpt
 HEADER = solver.h
 #
 # vecpar and share objects

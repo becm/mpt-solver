@@ -9,6 +9,8 @@ static int rfcn(int n, double t, const double *u, double x, double *f, double *d
 {
 	double fg;
 	
+	(void) n; (void) t; (void) x;
+	
 	d[0] = 1;
 	d[1] = 1/L;
 	
@@ -55,6 +57,8 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	int npde = 2;
+	
+	(void) out;
 	
 	usr->fcn = rs_pde;
 	

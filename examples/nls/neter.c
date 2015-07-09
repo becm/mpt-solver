@@ -33,6 +33,8 @@ static int deriv(void *udata, const double *x, double *jac, const int *lj, const
 	const double *u = udata;
 	int i, nres, ljac;
 	
+	(void) res;
+	
 	ljac = lj[0]; /* lenth of jacobian row */
 	nres = lj[1]; /* number of residuals */
 	i    = lj[2]; /* number of parameters */
@@ -48,6 +50,8 @@ static int deriv(void *udata, const double *x, double *jac, const int *lj, const
 int user_init(MPT_SOLVER_STRUCT(nlsfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	double *u;
+	
+	(void) out;
 	
 	u = mpt_data_grid(sd, 0);
 	u += sd->nval;

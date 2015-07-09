@@ -23,6 +23,8 @@ static int rs_akzo(void *udata, const double *t, const double *y, double *f)
 {
 	double Fin, r1, r2, r3, r4, r5, qy0, ry1;
 	
+	(void) udata; (void) t;
+	
 	if (y[1] < 0) {
 		fprintf(stderr, "Fehler: y(2) ist kleiner als 0\n");
 		return 1;
@@ -55,6 +57,8 @@ static int bm_akzo(void *udata, const double *t, const double *y, double *b, int
 {
 	int i, n = 5;
 	
+	(void) udata; (void) t; (void) y;
+	
 	for (i = 0; i < n; i++) {
 		idrow[i] = i;
 		idcol[i] = i;
@@ -66,6 +70,8 @@ static int bm_akzo(void *udata, const double *t, const double *y, double *b, int
 int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	double *param;
+	
+	(void) out;
 	
 	usr->fcn = rs_akzo;
 	usr->mas = bm_akzo;

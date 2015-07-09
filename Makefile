@@ -19,9 +19,10 @@ SRCS := $(wildcard util/*.c) client_ivp.c client_nls.c
 #
 # import library creation settings
 DIR_TOP = ${MPT_PREFIX}
-include base/lib.mk
+DIR_INC = ${DIR_TOP}/include/mpt
+include base/mpt.lib.mk
 # release information
-include base/release.mk
+include base/mpt.release.mk
 #
 # additional dependencies
 libinfo.o : base/libinfo.h base/version.h release.h

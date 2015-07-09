@@ -61,6 +61,8 @@ extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd
 {
 	int npde = 2;
 	
+	(void) out;
+	
 	usr->fcn = rs_pde;
 	
 	param = mpt_data_param(sd);

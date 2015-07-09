@@ -28,22 +28,24 @@ ifeq (${SOL}, both)
   src_type = ${src_nls} ${src_ivp} ${src_gen}
 endif
 #
-# compiler flags for math objects
-FFLAGS ?= -fpic -O5 -Wall
 # math objects in different location
 MATH_OBJS ?= $(MATH:%=${DIR_MATH}/%)
 # object collections
 default_objects = ${OBJS} $(src_type:%.c=${DIR_SOLVER}%.o) ${MATH_OBJS}
 STATIC_OBJS ?= ${default_objects}
 SHLIB_OBJS ?= libinfo.o ${default_objects}
-
-include ${DIR_SOLVER}../base/lib.mk
-
+#
+# import library creation
+include ${DIR_SOLVER}../base/mpt.lib.mk
+# compiler flags for FORTRAN math objects
+FFLAGS ?= -fpic -O5 -Wall -fstack-protector
+#
+# additional object dependancies
 ${OBJS} : ${DIR_SOLVER}../solver.h
 libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h release.h
 #
 # release information
-include ${DIR_BASE}release.mk
+include ${DIR_BASE}mpt.release.mk
 #
 # additional service targets
 .PHONY : clean_math
@@ -51,3 +53,4 @@ clean_math :
 	${RM} ${MATH_OBJS}
 
 distclean : clean_math
+#

@@ -11,6 +11,8 @@ static int rh_side(void *udata, const double *t, const double *y, double *f)
 {
 	double qy0 = y[0] * y[0];
 	
+	(void) udata; (void) t;
+	
 	f[0] = -(theta[0] +theta[2]) * qy0;
 	f[1] = theta[0] * qy0 - theta [1] * y[1];
 	
@@ -21,6 +23,8 @@ extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd
 {
 	double *param;
 	int i, n;
+	
+	(void) out;
 	
 	usr->fcn = rh_side;
 	

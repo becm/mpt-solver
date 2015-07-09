@@ -49,7 +49,7 @@ int wrap_fw(void *out, MPT_STRUCT(property) *pr)
 	return 0;
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
 	const char txt[] = "load: ";
 	char buf[128];
