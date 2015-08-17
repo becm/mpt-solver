@@ -30,10 +30,12 @@ endif
 #
 # math objects in different location
 MATH_OBJS ?= $(MATH:%=${DIR_MATH}/%)
+MATH_OBJS_STATIC ?= ${MATH_OBJS}
+MATH_OBJS_SHARED ?= ${MATH_OBJS}
 # object collections
-default_objects = ${OBJS} $(src_type:%.c=${DIR_SOLVER}%.o) ${MATH_OBJS}
-STATIC_OBJS ?= ${default_objects}
-SHLIB_OBJS ?= libinfo.o ${default_objects}
+default_objects = ${OBJS} $(src_type:%.c=${DIR_SOLVER}%.o)
+STATIC_OBJS ?= ${default_objects} ${MATH_OBJS_STATIC}
+SHLIB_OBJS ?= libinfo.o ${default_objects} ${MATH_OBJS_SHARED}
 #
 # import library creation
 include ${DIR_SOLVER}../base/mpt.lib.mk

@@ -2,12 +2,13 @@
 # collect sundials objects created by CMake
 
 # sundials objects base
-sundials_base="$1"
-if [ -z "$sundials_base" ]; then \
+if [ -z "${DIR_SUNDIALS}" ]; then \
   printf '%s\n' 'missing SUNDIALS base directory' 1>&2
   exit 1
 fi
-shift
+
+# target type
+[ -z "${LIBRARY_TYPE}" ] && LIBRARY_TYPE="shared"
 
 # elements to include
 if [ $# -lt 1 ]; then \
@@ -22,7 +23,13 @@ objs=`tempfile --prefix='sun_'`
 
 # loop over objects to include
 for d in "$@"; do \
-  for f in `find ${sundials_base}/src/${d} -name '*.c.o'`; do \
+  case "$d" in
+    nvec_ser)      s="nvecserial";;
+    nvec_openmp)   s="nvecopenmp";;
+    nvec_pthreads) s="nvecopenmp";;
+    *) s="$d";;
+  esac
+  for f in `find "${DIR_SUNDIALS}/src/${d}/CMakeFiles/sundials_${s}_${LIBRARY_TYPE}.dir" -name '*.c.o'`; do \
 # no objects hash file
     if [ ! -r "${objs}" ]; then \
       sha256sum "$f" > "${objs}"
@@ -35,11 +42,10 @@ for d in "$@"; do \
       continue
     fi
 # check for object collisions
-    ohash=`sha256sum "$f" | cut -f 1 -d ' '`
-    fhash=`printf '%s' "$o" | cut -f 1 -d ' '`
+    fhash=`sha256sum "$f" | cut -f 1 -d ' '`
+    ohash=`printf '%s' "$o" | cut -f 1 -d ' '`
     if [ "x${fhash}" != "x${ohash}" ]; then \
-      printf '%s\n%s\n' "${ohash}" "${fhash}"
-      printf '%s: %s\n' 'conflicting objects' "$o" 1>&2
+      printf '%s:\n%s >\n%s  %s\n' 'conflicting objects' "$o" "${fhash}" "$f" 1>&2
       exit 1
     fi
   done
