@@ -15,10 +15,10 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *data, int show, MP
 	double *rwk = data->rwork.iov_base;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
-	pr.name = "method";
+	pr.name = "jacobian";
 	pr.desc = MPT_tr("method for jacobian");
 	if (data->jbnd) {
-		struct { const char *t; int mu, ml; } val;
+		struct { const char *t; int32_t mu, ml; } val;
 		val.t = (data->jac && !data->jnum) ? "banded(user)" : "banded";
 		val.t = MPT_tr(val.t);
 		val.ml = data->mbnd[0]; val.mu = data->mbnd[0];
@@ -73,14 +73,14 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *data, int show, MP
 	}
 	
 	pr.name = "feval";
-	pr.desc = MPT_tr("f evaluations");
+	pr.desc = MPT_tr("function evaluations");
 	pr.val.fmt = "i";
 	pr.val.ptr = &iwk[6];
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jeval";
-	pr.desc = MPT_tr("Jacobian evaluations");
+	pr.desc = MPT_tr("jacobian evaluations");
 	pr.val.fmt = "i";
 	pr.val.ptr = &iwk[7];
 	out(usr, &pr);

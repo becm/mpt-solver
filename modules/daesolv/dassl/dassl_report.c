@@ -12,7 +12,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	int line =  0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
-	struct { const char *jac, *val; int ml, mu; } d;
+	struct { const char *jac, *val; int32_t ml, mu; } d;
 	
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";

@@ -14,10 +14,10 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
-	struct { const char *type; int ml, mu; } miter;
+	struct { const char *type; int32_t ml, mu; } miter;
 	int neqs;
 	
-	pr.name = "method";
+	pr.name = "jacobian";
 	pr.desc = MPT_tr("method for jacobian");
 	pr.val.fmt = "s";
 	pr.val.ptr = &miter;

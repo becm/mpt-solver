@@ -173,7 +173,7 @@ static int wrapReport(void *ptr, MPT_STRUCT(property) *pr)
 	vec.iov_base = buf;
 	vec.iov_len  = sizeof(buf) - 1;
 	
-	if ((len = mpt_tostring(&pr->val, appendString, &vec)) <= 0) {
+	if ((len = mpt_tostring(&pr->val, appendString, &vec)) < 0) {
 		return len;
 	}
 	++vec.iov_len;

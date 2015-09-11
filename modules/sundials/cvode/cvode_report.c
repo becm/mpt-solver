@@ -85,7 +85,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	if (CVodeGetNumRhsEvals(data->mem, &lval) == CV_SUCCESS) {
 	val = lval;
 	pr.name = "feval";
-	pr.desc = MPT_tr("f evaluations");
+	pr.desc = MPT_tr("function evaluations");
 	pr.val.fmt = "l";
 	pr.val.ptr = &val;
 	out(usr, &pr);

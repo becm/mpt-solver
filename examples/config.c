@@ -36,13 +36,19 @@ int wrap_fw(void *out, MPT_STRUCT(property) *pr)
 	}
 	
 	while (*fmt) {
-		int len;
+		int len, add;
 		fputc(' ', out);
 		if ((len = mpt_data_print(buf, sizeof(buf), *fmt, data)) < 0) {
 			return -1;
 		}
-		data += mpt_valsize(*fmt++);
 		fwrite(buf, len, 1, out);
+		
+		if ((add = mpt_valsize(*fmt++)) < 0) {
+			break;
+		}
+		if (!add) add = sizeof(void *);
+		
+		data += add;
 	}
 	fputc('\n', out);
 	

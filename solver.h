@@ -373,7 +373,7 @@ extern int mpt_solver_info  (const MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger)
 extern int mpt_solver_status(const MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern int mpt_solver_report(const MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 /* final solver statistics */
-extern void mpt_solver_statistics(MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) *, const struct timeval *, const struct timeval *);
+extern void mpt_solver_statistics(const MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) *, const struct timeval *, const struct timeval *);
 
 
 /* solver module data management */
