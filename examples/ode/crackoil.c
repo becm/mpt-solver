@@ -13,8 +13,8 @@ static int rh_side(void *udata, const double *t, const double *y, double *f)
 	
 	(void) udata; (void) t;
 	
-	f[0] = -(theta[0] +theta[2]) * qy0;
-	f[1] = theta[0] * qy0 - theta [1] * y[1];
+	f[0] = -(theta[0] + theta[2]) * qy0;
+	f[1] = theta[0] * qy0 - theta[1] * y[1];
 	
 	return 0;
 }

@@ -65,10 +65,10 @@ static int initNLS(MPT_INTERFACE(client) *cl)
 		if (mpt_library_bind(&nls->pr, a ? a : conf, log) < 0) {
 			return -1;
 		}
-	}
-	if (!(nls->sol = nls->pr._mt->_vptr->typecast(nls->pr._mt, MPT_ENUM(TypeSolver)))) {
-		(void) mpt_log(log, 0, MPT_ENUM(LogError), "%s: %s", MPT_tr("solver"), conf);
-		return -2;
+		if (!(nls->sol = nls->pr._mt->_vptr->typecast(nls->pr._mt, MPT_ENUM(TypeSolver)))) {
+			(void) mpt_log(log, from, MPT_ENUM(LogError), "%s: %s", MPT_tr("no solver"), conf);
+			return -2;
+		}
 	}
 	conf = mpt_meta_typename((void *) nls->sol);
 	

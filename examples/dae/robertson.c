@@ -6,7 +6,6 @@
 #include <mpt/solver.h>
 
 static double *param;
-static int npar;
 
 /* DY(i)/DY(j) */
 int rh_side(void *udata, const double *t, const double *y, double *f)
@@ -67,7 +66,7 @@ int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_I
 	
 	param = mpt_data_param(sd);
 	
-	if ((npar = sd->npar) < 3) return -1;
+	if (sd->npar < 3) return -1;
 	
 	return 3;
 }

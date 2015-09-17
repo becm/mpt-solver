@@ -68,10 +68,10 @@ static int initIVP(MPT_INTERFACE(client) *cl, int type)
 		if (mpt_library_bind(&ivp->pr, a ? a : conf, log) < 0) {
 			return -1;
 		}
-	}
-	if (!(ivp->sol = ivp->pr._mt->_vptr->typecast(ivp->pr._mt, MPT_ENUM(TypeSolver)))) {
-		(void) mpt_log(log, 0, MPT_ENUM(LogError), "%s: %s", MPT_tr("solver"), conf);
-		return -2;
+		if (!(ivp->sol = ivp->pr._mt->_vptr->typecast(ivp->pr._mt, MPT_ENUM(TypeSolver)))) {
+			(void) mpt_log(log, from, MPT_ENUM(LogError), "%s: %s", MPT_tr("no solver"), conf);
+			return -2;
+		}
 	}
 	conf = mpt_meta_typename((void *) ivp->sol);
 	

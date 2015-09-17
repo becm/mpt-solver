@@ -12,22 +12,28 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
+	static const char lm[] = "levenberg-marquardt";
 	const char *solv = "powell hybrid", *jac = "numeric";
 	
 	switch (mpack->solv) {
-	    case 0: return 0;
+	    case 0:
+		if (mpack->nls.nres != mpack->nls.nval) {
+			solv = lm;
+		}
+		break;
 	    case MPT_ENUM(MinpackHybrd):
-		if (mpack->mu < mpack->nls.nres || mpack->ml < mpack->nls.nres)
+		if (mpack->mu < mpack->nls.nres || mpack->ml < mpack->nls.nres) {
 			jac = "banded";
+		}
 		break;
 	    case MPT_ENUM(MinpackHybrj): jac = "user"; break;
-	    case MPT_ENUM(MinpackLmDif): solv = "levenberg-marquardt"; break;
-	    case MPT_ENUM(MinpackLmDer): solv = "levenberg-marquardt"; jac = "user"; break;
-	    case MPT_ENUM(MinpackLmStr): solv = "levenberg-marquardt"; jac = "columnwise user"; break;
+	    case MPT_ENUM(MinpackLmDif): solv = lm; break;
+	    case MPT_ENUM(MinpackLmDer): solv = lm; jac = "user"; break;
+	    case MPT_ENUM(MinpackLmStr): solv = lm; jac = "columnwise user"; break;
 	    default:
-		errno = EINVAL; return -1;
+		errno = EINVAL;
+		return -1;
 	}
-	
 	pr.name = "method";
 	pr.desc = MPT_tr("minpack solver type");
 	pr.val.fmt = 0;
@@ -46,7 +52,7 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	
 	
 	pr.name = "feval";
-	pr.desc = MPT_tr("f evaluations");
+	pr.desc = MPT_tr("function evaluations");
 	pr.val.fmt = "i";
 	pr.val.ptr = &mpack->nfev;
 	out(usr, &pr);

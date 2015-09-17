@@ -11,20 +11,20 @@
 extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
+	int32_t val;
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
 	struct { const char *type; int32_t ml, mu; } miter;
-	int neqs;
 	
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("method for jacobian");
 	pr.val.fmt = "s";
 	pr.val.ptr = &miter;
 	
-	neqs = data->ivp.neqs * (data->ivp.pint + 1);
+	val = data->ivp.neqs * (data->ivp.pint + 1);
 	
-	if ((miter.ml = data->mljac) >= 0 && miter.ml < neqs) {
+	if ((miter.ml = data->mljac) >= 0 && miter.ml < val) {
 		miter.mu   = data->mujac;
 		miter.type = data->jac ? "banded(user)" : "banded";
 		pr.val.fmt = "sii";
@@ -49,7 +49,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	pr.name = "n";
 	pr.desc = "integration steps";
 	pr.val.fmt = "i";
-	pr.val.ptr = &data->count.st.nsteps;
+	pr.val.ptr = &val; val = data->count.st.nsteps;
 	out(usr, &pr);
 	++line;
 	}
@@ -63,35 +63,37 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	++line;
 	}
 	
-	if (!(show & MPT_SOLVER_ENUM(Report)))
+	if (!(show & MPT_SOLVER_ENUM(Report))) {
 		return line;
+	}
 	
 	if (data->count.st.nsteps != data->count.st.naccpt) {
 		pr.name = "nacc";
 		pr.desc = MPT_tr("accepted steps");
 		pr.val.fmt = "i";
-		pr.val.ptr = &data->count.st.naccpt;
+		pr.val.ptr = &val; val = data->count.st.naccpt;
 		out(usr, &pr);
 		++line;
 	}
 	pr.name = "feval";
-	pr.desc = MPT_tr("f evaluations");
+	pr.desc = MPT_tr("function evaluations");
 	pr.val.fmt = "i";
-	pr.val.ptr = &data->count.st.nfev;
+	pr.val.ptr = &val; val = data->count.st.nfev;
+	if (val < 0) val = 0;
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jeval";
-	pr.desc = MPT_tr("Jacobian evaluations");
+	pr.desc = MPT_tr("jacobian evaluations");
 	pr.val.fmt = "i";
-	pr.val.ptr = &data->count.st.njac;
+	pr.val.ptr = &val; val = data->count.st.njac;
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
 	pr.val.fmt = "i";
-	pr.val.ptr = &data->count.st.nlud;
+	pr.val.ptr = &val; val = data->count.st.nlud;
 	out(usr, &pr);
 	++line;
 	

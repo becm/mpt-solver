@@ -66,19 +66,19 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *data, int show, MPT_
 	if (!(show & MPT_SOLVER_ENUM(Report))) return line;
 	
 	pr.name = "feval";
-	pr.desc = MPT_tr("f evaluations");
+	pr.desc = MPT_tr("function evaluations");
 	pr.val.fmt = "i";
 	pr.val.ptr = &data->iopt[23];
 	out(usr, &pr);
 	
 	pr.name = "jeval";
-	pr.desc = MPT_tr("Jacobian evaluations");
+	pr.desc = MPT_tr("jacobian evaluations");
 	pr.val.fmt = "i";
 	pr.val.ptr = &data->iopt[28];
 	out(usr, &pr);
 	
 	pr.name = "jfeval";
-	pr.desc = "Jacobian f eval.";
+	pr.desc = "jacobian f eval.";
 	pr.val.fmt = "i";
 	pr.val.ptr = &data->iopt[24];
 	out(usr, &pr);

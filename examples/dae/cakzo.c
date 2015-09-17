@@ -89,6 +89,7 @@ int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_I
 	  case 3: k3   = param[2];
 	  case 2: k2   = param[1];
 	  case 1: k1   = param[0];
+	  case 0:;
 	}
 	return 6;
 }

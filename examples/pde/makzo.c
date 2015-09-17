@@ -3,6 +3,7 @@
 #include <mpt/solver.h>
 
 static double *param, *grid;
+static const int N_PDE = 2;
 
 /* solver right side calculation */
 static int rs_pde(void *udata, const double *t, const double *y, double *f)
@@ -27,23 +28,23 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 	alpha  = 2.0*(dzeta-1.0)*dum/c;
 	beta   = dum*dum;
 	
-	/* f(1) = (phi-2d0*y(1)+y(3))*beta/dzeta2
+/*        f(1) = (phi-2d0*y(1)+y(3))*beta/dzeta2
      +        +alpha*(y(3)-phi)/(2d0*dzeta)-k*y(1)*y(2) */
 	f[0] = (phi-2.0*y[0]+y[2])*beta/dzeta2+alpha*(y[2]-phi)/(2.0*dzeta)-k*y[0]*y[1];
 	/* f(2) = -k*y(1)*y(2) */
 	f[1] = -k*y[0]*y[1];
 	
 	for (i = 1; i < nint; i++) {
-		f += 2;
-		y += 2;
+		f += N_PDE;
+		y += N_PDE;
 		
 		zeta  = (i+1)*dzeta;
 		dum   = (zeta-1.0)*(zeta-1.0)/c;
 		alpha = 2.0*(zeta-1.0)*dum/c;
 		beta  = dum*dum;
 		
-		/* f(i) = (y(i-2)-2d0*y(i)+y(i+2))*beta/dzeta2
-     +           +alpha*(y(i+2)-y(i-2))/(2d0*dzeta)-k*y(i)*y(i+1) */
+	/*        f(i) = (y(i-2)-2d0*y(i)+y(i+2))*beta/dzeta2
+	     +        +alpha*(y(i+2)-y(i-2))/(2d0*dzeta)-k*y(i)*y(i+1) */
 		f[0] = (y[-2]-2.0*y[0]+y[2])*beta/dzeta2
 		     + alpha*(y[2]-y[-2])/(2.0*dzeta)-k*y[0]*y[1];
 		
@@ -59,15 +60,13 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 /* set user functions for PDE step */
 extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
-	int npde = 2;
-	
 	(void) out;
 	
 	usr->fcn = rs_pde;
 	
 	param = mpt_data_param(sd);
-	grid  = mpt_data_grid (sd, npde);
+	grid  = mpt_data_grid (sd, N_PDE);
 	
-	return npde;
+	return N_PDE;
 }
 
