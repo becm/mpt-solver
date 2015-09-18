@@ -99,7 +99,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	/* solver config filename from terminal */
 	if (!mpt_node_next(solv->conf->children, "solconf")) {
 		MPT_STRUCT(node) *conf;
-		static const char defName[] = "solver.conf";
+		static const char defName[] = "solver.conf", sc[] = "solconf";
 		const char *format;
 		char *rname, buf[1024];
 		
@@ -112,10 +112,11 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		conf = mpt_node_next(solv->conf->children, "solconf_fmt");
 		format = conf ? mpt_node_data(conf, 0) : "[ ] =\n#!";
 		
-		if (!(conf = mpt_node_new(strlen(fname) + 1, "solconf", 7))) {
+		if (!(conf = mpt_node_new(sizeof(sc), strlen(fname) + 1))) {
 			free(rname);
 			return MPT_event_fail(ev, MPT_tr("unable to create solver configuration"));
 		}
+		mpt_identifier_set(&conf->ident, "solconf", strlen(sc));
 		if (mpt_node_set(conf, fname) < 0) {
 			free(rname);
 			mpt_node_destroy(conf);

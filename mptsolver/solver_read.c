@@ -60,9 +60,11 @@ extern const char *mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(message) *
 	}
 	/* save to configuration if unset */
 	if (!tmp) {
-		if (!(tmp = mpt_node_new(part+1, "solconf", -7))) {
+		static const char sc[] = "solconf";
+		if (!(tmp = mpt_node_new(sizeof(sc), part+1))) {
 			return MPT_tr("node create error");
 		}
+		mpt_identifier_set(&conf->ident, sc, strlen(sc));
 		if (mpt_gnode_insert(conf, 0, tmp) < 0) {
 			mpt_node_destroy(tmp);
 			return MPT_tr("node insert error");
