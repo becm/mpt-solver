@@ -54,17 +54,20 @@ extern void mpt_solver_param(MPT_INTERFACE(metatype) *gen, const MPT_STRUCT(node
 		}
 		if (len > 0) {
 			if (!*pr.name) {
-				mpt_log(out, __func__, MPT_ENUM(LogWarning), "%s", MPT_tr("no property name"));
+				mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s",
+				        MPT_tr("no property name"));
 				continue;
 			}
 			if (mpt_meta_pset(gen, &pr, 0) < 0) {
-				mpt_log(out, __func__, MPT_ENUM(LogWarning), "%s: <%s>", MPT_tr("unable to set property"), pr.name);
+				mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s: <%s>",
+				        MPT_tr("unable to set property"), pr.name);
 			}
 			continue;
 		}
 		if ((len = arg->_vptr->conv(arg, 's', &pr.name)) <= 0) {
 			break;
 		}
-		mpt_log(out, __func__, MPT_ENUM(LogWarning), "%s: <%s>", MPT_tr("bad assignment argument"), pr.name);
+		mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s: <%s>",
+		        MPT_tr("bad assignment argument"), pr.name);
 	}
 }

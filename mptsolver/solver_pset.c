@@ -28,7 +28,8 @@ static int procProp(void *ptr, MPT_INTERFACE(property) *pr)
 	/* complain on missing name */
 	if (!pr->name) {
 		if (o->log) {
-			(void) mpt_log(o->log, fcn, MPT_ENUM(LogError), "%s: %s: <%p>", o->name, MPT_tr("no property name"), pr->val.ptr);
+			(void) mpt_log(o->log, fcn, MPT_FCNLOG(Error), "%s: %s: <%p>",
+			               o->name, MPT_tr("no property name"), pr->val.ptr);
 		}
 		o->err |= 8;
 		return 4;
@@ -43,7 +44,8 @@ static int procProp(void *ptr, MPT_INTERFACE(property) *pr)
 		if ((o->mask & MPT_ENUM(TraverseUnknown)) || !o->log) {
 			return 1;
 		}
-		(void) mpt_log(o->log, fcn, MPT_ENUM(LogError), "%s: %s: %s", o->name, MPT_tr("bad property name"), pr->name);
+		(void) mpt_log(o->log, fcn, MPT_FCNLOG(Error), "%s: %s: %s",
+		               o->name, MPT_tr("bad property name"), pr->name);
 		return 1;
 	}
 	/* bad property value */
@@ -54,15 +56,18 @@ static int procProp(void *ptr, MPT_INTERFACE(property) *pr)
 			return 2;
 		}
 		if ((tmp = pr->val.fmt)) {
-			(void) mpt_log(o->log, fcn, MPT_ENUM(LogError), "%s: %s: %s <%s>", o->name, MPT_tr("bad property value"), pr->name, tmp);
+			(void) mpt_log(o->log, fcn, MPT_FCNLOG(Error), "%s: %s: %s <%s>",
+			               o->name, MPT_tr("bad property value"), pr->name, tmp);
 		} else {
 			if (!(tmp = pr->val.ptr)) tmp = "";
-			(void) mpt_log(o->log, fcn, MPT_ENUM(LogError), "%s: %s: %s = %s", o->name, MPT_tr("bad property value"), pr->name, tmp);
+			(void) mpt_log(o->log, fcn, MPT_FCNLOG(Error), "%s: %s: %s = %s",
+			               o->name, MPT_tr("bad property value"), pr->name, tmp);
 		}
 		return 2;
 	}
 	/* other property set error */
-	(void) mpt_log(o->log, fcn, MPT_ENUM(LogError), "%s: %s: %s", o->name, MPT_tr("error setting property"), pr->name);
+	(void) mpt_log(o->log, fcn, MPT_FCNLOG(Error), "%s: %s: %s",
+	               o->name, MPT_tr("error setting property"), pr->name);
 	o->err |= 4;
 	return 3;
 }

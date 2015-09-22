@@ -70,7 +70,9 @@ extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd
 	grid  = mpt_data_grid (sd, npde);
 	
 	if ((npar = sd->npar) < 2) {
-		mpt_output_log(out, __func__, MPT_ENUM(LogError), "%s (npar=%d)", "missing parameters", npar);
+		mpt_output_log(out, __func__, MPT_FCNLOG(Error), "%s (npar=%d)",
+		               "missing parameters", npar);
+		return MPT_ERROR(BadValue);
 	}
 	
 	return npde;

@@ -55,7 +55,8 @@ static int initNLS(MPT_INTERFACE(client) *cl)
 	
 	if (!(conf = node ? mpt_node_data(node, 0) : 0)) {
 		if (!nls->sol) {
-			(void) mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("missing solver description"));
+			(void) mpt_log(log, from, MPT_FCNLOG(Error), "%s",
+			               MPT_tr("missing solver description"));
 			return -3;
 		}
 		ret = 0;
@@ -66,24 +67,27 @@ static int initNLS(MPT_INTERFACE(client) *cl)
 			return -1;
 		}
 		if (!(nls->sol = nls->pr._mt->_vptr->typecast(nls->pr._mt, MPT_ENUM(TypeSolver)))) {
-			(void) mpt_log(log, from, MPT_ENUM(LogError), "%s: %s", MPT_tr("no solver"), conf);
+			(void) mpt_log(log, from, MPT_FCNLOG(Error), "%s: %s",
+			               MPT_tr("no solver"), conf);
 			return -2;
 		}
 	}
 	conf = mpt_meta_typename((void *) nls->sol);
 	
 	if (mpt_solver_check(nls->sol, -MPT_SOLVER_ENUM(CapableNls)) < 0) {
-		(void) mpt_log(log, from, MPT_ENUM(LogError), "%s: %s",
+		(void) mpt_log(log, from, MPT_FCNLOG(Error), "%s: %s",
 		               conf ? conf : "solver",
 		               MPT_tr("unable to handle NLS problem"));
 		return -3;
 	}
 	if (conf) {
-		(void) mpt_log(log, 0, MPT_ENUM(LogMessage), "%s: %s", MPT_tr("solver"), conf);
+		(void) mpt_log(log, 0, MPT_FCNLOG(Message), "%s: %s",
+		               MPT_tr("solver"), conf);
 	}
 	if (!nls->sd) {
 		if (!(nls->sd = malloc(sizeof(*nls->sd)))) {
-			(void) mpt_log(log, from, MPT_ENUM(LogCritical), "%s", MPT_tr("no memory for data"));
+			(void) mpt_log(log, from, MPT_FCNLOG(Critical), "%s",
+			               MPT_tr("no memory for data"));
 			return -2;
 		}
 		mpt_data_init(nls->sd);
@@ -105,11 +109,13 @@ static int prepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(source) *args)
 	int32_t ret;
 	
 	if (!(gen = nls->sol)) {
-		mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("no solver assigned"));
+		mpt_log(log, from, MPT_FCNLOG(Error), "%s",
+		        MPT_tr("no solver assigned"));
 		return -1;
 	}
 	if (!(dat = nls->sd)) {
-		mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("missing solver data"));
+		mpt_log(log, from, MPT_FCNLOG(Error), "%s",
+		        MPT_tr("missing solver data"));
 		return -1;
 	}
 	if (mpt_conf_history(cl->out, cl->conf->children) < 0) {
@@ -122,7 +128,8 @@ static int prepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(source) *args)
 	ufcn = nctl->ufcn(gen);
 	
 	if ((ret = mpt_conf_nls(dat, cl->conf->children, log)) < 0) {
-		mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("solver preparation failed"));
+		mpt_log(log, from, MPT_FCNLOG(Error), "%s",
+		        MPT_tr("solver preparation failed"));
 		return -2;
 	}
 	/* call user init function */
@@ -130,18 +137,21 @@ static int prepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(source) *args)
 		return ret;
 	}
 	if (dat->nval < dat->npar) {
-		mpt_log(log, from, MPT_ENUM(LogError), "%s: %i < %i", MPT_tr("not enough parameters"), dat->nval, dat->npar);
+		mpt_log(log, from, MPT_FCNLOG(Error), "%s: %i < %i",
+		        MPT_tr("not enough parameters"), dat->nval, dat->npar);
 		return -2;
 	}
 	
 	if (mpt_meta_set((void *) gen, 0, "ii", dat->npar, dat->nval) <= 0) {
-		mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("unable to save problem dimensions to solver"));
+		mpt_log(log, from, MPT_FCNLOG(Error), "%s",
+		        MPT_tr("unable to save problem dimensions to solver"));
 		return -3;
 	}
 	mpt_solver_param((void *) gen, cl->conf->children, args, log);
 	
 	if (nctl->step(gen, mpt_data_param(dat), 0) < 0) {
-		mpt_log(log, from, MPT_ENUM(LogError), "%s", MPT_tr("preparing solver backend failed"));
+		mpt_log(log, from, MPT_FCNLOG(Error), "%s",
+		        MPT_tr("preparing solver backend failed"));
 		return -3;
 	}
 	if (!log) {
@@ -170,7 +180,8 @@ static void clearNLS(MPT_INTERFACE(client) *cl)
 	
 	/* close history output */
 	if (cl->out && mpt_conf_history(cl->out, 0) < 0) {
-		mpt_output_log(cl->out, __func__, MPT_ENUM(LogError), "%s", MPT_tr("unable to close history output"));
+		mpt_output_log(cl->out, __func__, MPT_FCNLOG(Error), "%s",
+		               MPT_tr("unable to close history output"));
 	}
 }
 /* output for NLS solvers */
@@ -238,11 +249,13 @@ static int outNLS(const MPT_INTERFACE(client) *cl, int state)
 				const char *name = mpt_node_ident(pbase);
 				pbase = pbase->next;
 				if (name) {
-					mpt_output_log(out, 0, MPT_ENUM(LogMessage), "%s %2d: %16g (%s)", desc, i+1, p[i], name);
+					mpt_output_log(out, 0, MPT_FCNLOG(Message), "%s %2d: %16g (%s)",
+					               desc, i+1, p[i], name);
 					continue;
 				}
 			}
-			mpt_output_log(out, 0, MPT_ENUM(LogMessage), "%s %2d: %16g",      desc, i+1, p[i]);
+			mpt_output_log(out, 0, MPT_FCNLOG(Message), "%s %2d: %16g",
+			               desc, i+1, p[i]);
 		}
 		for (i = 0; i < ld; i++) {
 			if (mpt_bitmap_get(dat->mask, sizeof(dat->mask), i+1) > 0) {

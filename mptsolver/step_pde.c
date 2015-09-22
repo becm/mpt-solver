@@ -32,21 +32,25 @@ extern int mpt_step_pde(MPT_SOLVER_INTERFACE *gen, MPT_SOLVER_STRUCT(data) *md, 
 	
 	/* get current independent variable from solver */
 	if (ictl->step(gen, 0, &tcurr, 0) < 0) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s", MPT_tr("solver not prepared for run"));
-		errno = EFAULT; return -1;
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+		               MPT_tr("solver not prepared for run"));
+		errno = EFAULT;
+		return -1;
 	}
 	/* get PDE grid and data */
 	if (!(val = md->val._buf)
 	    || (len = md->nval) < 1
 	    || (ld  = val->used / len / sizeof(double)) < 2) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s", MPT_tr("solver data in invalid state"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+		               MPT_tr("solver data in invalid state"));
 		return -1;
 	}
 	grid = (double *) (val+1);
 	
 	/* enshure tend > tcurr */
 	if (mpt_iterator_next(md->iter, &tcurr) < 0) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogWarning), "%s", MPT_tr("no iteration steps left"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s",
+		               MPT_tr("no iteration steps left"));
 		return -2;
 	}
 	
@@ -56,7 +60,8 @@ extern int mpt_step_pde(MPT_SOLVER_INTERFACE *gen, MPT_SOLVER_STRUCT(data) *md, 
 	
 	/* execute next PDE step */
 	if ((err = ictl->step(gen, grid+len, &tcurr, grid)) < 0) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s: %d", MPT_tr("PDE step error"), err);
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %d",
+		               MPT_tr("PDE step error"), err);
 		return err;
 	}
 	/* add solver runtime */

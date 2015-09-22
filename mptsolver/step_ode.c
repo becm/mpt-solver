@@ -31,12 +31,15 @@ extern int mpt_step_ode(MPT_SOLVER_INTERFACE *gen, MPT_SOLVER_STRUCT(data) *md, 
 	int err, cont;
 	
 	if (ictl->step(gen, 0, &tcurr, 0) < 0) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s", MPT_tr("solver not prepared for run"));
-		errno = EFAULT; return -1;
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+		               MPT_tr("solver not prepared for run"));
+		errno = EFAULT;
+		return -1;
 	}
 	/* enshure tend > tcurr */
 	if (mpt_iterator_next(md->iter, &tcurr) < 0) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogWarning), "%s", MPT_tr("no iteration steps left"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s",
+		               MPT_tr("no iteration steps left"));
 		return -2;
 	}
 	/* initialize current time structures */
@@ -48,10 +51,12 @@ extern int mpt_step_ode(MPT_SOLVER_INTERFACE *gen, MPT_SOLVER_STRUCT(data) *md, 
 		cont = -cont;
 		err = 0;
 		if (cont < 2) {
-			(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s: %d", MPT_tr("bad IVP data size"), cont);
+			(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %d",
+			               MPT_tr("bad IVP data size"), cont);
 		}
 		if (!(buf = md->val._buf) || (err = buf->used/sizeof(*data)) < cont) {
-			(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s: %d < %d", MPT_tr("missing IVP data"), err, cont);
+			(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %d < %d",
+			               MPT_tr("missing IVP data"), err, cont);
 			return -1;
 		}
 		data = (double *) (buf+1);
@@ -61,12 +66,14 @@ extern int mpt_step_ode(MPT_SOLVER_INTERFACE *gen, MPT_SOLVER_STRUCT(data) *md, 
 	do {
 		/* get value destination for ODE/DAE */
 		if (cont && !(data = mpt_values_prepare(&md->val, -cont))) {
-			(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s", MPT_tr("unable to get target memory"));
+			(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+			               MPT_tr("unable to get target memory"));
 			return -1;
 		}
 		/* call ODE/DAE solver with current/target time and in/out-data */
 		if ((err = ictl->step(gen, data+1, &tcurr, 0)) < 0) {
-			(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s: %d", MPT_tr("IVP step error"), -err);
+			(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %d",
+			               MPT_tr("IVP step error"), -err);
 		}
 		/* save time value */
 		data[0] = tcurr;

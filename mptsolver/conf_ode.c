@@ -33,13 +33,15 @@ extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *con
 	
 	/* check iterator */
 	if (!md->iter && mpt_conf_iterator(&md->iter, mpt_node_next(conf, val = "times")) < 0) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s: %s", val, MPT_tr("invalid iterator description"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %s", val,
+		               MPT_tr("invalid iterator description"));
 		return -1;
 	}
 	
 	if (!md->npar) {
 		if ((len = mpt_conf_param(&md->param, mpt_node_next(conf, val = "param"), 0)) < 0) {
-			(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s: %s", val, MPT_tr("invalid parameter format"));
+			(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %s",
+			               val, MPT_tr("invalid parameter format"));
 		} else {
 			md->npar = len;
 		}
@@ -48,13 +50,15 @@ extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *con
 	
 	t = mpt_iterator_curr(md->iter);
 	if (isnan(t)) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s", val, MPT_tr("unable to get iterator state"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s", val,
+		               MPT_tr("unable to get iterator state"));
 		return -1;
 	}
 	/* save initial independant value */
 	if ((buf = md->val._buf)) buf->used = 0;
 	if (!mpt_array_append(&md->val, sizeof(t), &t)) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s", MPT_tr("unable to save initial time in history"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+		               MPT_tr("unable to save initial time in history"));
 		return -4;
 	}
 	if (!(prof = mpt_node_next(conf, "profile"))) {
@@ -62,7 +66,8 @@ extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *con
 	}
 	/* read profile values */
 	else if ((len = mpt_conf_param(&md->val, prof, 1)) < 0) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s: %s", val, MPT_tr("failed to reserve initial data"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %s",
+		               val, MPT_tr("failed to reserve initial data"));
 		return -1;
 	}
 	buf = md->val._buf;

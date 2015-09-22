@@ -92,11 +92,11 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 		if ((cmd = mpt_command_get(&dsp->_cmd, id))) {
 			cmd->cmd = (int (*)()) cmdsolv[i].ctl;
 			cmd->arg = cl;
-			mpt_output_log(dsp->_out, __func__, MPT_ENUM(LogInfo), "%s: %"PRIxPTR" (%s)\n",
+			mpt_output_log(dsp->_out, __func__, MPT_FCNLOG(Info), "%s: %"PRIxPTR" (%s)\n",
 				       MPT_tr("replaced handler id"), id, cmdsolv[i].name);
 		}
 		else if (mpt_dispatch_set(dsp, id, (int (*)()) cmdsolv[i].ctl, cl) < 0) {
-			mpt_output_log(dsp->_out, __func__, MPT_ENUM(LogWarning), "%s: %"PRIxPTR" (%s)\n",
+			mpt_output_log(dsp->_out, __func__, MPT_FCNLOG(Warning), "%s: %"PRIxPTR" (%s)\n",
 				       MPT_tr("error registering handler id"), id, cmdsolv[i].name);
 		}
 	}

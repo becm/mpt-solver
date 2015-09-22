@@ -29,11 +29,13 @@ extern int mpt_step_nls(MPT_SOLVER_INTERFACE *gen, MPT_SOLVER_STRUCT(data) *dat,
 	int err;
 	
 	if (!(res = mpt_data_grid(dat, 0))) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s", MPT_tr("solver data in invalid state"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+		               MPT_tr("solver data in invalid state"));
 		return -1;
 	}
 	if (!(par = mpt_data_param(dat))) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s", MPT_tr("parameter data in invalid state"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+		               MPT_tr("parameter data in invalid state"));
 		return -1;
 	}
 	
@@ -41,7 +43,8 @@ extern int mpt_step_nls(MPT_SOLVER_INTERFACE *gen, MPT_SOLVER_STRUCT(data) *dat,
 	getrusage(RUSAGE_SELF, &pre);
 	
 	if ((err = nctl->step(gen, par, res)) < 0) {
-		(void) mpt_log(out, __func__, MPT_ENUM(LogError), "%s: %d", MPT_tr("NLEQ step error"), err);
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %d",
+		               MPT_tr("NLEQ step error"), err);
 	}
 	/* add solver runtime */
 	getrusage(RUSAGE_SELF, &post);
