@@ -4,3 +4,7 @@
 *~
 # release header
 release.h
+
+# meson subproject wrap files
+subprojects/*
+!subprojects/*.wrap

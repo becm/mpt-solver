@@ -1,0 +1,4 @@
+[wrap-git]
+directory=mpt-base
+url=https://github.com/becm/mpt-base.git
+revision=head

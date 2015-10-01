@@ -10,6 +10,10 @@
 
 #include "core.h"
 
+#ifdef __cplusplus
+# include <stdlib.h>
+#endif
+
 struct iovec;
 struct rusage;
 
@@ -264,7 +268,7 @@ struct vecpar
 		int len = base ? d.len / sizeof(T) : 1;
 		if (pos < 0) pos += len;
 		if (!pos && !base) return d.val;
-		return (pos >= 0 && pos < len) ? base[pos]  : def;
+		return (pos >= 0 && pos < len) ? base[pos] : def;
 	}
 protected:
 	T *base;
