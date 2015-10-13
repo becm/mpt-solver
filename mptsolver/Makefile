@@ -2,7 +2,7 @@
 LIB = mptsolver
 #
 # additional header directories
-base_inc = . mptcore mptplot mptclient
+base_inc = . mptcore mptplot
 INC = .. $(base_inc:%=../base/%)
 #
 # header to export
@@ -13,7 +13,7 @@ SHLIB_MAJOR = 1
 SHLIB_MINOR = 0
 SHLIB_TEENY = 0
 SHLIB_OBJS = libinfo.o ${OBJS}
-LDLIBS = -lmptio -lmptplot -lmptcore -ldl
+LDLIBS = -lmptplot -lmptcore -ldl
 #
 # source summary
 SRCS := $(wildcard client_*.c conf_*.c data_*.c solver_*.c step_*.c) residuals_cdiff.c

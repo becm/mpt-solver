@@ -19,13 +19,13 @@ src_nls = nlspar_set.c
 #
 # additional objects for solver
 ifeq (${SOL}, ivp)
-  src_type = ${src_ivp} ${src_gen}
+  src_solver = ${src_ivp} ${src_gen}
 endif
 ifeq (${SOL}, nls)
-  src_type = ${src_nls} ${src_gen}
+  src_solver = ${src_nls} ${src_gen}
 endif
 ifeq (${SOL}, both)
-  src_type = ${src_nls} ${src_ivp} ${src_gen}
+  src_solver = ${src_nls} ${src_ivp} ${src_gen}
 endif
 #
 # math objects in different location
@@ -33,7 +33,7 @@ MATH_OBJS ?= $(MATH:%=${DIR_MATH}/%)
 MATH_OBJS_STATIC ?= ${MATH_OBJS}
 MATH_OBJS_SHARED ?= ${MATH_OBJS}
 # object collections
-default_objects = ${OBJS} $(src_type:%.c=${DIR_SOLVER}%.o)
+default_objects = ${OBJS} $(src_solver:%.c=${DIR_SOLVER}%.o)
 STATIC_OBJS ?= ${default_objects} ${MATH_OBJS_STATIC}
 SHLIB_OBJS ?= libinfo.o ${default_objects} ${MATH_OBJS_SHARED}
 #
