@@ -15,35 +15,21 @@ else
   with_shared = true
 endif
 
-mpt_inc = get_option('prefix') + '/' + get_option('includedir') + '/mpt'
-mpt_lib = get_option('prefix') + '/' + get_option('libdir')
-
-
 global = [ declare_dependency(include_directories : include_directories('.')) ]
 
+mpt_lib = get_option('prefix') + '/' + get_option('libdir')
 core = find_library('mptcore', required : false, dirs : mpt_lib)
-if not core.found()
-  with_core = true
-  subdir('base/mptcore')
-  inc = include_directories('base/mptcore')
-else
-  inc = include_directories(mpt_inc)
-  core = [ core, declare_dependency(include_directories : inc) ]
-  global += declare_dependency(include_directories : inc)
-endif
-
 plot = find_library('mptplot', required : false, dirs : mpt_lib)
-if not plot.found()
-  with_plot = true
-  subdir('base/mptplot')
-else
-  global += declare_dependency(include_directories : include_directories(mpt_inc))
-endif
-
 load = find_library('mptloader', required : false, dirs : mpt_lib)
-if not load.found()
-  with_loader = true
-  subdir('base/mptloader')
+
+if core.found() and plot.found() and load.found()
+  mpt_inc = get_option('prefix') + '/' + get_option('includedir') + '/mpt'
+  global += declare_dependency(include_directories : include_directories(mpt_inc))
+else
+  core = dependency('mptcore')
+  plot = dependency('mptplot')
+  load = dependency('mptloader')
+  global += dependency('mptheaders')
 endif
 
 mpt = [ plot, core, load, global ]

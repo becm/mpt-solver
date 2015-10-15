@@ -80,9 +80,12 @@ static int initIVP(MPT_INTERFACE(client) *cl, int type)
 	if (mpt_solver_check(ivp->sol, type) < 0) {
 		if (!conf) conf = "solver";
 		switch (type) {
-		  case MPT_SOLVER_ENUM(ODE): (void) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s", MPT_tr("unable to handle ODE problem")); break;
-		  case MPT_SOLVER_ENUM(DAE): (void) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s", MPT_tr("unable to handle DAE problem")); break;
-		  case MPT_SOLVER_ENUM(PDE): (void) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s", MPT_tr("unable to handle PDE problem")); break;
+		  case MPT_SOLVER_ENUM(ODE):
+			(void) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s", conf, MPT_tr("unable to handle ODE problem")); break;
+		  case MPT_SOLVER_ENUM(DAE):
+			(void) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s", conf, MPT_tr("unable to handle DAE problem")); break;
+		  case MPT_SOLVER_ENUM(PDE):
+			(void) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s", conf, MPT_tr("unable to handle PDE problem")); break;
 		  default:;
 		}
 		return -3;

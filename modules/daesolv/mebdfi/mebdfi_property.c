@@ -6,7 +6,6 @@
 #include <strings.h>
 #include <errno.h>
 
-#include "release.h"
 #include "version.h"
 
 #include "mebdfi.h"
@@ -144,7 +143,7 @@ extern int mpt_mebdfi_property(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_STRUCT(prope
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
-		static const char version[] = MPT_VERSION"\0";
+		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
 		prop->val.fmt= 0; prop->val.ptr = version;
 		return 0;

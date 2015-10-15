@@ -50,7 +50,7 @@ extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *con
 	
 	t = mpt_iterator_curr(md->iter);
 	if (isnan(t)) {
-		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s", val,
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
 		               MPT_tr("unable to get iterator state"));
 		return -1;
 	}
@@ -66,8 +66,8 @@ extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *con
 	}
 	/* read profile values */
 	else if ((len = mpt_conf_param(&md->val, prof, 1)) < 0) {
-		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %s",
-		               val, MPT_tr("failed to reserve initial data"));
+		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+		               MPT_tr("failed to reserve initial data"));
 		return -1;
 	}
 	buf = md->val._buf;
