@@ -1,7 +1,7 @@
 # mpt-solver/mptsolver/meson.build
 # build definition for mpt solver library
 
-lib_src = files(
+src_lib = files(
   'client_ivp.c', 'client_nls.c',
   'conf_nls.c', 'conf_ode.c', 'conf_pde.c',
   'data_finit.c', 'data_grid.c', 'data_param.c', 'data_timeradd.c',
@@ -12,10 +12,9 @@ lib_src = files(
   'step_nls.c', 'step_ode.c', 'step_pde.c'
 )
 
-lib = shared_library('mptsolver', lib_src, #'libinfo.c',
-  include_directories : inc,
+lib = shared_library('mptsolver', src_lib, #'libinfo.c',
   install_rpath : '$ORIGIN',
-  dependencies : [ plot, core ],
+  dependencies : mpt,
   version : '1.0.0', soversion : '1',
   install : true)
 
