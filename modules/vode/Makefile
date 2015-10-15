@@ -20,4 +20,4 @@ HEADER = vode.h
 #
 # solver rules
 include ../mpt.solver.mk
-vode_property.o : ${DIR_BASE}version.h release.h
+vode_property.o : ${DIR_BASE}version.h

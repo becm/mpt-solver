@@ -4,7 +4,7 @@
 
 #include <sundials/sundials_config.h>
 
-#include "release.h"
+#include "version.h"
 #include "libinfo.h"
 
 #define _STRING(x)  #x

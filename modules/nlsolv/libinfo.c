@@ -2,7 +2,7 @@
  * library description standalone nonlinear solvers
  */
 
-#include "release.h"
+#include "version.h"
 #include "libinfo.h"
 
 extern void _start()

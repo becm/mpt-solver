@@ -44,10 +44,7 @@ FFLAGS ?= -fpic -O5 -Wall -fstack-protector
 #
 # additional object dependancies
 ${OBJS} : ${DIR_SOLVER}../solver.h
-libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h release.h
-#
-# release information
-include ${DIR_BASE}mpt.release.mk
+libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
 #
 # additional service targets
 .PHONY : clean_math

@@ -35,4 +35,4 @@ include ../mpt.solver.mk
 # local object dependencies
 $(portn2_wrapper:%=portn2/%)   : portn2/portn2.h
 $(minpack_wrapper:%=minpack/%) : minpack/minpack.h
-minpack/minpack_property.o portn2/portn2_property.o  : ${DIR_BASE}version.h release.h
+minpack/minpack_property.o portn2/portn2_property.o  : ${DIR_BASE}version.h

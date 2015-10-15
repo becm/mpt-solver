@@ -22,4 +22,4 @@ HEADER = bacol.h
 #
 # general library rules
 include ../mpt.solver.mk
-bacol_property.o : ${DIR_BASE}version.h release.h
+bacol_property.o : ${DIR_BASE}version.h

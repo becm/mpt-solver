@@ -17,4 +17,4 @@ HEADER = limex.h
 include ../mpt.solver.mk
 #
 # local dependencies
-limex_property.o : ${DIR_BASE}version.h release.h
+limex_property.o : ${DIR_BASE}version.h

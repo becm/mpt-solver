@@ -39,4 +39,4 @@ ${DIR_MATH}/mebdfi.o : FFLAGS=-O0 -fpic -Wall
 dassl/%.o : dassl.h
 radau/%.o : dassl.h
 mebdfi/%.o : mebdfi.h
-dassl/dassl_property.o radau/radau_property.o radau/radau_property.o : ${DIR_BASE}version.h release.h
+dassl/dassl_property.o radau/radau_property.o radau/radau_property.o : ${DIR_BASE}version.h

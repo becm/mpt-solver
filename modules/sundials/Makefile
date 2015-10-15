@@ -36,4 +36,4 @@ include ../mpt.solver.mk
 #
 # object dependencies
 ${OBJS} : sundials.h
-ida/ida_property.o cvode/cvode_property.o : ${DIR_BASE}version.h release.h
+ida/ida_property.o cvode/cvode_property.o : ${DIR_BASE}version.h

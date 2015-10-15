@@ -2,7 +2,7 @@
  * library description for nonlinear solvers with BLAS dependancy
  */
 
-#include "release.h"
+#include "version.h"
 #include "libinfo.h"
 
 extern void _start()

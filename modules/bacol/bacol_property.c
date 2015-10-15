@@ -8,7 +8,6 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include "release.h"
 #include "version.h"
 
 #include "bacol.h"
@@ -156,7 +155,7 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 		return id;
 	}
 	if (name && !strcasecmp(name, "version")) {
-		static const char version[] = MPT_VERSION"\0";
+		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
 		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;

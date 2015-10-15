@@ -22,10 +22,7 @@ SRCS := $(wildcard client_*.c conf_*.c data_*.c solver_*.c step_*.c) residuals_c
 DIR_TOP = ${MPT_PREFIX}
 DIR_INC = ${DIR_TOP}/include/mpt
 include ../base/mpt.lib.mk
-# release information
-include ../base/mpt.release.mk
 #
 # additional dependencies
-libinfo.o : ../base/libinfo.h ../base/version.h release.h
+libinfo.o : ../base/libinfo.h ../base/version.h
 CLEAN_FILES += libinfo.o
-#
