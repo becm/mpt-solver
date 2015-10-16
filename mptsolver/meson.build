@@ -12,7 +12,8 @@ src_lib = files(
   'step_nls.c', 'step_ode.c', 'step_pde.c'
 )
 
-lib = shared_library('mptsolver', src_lib, #'libinfo.c',
+lib = shared_library('mptsolver', src_lib, 'libinfo.c',
+  include_directories : include_directories('../base'),
   install_rpath : '$ORIGIN',
   dependencies : mpt,
   version : '1.0.0', soversion : '1',
