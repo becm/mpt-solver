@@ -26,10 +26,10 @@
  */
 extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
+	static const char longfmt[] = { MPT_ENUM(TypeLong) };
 	MPT_STRUCT(property) pr;
+	long int lval;
 	double dval;
-	long lval;
-	int64_t val;
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -41,28 +41,26 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	    && (IDAGetCurrentTime(ida->mem, &dval) == IDA_SUCCESS)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	pr.val.fmt = "D";
+	pr.val.fmt = "d";
 	pr.val.ptr = &dval;
 	out(usr, &pr);
 	++line;
 	}
 	if ((show & (MPT_SOLVER_ENUM(Report) | MPT_SOLVER_ENUM(Status)))
 	    && (IDAGetNumSteps(ida->mem, &lval) == IDA_SUCCESS)) {
-	val = lval;
 	pr.name = "n";
 	pr.desc = MPT_tr("integration steps");
-	pr.val.fmt = "l";
-	pr.val.ptr = &val;
+	pr.val.fmt = longfmt;
+	pr.val.ptr = &lval;
 	out(usr, &pr);
 	++line;
 	}
 	
 	if ((show & MPT_SOLVER_ENUM(Status))
 	    && (IDAGetLastStep(ida->mem, &dval) == IDA_SUCCESS)) {
-	val = lval;
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	pr.val.fmt = "D";
+	pr.val.fmt = "d";
 	pr.val.ptr = &dval;
 	out(usr, &pr);
 	++line;
@@ -71,51 +69,47 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	if (!(show & MPT_SOLVER_ENUM(Report))) return line;
 	
 	if (IDAGetNumResEvals(ida->mem, &lval) == IDA_SUCCESS) {
-	val = lval;
 	pr.name = "reval";
 	pr.desc = MPT_tr("residual evaluations");
-	pr.val.fmt = "l";
-	pr.val.ptr = &val;
+	pr.val.fmt = longfmt;
+	pr.val.ptr = &lval;
 	out(usr, &pr);
 	++line;
 	}
 	
 	if (ida->sd.linalg & MPT_ENUM(SundialsSpils)) {
 		if (IDASpilsGetNumLinIters(ida->mem, &lval) == IDA_SUCCESS) {
-		val = lval;
 		pr.name = "liter";
 		pr.desc = MPT_tr("linear iterations");
-		pr.val.fmt = "l";
-		pr.val.ptr = &val;
+		pr.val.fmt = longfmt;
+		pr.val.ptr = &lval;
 		out(usr, &pr);
 		++line;
 		}
 	} else if (ida->sd.linalg & MPT_ENUM(SundialsDls)) {
 		if (IDADlsGetNumJacEvals(ida->mem, &lval) == IDA_SUCCESS) {
-		val = lval;
 		pr.name = "jeval";
 		pr.desc = MPT_tr("jacobian evaluations");
-		pr.val.fmt = "l";
-		pr.val.ptr = &val;
+		pr.val.fmt = longfmt;
+		pr.val.ptr = &lval;
 		out(usr, &pr);
 		++line;
 		}
 	}
 	if (IDAGetNumNonlinSolvIters(ida->mem, &lval) == IDA_SUCCESS) {
-	val = lval;
 	pr.name = "niter";
 	pr.desc = MPT_tr("nonlinear iterations");
-	pr.val.fmt = "l";
-	pr.val.ptr = &val;
+	pr.val.fmt = longfmt;
+	pr.val.ptr = &lval;
 	out(usr, &pr);
 	++line;
 	}
 	if ((IDAGetNumErrTestFails(ida->mem, &lval) == IDA_SUCCESS)
-	    && (val = lval)) {
+	    && lval) {
 	pr.name = "etfail";
 	pr.desc = MPT_tr("error test failures");
-	pr.val.fmt = "l";
-	pr.val.ptr = &val;
+	pr.val.fmt = longfmt;
+	pr.val.ptr = &lval;
 	out(usr, &pr);
 	++line;
 	}

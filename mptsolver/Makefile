@@ -13,7 +13,7 @@ SHLIB_MAJOR = 1
 SHLIB_MINOR = 0
 SHLIB_TEENY = 0
 SHLIB_OBJS = libinfo.o ${OBJS}
-LDLIBS = -lmptplot -lmptcore -ldl
+LDLIBS = -lmptplot -lmptcore -lmptloader
 #
 # source summary
 SRCS := $(wildcard client_*.c conf_*.c data_*.c solver_*.c step_*.c) residuals_cdiff.c

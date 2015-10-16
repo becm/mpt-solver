@@ -21,19 +21,19 @@ static int setIvp(MPT_SOLVER_STRUCT(ida) *data, MPT_INTERFACE(source) *src)
 }
 static int setMaxOrd(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
 {
-	int64_t val;
+	long val;
 	int len;
 	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
+	if ((len = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return len;
 	if (IDASetMaxOrd(ida->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setMaxNSteps(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
 {
-	int64_t val;
+	long val;
 	int len;
 	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
+	if ((len = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return len;
 	if (IDASetMaxNumSteps(ida->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
@@ -102,6 +102,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(source) *src)
  */
 extern int sundials_ida_property(MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(property) *prop, MPT_INTERFACE(source) *src)
 {
+	static const char longfmt[] = { MPT_ENUM(TypeLong) };
 	const char *name;
 	intptr_t pos = 0, id;
 	IDAMem ida_mem = ida->mem;
@@ -159,7 +160,7 @@ extern int sundials_ida_property(MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(propert
 	if (name ? (!strcasecmp(name, "maxnumsteps") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "mxstep")) : (pos == id++)) {
 		if (ida && (id = setMaxNSteps(ida, src)) < 0) return id;
 		prop->name = "maxnumsteps"; prop->desc = "maximum steps per call";
-		prop->val.fmt = "l"; prop->val.ptr = ida_mem ? &ida_mem->ida_mxstep : 0;
+		prop->val.fmt = longfmt; prop->val.ptr = ida_mem ? &ida_mem->ida_mxstep : 0;
 		return id;
 	}
 	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "hin") || !strcasecmp(name, "h") || !strcasecmp(prop->name, "h0")) : (pos == id++)) {

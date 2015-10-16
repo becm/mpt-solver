@@ -37,7 +37,7 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *data, int show, MP
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	pr.val.fmt = "D";
+	pr.val.fmt = "d";
 	pr.val.ptr = &data->ivp.last;
 	out(usr, &pr);
 	++line;
@@ -55,7 +55,7 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *data, int show, MP
 	if (show & MPT_SOLVER_ENUM(Status) && rwk) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	pr.val.fmt = "D";
+	pr.val.fmt = "d";
 	pr.val.ptr = &rwk[1];
 	out(usr, &pr);
 	++line;

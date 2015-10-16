@@ -249,7 +249,7 @@ extern int mpt_vode_property(MPT_SOLVER_STRUCT(vode) *data, MPT_STRUCT(property)
 	if (name ? !strncasecmp(name, "itask", 2) : (pos == ++id)) {
 		if (data && (id = setStepType(data, src)) < 0) return id;
 		prop->name = "itask"; prop->desc = "step control";
-		prop->val.fmt  = "h"; prop->val.ptr = &data->itask;
+		prop->val.fmt  = "n"; prop->val.ptr = &data->itask;
 		return id;
 	}
 	if (name ? !strncasecmp(name, "method", 4) : (pos == ++id)) {

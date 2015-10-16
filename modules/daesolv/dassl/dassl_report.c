@@ -32,7 +32,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	pr.val.fmt = "D";
+	pr.val.fmt = "d";
 	pr.val.ptr = &rwork[3];
 	out(usr, &pr);
 	++line;
@@ -50,7 +50,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = "current step size";
-	pr.val.fmt = "D";
+	pr.val.fmt = "d";
 	pr.val.ptr = &rwork[2];
 	out(usr, &pr);
 	++line;

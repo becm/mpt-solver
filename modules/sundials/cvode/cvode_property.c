@@ -11,7 +11,7 @@
 
 #include "sundials.h"
 
-static char bdfText[] = "BDF", adamsText[] = "Adams";
+static const char bdfText[] = "BDF", adamsText[] = "Adams";
 
 static int setIvp(MPT_SOLVER_STRUCT(cvode) *data, MPT_INTERFACE(source) *src)
 {
@@ -42,29 +42,29 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 }
 static int setMaxOrd(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 {
-	int64_t val;
+	long val;
 	int len;
 	CVodeMem cv_mem = cv->mem;
 	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
+	if ((len = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return len;
 	else if (CVodeSetMaxOrd(cv->mem, len ? val : cv_mem->cv_qmax) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setMaxNSteps(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 {
-	int64_t val;
+	long val;
 	int len;
 	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
+	if ((len = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return len;
 	if (CVodeSetMaxNumSteps(cv->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
 static int setMaxHNil(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
 {
-	int64_t val;
+	long val;
 	int len;
 	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'l', &val)) < 0) return len;
+	if ((len = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return len;
 	if (CVodeSetMaxHnilWarns(cv->mem, len ? val : 0) < 0) return MPT_ERROR(BadValue);
 	return len;
 }
@@ -112,6 +112,7 @@ static int setMaxStep(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(source) *src)
  */
 extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(property) *prop, MPT_INTERFACE(source) *src)
 {
+	static const char longfmt[] = { MPT_ENUM(TypeLong) };
 	const char *name;
 	intptr_t pos = 0, id;
 	CVodeMem cv_mem = cv ? cv->mem : 0;
@@ -157,7 +158,7 @@ extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(prop
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
 		if (cv && (id = sundials_jacobian(&cv->sd, cv->ivp.neqs, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "jacobian type";
-		prop->val.fmt = "B"; prop->val.ptr = &cv->sd.jacobian;
+		prop->val.fmt = "y"; prop->val.ptr = &cv->sd.jacobian;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "method") : (pos == ++id)) {
@@ -181,7 +182,7 @@ extern int sundials_cvode_property(MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(prop
 	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) : (pos == ++id)) {
 		if (cv && (id = setMaxNSteps(cv, src)) < 0) return id;
 		prop->name = "mxstep"; prop->desc = "allowed function evaluations per call";
-		prop->val.fmt = "l"; prop->val.ptr = cv_mem ? &cv_mem->cv_mxstep : 0;
+		prop->val.fmt = longfmt; prop->val.ptr = cv_mem ? &cv_mem->cv_mxstep : 0;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "hnilwarns") : (pos == ++id)) {

@@ -176,7 +176,7 @@ extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *data, MPT_STRUCT(propert
 	if (name ? !strcasecmp(name, "kcol") : pos == ++id) {
 		if (data && (id = setKollocations(data, src)) < 0) return id;
 		prop->name = "kcol"; prop->desc = "collocations per interval";
-		prop->val.fmt = "h"; prop->val.ptr = &data->kcol;
+		prop->val.fmt = "n"; prop->val.ptr = &data->kcol;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "nint") : pos == ++id) {

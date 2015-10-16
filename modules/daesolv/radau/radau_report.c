@@ -40,7 +40,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	pr.val.fmt = "D";
+	pr.val.fmt = "d";
 	pr.val.ptr = &data->ivp.last;
 	out(usr, &pr);
 	++line;
@@ -57,7 +57,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = "current step size";
-	pr.val.fmt = "D";
+	pr.val.fmt = "d";
 	pr.val.ptr = &data->h;
 	out(usr, &pr);
 	++line;
