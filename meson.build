@@ -17,6 +17,7 @@ endif
 
 global = [ declare_dependency(include_directories : include_directories('.')) ]
 
+# find base libraries in target location
 mpt_lib = get_option('prefix') + '/' + get_option('libdir')
 core = find_library('mptcore', required : false, dirs : mpt_lib)
 plot = find_library('mptplot', required : false, dirs : mpt_lib)
@@ -25,15 +26,16 @@ load = find_library('mptloader', required : false, dirs : mpt_lib)
 if core.found() and plot.found() and load.found()
   mpt_inc = get_option('prefix') + '/' + get_option('includedir') + '/mpt'
   global += declare_dependency(include_directories : include_directories(mpt_inc))
+
+  # only install header when bas is present in same location
+  install_headers('solver.h', subdir : 'mpt')
 else
   core = dependency('mptcore')
   plot = dependency('mptplot')
   load = dependency('mptloader')
-  global += dependency('mptheaders')
+  global += dependency('mpt-local-headers')
 endif
 
 mpt = [ plot, core, load, global ]
-
-install_headers('solver.h', subdir : 'mpt')
 
 subdir('mptsolver')
