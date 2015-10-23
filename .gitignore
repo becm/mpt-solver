@@ -2,5 +2,3 @@
 *.[oa]
 *.py[co]
 *~
-# release header
-release.h

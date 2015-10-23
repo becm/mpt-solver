@@ -3,6 +3,7 @@
  */
 
 #include <string.h>
+#include <strings.h>
 #include <errno.h>
 
 #include <ida/ida_impl.h>
