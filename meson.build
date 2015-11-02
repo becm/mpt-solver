@@ -1,7 +1,9 @@
 # mpt-solver/meson.build
 # build definitions for mpt solvers
 
-project('mptsolver', 'c')
+project('mptsolver', 'c', default_options : [
+  'c_std=c11'
+])
 
 libs = get_option('libraries')
 if libs == 'shared'
@@ -27,7 +29,7 @@ if core.found() and plot.found() and load.found()
   mpt_inc = get_option('prefix') + '/' + get_option('includedir') + '/mpt'
   global += declare_dependency(include_directories : include_directories(mpt_inc))
 
-  # only install header when bas is present in same location
+  # only install header when base is present in same location
   install_headers('solver.h', subdir : 'mpt')
 else
   core = dependency('mptcore')
