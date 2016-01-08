@@ -7,7 +7,7 @@
 
 #include "solver.h"
 
-static int getValues(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(source) *src)
+extern int mpt_vecpar_set(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(metatype) *src)
 {
 	struct iovec tmp;
 	double v1 = 0.0, v2, *dest;
@@ -15,7 +15,7 @@ static int getValues(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(source) *src)
 	
 	if (!src) return val->base ? val->d.len/sizeof(double) : 0;
 	
-	if ((len = src->_vptr->conv(src, 'd' | MPT_ENUM(TypeVector), &tmp)) >= 0) {
+	if ((len = src->_vptr->conv(src, ('d' - 0x40) | MPT_ENUM(ValueConsume), &tmp)) >= 0) {
 		size_t elem = tmp.iov_len / sizeof(double);
 		if (!elem) {
 			dest = mpt_vecpar_alloc((struct iovec *) val, 0, 0);
@@ -29,11 +29,11 @@ static int getValues(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(source) *src)
 		}
 		return elem;
 	}
-	if ((len = src->_vptr->conv(src, 'd', &v1)) < 0) {
+	if ((len = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v1)) < 0) {
 		return -2;
 	}
 	/* single value only */
-	if (!len || (pos = src->_vptr->conv(src, 'd', &v2)) <= 0) {
+	if (!len || (pos = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v2)) <= 0) {
 		dest = mpt_vecpar_alloc((struct iovec *) val, 0, 0);
 		val->d.val = v1; return len ? 1 : 0;
 	}
@@ -48,7 +48,7 @@ static int getValues(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(source) *src)
 	dest[1] = v2;
 	
 	/* read further data */
-	while ((len = src->_vptr->conv(src, 'd', &v2)) > 0) {
+	while ((len = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v2)) > 0) {
 		/* increase vector space */
 		if (pos >= full && !(dest = mpt_vecpar_alloc((struct iovec *) val, pos+1, sizeof(double)))) {
 			break;
@@ -62,17 +62,15 @@ static int getValues(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(source) *src)
 	return pos;
 }
 
-extern int mpt_vecpar_value(MPT_TYPE(dvecpar) *tol, MPT_STRUCT(value) *val, MPT_INTERFACE(source) *src)
+extern int mpt_vecpar_get(const MPT_TYPE(dvecpar) *tol, MPT_STRUCT(value) *val)
 {
-	int len = 0;
-	
-	len = getValues(tol, src);
+	int len = tol->base ? tol->d.len/sizeof(double) : 0;
 	
 	if (!val) {
 		return len;
 	}
 	if (tol->base) {
-		static const char fmt[2] = { (char) (MPT_ENUM(TypeVector) | 'd') };
+		static const char fmt[2] = { 'd' - 0x40 };
 		val->fmt = fmt;
 		val->ptr = tol;
 	} else {

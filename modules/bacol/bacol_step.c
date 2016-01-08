@@ -1,5 +1,5 @@
 /*!
- * general wrapper for BACOL step and output
+ * C wrapper to bacol fortran routines
  */
 
 #include <errno.h>
@@ -7,47 +7,51 @@
 
 #include "bacol.h"
 
-extern int mpt_bacol_step(MPT_SOLVER_STRUCT(bacol) *data, double *yout, double tend, double *xout)
+extern int mpt_bacol_sstep(MPT_SOLVER_STRUCT(bacol) *data, double tend)
 {
-	int	val, dim;
-	
-	if (data->mflag.noinit < 0) {
+	MPT_SOLVER_STRUCT(ivppar) *ivp = &data->ivp;
+	double *rtol, *atol;
+	int idid, kcol, lip, lrp;
+#ifdef MPT_BACOL_RADAU
+	int lcp;
+#endif
+	if ( (idid = data->mflag.noinit) < 0 ) {
 		errno = EINVAL; return -1;
 	}
-	dim = data->ivp.pint + 1;
+	if ( idid ) idid = 1;
 	
-	/* internal grid initialisation */
-	if (!data->mflag.noinit) {
-		if (!xout) {
-			errno = EFAULT; return -1;
-		}
-		if (data->xinit) {
-			val = data->xinit(dim, xout, data->nintmx/2, data->x, data->nint);
-			if (val < 1 || val > data->nintmx/2) {
-				errno = ERANGE; return -1;
-			}
-			data->nint = val;
-		}
-		else if (dim > data->nintmx/2) {
-			errno = ERANGE; return -1;
-		}
-		else {
-			(void) memcpy(data->x, xout, dim*sizeof(*data->x));
-			data->nint = data->ivp.pint;
-		}
+	if ( data->rtol.base && data->atol.base && ivp->neqs > 1 ) {
+		data->mflag.tvec = 1; rtol = data->rtol.base; atol = data->atol.base;
 	}
-	val = mpt_bacol_sstep(data, tend);
+	else {
+		data->mflag.tvec = 0; rtol = &data->rtol.d.val; atol = &data->atol.d.val;
+	}
+	kcol = data->kcol;
 	
-	if (val < 0)
-		return val;
+	lrp = data->rpar.iov_len / sizeof(double);
+	lip = data->ipar.iov_len / sizeof(int);
 	
-	/* leave if no grid data */
-	if (!xout && !yout)
-		return 0;
+	/* fortran routine call */
+	switch ( data->backend ) {
+#ifdef MPT_BACOL_RADAU
+	    case 'r': case 'R':
+	lcp = data->bd.cpar.iov_len / sizeof(double) / 2;
+	bacolr_(&ivp->last, &tend, atol, rtol, &ivp->neqs, &kcol,
+		&data->nintmx, &data->nint, data->x, (int *) &data->mflag,
+		data->rpar.iov_base, &lrp, data->ipar.iov_base, &lip,
+		data->bd.cpar.iov_base, &lcp, data->y, &idid);
+	    break;
+#endif
+#ifdef MPT_BACOL_DASSL
+	    case 'd': case 'D':
+	bacol_(&ivp->last, &tend, atol, rtol, &ivp->neqs, &kcol,
+		&data->nintmx, &data->nint, data->x, (int *) &data->mflag,
+		data->rpar.iov_base, &lrp, data->ipar.iov_base, &lip, data->y, &idid);
+	    break;
+#endif
+	    default: errno = EBADR; return -1;
+	}
+	if ( idid < 0 ) errno = EINVAL;
 	
-	/* generate y-values for grid */
-	if ((val = mpt_bacol_values(data, xout, 0, yout)) < 0)
-		return val;
-	
-	return  (val != dim) ? val : 0;
+	return idid;
 }

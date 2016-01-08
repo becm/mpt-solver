@@ -6,21 +6,18 @@
 
 #include "solver.h"
 
-extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *ivp, MPT_INTERFACE(source) *src)
+extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *ivp, MPT_INTERFACE(metatype) *src)
 {
 	double t;
 	int32_t l1, l2;
 	
 	if (!src) {
-		l1 = 0;
-		if (ivp->neqs < 0) return MPT_ERROR(BadArgument);
-		if (ivp->pint < 0) return MPT_ERROR(BadValue);
-		if (ivp->neqs != 1)   l1 |= 1;
-		if (ivp->pint != 0)   l1 |= 2;
-		if (ivp->last != 0.0) l1 |= 4;
-		return l1;
+		ivp->neqs = 1;
+		ivp->pint = 0;
+		ivp->last = 0;
+		return 0;
 	}
-	if ((l1 = src->_vptr->conv(src, 'i', &l2)) > 0) {
+	if ((l1 = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &l2)) > 0) {
 		int32_t pi;
 		if (l2 == 0) {
 			return MPT_ERROR(BadValue);
@@ -28,7 +25,7 @@ extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *ivp, MPT_INTERFACE(source) 
 		if (l2 > 0) {
 			ivp->neqs = l2;
 		}
-		if ((l2 = src->_vptr->conv(src, 'i', &pi)) == 0) {
+		if ((l2 = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &pi)) == 0) {
 			ivp->pint = 0;
 			l2 = 0;
 		} else if (l2 > 0 && pi >= 0) {
@@ -39,7 +36,7 @@ extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *ivp, MPT_INTERFACE(source) 
 		l1 = 0;
 	}
 	t = 0;
-	if ((l2 = src->_vptr->conv(src, 'd', &t)) > 0) {
+	if ((l2 = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t)) > 0) {
 		ivp->last = t;
 		l1 += l2;
 	}

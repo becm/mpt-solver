@@ -6,17 +6,14 @@
 
 #include "solver.h"
 
-extern int mpt_nlspar_set(MPT_SOLVER_STRUCT(nlspar) *nls, MPT_INTERFACE(source) *src)
+extern int mpt_nlspar_set(MPT_SOLVER_STRUCT(nlspar) *nls, MPT_INTERFACE(metatype) *src)
 {
 	int32_t l1, l2;
 	
 	if (!src) {
-		l1 = 0;
-		if (nls->nval < 0) return MPT_ERROR(BadArgument);
-		if (nls->nres < 0) return MPT_ERROR(BadValue);
-		if (nls->nval != 1)  l1 |= 1;
-		if (nls->nres != 0)  l1 |= 2;
-		return l1;
+		nls->nval = 0;
+		nls->nres = 0;
+		return 0;
 	}
 	if ((l1 = src->_vptr->conv(src, 'i', &l2)) > 0) {
 		int32_t nv, res;
