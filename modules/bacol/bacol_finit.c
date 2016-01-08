@@ -8,73 +8,74 @@
 
 #include "bacol.h"
 
-extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *data)
+extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *bac)
 {
-	if (data->x) free(data->x);
-	if (data->y) free(data->y);
+	free(bac->x); bac->x = 0;
+	free(bac->y); bac->y = 0;
 	
-	data->y = data->x = 0;
 	
-	if (data->ipar.iov_base) {
-		free(data->ipar.iov_base);
-		data->ipar.iov_base = 0;
-		data->ipar.iov_len  = 0;
-	}
-	if (data->rpar.iov_base) {
-		free(data->rpar.iov_base);
-		data->rpar.iov_base = 0;
-		data->rpar.iov_len  = 0;
-	}
-	if (data->owrk.iov_base) {
-		free(data->owrk.iov_base);
-		data->owrk.iov_base = 0;
-		data->owrk.iov_len  = 0;
-	}
+	free(bac->ipar.iov_base);
+	bac->ipar.iov_base = 0;
+	bac->ipar.iov_len  = 0;
 	
-	mpt_vecpar_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_vecpar_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	free(bac->rpar.iov_base);
+	bac->rpar.iov_base = 0;
+	bac->rpar.iov_len  = 0;
 	
-	data->mflag.noinit = -1;
+	free(bac->out.wrk.iov_base);
+	bac->out.wrk.iov_base = 0;
+	bac->out.wrk.iov_len  = 0;
 	
-	switch (data->backend) {
+	free(bac->out.x); bac->out.x = 0;
+	free(bac->out.y); bac->out.y = 0;
+	
+	mpt_vecpar_cktol(&bac->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_vecpar_cktol(&bac->atol, 0, 0, __MPT_IVP_ATOL);
+	
+	bac->mflag.noinit = -1;
+	
+	switch (bac->backend) {
 #ifdef MPT_BACOL_RADAU
 	  case 'r': case 'R':
-		free(data->bd.cpar.iov_base);
-		data->bd.cpar.iov_base = 0;
-		data->bd.cpar.iov_len  = 0;
+		free(bac->bd.cpar.iov_base);
+		bac->bd.cpar.iov_base = 0;
+		bac->bd.cpar.iov_len  = 0;
 #endif
 		break;
 	  default:;
 	}
 }
 
-extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *data)
+extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *bac)
 {
-	MPT_IVPPAR_INIT(&data->ivp);
+	bac->ivp.neqs = 1;
+	bac->ivp.pint = 127;
 	
-	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
-	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);
+	MPT_VECPAR_INIT(&bac->rtol, __MPT_IVP_RTOL);
+	MPT_VECPAR_INIT(&bac->atol, __MPT_IVP_ATOL);
 	
-	data->kcol   = 2;
-	data->nintmx = 127;
-	data->nint   = 10;
+	bac->kcol   = 2;
+	bac->nint   = 10;
 	
-	(void) memset(&data->mflag, 0, sizeof(data->mflag));
-	data->mflag.noinit = -1;
+	(void) memset(&bac->mflag, 0, sizeof(bac->mflag));
+	bac->mflag.noinit = -1;
 	
-	data->x = data->y = 0;
+	bac->x = 0;
+	bac->y = 0;
+	bac->grid = 0;
 	
-	data->rpar.iov_base = 0; data->rpar.iov_len = 0;
-	data->ipar.iov_base = 0; data->ipar.iov_len = 0;
-	data->owrk.iov_base = 0; data->owrk.iov_len = 0;
+	bac->out.len = 0;
+	bac->out.x = 0;
+	bac->out.y = 0;
+	bac->out.wrk.iov_base = 0;
+	bac->out.wrk.iov_len  = 0;
 	
-	data->ufcn = 0;
+	bac->rpar.iov_base = 0; bac->rpar.iov_len = 0;
+	bac->ipar.iov_base = 0; bac->ipar.iov_len = 0;
 	
-	data->xinit = mpt_bacol_grid_init;
-	data->xgrid = 0;
 	
-	*((short *) &data->backend) = 'd';
+	*((short *) &bac->backend) = 'd';
 	
-	memset(&data->bd, 0, sizeof(data->bd));
+	memset(&bac->bd, 0, sizeof(bac->bd));
 }
 

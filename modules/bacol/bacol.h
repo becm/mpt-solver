@@ -36,14 +36,23 @@ MPT_SOLVER_STRUCT(bacol)
 public:
 	bacol(int type = 'd');
 	~bacol();
+#else
+# define MPT_BACOL_NIMAXDEF 127
+# define MPT_BACOL_NCONTI   2
 #endif
 	MPT_SOLVER_STRUCT(ivppar) ivp; /* inherit IVP parameter */
+	
+	double  t,           /* reached time step */
+	       *x,           /* x-values for internal grid points (nintmx+1) */
+	       *y;           /* bspline coefficients for y */
+	
 	MPT_TYPE(dvecpar) atol, rtol;  /* tolerances */
+	
+	double initstep;     /* initial stepsize */
 	
 	const short backend; /* solver backend */
 	short       kcol;    /* collocation points per subinterval [1..10] */
-	int         nintmx,  /* maximal internal intervals */
-	            nint;    /* current internal intervals */
+	int         nint;    /* current internal intervals */
 	
 	struct {
 		int noinit,  /* no initial call */
@@ -55,32 +64,23 @@ public:
 		    dbmax;   /* max. number of bdf methods for dassl on ipar[14] */
 	} mflag;
 	
+	struct {
+		uint          len;
+		double       *x,
+		             *y;    /* output data */
+		struct iovec  wrk;  /* work space for output creation */
+	} out;
 	
-	double initstep;  /* initial stepsize */
+	/* adapt grid data */
+	int (*grid)(const MPT_SOLVER_STRUCT(bacol) *, int , double *);
 	
-	double *x,  /* x-values for internal grid points (nintmx+1) */
-	       *y;  /* bspline coefficients for y */
-	
-	struct iovec rpar,  /* real parameters */
-	             ipar,  /* integer parameters */
-	             owrk;  /* work space for output creation */
-	
-	/* bacol user functions, set global by bacol_default() */
-	MPT_SOLVER_STRUCT(bacolfcn) *ufcn;
-	
-	/* initialize grid (nval, xsrc, max. intv, x, intv) */
-	int (*xinit)(int , const double *, int , double *, int );
-	
-	/* adapt output grid (time, intv, x, max. dim, xout) */
-	int (*xgrid)(double , int , const double *, int , double *);
-	
+	struct iovec rpar,          /* floating point state data */
+	             ipar;          /* integer state data */
 	union {
 		struct iovec cpar;  /* radau complex parameter */
 		double tstop;       /* dassl tstop value */
 	} bd;
 };
-
-#define MPT_BACOL_NCONTI  2
 
 __MPT_EXTDECL_BEGIN
 
@@ -96,9 +96,7 @@ extern void values_(int *, double *, int *, double *, int *, int *,
                     int *, double *, double *, double *);
 
 /* execute next step on supplied bacol instance */
-extern int mpt_bacol_sstep(MPT_SOLVER_STRUCT(bacol) *, double );
-extern int mpt_bacol_step(MPT_SOLVER_STRUCT(bacol) *, double *, double , double *);
-extern int mpt_bacol_step_(MPT_SOLVER_STRUCT(bacol) *, double *, double *, double *);
+extern int mpt_bacol_step(MPT_SOLVER_STRUCT(bacol) *, double);
 
 /* generate output values from current bacol state */
 extern int mpt_bacol_values(MPT_SOLVER_STRUCT(bacol) *, double *, int , double *);
@@ -107,16 +105,20 @@ extern int mpt_bacol_values(MPT_SOLVER_STRUCT(bacol) *, double *, int , double *
 extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *);
 extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *);
 
-/* set bacol parameter */
-extern int mpt_bacol_property(MPT_SOLVER_STRUCT(bacol) *, MPT_STRUCT(property) *, MPT_INTERFACE(source) *src);
+/* get/set bacol parameter */
+extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *, MPT_STRUCT(property) *);
+extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *, const char *, MPT_INTERFACE(metatype) *);
 /* validate settings and working space for use */
-extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *, int , int );
+extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *);
 
 /* bacol status information */
-extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_bacol_report(MPT_SOLVER_STRUCT(bacol) *, int , MPT_TYPE(PropertyHandler) , void *);
+
+/* set bacol state data */
+extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *, const MPT_STRUCT(value) *);
 
 /* default helper functions */
-extern int mpt_bacol_grid_init(int , const double *, int , double *, int );
+extern int mpt_bacol_grid_init(int , const double *, int , double *, int);
 
 #ifndef __cplusplus
 /* open/close handler for generic solver type */
@@ -140,22 +142,51 @@ inline bacol::~bacol()
 class Bacol : public Ivp, bacol
 {
 public:
-	Bacol(const char *t = 0) : bacol(t ? *t : 'd')
-	{ }
+	Bacol(int npde = -1, const char *t = 0) : bacol(t ? *t : 'd')
+	{
+		if (npde >= 0) ivp.neqs = npde;
+	}
 	virtual ~Bacol()
 	{ }
-	Bacol *addref()
-	{ return 0; }
-	int unref()
-	{ delete this; return 0; }
-	int property(struct property *pr, source *src = 0)
-	{ return mpt_bacol_property(this, pr, src); }
-	int report(int what, PropertyHandler out, void *opar) const
-	{ return mpt_bacol_report(this, what, out, opar); }
-	int step(double *u, double *tend, double *x)
-	{ return mpt_bacol_step_(this, u, tend, x); }
-	operator ivppar *() const
-	{ return (ivppar *) &this->ivp; }
+	void unref()
+	{
+		delete this;
+	}
+	uintptr_t addref()
+	{
+		return 0;
+	}
+	int property(struct property *pr) const
+	{
+		return mpt_bacol_get(this, pr);
+	}
+	int setProperty(const char *pr, metatype *src = 0)
+	{
+		return mpt_bacol_set(this, pr, src);
+	}
+	int report(int what, PropertyHandler out, void *opar)
+	{
+		return mpt_bacol_report(this, what, out, opar);
+	}
+	int step(double *tend)
+	{
+		if (!tend) return mpt_bacol_prepare(this);
+		int ret = mpt_bacol_step(this, *tend);
+		*tend = t;
+		return ret;
+	}
+	inline double *grid() const
+	{
+		return out.x;
+	}
+	inline double *values() const
+	{
+		return out.y;
+	}
+	inline int size() const
+	{
+		return (out.x && out.y) ? out.len : 0;
+	}
 };
 #endif
 __MPT_SOLVER_END

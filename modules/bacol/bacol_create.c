@@ -11,58 +11,53 @@
 
 extern void uinit_(const double *, double *, const int *);
 
-extern int mpt_bacol_step_(MPT_SOLVER_STRUCT(bacol) *bac, double *u, double *tend, double *x)
+static void bacFini(MPT_INTERFACE(object) *gen)
 {
-	int i;
-	
-	if (!tend || bac->mflag.noinit < 0) {
-		if ((i = mpt_bacol_prepare(bac, bac->ivp.neqs, bac->ivp.pint)) < 0)
-			return i;
-		
-		if (!tend) {
-			if ( !u || !x ) return i;
-			
-			for ( i = 0 ; i <= bac->ivp.pint ; i++, u += bac->ivp.neqs )
-				uinit_(x++, u, &bac->ivp.neqs);
-			return i;
-		}
-	}
-	i = u ? mpt_bacol_step(bac, u, *tend, x) : 0;
-	*tend = bac->ivp.last;
-	return i;
+	mpt_bacol_fini((MPT_SOLVER_STRUCT(bacol) *) (gen+1));
+	free(gen);
+}
+static uintptr_t bacAddref()
+{
+	return 0;
+}
+static int bacGet(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
+{
+	return mpt_bacol_get((MPT_SOLVER_STRUCT(bacol) *) (gen+1), pr);
+}
+static int bacSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metatype) *src)
+{
+	return mpt_bacol_set((MPT_SOLVER_STRUCT(bacol) *) (gen+1), pr, src);
 }
 
-static int bacFini(MPT_INTERFACE(metatype) *gen)
-{ mpt_bacol_fini((MPT_SOLVER_STRUCT(bacol) *) (gen+1)); free(gen); return 0; }
-
-static MPT_INTERFACE(metatype) *bacAddref()
-{ return 0; }
-
-static int bacProperty(MPT_INTERFACE(metatype) *gen, MPT_STRUCT(property) *pr, MPT_INTERFACE(source) *src)
-{ return mpt_bacol_property((MPT_SOLVER_STRUCT(bacol) *) (gen+1), pr, src); }
-
-static void *bacCast(MPT_INTERFACE(metatype) *gen, int type)
+static int bacReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	switch(type) {
-	  case MPT_ENUM(TypeMeta): return gen;
-	  case MPT_ENUM(TypeSolver): return gen;
-	  default: return 0;
-	}
+	return mpt_bacol_report((MPT_SOLVER_STRUCT(bacol) *) (gen+1), what, out, data);
 }
-
-static int bacReport(const MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{ return mpt_bacol_report((MPT_SOLVER_STRUCT(bacol) *) (gen+1), what, out, data); }
-
-static int bacStep(MPT_SOLVER_INTERFACE *gen, double *u, double *tend, double *x)
-{ return mpt_bacol_step_((void *) (gen+1), u, tend, x); }
-
-static MPT_SOLVER_STRUCT(ivpfcn) *bacFcn(const MPT_SOLVER_INTERFACE *gen)
-{ (void) gen; return 0; }
-
-static const MPT_INTERFACE_VPTR(Ivp) bacolCtl = {
-	{ { bacFini, bacAddref, bacProperty, bacCast }, bacReport },
+static int bacStep(MPT_SOLVER_INTERFACE *gen, double *end)
+{
+	MPT_SOLVER_STRUCT(bacol) *bac = (void *) (gen+1);
+	int ret;
+	if (!end) return mpt_bacol_prepare(bac);
+	ret = mpt_bacol_step(bac, *end);
+	*end = bac->t;
+	return ret;
+}
+static void *bacFcn(const MPT_SOLVER_INTERFACE *gen, int type)
+{
+	(void) gen;
+	(void) type;
+	return 0;
+}
+static double *bacState(MPT_SOLVER_INTERFACE *gen)
+{
+	MPT_SOLVER_STRUCT(bacol) *bac = (void *) (gen+1);
+	return bac->out.y;
+}
+static const MPT_INTERFACE_VPTR(Ivp) _vptr_bacol = {
+	{ { bacFini, bacAddref, bacGet, bacSet }, bacReport },
 	bacStep,
-	bacFcn
+	bacFcn,
+	bacState
 };
 
 extern MPT_SOLVER_INTERFACE *mpt_bacol_create()
@@ -75,7 +70,7 @@ extern MPT_SOLVER_INTERFACE *mpt_bacol_create()
 	
 	data = (MPT_SOLVER_STRUCT(bacol) *) (gen+1);
 	mpt_bacol_init(data);
-	gen->_vptr = &bacolCtl.gen;
+	gen->_vptr = &_vptr_bacol.gen;
 	
 	return gen;
 }

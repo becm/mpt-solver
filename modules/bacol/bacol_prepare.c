@@ -7,33 +7,33 @@
 
 #include "bacol.h"
 
-extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *data, int npde, int odim)
+extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 {
-	MPT_SOLVER_STRUCT(ivppar) *ivp = &data->ivp;
 	double *tmp;
-	int kcol, nimx, maxvec, lip, lrp, lcp;
+	int npde, odim, kcol, nimx, maxvec, lip, lrp, lcp;
 	
-	if (npde < 1 || odim < 0) {
-		errno = EINVAL; return -2;
+	
+	/* set helper variables */
+	npde   = bac->ivp.neqs;
+	kcol   = bac->kcol;
+	nimx   = bac->ivp.pint;
+	maxvec = npde * (nimx * kcol + MPT_BACOL_NCONTI);
+	
+	if (npde < 1 || bac->nint < 1 || bac->nint > nimx) {
+		return MPT_ERROR(BadArgument);
 	}
-	ivp->neqs = npde;
-	ivp->pint = odim;
 	
 	/* use vector tolerances if one is set */
-	odim = (npde > 1 && (data->rtol.base || data->atol.base)) ? 1 : 0;
+	odim = (npde > 1 && (bac->rtol.base || bac->atol.base)) ? 1 : 0;
 	
-	if (mpt_vecpar_cktol(&data->rtol, ivp->neqs, odim, __MPT_IVP_RTOL) < 0) {
-		return -1;
+	if (mpt_vecpar_cktol(&bac->rtol, bac->ivp.neqs, odim, __MPT_IVP_RTOL) < 0) {
+		return MPT_ERROR(BadOperation);
 	}
-	if (mpt_vecpar_cktol(&data->atol, ivp->neqs, odim, __MPT_IVP_ATOL) < 0) {
-		return -1;
+	if (mpt_vecpar_cktol(&bac->atol, bac->ivp.neqs, odim, __MPT_IVP_ATOL) < 0) {
+		return MPT_ERROR(BadOperation);
 	}
-	/* set helper variables */
-	kcol	= data->kcol;
-	nimx	= data->nintmx;
-	maxvec	= npde * (nimx * kcol + MPT_BACOL_NCONTI);
 	
-	switch (data->backend) {
+	switch (bac->backend) {
 #ifdef MPT_BACOL_RADAU
 	    case 'r': case 'R':
 	lip = 100 + 3 * npde * (nimx * (2 * kcol + 1) + 4);
@@ -61,32 +61,37 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *data, int npde, int odim)
 	lcp = 0;
 	    break;
 #endif
-	    default: errno = EBADR; return -1;
+	    default: errno = EBADR; return MPT_ERROR(BadArgument);
 	}
 	
-	if (!(tmp = realloc(data->x, (nimx + 1) * sizeof(*data->x)))) {
-		return -1;
+	if (!(tmp = realloc(bac->x, (nimx + 1) * sizeof(*bac->x)))) {
+		return MPT_ERROR(BadOperation);
 	}
-	data->x = tmp;
-	
-	if (!(tmp = realloc(data->y, maxvec * sizeof(*data->y)))) {
-		return -1;
+	if (!bac->x) {
+		int i, nint = bac->nint;
+		double dx = 1.0 / nint;
+		for (i = 0; i <= nint; ++i) tmp[i] = i *dx;
 	}
-	data->y = tmp;
+	bac->x = tmp;
 	
-	if (!mpt_vecpar_alloc(&data->ipar, lip, sizeof(double)))
-		return -1;
-	
-	if (!mpt_vecpar_alloc(&data->rpar, lrp, sizeof(int))) {
-		return -1;
+	if (!(tmp = realloc(bac->y, maxvec * sizeof(*bac->y)))) {
+		return MPT_ERROR(BadOperation);
 	}
-	if (lcp && !mpt_vecpar_alloc(&data->bd.cpar, lcp, 2*sizeof(double))) {
-		return -1;
-	}
-	((double *) data->rpar.iov_base)[0] = data->bd.tstop;
-	((double *) data->rpar.iov_base)[1] = data->initstep;
+	bac->y = tmp;
 	
-	data->mflag.noinit = 0;
+	if (!mpt_vecpar_alloc(&bac->ipar, lip, sizeof(double))) {
+		return MPT_ERROR(BadOperation);
+	}
+	if (!mpt_vecpar_alloc(&bac->rpar, lrp, sizeof(int))) {
+		return MPT_ERROR(BadOperation);
+	}
+	if (lcp && !mpt_vecpar_alloc(&bac->bd.cpar, lcp, 2*sizeof(double))) {
+		return MPT_ERROR(BadOperation);
+	}
+	((double *) bac->rpar.iov_base)[0] = bac->bd.tstop;
+	((double *) bac->rpar.iov_base)[1] = bac->initstep;
+	
+	bac->mflag.noinit = 0;
 	
 	return 0;
 }

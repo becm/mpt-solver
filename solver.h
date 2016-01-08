@@ -61,7 +61,7 @@ typedef int (*MPT_TYPE(IvpJac))(void *upar, double t, const double *y, double *j
 typedef int (*MPT_TYPE(IvpMas))(void *upar, double t, const double *y, double *band, int *ir, int *ic);
 /* extensions for PDE solvers */
 typedef int (*MPT_TYPE(RsideFcn))(void *upar, double x, const double *y, double t, double *f, double *dx, double *dy);
-typedef int (*MPT_TYPE(PdeFcn))(void *upar, MPT_TYPE(RsideFcn), int pts, const double *x, double t, const double *y, double *f);
+typedef int (*MPT_TYPE(PdeFcn))(void *upar, double t, const double *y, double *f, int pts, const double *x, MPT_TYPE(RsideFcn));
 
 /* non-linear solver functions */
 typedef int (*MPT_TYPE(NlsFcn))(void *rpar, const double *p, double *res, const int *lres);
@@ -91,12 +91,20 @@ enum MPT_SOLVER_ENUM(Flags)
 /*! generic IVP functions */
 MPT_SOLVER_STRUCT(odefcn)
 {
+#ifdef __cplusplus
+	inline odefcn(IvpFcn f, IvpJac j = 0) : fcn(f), param(0), jac(j)
+	{ }
+#endif
 	MPT_TYPE(IvpFcn) fcn;   /* unified right side calculation */
 	void            *param; /* user parameter for handler functions */
 	MPT_TYPE(IvpJac) jac;   /* (full/banded) jacobi matrix */
 };
 MPT_SOLVER_STRUCT(daefcn)
 {
+#ifdef __cplusplus
+	inline daefcn(IvpFcn f, IvpMas m, IvpJac j = 0) : fcn(f), param(0), jac(j), mas(m)
+	{ }
+#endif
 	MPT_TYPE(IvpFcn)  fcn;   /* unified right side calculation */
 	void             *param; /* user parameter for handler functions */
 	MPT_TYPE(IvpJac)  jac;   /* (full/banded) jacobi matrix */
@@ -104,33 +112,36 @@ MPT_SOLVER_STRUCT(daefcn)
 };
 MPT_SOLVER_STRUCT(pdefcn)
 {
+#ifdef __cplusplus
+	inline pdefcn(PdeFcn f, RsideFcn r = 0) : fcn(f), param(0), rside(r)
+	{ }
+#endif
 	MPT_TYPE(PdeFcn)    fcn;   /* right side function */
 	void               *param; /* user parameter for handler functions */
 	MPT_TYPE(RsideFcn)  rside; /* right side function */
 };
+
+#ifndef __cplusplus
 typedef union
 {
-#ifndef __cplusplus
 # define MPT_IVPFCN_INIT(d)  ((MPT_SOLVER_TYPE(ivpfcn) *) memset(d, 0, sizeof(MPT_SOLVER_TYPE(ivpfcn))))
-#endif
 	MPT_SOLVER_STRUCT(odefcn) ode;
 	MPT_SOLVER_STRUCT(daefcn) dae;
 	MPT_SOLVER_STRUCT(pdefcn) pde;
 } MPT_SOLVER_TYPE(ivpfcn);
+#endif
 
 /*! general IVP parameter */
 MPT_SOLVER_STRUCT(ivppar)
 {
 #ifdef __cplusplus
-	inline ivppar() : neqs(0), pint(0), last(0)
+	inline ivppar() : neqs(0), pint(0)
 	{ }
 #else
-# define MPT_IVPPAR_INIT(d)  ((d)->neqs = (d)->pint = (d)->last = 0)
+# define MPT_IVPPAR_INIT(d)  ((d)->neqs = 0, (d)->pint = 0)
 #endif
-	int32_t neqs;  /* number of equotations */
-	int32_t pint;  /* number pde intervals */
-	
-	double  last;  /* reached time */
+	int32_t neqs,  /* number of equotations */
+	        pint;  /* number pde intervals */
 };
 typedef int (*MPT_TYPE(DataInitializer))(void *, double *, size_t);
 
@@ -200,9 +211,17 @@ protected:
 	~Ivp() {}
 public:
 	virtual int step(double *end) = 0;
-	virtual ivpfcn *functions(int type = ODE) const;
+	virtual void *functions(int type = ODE) const;
+	virtual double *initstate();
 	
 	operator const struct ivppar *();
+	
+	inline operator odefcn *() const
+	{ return (odefcn *) functions(ODE); }
+	inline operator daefcn *() const
+	{ return (daefcn *) functions(DAE); }
+	inline operator pdefcn *() const
+	{ return (pdefcn *) functions(PDE); }
 };
 
 /*! extension for NonLinear Systems */
@@ -219,7 +238,9 @@ protected:
 
 inline Ivp::operator const ivppar *()
 { struct property p; return property(&p) < 0 ? 0 : (struct ivppar *) p.val.ptr; }
-inline ivpfcn *Ivp::functions(int) const
+inline void *Ivp::functions(int) const
+{ return 0; }
+inline double *Ivp::initstate()
 { return 0; }
 
 inline Nls::operator const nlspar *()
@@ -327,13 +348,14 @@ MPT_INTERFACE_VPTR(Ivp)
 {
 	MPT_INTERFACE_VPTR(solver) gen;
 	int (*step)(MPT_SOLVER_INTERFACE *, double *end);
-	MPT_SOLVER_TYPE(ivpfcn) *(*ufcn) (const MPT_SOLVER_INTERFACE *, int);
+	void *(*functions)(const MPT_SOLVER_INTERFACE *, int);
+	double *(*initstate)(MPT_SOLVER_INTERFACE *);
 };
 MPT_INTERFACE_VPTR(Nls)
 {
 	MPT_INTERFACE_VPTR(solver) gen;
 	int (*step)(MPT_SOLVER_INTERFACE *s, double *res);
-	MPT_SOLVER_STRUCT(nlsfcn) *(*ufcn) (const MPT_SOLVER_INTERFACE *);
+	MPT_SOLVER_STRUCT(nlsfcn) *(*functions)(const MPT_SOLVER_INTERFACE *);
 };
 #endif
 

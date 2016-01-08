@@ -8,38 +8,36 @@
 
 extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *ivp, MPT_INTERFACE(metatype) *src)
 {
-	double t;
-	int32_t l1, l2;
+	int32_t neqs, pint;
+	int len;
 	
 	if (!src) {
 		ivp->neqs = 1;
 		ivp->pint = 0;
-		ivp->last = 0;
 		return 0;
 	}
-	if ((l1 = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &l2)) > 0) {
-		int32_t pi;
-		if (l2 == 0) {
+	if ((len = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &neqs)) < 0) {
+		return len;
+	}
+	if (!len) {
+		ivp->neqs = 1;
+		ivp->pint = 0;
+		return 0;
+	}
+	if (neqs <= 0) {
+		return MPT_ERROR(BadValue);
+	}
+	if ((len = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &pint)) < 0) {
+		return len;
+	}
+	if (len) {
+		if (pint < 0) {
 			return MPT_ERROR(BadValue);
 		}
-		if (l2 > 0) {
-			ivp->neqs = l2;
-		}
-		if ((l2 = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &pi)) == 0) {
-			ivp->pint = 0;
-			l2 = 0;
-		} else if (l2 > 0 && pi >= 0) {
-			ivp->pint = pi;
-		}
-		l1 += l2;
-	} else {
-		l1 = 0;
+		ivp->neqs = neqs;
+		ivp->pint = pint;
+		return 2;
 	}
-	t = 0;
-	if ((l2 = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t)) > 0) {
-		ivp->last = t;
-		l1 += l2;
-	}
-	
-	return l1;
+	ivp->neqs = neqs;
+	return 1;
 }
