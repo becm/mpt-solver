@@ -4,7 +4,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+
+#include <math.h>
 
 #include "bacol.h"
 
@@ -57,18 +58,22 @@ extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *bac)
 	bac->kcol   = 2;
 	bac->nint   = 10;
 	
-	(void) memset(&bac->mflag, 0, sizeof(bac->mflag));
-	bac->mflag.noinit = -1;
-	
-	bac->x = 0;
-	bac->y = 0;
-	bac->grid = 0;
-	
-	bac->out.len = 0;
+	bac->out.nderiv = -1;
+	bac->out.nint = 0;
 	bac->out.x = 0;
 	bac->out.y = 0;
 	bac->out.wrk.iov_base = 0;
 	bac->out.wrk.iov_len  = 0;
+	
+	(void) memset(&bac->mflag, 0, sizeof(bac->mflag));
+	bac->mflag.noinit = -1;
+	
+	bac->initstep = NAN;
+	
+	bac->t = 0.0;
+	bac->x = 0;
+	bac->y = 0;
+	bac->grid = 0;
 	
 	bac->rpar.iov_base = 0; bac->rpar.iov_len = 0;
 	bac->ipar.iov_base = 0; bac->ipar.iov_len = 0;

@@ -33,9 +33,22 @@ static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(metatype) *s
 #endif
 	  default: return MPT_ERROR(BadValue);
 	}
-	return len;
+	return 0;
 }
 
+/*!
+ * \ingroup mptSundialsIda
+ * \brief set BACOL property
+ * 
+ * Change property of BACOL solver
+ * 
+ * \param bac  BACOL data
+ * \param name name of property to change
+ * \param src  data source to change property
+ * 
+ * \retval <0  failure
+ * \retval >=0 consumed value count
+ */
 extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_INTERFACE(metatype) *src)
 {
 	int len = 0;
@@ -76,15 +89,20 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 		return mpt_vecpar_set(&bac->rtol, src);
 	}
 	if (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) {
-		int nout = 10;
+		int32_t oint = 10;
 		
 		if (bac->out.x || bac->out.y) {
 			return MPT_ERROR(BadOperation);
 		}
-		if (src && (len = src->_vptr->conv(src, 'i', &nout)) < 0) return len;
-		if (nout < 2) return MPT_ERROR(BadValue);
-		bac->out.len = (tolower(*name) == 'i') ? nout + 1 : nout;
-		return len;
+		if (src && (len = src->_vptr->conv(src, 'i', &oint)) < 0) return len;
+		if (tolower(*name) != 'i') {
+			--oint;
+		}
+		if (oint < 1) {
+			return MPT_ERROR(BadValue);
+		}
+		bac->out.nint = oint;
+		return len ? 1 : 0;
 	}
 	/* no interaction after setup */
 	if (bac->x || bac->y || bac->rpar.iov_base || bac->ipar.iov_base) {
@@ -92,40 +110,40 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	}
 	/* bacol parameters */
 	if (!strcasecmp(name, "kcol")) {
-		int kcol = 2;
+		int32_t kcol = 2;
 	
 		if (!src && (len = src->_vptr->conv(src, 'i', &kcol)) < 0) return len;
 		else if (kcol < 2 || kcol > 10) return MPT_ERROR(BadValue);
 		bac->kcol = kcol;
-		return len;
+		return len ? 1 : 0;
 	}
 	if (!strcasecmp(name, "nint")) {
-		int nint = 10;
+		int32_t nint = 10;
 		
 		if (src && (len = src->_vptr->conv(src, 'i', &nint)) < 0) return len;
 		if (nint < 2 || nint > bac->ivp.pint) return MPT_ERROR(BadValue);
 		bac->nint = nint;
-		return len;
+		return len ? 1 : 0;
 	}
 	if (!strcasecmp(name, "nintmx")) {
-		int nintmx = 127;
+		int32_t nintmx = 127;
 		
 		if (src && (len = src->_vptr->conv(src, 'i', &nintmx)) < 0) return len;
 		if (nintmx < bac->nint) return MPT_ERROR(BadValue);
 		bac->ivp.pint = nintmx;
-		return len;
+		return len ? 1 : 0;
 	}
 	if (!strncasecmp(name, "dirichlet", 3)) {
 		if (src && (len = src->_vptr->conv(src, 'i', &bac->mflag.bdir) < 0)) return len;
 		if (!len) bac->mflag.bdir = 0;
-		return len;
+		return len ? 1 : 0;
 	}
 	/* ode parameter */
 	if (!strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) {
 		if (src && (len = src->_vptr->conv(src, 'd', &bac->initstep)) < 0) return len;
 		bac->mflag.step = len ? 1 : 0;
 		
-		return len;
+		return len ? 1 : 0;
 	}
 	/* solving backend */
 	if (!strcasecmp(name, "backend")) {
@@ -137,18 +155,18 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	if (!strcasecmp(name, "tstop")) {
 		if (src && (len = src->_vptr->conv(src, 'd', &bac->bd.tstop)) < 0) return len;
 		bac->mflag.tstop = len ? 1 : 0;
-		return len;
+		return len ? 1 : 0;
 	}
 	/* dassl parameter */
 	if (!strcasecmp(name, "maxstep")) {
 		if (src && (len = src->_vptr->conv(src, 'i', &bac->mflag.mstep)) < 0) return len;
-		if (!len) bac->mflag.mstep = 0;
-		return len;
+		if (!len) return bac->mflag.mstep = 0;
+		return len ? 1 : 0;
 	}
 	if (!strcasecmp(name, "dasslbdf") || !strcasecmp(name, "bdf")) {
 		if (src && (len = src->_vptr->conv(src, 'i', &bac->mflag.dbmax)) < 0) return len;
-		if (!len) bac->mflag.dbmax = 0;
-		return len;
+		if (!len) return bac->mflag.dbmax = 0;
+		return len ? 1 : 0;
 	}
 	}
 #endif
@@ -156,6 +174,19 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	return MPT_ERROR(BadArgument);
 }
 
+/*!
+ * \ingroup mptBacol
+ * \brief get BACOL property
+ * 
+ * Get property of BACOL solver
+ * 
+ * \param bac  BACOL data
+ * \param prop object property
+ * 
+ * \retval 0   default value
+ * \retval <0  failure
+ * \retval >0  changed property
+ */
 extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(property) *prop)
 {
 	const char *name;
@@ -213,10 +244,10 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 		return bac->nint == 10 ? 0 : 1;
 	}
 	if (name ? (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) : pos == ++id) {
-		prop->name = "nout"; prop->desc = "number of internal intervals";
-		prop->val.fmt = "i"; prop->val.ptr = &bac->out.len;
+		prop->name = "iout"; prop->desc = "number of internal intervals";
+		prop->val.fmt = "i"; prop->val.ptr = &bac->out.nint;
 		if (!bac) return id;
-		return bac->out.len ? 1 : 0;
+		return bac->out.nint ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "nintmx") : pos == ++id) {
 		prop->name = "nintmx"; prop->desc = "maximum internal intervals";

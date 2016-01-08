@@ -50,9 +50,17 @@ public:
 	
 	double initstep;     /* initial stepsize */
 	
-	const short backend; /* solver backend */
-	short       kcol;    /* collocation points per subinterval [1..10] */
 	int         nint;    /* current internal intervals */
+	short       kcol;    /* collocation points per subinterval [1..10] */
+	const char  backend; /* solver backend */
+	
+	struct {
+		int8_t        nderiv;
+		uint          nint;
+		double       *x,
+		             *y;    /* output data */
+		struct iovec  wrk;  /* work space for output creation */
+	} out;
 	
 	struct {
 		int noinit,  /* no initial call */
@@ -63,13 +71,6 @@ public:
 		    step,    /* user specified initial step size on rpar[1] */
 		    dbmax;   /* max. number of bdf methods for dassl on ipar[14] */
 	} mflag;
-	
-	struct {
-		uint          len;
-		double       *x,
-		             *y;    /* output data */
-		struct iovec  wrk;  /* work space for output creation */
-	} out;
 	
 	/* adapt grid data */
 	int (*grid)(const MPT_SOLVER_STRUCT(bacol) *, int , double *);
@@ -175,17 +176,17 @@ public:
 		*tend = t;
 		return ret;
 	}
-	inline double *grid() const
+	inline const double *grid() const
 	{
 		return out.x;
 	}
-	inline double *values() const
+	inline const double *values() const
 	{
 		return out.y;
 	}
-	inline int size() const
+	inline int updateOutput()
 	{
-		return (out.x && out.y) ? out.len : 0;
+		return mpt_bacol_values(this, out.x, 0, out.y);
 	}
 };
 #endif

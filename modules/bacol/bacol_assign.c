@@ -13,7 +13,7 @@ extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *bac, const MPT_STRUCT(valu
 	const struct iovec *vec;
 	double t, *x, *y;
 	size_t l;
-	uint lout;
+	uint oint;
 	int neqs;
 	
 	neqs = bac->ivp.neqs;
@@ -55,10 +55,10 @@ extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *bac, const MPT_STRUCT(valu
 		uint nint;
 		/* need matching grid dimensions */
 		if ((nint = bac->nint)
-		    && l != (bac->nint * sizeof(double))) {
+		    && l != ((bac->nint+1) * sizeof(double))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (l != (bac->ivp.pint * sizeof(double))) {
+		if (l > ((bac->ivp.pint+1) * sizeof(double))) {
 			return MPT_ERROR(BadValue);
 		}
 		bac->nint = l / sizeof(double);
@@ -69,7 +69,7 @@ extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *bac, const MPT_STRUCT(valu
 			return MPT_ERROR(BadOperation);
 		}
 		if (x) {
-			memcpy(bac->x, x, bac->nint * sizeof(*x));
+			memcpy(bac->x, x, (bac->nint+1) * sizeof(*x));
 		}
 		bac->t = t;
 		return 2;
@@ -78,27 +78,28 @@ extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *bac, const MPT_STRUCT(valu
 	if (*val.fmt++ != MPT_value_toVector('d') || *val.fmt) {
 		return MPT_ERROR(BadType);
 	}
-	if ((lout = bac->out.len)
-	    && l != (lout * sizeof(double))) {
-		return MPT_ERROR(BadValue);
+	if ((oint = bac->out.nint)) {
+		if (l != ((oint+1) * sizeof(double))) {
+			return MPT_ERROR(BadValue);
+		}
+	} else {
+		bac->out.nint = (l / sizeof(double)) - 1;
 	}
-	bac->out.len = l / sizeof(double);
-	
 	y = vec->iov_base;
 	l = vec->iov_len;
 	
 	if (mpt_bacol_values(bac, 0, -1, 0) < 0) {
-		bac->out.len = lout;
+		bac->out.nint = oint;
 		return MPT_ERROR(BadOperation);
 	}
-	lout = bac->out.len;
+	oint = bac->out.nint;
 	if (x) {
-		memcpy(bac->out.x, x, lout * sizeof(*x));
+		memcpy(bac->out.x, x, (oint+1) * sizeof(*x));
 	} else {
-		double dx = 1.0 / (lout - 1);
+		double dx = 1.0 / oint;
 		uint i;
 		x = bac->x;
-		for (i = 0; i < lout; ++i) x[i] = i * dx;
+		for (i = 0; i <= oint; ++i) x[i] = i * dx;
 	}
 	if (l) {
 		if (y) {
