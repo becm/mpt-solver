@@ -79,10 +79,10 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	}
 	bac->y = tmp;
 	
-	if (!mpt_vecpar_alloc(&bac->ipar, lip, sizeof(double))) {
+	if (!mpt_vecpar_alloc(&bac->ipar, lip, sizeof(int))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_vecpar_alloc(&bac->rpar, lrp, sizeof(int))) {
+	if (!mpt_vecpar_alloc(&bac->rpar, lrp, sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
 	if (lcp && !mpt_vecpar_alloc(&bac->bd.cpar, lcp, 2*sizeof(double))) {
