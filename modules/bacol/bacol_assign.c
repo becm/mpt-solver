@@ -72,7 +72,7 @@ extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *bac, const MPT_STRUCT(valu
 			memcpy(bac->x, x, (bac->nint+1) * sizeof(*x));
 		}
 		bac->t = t;
-		return 2;
+		return val.fmt - ptr->fmt;
 	}
 	/* initialize output data */
 	if (*val.fmt++ != MPT_value_toVector('d') || *val.fmt) {
@@ -109,7 +109,5 @@ extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *bac, const MPT_STRUCT(valu
 		}
 	}
 	bac->t = t;
-	return 2;
+	return val.fmt - ptr->fmt;
 }
-
-

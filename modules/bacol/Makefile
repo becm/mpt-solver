@@ -15,7 +15,7 @@ LINK   = ${FC}
 #
 # sources and math objects
 SRCS = $(wildcard bacol_*.c)
-MATH = bacolnoblas.o bacolrr.o dgbsl.o dgesl.o dgbfa.o dgefa.o
+MATH = bacol.o bacolrr.o
 #
 # headers to export
 HEADER = bacol.h
