@@ -3,9 +3,9 @@
  */
 
 #ifndef _MPT_BACOL_H
-#define _MPT_BACOL_H  201502
 
 #include "../solver.h"
+#define _MPT_BACOL_H  _MPT_SOLVER_H
 
 #include <sys/uio.h>
 
@@ -46,7 +46,7 @@ public:
 	       *x,           /* x-values for internal grid points (nintmx+1) */
 	       *y;           /* bspline coefficients for y */
 	
-	MPT_TYPE(dvecpar) atol, rtol;  /* tolerances */
+	MPT_SOLVER_TYPE(dvecpar) atol, rtol; /* tolerances */
 	
 	double initstep;     /* initial stepsize */
 	

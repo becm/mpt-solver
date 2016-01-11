@@ -4,7 +4,7 @@
  */
 
 #ifndef _MPT_SOLVER_H
-#define _MPT_SOLVER_H  201502
+#define _MPT_SOLVER_H  @INTERFACE_VERSION@
 
 #include <sys/time.h>
 
@@ -37,7 +37,7 @@ MPT_STRUCT(event);
 #  define __MPT_NLS_TOL   1e-6
 # endif
 # define MPT_SOLVER_STRUCT(i) struct mpt_solver_##i
-# define MPT_SOLVER_TYPE(i)   MPT_SOLVER_##i
+# define MPT_SOLVER_TYPE(i)   MptSolver##i
 # define MPT_SOLVER_ENUM(i)   MPT_SOLVER_##i
 # define __MPT_SOLVER_BEGIN
 # define __MPT_SOLVER_END
@@ -55,32 +55,32 @@ namespace solver {
 #endif
 
 /* ODE solver functions */
-typedef int (*MPT_TYPE(IvpFcn))(void *upar, double t, const double *y, double *f);
-typedef int (*MPT_TYPE(IvpJac))(void *upar, double t, const double *y, double *jac, int ldjac);
+typedef int (*MPT_SOLVER_TYPE(IvpFcn))(void *upar, double t, const double *y, double *f);
+typedef int (*MPT_SOLVER_TYPE(IvpJac))(void *upar, double t, const double *y, double *jac, int ldjac);
 /* extension for DAE solvers */
-typedef int (*MPT_TYPE(IvpMas))(void *upar, double t, const double *y, double *band, int *ir, int *ic);
+typedef int (*MPT_SOLVER_TYPE(IvpMas))(void *upar, double t, const double *y, double *band, int *ir, int *ic);
 /* extensions for PDE solvers */
-typedef int (*MPT_TYPE(RsideFcn))(void *upar, double x, const double *y, double t, double *f, double *dx, double *dy);
-typedef int (*MPT_TYPE(PdeFcn))(void *upar, double t, const double *y, double *f, int pts, const double *x, MPT_TYPE(RsideFcn));
+typedef int (*MPT_SOLVER_TYPE(RsideFcn))(void *upar, double t, const double *y, double *f, double x, double *dx, double *dy);
+typedef int (*MPT_SOLVER_TYPE(PdeFcn))(void *upar, double t, const double *y, double *f, int pts, const double *x, MPT_SOLVER_TYPE(RsideFcn));
 
 /* non-linear solver functions */
-typedef int (*MPT_TYPE(NlsFcn))(void *rpar, const double *p, double *res, const int *lres);
-typedef int (*MPT_TYPE(NlsJac))(void *jpar, const double *p, double *jac, const int *ld, const double *res);
+typedef int (*MPT_SOLVER_TYPE(NlsFcn))(void *rpar, const double *p, double *res, const int *lres);
+typedef int (*MPT_SOLVER_TYPE(NlsJac))(void *jpar, const double *p, double *jac, const int *ld, const double *res);
 
 MPT_SOLVER_STRUCT(nlspar);
-typedef int (*MPT_TYPE(NlsOut))(void *opar, MPT_SOLVER_STRUCT(nlspar) *np, const double *p, const double *res);
+typedef int (*MPT_SOLVER_TYPE(NlsOut))(void *opar, MPT_SOLVER_STRUCT(nlspar) *np, const double *p, const double *res);
 
 
 enum MPT_SOLVER_ENUM(Flags)
 {
+	MPT_SOLVER_ENUM(CapableIvp) = 0x10,
 	MPT_SOLVER_ENUM(ODE)        = 0x11,
 	MPT_SOLVER_ENUM(DAE)        = 0x12,
 	MPT_SOLVER_ENUM(PDE)        = 0x14,
-	MPT_SOLVER_ENUM(CapableIvp) = 0x10,
 	
+	MPT_SOLVER_ENUM(CapableNls) = 0x20,
 	MPT_SOLVER_ENUM(NlsVector)  = 0x21,
 	MPT_SOLVER_ENUM(NlsOverDet) = 0x22,
-	MPT_SOLVER_ENUM(CapableNls) = 0x20,
 	
 	MPT_SOLVER_ENUM(Header)     = 0x1,
 	MPT_SOLVER_ENUM(Status)     = 0x2,
@@ -95,9 +95,9 @@ MPT_SOLVER_STRUCT(odefcn)
 	inline odefcn(IvpFcn f, IvpJac j = 0) : fcn(f), param(0), jac(j)
 	{ }
 #endif
-	MPT_TYPE(IvpFcn) fcn;   /* unified right side calculation */
-	void            *param; /* user parameter for handler functions */
-	MPT_TYPE(IvpJac) jac;   /* (full/banded) jacobi matrix */
+	MPT_SOLVER_TYPE(IvpFcn) fcn;   /* unified right side calculation */
+	void                   *param; /* user parameter for handler functions */
+	MPT_SOLVER_TYPE(IvpJac) jac;   /* (full/banded) jacobi matrix */
 };
 MPT_SOLVER_STRUCT(daefcn)
 {
@@ -105,10 +105,10 @@ MPT_SOLVER_STRUCT(daefcn)
 	inline daefcn(IvpFcn f, IvpMas m, IvpJac j = 0) : fcn(f), param(0), jac(j), mas(m)
 	{ }
 #endif
-	MPT_TYPE(IvpFcn)  fcn;   /* unified right side calculation */
-	void             *param; /* user parameter for handler functions */
-	MPT_TYPE(IvpJac)  jac;   /* (full/banded) jacobi matrix */
-	MPT_TYPE(IvpMas)  mas;   /* (sparse) mass matrix */
+	MPT_SOLVER_TYPE(IvpFcn)  fcn;   /* unified right side calculation */
+	void                    *param; /* user parameter for handler functions */
+	MPT_SOLVER_TYPE(IvpJac)  jac;   /* (full/banded) jacobi matrix */
+	MPT_SOLVER_TYPE(IvpMas)  mas;   /* (sparse) mass matrix */
 };
 MPT_SOLVER_STRUCT(pdefcn)
 {
@@ -116,9 +116,10 @@ MPT_SOLVER_STRUCT(pdefcn)
 	inline pdefcn(PdeFcn f, RsideFcn r = 0) : fcn(f), param(0), rside(r)
 	{ }
 #endif
-	MPT_TYPE(PdeFcn)    fcn;   /* right side function */
-	void               *param; /* user parameter for handler functions */
-	MPT_TYPE(RsideFcn)  rside; /* right side function */
+	MPT_SOLVER_TYPE(PdeFcn)    fcn;   /* right side function */
+	void                      *param; /* user parameter for handler functions */
+	MPT_SOLVER_TYPE(RsideFcn)  rside; /* right side function */
+	double                    *grid;  /* solver grid data */
 };
 
 #ifndef __cplusplus
@@ -143,7 +144,6 @@ MPT_SOLVER_STRUCT(ivppar)
 	int32_t neqs,  /* number of equotations */
 	        pint;  /* number pde intervals */
 };
-typedef int (*MPT_TYPE(DataInitializer))(void *, double *, size_t);
 
 /*! generic nonlinear system functions */
 MPT_SOLVER_STRUCT(nlsfcn)
@@ -154,12 +154,12 @@ MPT_SOLVER_STRUCT(nlsfcn)
 #else
 # define MPT_NLSFCN_INIT(d)  ((MPT_SOLVER_STRUCT(nlsfcn) *) memset(d, 0, sizeof(MPT_SOLVER_STRUCT(nlsfcn))))
 #endif
-	MPT_TYPE(NlsFcn) res;  /* calculate residuals */
-	MPT_TYPE(NlsJac) jac;  /* calculate residual jacobian */
-	void *rpar, *jpar;     /* residual/jacobian function parameter */
+	MPT_SOLVER_TYPE(NlsFcn) res;  /* calculate residuals */
+	MPT_SOLVER_TYPE(NlsJac) jac;  /* calculate residual jacobian */
+	void *rpar, *jpar;            /* residual/jacobian function parameter */
 	
-	MPT_TYPE(NlsOut) out;  /* output current parameter/residuals */
-	void *opar;            /* output function parameter */
+	MPT_SOLVER_TYPE(NlsOut) out;  /* output current parameter/residuals */
+	void *opar;                   /* output function parameter */
 };
 /*! general nonlinear system parameter */
 MPT_SOLVER_STRUCT(nlspar)
@@ -326,12 +326,12 @@ typedef struct
 {
 	double *base;
 	union { size_t len; double val; } d;
-} MPT_TYPE(dvecpar);
+} MPT_SOLVER_TYPE(dvecpar);
 typedef struct
 {
 	int *base;
 	union { size_t len; int val; } d;
-} MPT_TYPE(ivecpar);
+} MPT_SOLVER_TYPE(ivecpar);
 
 MPT_SOLVER_INTERFACE;
 MPT_INTERFACE_VPTR(solver)
@@ -402,7 +402,7 @@ extern int mpt_step_ode(MPT_SOLVER_INTERFACE *, MPT_SOLVER_STRUCT(data) *, MPT_I
 extern int mpt_step_nls(MPT_SOLVER_INTERFACE *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *);
 
 /* inner node residuals with central differences */
-extern int mpt_residuals_cdiff(MPT_TYPE(RsideFcn) , double , const double *, int , const double *, int , double *);
+extern int mpt_residuals_cdiff(MPT_SOLVER_TYPE(RsideFcn) , double , const double *, int , const double *, int , double *);
 
 /* check solver capabilities */
 extern int mpt_solver_check(MPT_SOLVER_INTERFACE *, int);
@@ -426,9 +426,9 @@ extern int mpt_solver_time(const MPT_SOLVER_INTERFACE *, double *);
 /* solver module data management */
 extern void *mpt_vecpar_alloc(struct iovec *, size_t len, size_t size);
 
-extern int mpt_vecpar_cktol(MPT_TYPE(dvecpar) *, int len, int repeat, double def);
-extern int mpt_vecpar_get(const MPT_TYPE(dvecpar) *, MPT_STRUCT(value) *);
-extern int mpt_vecpar_set(MPT_TYPE(dvecpar) *, MPT_INTERFACE(metatype) *);
+extern int mpt_vecpar_cktol(MPT_SOLVER_TYPE(dvecpar) *, int len, int repeat, double def);
+extern int mpt_vecpar_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);
+extern int mpt_vecpar_set(MPT_SOLVER_TYPE(dvecpar) *, MPT_INTERFACE(metatype) *);
 
 extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *, MPT_INTERFACE(metatype) *);
 extern int mpt_nlspar_set(MPT_SOLVER_STRUCT(nlspar) *, MPT_INTERFACE(metatype) *);
