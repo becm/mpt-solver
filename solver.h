@@ -74,9 +74,9 @@ typedef int (*MPT_SOLVER_TYPE(NlsOut))(void *opar, MPT_SOLVER_STRUCT(nlspar) *np
 enum MPT_SOLVER_ENUM(Flags)
 {
 	MPT_SOLVER_ENUM(CapableIvp) = 0x10,
-	MPT_SOLVER_ENUM(ODE)        = 0x11,
-	MPT_SOLVER_ENUM(DAE)        = 0x12,
-	MPT_SOLVER_ENUM(PDE)        = 0x14,
+	MPT_SOLVER_ENUM(ODE)        = 0x10,
+	MPT_SOLVER_ENUM(DAE)        = 0x11,
+	MPT_SOLVER_ENUM(PDE)        = 0x12,
 	
 	MPT_SOLVER_ENUM(CapableNls) = 0x20,
 	MPT_SOLVER_ENUM(NlsVector)  = 0x21,
@@ -211,10 +211,8 @@ protected:
 	~Ivp() {}
 public:
 	virtual int step(double *end) = 0;
-	virtual void *functions(int type = ODE) const;
+	virtual void *functions(int) const;
 	virtual double *initstate();
-	
-	operator const struct ivppar *();
 	
 	inline operator odefcn *() const
 	{ return (odefcn *) functions(ODE); }
@@ -231,20 +229,15 @@ protected:
 	~Nls() {}
     public:
 	virtual int step(double *res) = 0;
-	virtual operator nlsfcn *() const;
 	
-	operator const struct nlspar *();
+	virtual operator nlsfcn *() const;
 };
 
-inline Ivp::operator const ivppar *()
-{ struct property p; return property(&p) < 0 ? 0 : (struct ivppar *) p.val.ptr; }
 inline void *Ivp::functions(int) const
 { return 0; }
 inline double *Ivp::initstate()
 { return 0; }
 
-inline Nls::operator const nlspar *()
-{ struct property p; return property(&p) < 0 ? 0 : (struct nlspar *) p.val.ptr; }
 inline Nls::operator nlsfcn *() const
 { return 0; }
 

@@ -14,25 +14,22 @@
  * 
  * Execute IDA solver step to requested end.
  * 
- * \param data  IDA solver data
- * \param val   current values
- * \param tend  step target time
+ * \param ida  IDA solver data
+ * \param tend step target time
  * 
  * \return non-zero on error
  */
-extern int sundials_ida_step(MPT_SOLVER_STRUCT(ida) *data, double *val, double tend)
+extern int sundials_ida_step(MPT_SOLVER_STRUCT(ida) *ida, double tend)
 {
-	int	err;
+	int err;
 	
-	if (!data->sd.y || !val) {
+	if (!ida->sd.y || !ida->yp) {
 		errno = EFAULT;
-		return -1;
+		return MPT_ERROR(BadOperation);
 	}
-	N_VSetArrayPointer(val, data->sd.y);
+	err = (ida->sd.step & MPT_SOLVER_ENUM(SundialsStepSingle)) ? IDA_ONE_STEP : IDA_NORMAL;
 	
-	err = (data->sd.step & MPT_ENUM(SundialsStepSingle)) ? IDA_ONE_STEP : IDA_NORMAL;
-	
-	err = IDASolve(data->mem, tend, &data->ivp.last, data->sd.y, data->yp, err);
+	err = IDASolve(ida->mem, tend, &ida->t, ida->sd.y, ida->yp, err);
 	
 	return err < 0 ? err : 0;
 }

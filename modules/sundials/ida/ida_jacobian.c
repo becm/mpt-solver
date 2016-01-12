@@ -11,15 +11,15 @@
 
 static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double t, const double *y, double cj, double *jac, int ldjac)
 {
-	const MPT_SOLVER_STRUCT(ivpfcn) *fcn = ida->ufcn;
+	const MPT_SOLVER_STRUCT(daefcn) *dae = ida->ufcn;
 	int ret;
 	
 	/* calculate jacobian */
-	if ((ret = fcn->jac(fcn->param, &t, y, jac, ldjac)) < 0) {
+	if ((ret = dae->jac(dae->param, t, y, jac, ldjac)) < 0) {
 		return ret;
 	}
 	/* Jac -= cj*B */
-	if (!fcn->mas) {
+	if (!dae->mas) {
 		int i;
 		for (i = 0; i < n; i++, jac += ldjac) {
 			jac[i] -= cj;
@@ -44,7 +44,7 @@ static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double
 			
 			*idrow = i;
 			
-			if ((nz = fcn->mas(fcn->param, &t, y, mas, idrow, idcol)) < 0) {
+			if ((nz = dae->mas(dae->param, t, y, mas, idrow, idcol)) < 0) {
 				return nz;
 			}
 			for (j = 0 ; j < nz ; j++) {
@@ -68,7 +68,7 @@ static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double
 extern int sundials_ida_jac_band(long int n, long int mu, long int ml,
                                  realtype t, realtype cj,
                                  N_Vector y, N_Vector yp, N_Vector f,
-                                 DlsMat Jac, void *data,
+                                 DlsMat Jac, MPT_SOLVER_STRUCT(ida) *ida,
                                  N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
 	double *jac;
@@ -82,7 +82,7 @@ extern int sundials_ida_jac_band(long int n, long int mu, long int ml,
 	jac = BAND_COL(Jac,0);
 	ld  = BAND_COL(Jac,1) - jac - 1;
 	
-	return sundials_ida_jacobian(data, n, t, N_VGetArrayPointer(y), cj, jac, ld);
+	return sundials_ida_jacobian(ida, n, t, N_VGetArrayPointer(y), cj, jac, ld);
 }
 
 /*!
@@ -96,7 +96,7 @@ extern int sundials_ida_jac_band(long int n, long int mu, long int ml,
  */
 extern int sundials_ida_jac_dense(long int n, realtype t, realtype cj,
                                   N_Vector y, N_Vector yp, N_Vector f,
-                                  DlsMat Jac, void *data,
+                                  DlsMat Jac, MPT_SOLVER_STRUCT(ida) *ida,
                                   N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
 	double *jac;
@@ -108,7 +108,7 @@ extern int sundials_ida_jac_dense(long int n, realtype t, realtype cj,
 	jac = DENSE_COL(Jac,0);
 	ld  = DENSE_COL(Jac,1) - jac;
 	
-	return sundials_ida_jacobian(data, n, t, N_VGetArrayPointer(y), cj, jac, ld);
+	return sundials_ida_jacobian(ida, n, t, N_VGetArrayPointer(y), cj, jac, ld);
 }
 
 

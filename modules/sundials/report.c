@@ -20,18 +20,18 @@ extern int sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(P
 	pr.val.ptr = &val;
 	
 	switch (sd->jacobian) {
-		case MPT_ENUM(SundialsJacDiag):
-		case MPT_ENUM(SundialsJacDiag) | MPT_ENUM(SundialsJacNumeric):
+		case MPT_SOLVER_ENUM(SundialsJacDiag):
+		case MPT_SOLVER_ENUM(SundialsJacDiag) | MPT_SOLVER_ENUM(SundialsJacNumeric):
 			val.type = "diag"; break;
-		case MPT_ENUM(SundialsJacDense):
+		case MPT_SOLVER_ENUM(SundialsJacDense):
 			val.type = "full(user)"; break;
-		case MPT_ENUM(SundialsJacDense) | MPT_ENUM(SundialsJacNumeric):
+		case MPT_SOLVER_ENUM(SundialsJacDense) | MPT_SOLVER_ENUM(SundialsJacNumeric):
 			val.type = "full"; break;
-		case MPT_ENUM(SundialsJacBand):
+		case MPT_SOLVER_ENUM(SundialsJacBand):
 			val.type = "banded(user)"; pr.val.fmt = "sii";
 			val.mu = sd->mu; val.ml = sd->ml;
 			break;
-		case MPT_ENUM(SundialsJacBand) | MPT_ENUM(SundialsJacNumeric):
+		case MPT_SOLVER_ENUM(SundialsJacBand) | MPT_SOLVER_ENUM(SundialsJacNumeric):
 			val.type = "banded"; pr.val.fmt = "sii";
 			val.mu = sd->mu; val.ml = sd->ml;
 			break;

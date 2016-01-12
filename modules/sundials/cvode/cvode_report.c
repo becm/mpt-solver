@@ -22,14 +22,14 @@
  * 
  * \return number of reported properties
  */
-extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
-	static const char longfmt[] = { MPT_ENUM(TypeLong) };
+	static const char longfmt[] = { MPT_ENUM(TypeLong), 0 };
 	MPT_STRUCT(property) pr;
 	long int lval;
 	double dval;
 	int line = 0;
-	CVodeMem cv_mem = data->mem;
+	CVodeMem cv_mem = cv->mem;
 	
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -45,12 +45,12 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	}
 	if (out(usr, &pr) > 0) ++line;
 	
-	if (sundials_report_jac(&data->sd, out, usr) >= 0) ++line;
+	if (sundials_report_jac(&cv->sd, out, usr) >= 0) ++line;
 	
 	}
 	
 	if ((show & MPT_SOLVER_ENUM(Status))
-	    && (CVodeGetCurrentTime(data->mem, &dval) == CV_SUCCESS)) {
+	    && (CVodeGetCurrentTime(cv_mem, &dval) == CV_SUCCESS)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
 	pr.val.fmt = "d";
@@ -60,7 +60,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	}
 	
 	if ((show & (MPT_SOLVER_ENUM(Status) | MPT_SOLVER_ENUM(Report)))
-	    && (CVodeGetNumSteps(data->mem, &lval) == CV_SUCCESS)) {
+	    && (CVodeGetNumSteps(cv_mem, &lval) == CV_SUCCESS)) {
 	pr.name = "n";
 	pr.desc = MPT_tr("integration steps");
 	pr.val.fmt = longfmt;
@@ -70,7 +70,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	}
 	
 	if ((show & MPT_SOLVER_ENUM(Status))
-	    && (CVodeGetLastStep(data->mem, &dval) == CV_SUCCESS)) {
+	    && (CVodeGetLastStep(cv_mem, &dval) == CV_SUCCESS)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
 	pr.val.fmt = "d";
@@ -81,7 +81,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	
 	if (!(show & MPT_SOLVER_ENUM(Report))) return line;
 	
-	if (CVodeGetNumRhsEvals(data->mem, &lval) == CV_SUCCESS) {
+	if (CVodeGetNumRhsEvals(cv_mem, &lval) == CV_SUCCESS) {
 	pr.name = "feval";
 	pr.desc = MPT_tr("function evaluations");
 	pr.val.fmt = longfmt;
@@ -90,8 +90,8 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	++line;
 	}
 	
-	if ((data->sd.linalg & MPT_ENUM(SundialsDls))
-	    && (CVodeGetNumLinSolvSetups(data->mem, &lval) == CV_SUCCESS)) {
+	if ((cv->sd.linalg & MPT_SOLVER_ENUM(SundialsDls))
+	    && (CVodeGetNumLinSolvSetups(cv_mem, &lval) == CV_SUCCESS)) {
 	pr.name = "lsetup";
 	pr.desc = MPT_tr("linear solver setups");
 	pr.val.fmt = longfmt;
@@ -100,7 +100,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	++line;
 	}
 	
-	if (CVodeGetNumNonlinSolvIters(data->mem, &lval) == CV_SUCCESS) {
+	if (CVodeGetNumNonlinSolvIters(cv_mem, &lval) == CV_SUCCESS) {
 	pr.name = "nliter";
 	pr.desc = MPT_tr("nonlinear solver iterations");
 	pr.val.fmt = longfmt;
@@ -109,7 +109,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *data, int show,
 	++line;
 	}
 	
-	if (CVodeGetNumNonlinSolvConvFails(data->mem, &lval) == CV_SUCCESS
+	if (CVodeGetNumNonlinSolvConvFails(cv_mem, &lval) == CV_SUCCESS
 	    && lval) {
 	pr.name = "nlfail";
 	pr.desc = MPT_tr("nonlinear solver conv. fail");

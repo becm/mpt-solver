@@ -26,7 +26,6 @@ extern void sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
 	mpt_vecpar_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
 	
 	if (data->sd.y) {
-		N_VSetArrayPointer(0, data->sd.y);
 		N_VDestroy(data->sd.y);
 	}
 	if (data->mem) CVodeFree(&data->mem);
@@ -47,7 +46,6 @@ extern void sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
 	mpt_vecpar_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
 	
 	if (data->sd.y) {
-		N_VSetArrayPointer(0, data->sd.y);
 		N_VDestroy(data->sd.y);
 		data->sd.y = 0;
 	}

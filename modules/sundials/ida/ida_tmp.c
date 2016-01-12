@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include <sundials/sundials_types.h>
+
 #include "sundials.h"
 
 /*!

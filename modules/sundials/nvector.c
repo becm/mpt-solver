@@ -8,7 +8,7 @@
 
 #include "sundials.h"
 
-extern N_Vector sundials_nvector_empty(long len)
+extern N_Vector sundials_nvector_new(long len)
 {
-	return N_VNewEmpty_Serial(len);
+	return N_VNew_Serial(len);
 }

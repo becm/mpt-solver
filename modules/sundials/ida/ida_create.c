@@ -10,77 +10,65 @@
 
 #include "sundials.h"
 
-/*!
- * \ingroup mptSundialsIda
- * \brief IDA step operation
- * 
- * Execute IDA solver step to requested end.
- * Prepare solver data if needed.
- * 
- * Pass zero pointer user data to query current position.
- * 
- * Pass zero pointer end data to skip step execution.
- * 
- * \return IDA solver instance
- */
-extern int sundials_ida_step_(MPT_SOLVER_STRUCT(ida) *ida, double *u, double *end)
+static void idaUnref(MPT_INTERFACE(object) *gen)
 {
-	int err;
-	if (!u && end) {
-		if (!ida->sd.y) {
-			return -1;
-		}
-		*end = ida->ivp.last;
-		return 0;
-	}
-	if (!ida->sd.y || !end) {
-		if ((err = sundials_ida_prepare(ida, u)) < 0 || !end) {
-			return err;
-		}
-	}
-	err = sundials_ida_step(ida, u, *end);
-	*end = ida->ivp.last;
-	return err;
+	  sundials_ida_fini((MPT_SOLVER_STRUCT(ida) *) (gen+1));
+	  free(gen);
+}
+static uintptr_t idaRef()
+{
+	return 0;
+}
+static int idaGet(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
+{
+	return sundials_ida_get((MPT_SOLVER_STRUCT(ida) *) (gen+1), pr);
+}
+static int idaSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metatype) *src)
+{
+	return sundials_ida_set((MPT_SOLVER_STRUCT(ida) *) (gen+1), pr, src);
 }
 
-static int idaFini(MPT_INTERFACE(metatype) *gen)
-{ sundials_ida_fini((MPT_SOLVER_STRUCT(ida) *) (gen+1)); free(gen); return 0; }
-
-static MPT_INTERFACE(metatype) *idaRef()
-{ return 0; }
-
-static int idaProperty(MPT_INTERFACE(metatype) *gen, MPT_STRUCT(property) *pr, MPT_INTERFACE(source) *src)
-{ return sundials_ida_property((MPT_SOLVER_STRUCT(ida) *) (gen+1), pr, src); }
-
-static void *idaCast(MPT_INTERFACE(metatype) *gen, int type)
+static int idaReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	switch(type) {
-	  case MPT_ENUM(TypeMeta): return gen;
-	  case MPT_ENUM(TypeSolver): return gen;
+	return sundials_ida_report((MPT_SOLVER_STRUCT(ida) *) (gen+1), what, out, data);
+}
+static int idaStep(MPT_SOLVER_INTERFACE *gen, double *end)
+{
+	MPT_SOLVER_STRUCT(ida) *ida = (void *) (gen+1);
+	int ret;
+	if (!end) return sundials_ida_prepare(ida);
+	ret = sundials_ida_step(ida, *end);
+	*end = ida->t;
+	return ret;
+}
+static void *idaFcn(const MPT_SOLVER_INTERFACE *gen, int type)
+{
+	MPT_SOLVER_STRUCT(ida) *ida = (void *) (gen+1);
+	switch (type) {
+	  case MPT_SOLVER_ENUM(ODE): return ida->ivp.pint ? 0 : (ida+1);
+	  case MPT_SOLVER_ENUM(DAE): return ida->ivp.pint ? 0 : (ida+1);
+	  case MPT_SOLVER_ENUM(PDE):
+	  case MPT_SOLVER_ENUM(PDE) | MPT_SOLVER_ENUM(DAE):
+		return ida->ivp.pint ? (ida+1) : 0;
 	  default: return 0;
 	}
 }
-
-static int idaReport(const MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{ return sundials_ida_report((MPT_SOLVER_STRUCT(ida) *) (gen+1), what, out, data); }
-
-static int idaStep(MPT_SOLVER_INTERFACE *gen, double *u, double *end, double *x)
+static double *idaState(MPT_SOLVER_INTERFACE *gen)
 {
 	MPT_SOLVER_STRUCT(ida) *ida = (void *) (gen+1);
-	(void) x;
-	return sundials_ida_step_(ida, u, end);
-}
-
-static MPT_SOLVER_STRUCT(ivpfcn) *idaFcn(const MPT_SOLVER_INTERFACE *gen)
-{
-	MPT_SOLVER_STRUCT(ida) *ida = (void *) (gen+1);
-	return (void *) ida->ufcn;
+#ifdef SUNDIALS_DOUBLE_PRECISION
+	if (ida->sd.y) {
+		return N_VGetArrayPointer(ida->sd.y);
+	}
+#endif
+	return 0;
 }
 
 static const MPT_INTERFACE_VPTR(Ivp) idaCtl = {
-	{ { idaFini, idaRef, idaProperty, idaCast }, idaReport },
+	{ { idaUnref, idaRef, idaGet, idaSet }, idaReport },
 	idaStep,
-	idaFcn
+	idaFcn,
+	idaState
 };
 
 /*!
@@ -94,22 +82,23 @@ static const MPT_INTERFACE_VPTR(Ivp) idaCtl = {
 extern MPT_SOLVER_INTERFACE *sundials_ida_create()
 {
 	MPT_SOLVER_INTERFACE *gen;
-	MPT_SOLVER_STRUCT(ivpfcn) *uf;
+	MPT_SOLVER_TYPE(ivpfcn) *uf;
 	MPT_SOLVER_STRUCT(ida) *ida;
 	
-	if (!(gen = malloc(sizeof(*gen)+sizeof(*ida)+sizeof(MPT_SOLVER_STRUCT(ivpfcn))))) {
+	if (!(gen = malloc(sizeof(*gen)+sizeof(*ida)+sizeof(*uf)))) {
 		return 0;
 	}
 	ida = (MPT_SOLVER_STRUCT(ida) *) (gen+1);
+	
 	if (sundials_ida_init(ida) < 0) {
 		free(ida);
 		return 0;
 	}
+	uf = MPT_IVPFCN_INIT(ida + 1);
+	uf->dae.param = &ida->ivp;
 	
+	ida->ufcn = &uf->dae;
 	IDASetUserData(ida->mem, ida);
-	
-	ida->ufcn = uf = MPT_IVPFCN_INIT(ida + 1);
-	uf->param = &ida->ivp;
 	
 	gen->_vptr = &idaCtl.gen;
 	

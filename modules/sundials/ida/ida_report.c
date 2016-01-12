@@ -77,7 +77,7 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	++line;
 	}
 	
-	if (ida->sd.linalg & MPT_ENUM(SundialsSpils)) {
+	if (ida->sd.linalg & MPT_SOLVER_ENUM(SundialsSpils)) {
 		if (IDASpilsGetNumLinIters(ida->mem, &lval) == IDA_SUCCESS) {
 		pr.name = "liter";
 		pr.desc = MPT_tr("linear iterations");
@@ -86,7 +86,7 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 		out(usr, &pr);
 		++line;
 		}
-	} else if (ida->sd.linalg & MPT_ENUM(SundialsDls)) {
+	} else if (ida->sd.linalg & MPT_SOLVER_ENUM(SundialsDls)) {
 		if (IDADlsGetNumJacEvals(ida->mem, &lval) == IDA_SUCCESS) {
 		pr.name = "jeval";
 		pr.desc = MPT_tr("jacobian evaluations");

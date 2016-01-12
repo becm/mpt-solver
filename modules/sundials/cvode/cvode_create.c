@@ -10,93 +10,84 @@
 #include "cvode/cvode_impl.h"
 #include "sundials.h"
 
-/*!
- * \ingroup mptSundialsCVode
- * \brief CVode step operation
- * 
- * Execute CVode solver step to requested end.
- * Prepare solver data if needed.
- * 
- * Pass zero pointer user data to query current position.
- * 
- * Pass zero pointer end data to skip step execution.
- * 
- * \return prepare/step operation result
- */
-extern int sundials_cvode_step_(MPT_SOLVER_STRUCT(cvode) *cv, double *u, double *end)
+static void cVodeUnref(MPT_INTERFACE(object) *gen)
 {
-	int err;
-	if (!u && end) {
-		if (!cv->sd.y) return -1;
-		*end = cv->ivp.last;
-		return 0;
-	}
-	if (!cv->sd.y || !end) {
-		if ((err = sundials_cvode_prepare(cv, u)) < 0) return err;
-		if (!end) return err;
-	}
-	err = sundials_cvode_step(cv, u, *end);
-	*end = cv->ivp.last;
-	return err;
+	sundials_cvode_fini((MPT_SOLVER_STRUCT(cvode) *) (gen+1));
+	free(gen);
+}
+static uintptr_t cVodeRef(MPT_INTERFACE(object) *gen)
+{
+	(void) gen;
+	return 0;
+}
+static int cVodeGet(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
+{
+	return sundials_cvode_get((MPT_SOLVER_STRUCT(cvode) *) (gen+1), pr);
+}
+static int cVodeSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metatype) *src)
+{
+	return sundials_cvode_set((MPT_SOLVER_STRUCT(cvode) *) (gen+1), pr, src);
 }
 
-static int cVodeFini(MPT_INTERFACE(metatype) *gen)
-{ sundials_cvode_fini((MPT_SOLVER_STRUCT(cvode) *) (gen+1)); free(gen); return 0; }
-
-static MPT_INTERFACE(metatype) *cVodeRef()
-{ return 0; }
-
-static int cVodeProperty(MPT_INTERFACE(metatype) *gen, MPT_STRUCT(property) *pr, MPT_INTERFACE(source) *src)
-{ return sundials_cvode_property((MPT_SOLVER_STRUCT(cvode) *) (gen+1), pr, src); }
-
-static void *cVodeCast(MPT_INTERFACE(metatype) *gen, int type)
+static int cVodeReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	switch(type) {
-	  case MPT_ENUM(TypeMeta): return gen;
-	  case MPT_ENUM(TypeSolver): return gen;
+	return sundials_cvode_report((MPT_SOLVER_STRUCT(cvode) *) (gen+1), what, out, data);
+}
+static int cVodeStep(MPT_SOLVER_INTERFACE *gen, double *end)
+{
+	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (gen+1);
+	int ret;
+	if (!end) return sundials_cvode_prepare(cv);
+	ret = sundials_cvode_step(cv, *end);
+	*end = cv->t;
+	return ret;
+}
+static void *cVodeFcn(const MPT_SOLVER_INTERFACE *gen, int type)
+{
+	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (gen+1);
+	switch (type) {
+	  case MPT_SOLVER_ENUM(ODE): return cv->ivp.pint ? 0 : (cv + 1);
+	  case MPT_SOLVER_ENUM(PDE): return cv->ivp.pint ? (cv + 1) : 0;
 	  default: return 0;
 	}
 }
-
-static int cVodeReport(const MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{ return sundials_cvode_report((MPT_SOLVER_STRUCT(cvode) *) (gen+1), what, out, data); }
-
-static int cVodeStep(MPT_SOLVER_INTERFACE *gen, double *u, double *end, double *x)
+static double *cVodeState(MPT_SOLVER_INTERFACE *gen)
 {
 	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (gen+1);
-	(void) x;
-	return sundials_cvode_step_(cv, u, end);
+#ifdef SUNDIALS_DOUBLE_PRECISION
+	if (cv->sd.y) {
+		return N_VGetArrayPointer(cv->sd.y);
+	}
+#endif
+	return 0;
 }
-
-static MPT_SOLVER_STRUCT(ivpfcn) *cVodeFcn(const MPT_SOLVER_INTERFACE *gen)
-{
-	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (gen+1);
-	return (void *) (cv+1);
-}
-
 static const MPT_INTERFACE_VPTR(Ivp) cVodeCtl = {
-	{ { cVodeFini, cVodeRef, cVodeProperty, cVodeCast }, cVodeReport },
+	{ { cVodeUnref, cVodeRef, cVodeGet, cVodeSet }, cVodeReport },
 	cVodeStep,
-	cVodeFcn
+	cVodeFcn,
+	cVodeState
 };
 
 extern MPT_SOLVER_INTERFACE *sundials_cvode_create()
 {
 	MPT_SOLVER_INTERFACE *gen;
-	MPT_SOLVER_STRUCT(ivpfcn) *uf;
+	MPT_SOLVER_TYPE(ivpfcn) *uf;
 	MPT_SOLVER_STRUCT(cvode) *cv;
 	
-	if (!(gen = malloc(sizeof(*gen)+sizeof(*cv)+sizeof(MPT_SOLVER_STRUCT(ivpfcn))))) {
+	if (!(gen = malloc(sizeof(*gen)+sizeof(*cv)+sizeof(*uf)))) {
 		return 0;
 	}
 	cv = (MPT_SOLVER_STRUCT(cvode) *) (gen+1);
-	sundials_cvode_init(cv);
 	
+	if (sundials_cvode_init(cv) < 0) {
+		free(gen);
+		return 0;
+	}
+	uf = MPT_IVPFCN_INIT(cv + 1);
+	uf->ode.param = &cv->ivp;
+	
+	cv->ufcn = &uf->ode;
 	CVodeSetUserData(cv->mem, cv);
-	
-	cv->ufcn = uf = MPT_IVPFCN_INIT(cv + 1);
-	uf->param = &cv->ivp;
-	
 	
 	gen->_vptr = &cVodeCtl.gen;
 	

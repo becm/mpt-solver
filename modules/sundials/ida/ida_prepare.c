@@ -14,6 +14,7 @@
 
 #include <ida/ida_impl.h>
 
+#define _SUNDIALS_GENERIC_TYPE(x) void
 #include "sundials.h"
 
 #ifdef SUNDIALS_WITH_LAPACK
@@ -23,22 +24,22 @@ static int setLapack(IDAMem ida, MPT_SOLVER_STRUCT(sundials) *sd, long neqs)
 {
 	int err;
 	switch (sd->jacobian) {
-		case MPT_ENUM(SundialsJacBand):
+		case MPT_SOLVER_ENUM(SundialsJacBand):
 			if ((err = IDALapackBand(ida, neqs, sd->mu, sd->ml))) {
 				return -1;
 			}
 			return IDADlsSetBandJacFn(ida, sundials_ida_jac_band);
 		
-		case MPT_ENUM(SundialsJacBand) | MPT_ENUM(SundialsJacNumeric):
+		case MPT_SOLVER_ENUM(SundialsJacBand) | MPT_ENUM(SundialsJacNumeric):
 			return IDALapackBand(ida, neqs, sd->mu, sd->ml);
 		
-		case MPT_ENUM(SundialsJacDense):
+		case MPT_SOLVER_ENUM(SundialsJacDense):
 			if ((err = IDALapackDense(ida, neqs))) {
 				return -1;
 			}
 			return IDADlsSetDenseJacFn(ida, sundials_ida_jac_dense);
 		default:
-			sd->jacobian = MPT_ENUM(SundialsJacDense) | MPT_ENUM(SundialsJacNumeric);
+			sd->jacobian = MPT_SOLVER_ENUM(SundialsJacDense) | MPT_SOLVER_ENUM(SundialsJacNumeric);
 			return IDALapackDense(ida, neqs);
 	}
 }
@@ -49,22 +50,22 @@ static int setDls(IDAMem ida, MPT_SOLVER_STRUCT(sundials) *sd, long neqs)
 {
 	int err;
 	switch (sd->jacobian) {
-		case MPT_ENUM(SundialsJacBand):
+		case MPT_SOLVER_ENUM(SundialsJacBand):
 			if ((err = IDABand(ida, neqs, sd->mu, sd->ml))) {
 				return -1;
 			}
 			return IDADlsSetBandJacFn(ida, sundials_ida_jac_band);
 		
-		case MPT_ENUM(SundialsJacBand) | MPT_ENUM(SundialsJacNumeric):
+		case MPT_SOLVER_ENUM(SundialsJacBand) | MPT_SOLVER_ENUM(SundialsJacNumeric):
 			return IDABand(ida, neqs, sd->mu, sd->ml);
 		
-		case MPT_ENUM(SundialsJacDense):
+		case MPT_SOLVER_ENUM(SundialsJacDense):
 			if ((err = IDADense(ida, neqs))) {
 				return -1;
 			}
 			return IDADlsSetDenseJacFn(ida, sundials_ida_jac_dense);
 		default:
-			sd->jacobian = MPT_ENUM(SundialsJacDense) | MPT_ENUM(SundialsJacNumeric);
+			sd->jacobian = MPT_SOLVER_ENUM(SundialsJacDense) | MPT_SOLVER_ENUM(SundialsJacNumeric);
 			return IDADense(ida, neqs);
 	}
 }
@@ -80,41 +81,41 @@ static int setDls(IDAMem ida, MPT_SOLVER_STRUCT(sundials) *sd, long neqs)
  * 
  * \return non-zero on error
  */
-extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *data, double *val)
+extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 {
-	MPT_SOLVER_STRUCT(ivppar) *ivp;
 	IDAMem ida_mem;
 	long neqs;
 	int err;
 	
-	if (!(ivp = &data->ivp) || !(ida_mem = data->mem) || !val) {
-		errno = EFAULT;
-		return IDA_MEM_NULL;
+	if (!ida || !(ida_mem = ida->mem)) {
+		return MPT_ERROR(BadArgument);
 	}
-	
-	if ((neqs = ivp->neqs) < 1 || (neqs *= (ivp->pint + 1)) <= 0) {
-		return -2;
+	if ((neqs = ida->ivp.neqs) < 1 || (neqs *= (ida->ivp.pint + 1)) <= 0) {
+		return MPT_ERROR(BadArgument);
 	}
 	
 	/* prepare initial vector */
-	if (!data->sd.y && !(data->sd.y = sundials_nvector_empty(neqs))) {
-		return IDA_MEM_NULL;
+	if (!ida->sd.y) {
+		realtype *y;
+		if (!(ida->sd.y = sundials_nvector_new(neqs))) {
+			return MPT_ERROR(BadOperation);
+		}
+		y = N_VGetArrayPointer(ida->sd.y);
+		memset(y, 0, neqs * sizeof(*y));
 	}
-	if (!data->yp && !(data->yp = N_VClone(data->sd.y))) {
-		return IDA_MEM_NULL;
+	if (!ida->yp && !(ida->yp = N_VClone(ida->sd.y))) {
+		return MPT_ERROR(BadOperation);
 	}
-	N_VSetArrayPointer(val, data->sd.y);
-	err = IDAInit(ida_mem, sundials_ida_fcn, ivp->last, data->sd.y, data->yp);
-	N_VSetArrayPointer(0, data->sd.y);
+	err = IDAInit(ida_mem, sundials_ida_fcn, ida->t, ida->sd.y, ida->yp);
 	
 	/* prepare tolerances */
-	if (!data->atol.base && !data->rtol.base) {
-		err = IDASStolerances(ida_mem, data->rtol.d.val, data->atol.d.val);
+	if (!ida->atol.base && !ida->rtol.base) {
+		err = IDASStolerances(ida_mem, ida->rtol.d.val, ida->atol.d.val);
 	} else {
-		if (mpt_vecpar_cktol(&data->rtol, ivp->neqs, 1, __MPT_IVP_RTOL) < 0) {
+		if (mpt_vecpar_cktol(&ida->rtol, ida->ivp.neqs, 1, __MPT_IVP_RTOL) < 0) {
 			return -21;
 		}
-		if (mpt_vecpar_cktol(&data->atol, ivp->neqs, 1, __MPT_IVP_ATOL) < 0) {
+		if (mpt_vecpar_cktol(&ida->atol, ida->ivp.neqs, 1, __MPT_IVP_ATOL) < 0) {
 			return -22;
 		}
 		err = IDAWFtolerances(ida_mem, sundials_ewtfcn);
@@ -122,14 +123,14 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *data, double *val)
 	if (err < 0) {
 		return err;
 	}
-	switch (data->sd.linalg) {
-	  case 0: data->sd.linalg = MPT_ENUM(SundialsDls);
-	  case MPT_ENUM(SundialsDls):        return setDls(ida_mem, &data->sd, neqs);
-	  case MPT_ENUM(SundialsSpilsGMR):   return IDASpgmr(ida_mem, 0);
-	  case MPT_ENUM(SundialsSpilsBCG):   return IDASpbcg(ida_mem, 0);
-	  case MPT_ENUM(SundialsSpilsTFQMR): return IDASptfqmr(ida_mem, 0);
+	switch (ida->sd.linalg) {
+	  case 0: ida->sd.linalg = MPT_SOLVER_ENUM(SundialsDls);
+	  case MPT_SOLVER_ENUM(SundialsDls):        return setDls(ida_mem, &ida->sd, neqs);
+	  case MPT_SOLVER_ENUM(SundialsSpilsGMR):   return IDASpgmr(ida_mem, 0);
+	  case MPT_SOLVER_ENUM(SundialsSpilsBCG):   return IDASpbcg(ida_mem, 0);
+	  case MPT_SOLVER_ENUM(SundialsSpilsTFQMR): return IDASptfqmr(ida_mem, 0);
 #ifdef SUNDIALS_WITH_LAPACK
-	  case MPT_ENUM(SundialsLapack):     return setLapack(ida_mem, &data->sd, neqs);
+	  case MPT_SOLVER_ENUM(SundialsLapack):     return setLapack(ida_mem, &data->sd, neqs);
 #endif
 	  default: return -1;
 	}
