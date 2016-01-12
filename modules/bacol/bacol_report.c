@@ -54,7 +54,7 @@ extern int mpt_bacol_report(MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_TYPE(Pr
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)
-	    && (len = mpt_bacol_values(bac, bac->out.x, bac->ivp.pint, bac->out.y)) > 0) {
+	    && (len = mpt_bacol_values(bac, bac->out.x, 0, bac->out.y)) > 0) {
 		static const char fmt[] = { 'd', MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
 		struct {
 			double t;

@@ -2,7 +2,7 @@
  * report for CVode solver
  */
 
-#include <errno.h>
+#include <sys/uio.h>
 
 #include <cvode/cvode_impl.h>
 
@@ -69,6 +69,25 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int show, M
 	++line;
 	}
 	
+	if (show & MPT_SOLVER_ENUM(Values)) {
+		static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
+		struct {
+			double t;
+			struct iovec s;
+		} val;
+		size_t pts = cv->ivp.pint + 1;
+		
+		val.t = cv->t;
+		val.s.iov_base = cv->sd.y ? N_VGetArrayPointer(cv->sd.y) : 0;
+		val.s.iov_len  = pts * cv->ivp.neqs;
+		
+		pr.name = 0;
+		pr.desc = MPT_tr("CVode solver state");
+		pr.val.fmt = fmt;
+		pr.val.ptr = &val;
+		
+		out(usr, &pr);
+	}
 	if ((show & MPT_SOLVER_ENUM(Status))
 	    && (CVodeGetLastStep(cv_mem, &dval) == CV_SUCCESS)) {
 	pr.name = "h";

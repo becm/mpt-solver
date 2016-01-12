@@ -2,7 +2,7 @@
  * IDA solver status messages
  */
 
-#include <errno.h>
+#include <sys/uio.h>
 
 #include <ida/ida_spils.h>
 #include <ida/ida_direct.h>
@@ -54,6 +54,25 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	pr.val.ptr = &lval;
 	out(usr, &pr);
 	++line;
+	}
+	if (show & MPT_SOLVER_ENUM(Values)) {
+		static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
+		struct {
+			double t;
+			struct iovec s;
+		} val;
+		size_t pts = ida->ivp.pint + 1;
+		
+		val.t = ida->t;
+		val.s.iov_base = ida->sd.y ? N_VGetArrayPointer(ida->sd.y) : 0;
+		val.s.iov_len  = pts * ida->ivp.neqs;
+		
+		pr.name = 0;
+		pr.desc = MPT_tr("IDA solver state");
+		pr.val.fmt = fmt;
+		pr.val.ptr = &val;
+		
+		out(usr, &pr);
 	}
 	
 	if ((show & MPT_SOLVER_ENUM(Status))
