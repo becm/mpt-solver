@@ -39,5 +39,6 @@ extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *ivp, MPT_INTERFACE(metatype
 		return 2;
 	}
 	ivp->neqs = neqs;
+	ivp->pint = 0;
 	return 1;
 }

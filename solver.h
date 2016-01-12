@@ -74,9 +74,9 @@ typedef int (*MPT_SOLVER_TYPE(NlsOut))(void *opar, MPT_SOLVER_STRUCT(nlspar) *np
 enum MPT_SOLVER_ENUM(Flags)
 {
 	MPT_SOLVER_ENUM(CapableIvp) = 0x10,
-	MPT_SOLVER_ENUM(ODE)        = 0x10,
-	MPT_SOLVER_ENUM(DAE)        = 0x11,
-	MPT_SOLVER_ENUM(PDE)        = 0x12,
+	MPT_SOLVER_ENUM(ODE)        = 0x11,
+	MPT_SOLVER_ENUM(DAE)        = 0x12,
+	MPT_SOLVER_ENUM(PDE)        = 0x14,
 	
 	MPT_SOLVER_ENUM(CapableNls) = 0x20,
 	MPT_SOLVER_ENUM(NlsVector)  = 0x21,
@@ -395,7 +395,7 @@ extern int mpt_step_ode(MPT_SOLVER_INTERFACE *, MPT_SOLVER_STRUCT(data) *, MPT_I
 extern int mpt_step_nls(MPT_SOLVER_INTERFACE *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *);
 
 /* inner node residuals with central differences */
-extern int mpt_residuals_cdiff(MPT_SOLVER_TYPE(RsideFcn) , double , const double *, int , const double *, int , double *);
+extern int mpt_residuals_cdiff(void *, double , const double *, double *, int , const double *, MPT_SOLVER_TYPE(RsideFcn));
 
 /* check solver capabilities */
 extern int mpt_solver_check(MPT_SOLVER_INTERFACE *, int);
