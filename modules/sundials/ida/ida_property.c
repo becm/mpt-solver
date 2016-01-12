@@ -56,7 +56,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(metatype) *src)
  * 
  * Query property of IDA solver
  * 
- * \param cv   IDA data
+ * \param ida  IDA data
  * \param name name of property to change
  * \param src  data source to change property
  * 
@@ -65,17 +65,30 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(metatype) *src)
  */
 extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_INTERFACE(metatype) *src)
 {
-	IDAMem ida_mem = ida->mem;
+	IDAMem ida_mem;
 	int ret = 0;
 	
+	if (!ida || !(ida_mem = ida->mem)) {
+		return MPT_ERROR(BadArgument);
+	}
 	if (!name) {
-		if (!src) {
-			if (sundials_ida_prepare(ida) < 0){
-				return MPT_ERROR(BadOperation);
+		realtype org = ida->t;
+		double t = 0;
+		if (!src || !(ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t))) {
+			if ((ret = sundials_ida_prepare(ida)) < 0) {
+				return ret;
 			}
 			return 0;
 		}
-		return sundials_values_ivp(&ida->sd.y, &ida->ivp, src);
+		if (ret < 0) {
+			return ret;
+		}
+		ida->t = t;
+		if ((ret = sundials_values_ivp(&ida->sd.y, &ida->ivp, src)) < 0) {
+			ida->t = org;
+			return ret;
+		}
+		return ret + 1;
 	}
 	if (!*name) {
 		if ((ret = mpt_ivppar_set(&ida->ivp, src)) >= 0) {

@@ -26,7 +26,7 @@
  */
 extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
-	static const char longfmt[] = { MPT_ENUM(TypeLong) };
+	static const char longfmt[] = { MPT_ENUM(TypeLong), 0 };
 	MPT_STRUCT(property) pr;
 	long int lval;
 	double dval;

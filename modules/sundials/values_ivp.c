@@ -22,7 +22,7 @@ extern int sundials_values_ivp(N_Vector *v, const MPT_SOLVER_STRUCT(ivppar) *ivp
 	long required;
 	
 	if (ivp->neqs < 1 || (required = ivp->pint) < 0
-	    || required++ == LONG_MAX || LONG_MAX/ivp->neqs > required) {
+	    || required++ == LONG_MAX || LONG_MAX/ivp->neqs < required) {
 		return MPT_ERROR(BadArgument);
 	}
 	required *= ivp->neqs;
@@ -33,7 +33,7 @@ extern int sundials_values_ivp(N_Vector *v, const MPT_SOLVER_STRUCT(ivppar) *ivp
 		}
 		return 0;
 	}
-	if (src->_vptr->conv(src, 'D' | MPT_ENUM(ValueConsume), &arr) >= 0) {
+	if (src->_vptr->conv(src, MPT_value_toArray('d') | MPT_ENUM(ValueConsume), &arr) >= 0) {
 		MPT_STRUCT(buffer) *buf;
 		if (!arr || !(buf = arr->_buf) || (long) (buf->used/sizeof(double)) != required) {
 			return MPT_ERROR(BadArgument);
@@ -49,7 +49,7 @@ extern int sundials_values_ivp(N_Vector *v, const MPT_SOLVER_STRUCT(ivppar) *ivp
 		
 		return 1;
 	}
-	if (src->_vptr->conv(src, ('d' - 0x40) | MPT_ENUM(ValueConsume), &vec) >= 0) {
+	if (src->_vptr->conv(src, MPT_value_toVector('d') | MPT_ENUM(ValueConsume), &vec) >= 0) {
 		if ((long) (vec.iov_len/sizeof(double)) != required) {
 			return MPT_ERROR(BadArgument);
 		}

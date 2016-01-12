@@ -56,10 +56,23 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MP
 		return MPT_ERROR(BadArgument);
 	}
 	if (!name) {
-		if (!src) {
-			return sundials_cvode_prepare(cv);
+		realtype org = cv->t;
+		double t = 0;
+		if (!src || !(ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t))) {
+			if ((ret = sundials_cvode_prepare(cv)) < 0) {
+				return ret;
+			}
+			return 0;
 		}
-		return sundials_values_ivp(&cv->sd.y, &cv->ivp, src);
+		if (ret < 0) {
+			return ret;
+		}
+		cv->t = t;
+		if ((ret = sundials_values_ivp(&cv->sd.y, &cv->ivp, src)) < 0) {
+			cv->t = org;
+			return ret;
+		}
+		return ret + 1;
 	}
 	if (!*name) {
 		if ((ret = mpt_ivppar_set(&cv->ivp, src)) >= 0) {

@@ -47,9 +47,7 @@ static void *idaFcn(const MPT_SOLVER_INTERFACE *gen, int type)
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): return ida->ivp.pint ? 0 : (ida+1);
 	  case MPT_SOLVER_ENUM(DAE): return ida->ivp.pint ? 0 : (ida+1);
-	  case MPT_SOLVER_ENUM(PDE):
-	  case MPT_SOLVER_ENUM(PDE) | MPT_SOLVER_ENUM(DAE):
-		return ida->ivp.pint ? (ida+1) : 0;
+	  case MPT_SOLVER_ENUM(PDE): return ida->ivp.pint ? (ida+1) : 0;
 	  default: return 0;
 	}
 }

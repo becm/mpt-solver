@@ -132,6 +132,9 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	if (!cv->sd.jacobian) cv->sd.linalg = 0;
 	else if (!cv->sd.linalg) cv->sd.linalg = MPT_SOLVER_ENUM(SundialsDls);
 	
+	if (cv->ivp.pint && cv->sd.jacobian) {
+		cv->sd.jacobian |= MPT_SOLVER_ENUM(SundialsJacNumeric);
+	}
 	switch (cv->sd.linalg) {
 	  case 0: return CVodeSetIterType(cv_mem, CV_FUNCTIONAL);
 	  case MPT_SOLVER_ENUM(SundialsDls):        return setDls(cv_mem, &cv->sd, neqs);

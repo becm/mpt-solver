@@ -123,6 +123,9 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	if (err < 0) {
 		return err;
 	}
+	if (ida->ivp.pint && ida->sd.jacobian) {
+		ida->sd.jacobian |= MPT_SOLVER_ENUM(SundialsJacNumeric);
+	}
 	switch (ida->sd.linalg) {
 	  case 0: ida->sd.linalg = MPT_SOLVER_ENUM(SundialsDls);
 	  case MPT_SOLVER_ENUM(SundialsDls):        return setDls(ida_mem, &ida->sd, neqs);
