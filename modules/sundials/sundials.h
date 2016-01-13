@@ -129,7 +129,7 @@ extern N_Vector sundials_nvector_new(long);
 extern int sundials_ewtfcn(N_Vector , N_Vector , void *);
 
 /* initialize values */
-extern int sundials_values_ivp(N_Vector *, const MPT_SOLVER_STRUCT(ivppar) *, MPT_INTERFACE(metatype) *);
+extern int sundials_vector_set(N_Vector *, long , MPT_INTERFACE(metatype) *);
 
 /* set CVode parameter */
 extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *, MPT_STRUCT(property) *);

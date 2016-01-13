@@ -72,23 +72,22 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_I
 		return MPT_ERROR(BadArgument);
 	}
 	if (!name) {
-		realtype org = ida->t;
-		double t = 0;
-		if (!src || !(ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t))) {
-			if ((ret = sundials_ida_prepare(ida)) < 0) {
+		realtype t = 0;
+		long required = ida->ivp.pint + 1;
+		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
+			if (ret < 0) {
 				return ret;
 			}
-			return 0;
+			src = 0;
 		}
-		if (ret < 0) {
+		if ((ret = sundials_vector_set(&ida->sd.y, required * ida->ivp.neqs, src)) < 0) {
 			return ret;
+		}
+		if (src) {
+			++ret;
 		}
 		ida->t = t;
-		if ((ret = sundials_values_ivp(&ida->sd.y, &ida->ivp, src)) < 0) {
-			ida->t = org;
-			return ret;
-		}
-		return ret + 1;
+		return ret;
 	}
 	if (!*name) {
 		if ((ret = mpt_ivppar_set(&ida->ivp, src)) >= 0) {

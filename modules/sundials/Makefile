@@ -18,7 +18,7 @@ LDLIBS += -lm
 LINK   = ${CC}
 #
 # objects
-sundials_sources = ewtfcn.c nvector.c jacobian.c report.c values_ivp.c
+sundials_sources = ewtfcn.c nvector.c jacobian.c report.c vector_set.c
 cvode_sources    = $(wildcard cvode/cvode_*.c)
 ida_sources      = $(wildcard ida/ida_*.c)
 

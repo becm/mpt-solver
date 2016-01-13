@@ -56,23 +56,23 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MP
 		return MPT_ERROR(BadArgument);
 	}
 	if (!name) {
-		realtype org = cv->t;
-		double t = 0;
-		if (!src || !(ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t))) {
-			if ((ret = sundials_cvode_prepare(cv)) < 0) {
+		realtype t = 0;
+		long required = cv->ivp.pint + 1;
+		/* initialize with zeros */
+		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t)) <= 0) {
+			if (ret < 0) {
 				return ret;
 			}
-			return 0;
+			src = 0;
 		}
-		if (ret < 0) {
+		if ((ret = sundials_vector_set(&cv->sd.y, required * cv->ivp.neqs, src)) < 0) {
 			return ret;
+		}
+		if (src) {
+			++ret;
 		}
 		cv->t = t;
-		if ((ret = sundials_values_ivp(&cv->sd.y, &cv->ivp, src)) < 0) {
-			cv->t = org;
-			return ret;
-		}
-		return ret + 1;
+		return ret;
 	}
 	if (!*name) {
 		if ((ret = mpt_ivppar_set(&cv->ivp, src)) >= 0) {
@@ -126,7 +126,7 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MP
 		double val = 0.0;
 		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
 		if (CVodeSetMaxStep(cv_mem, val) < 0) return MPT_ERROR(BadValue);
-		return ret;
+		return ret ? 1 : 0;
 	}
 	return MPT_ERROR(BadArgument);
 }
