@@ -48,6 +48,24 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	out(usr, &pr);
 	++line;
 	}
+	if ((show & MPT_SOLVER_ENUM(Values)) && mpack->info >= 0) {
+		static const char fmt[] = { MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
+		struct {
+			struct iovec x, f;
+		} d;
+		
+		d.x.iov_base = mpack->val.iov_base;
+		d.x.iov_len  = mpack->nls.nval * sizeof(double);
+		d.f.iov_base = ((double *) d.x.iov_base) + mpack->nls.nval;
+		d.f.iov_len  = mpack->nls.nres * sizeof(double);
+		
+		pr.name = 0;
+		pr.desc = MPT_tr("parameters and residual data");
+		pr.val.fmt = mpack->info ? fmt : fmt+1;
+		pr.val.ptr = &d;
+		
+		out(usr, &pr);
+	}
 	if (!(show & MPT_SOLVER_ENUM(Report))) return line;
 	
 	

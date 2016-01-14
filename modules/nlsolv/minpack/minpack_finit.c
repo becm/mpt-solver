@@ -11,6 +11,7 @@
 
 extern void mpt_minpack_fini(MPT_SOLVER_STRUCT(minpack) *mpack)
 {
+	mpt_vecpar_alloc(&mpack->val,  0, 0);
 	mpt_vecpar_alloc(&mpack->work, 0, 0);
 	mpt_vecpar_alloc(&mpack->diag, 0, 0);
 }
@@ -18,6 +19,9 @@ extern void mpt_minpack_fini(MPT_SOLVER_STRUCT(minpack) *mpack)
 extern void mpt_minpack_init(MPT_SOLVER_STRUCT(minpack) *mpack)
 {
 	MPT_NLSPAR_INIT(&mpack->nls);
+	
+	mpack->val.iov_base = 0;
+	mpack->val.iov_len  = 0;
 	
 	mpack->work.iov_base = 0;
 	mpack->work.iov_len  = 0;

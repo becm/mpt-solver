@@ -4,61 +4,61 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include "minpack.h"
 
-extern int mpt_minpack_step_(MPT_SOLVER_STRUCT(minpack) *mp, double *x, double *f)
+static void mpUnref(MPT_INTERFACE(object) *obj)
 {
-	if (mp->info < 0 || !f) {
-		int err;
-		if (mp->ufcn) {
-			if (mp->nls.nres != mp->nls.nval) {
-				if ((err = mpt_minpack_ufcn_lmderv(mp)) < 0) {
-					return err;
-				}
-			}
-			else if ((err = mpt_minpack_ufcn_hybrid(mp)) < 0) {
+	mpt_minpack_fini((MPT_SOLVER_STRUCT(minpack) *) (obj+1));
+	free(obj);
+}
+static uintptr_t mpRef()
+{
+	return 0;
+}
+static int mpGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
+{
+	return mpt_minpack_get((MPT_SOLVER_STRUCT(minpack) *) (obj+1), pr);
+}
+static int mpSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(metatype) *src)
+{
+	return mpt_minpack_set((MPT_SOLVER_STRUCT(minpack) *) (obj+1), pr, src);
+}
+
+static int mpReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
+{
+	return mpt_minpack_report((MPT_SOLVER_STRUCT(minpack) *) (gen+1), what, out, data);
+}
+
+static int mpSolve(MPT_SOLVER_INTERFACE *gen)
+{
+	MPT_SOLVER_STRUCT(minpack) *mp = (void *) (gen+1);
+	int err;
+	
+	if (mp->ufcn) {
+		if (mp->nls.nres != mp->nls.nval) {
+			if ((err = mpt_minpack_ufcn_lmderv(mp)) < 0) {
 				return err;
 			}
 		}
-		if ((err = mpt_minpack_prepare(mp, mp->nls.nval, mp->nls.nres)) < 0 || !f) {
+		else if ((err = mpt_minpack_ufcn_hybrid(mp)) < 0) {
 			return err;
 		}
 	}
-	return mpt_minpack_step(mp, x, f);
-}
-
-static int mpFree(MPT_INTERFACE(metatype) *gen)
-{ mpt_minpack_fini((MPT_SOLVER_STRUCT(minpack) *) (gen+1)); free(gen); return 0; }
-
-static MPT_INTERFACE(metatype) *mpAddref()
-{ return 0; }
-
-static int mpProperty(MPT_INTERFACE(metatype) *gen, MPT_STRUCT(property) *pr, MPT_INTERFACE(source) *src)
-{ return mpt_minpack_property((MPT_SOLVER_STRUCT(minpack) *) (gen+1), pr, src); }
-
-static void *mpCast(MPT_INTERFACE(metatype) *gen, int type)
-{
-	switch(type) {
-	  case MPT_ENUM(TypeMeta): return gen;
-	  case MPT_ENUM(TypeSolver): return gen;
-	  default: return 0;
+	if (mp->info < 0  && (err = mpt_minpack_prepare(mp, mp->nls.nval, mp->nls.nres))) {
+		return err;
 	}
+	return mpt_minpack_solve(mp);
 }
-
-static int mpReport(const MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{ return mpt_minpack_report((MPT_SOLVER_STRUCT(minpack) *) (gen+1), what, out, data); }
-
-static int mpStep(MPT_SOLVER_INTERFACE *gen, double *x, double *f)
-{ return mpt_minpack_step_((MPT_SOLVER_STRUCT(minpack) *) (gen+1), x, f); }
 
 static MPT_SOLVER_STRUCT(nlsfcn) *mpFcn(const MPT_SOLVER_INTERFACE *gen)
-{ return (void *) (((MPT_SOLVER_STRUCT(minpack *)) (gen+1))->ufcn); }
-
+{
+	MPT_SOLVER_STRUCT(minpack) *mp = (void *) (gen+1);
+	return (void *) (mp+1);
+}
 static const MPT_INTERFACE_VPTR(Nls) mpCtl = {
-	{ { mpFree, mpAddref, mpProperty, mpCast }, mpReport },
-	mpStep,
+	{ { mpUnref, mpRef, mpGet, mpSet }, mpReport },
+	mpSolve,
 	mpFcn
 };
 

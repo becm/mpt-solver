@@ -34,21 +34,22 @@ public:
 	~minpack();
 #endif
 	MPT_SOLVER_STRUCT(nlspar) nls; /* inherit nonlinear system parameter */
-	const MPT_SOLVER_STRUCT(nlsfcn) *ufcn;
-	
-	struct iovec diag,  /* scale factors for the variables */
-	             work;  /* unified work vektor */
 	
 	char solv;    /* solver selection */
 	char mode;    /* mode of operation */
 	char nprint;  /* print iteration */
 	char info;    /* status information */
-		
-	int mu, ml;   /* hybrd: upper/lower bandwith */
 	
 	int maxfev;   /* max. function evaluations */
 	
-	int nfev, njev;  /* function/jacobian evaluations */
+	int nfev,     /* function evaluations */
+	    njev;     /* jacobian evaluations */
+	
+	int mu, ml;   /* hybrd: upper/lower bandwith */
+	
+	struct iovec val,   /* combined parameters and residuals */
+	             diag,  /* scale factors for the variables */
+	             work;  /* unified work vektor */
 	
 	double xtol;  /* desired relative error in solution */
 	double ftol;  /* desired maximal residual */
@@ -64,6 +65,8 @@ public:
 		lmder_fcn_t *der;
 		lmstr_fcn_t *str;
 	} fcn;  /* residual calculation */
+	
+	const MPT_SOLVER_STRUCT(nlsfcn) *ufcn;
 };
 
 __MPT_EXTDECL_BEGIN
@@ -83,11 +86,11 @@ extern int lmstr1(lmstr_fcn_t *fcn, int m, int n, double *x, double *fvec,
                   double *fjac, int ldfjac, double tol, int *ipvt, double *wa, int lwa);
 
 /* set hybrd parameter */
-extern int mpt_minpack_property(MPT_SOLVER_STRUCT(minpack) *, MPT_STRUCT(property) *, MPT_INTERFACE(source) *src);
+extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *, MPT_STRUCT(property) *);
+extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *name, MPT_INTERFACE(metatype) *src);
 
 /* call minpack solver routine */
-extern int mpt_minpack_step(MPT_SOLVER_STRUCT(minpack) *mpack, double *x, double *f);
-extern int mpt_minpack_step_(MPT_SOLVER_STRUCT(minpack) *mpack, double *x, double *f);
+extern int mpt_minpack_solve(MPT_SOLVER_STRUCT(minpack) *mpack);
 
 /* initialize/terminate structured data */
 extern void mpt_minpack_init(MPT_SOLVER_STRUCT(minpack) *mpack);
@@ -123,23 +126,40 @@ class MinPack : public Nls, minpack
 	{ ufcn = &_fcn; }
 	virtual ~MinPack()
 	{ }
-	MinPack *addref()
-	{ return 0; }
-	int unref()
-	{ delete this; return 0; }
-	int property(struct property *pr, source *src = 0)
-	{ return mpt_minpack_property(this, pr, src); }
-	int report(int what, PropertyHandler out, void *data) const
-	{ return mpt_minpack_report(this, what, out, data); }
-	int step(double *x, double *f)
-	{ return mpt_minpack_step_(this, x, f); }
+	uintptr_t addref()
+	{
+		return 0;
+	}
+	void unref()
+	{
+		delete this;
+	}
+	int property(struct property *pr) const
+	{
+		return mpt_minpack_get(this, pr);
+	}
+	int setProperty(const char *pr, metatype *src = 0)
+	{
+		return mpt_minpack_set(this, pr, src);
+	}
+	
+	int report(int what, PropertyHandler out, void *data)
+	{
+		return mpt_minpack_report(this, what, out, data);
+	}
+	int solve()
+	{
+		return mpt_minpack_solve(this);
+	}
+	operator nlsfcn *() const
+	{
+		return const_cast<nlsfcn *>(&_fcn);
+	}
 	
 	operator const nlspar *() const
-	{ return static_cast<const nlspar *>(&this->nls); }
-	
-	operator nlsfcn *() const
-	{ return const_cast<nlsfcn *>(&_fcn); }
-	
+	{
+		return &nls;
+	}
     protected:
 	nlsfcn _fcn;
 };

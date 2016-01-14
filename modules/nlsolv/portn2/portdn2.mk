@@ -43,6 +43,7 @@ portn2_wrapper = \
 	portn2_prepare.o \
 	portn2_property.o \
 	portn2_report.o \
-	portn2_step.o \
-	portn2_ufcn.o
+	portn2_solve.o \
+	portn2_ufcn.o \
+	portn2_residuals.o
 

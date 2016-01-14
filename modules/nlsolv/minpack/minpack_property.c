@@ -7,110 +7,52 @@
 #include <strings.h>
 #include <limits.h>
 #include <float.h>
-#include <errno.h>
 #include <ctype.h>
 
 #include "version.h"
 
 #include "minpack.h"
 
-static int setNls(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
-{
-	if (!src) {
-		return mpt_nlspar_set(&data->nls, src);
-	}
-	else {
-		MPT_SOLVER_STRUCT(nlspar) nls = data->nls;
-		int ret;
-		
-		if ((ret =  mpt_nlspar_set(&nls, src)) < 0) {
-			return ret;
-		}
-		mpt_minpack_fini(data);
-		mpt_minpack_init(data);
-		data->nls = nls;
-		return ret;
-	}
-}
-static int setXTol(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
-{
-	int len;
-	if (!src) return data->xtol ? 1 : 0;
-	if (!(len = src->_vptr->conv(src, 'd', &data->xtol))) data->xtol = 0.0;
-	return len;
-}
-static int setFTol(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
-{
-	int len;
-	if (!src) return (data->ftol != 1e-7) ? 1 : 0;
-	if (!(len = src->_vptr->conv(src, 'd', &data->ftol))) data->xtol = 1e-7;
-	return len;
-}
-static int setGTol(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
-{
-	int len;
-	if (!src) return data->gtol ? 1 : 0;
-	if (!(len = src->_vptr->conv(src, 'd', &data->gtol))) data->gtol = 0.0;
-	return len;
-}
-static int setJacobian(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, MPT_INTERFACE(metatype) *src)
 {
 	char *key;
-	int l1, l2, l3;
+	int32_t val;
+	int res;
 	
-	if (!src) return (data->mu || data->ml) ? 0 : 1;
-	
-	if ((l1 = src->_vptr->conv(src, 'k', &key)) < 0) return l1;
-	
-	if (!l1 || !key) return data->mu = data->ml = 0;
-	
+	if (!src) {
+		mp->mu = mp->ml = 0;
+		return 0;
+	}
+	if ((res = src->_vptr->conv(src, 'k' | MPT_ENUM(ValueConsume), &key)) < 0) {
+		return res;
+	}
+	if (!res || !key) {
+		return mp->mu = mp->ml = 0;
+	}
 	switch (key[0]) {
-		case 'F': data->mu = data->ml = 0; return l1;
-		case 'f': data->mu = data->ml = 0; return l1;
+		case 'F': mp->mu = mp->ml = 0; return 1;
+		case 'f': mp->mu = mp->ml = 0; return 1;
 		case 'B': case 'b': break;
 		default:
-			errno = EINVAL;
 			return MPT_ERROR(BadValue);
 	}
-	l3 = 0;
-	
-	if ((l2 = src->_vptr->conv(src, 'i', &data->ml)) <= 0) {
-		l2 = 0; data->mu = data->ml = 0;
+	if ((res = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &val)) < 0) {
+		return res;
 	}
-	else if ((l3 = src->_vptr->conv(src, 'i', &data->mu)) <= 0) {
-		l3 = 0; data->mu = data->ml;
+	if (!res) {
+		mp->mu = mp->ml = 0;
+		return 1;
 	}
-	return l1 + l2 + l3;
+	if ((res = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &mp->mu)) < 0) {
+		return res;
+	}
+	if (!res) {
+		mp->mu = mp->ml = val;
+		return 2;
+	}
+	return 3;
 }
-static int setMaxFev(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
-{
-	int len;
-	if (!src) return data->maxfev;
-	if (!(len = src->_vptr->conv(src, 'i', &data->maxfev))) data->maxfev = 0;
-	return len;
-}
-static int setFactor(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
-{
-	int len;
-	if (!src) return (data->factor == 200.) ? 0 : 1;
-	if (!(len = src->_vptr->conv(src, 'd', &data->factor))) data->factor = 200.0;
-	return len;
-}
-static int setEpsFcn(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
-{
-	int len;
-	if (!src) return data->epsfcn ? 1 : 0;
-	if (!(len = src->_vptr->conv(src, 'd', &data->epsfcn))) data->epsfcn = 0.0;
-	return len;
-}
-static int setNPrint(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
-{
-	int len;
-	if (!src) return data->nprint;
-	if (!(len = src->_vptr->conv(src, 'c', &data->nprint))) data->nprint = 0;
-	return len;
-}
-static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
+static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(metatype) *src)
 {
 	double *diag;
 	int total = 0, curr, nd;
@@ -118,40 +60,154 @@ static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(source) *src)
 	if (!src) return data->diag.iov_len / sizeof(double);
 	
 	nd = data->nls.nval;
-	if (!(diag = mpt_vecpar_alloc(&data->diag, nd, sizeof(*diag)))) {
+	if (!(diag = malloc(nd * sizeof(*diag)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	while ((curr = src->_vptr->conv(src, 'd', diag)) > 0) {
-		total += curr; diag++; if ( !--nd ) return total;
+	if (src) {
+		while ((curr = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), diag))) {
+			if (curr < 0) {
+				free(diag);
+				return curr;
+			}
+			if (++total >= nd) {
+				break;
+			}
+			++diag;
+		}
 	}
-	data->diag.iov_len -= nd * sizeof(double);
+	for (curr = total; curr < nd; ++curr) diag[curr] = 1.0;
+	
+	free(data->diag.iov_base);
+	data->diag.iov_base = diag;
+	data->diag.iov_len  = nd * sizeof(*diag);
 	
 	return total;
 }
 
-extern int mpt_minpack_property(MPT_SOLVER_STRUCT(minpack) *data, MPT_STRUCT(property) *prop, MPT_INTERFACE(source) *src)
+/*!
+ * \ingroup mptNlSolvPortN2
+ * \brief set N2 property
+ * 
+ * Query property of Port N2 solver
+ * 
+ * \param mp   N2 data
+ * \param name name of property to change
+ * \param src  data source to change property
+ * 
+ * \retval <0   failure
+ * \retval >=0  used values
+ */
+extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, MPT_INTERFACE(metatype) *src)
+{
+	int ret = 0;
+	
+	if (!name) {
+		double *x = mp->val.iov_base;
+		
+		if (mp->nls.nval <= 0) {
+			return MPT_ERROR(BadArgument);
+		}
+		if ((ret = mpt_vecpar_set(&x, mp->nls.nval, src)) < 0) {
+			return ret;
+		}
+		if (!mp->val.iov_base) {
+			mp->val.iov_base = x;
+			mp->val.iov_len = mp->nls.nval * sizeof(*x);
+		}
+		return ret;
+	}
+	if (!*name) {
+		MPT_SOLVER_STRUCT(nlspar) nls = mp->nls;
+		
+		if ((ret =  mpt_nlspar_set(&nls, src)) < 0) {
+			return ret;
+		}
+		mpt_minpack_fini(mp);
+		mpt_minpack_init(mp);
+		mp->nls = nls;
+		return ret;
+	}
+	if (!strcasecmp(name, "xtol")) {
+		double val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		mp->xtol = val;
+		return ret ? 1 : 0;
+	}
+	if (!strcasecmp(name, "ftol")) {
+		double val = 1e-7;
+		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		mp->ftol = val;
+		return ret ? 1 : 0;
+	}
+	if (!strcasecmp(name, "gtol")) {
+		double val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		mp->gtol = val;
+		return ret ? 1 : 0;
+	}
+	if (!strncasecmp(name, "jac", 3)) {
+		return setJacobian(mp, src);
+	}
+	if (!strcasecmp(name, "maxfev")) {
+		uint32_t val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'u' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		mp->maxfev = val;
+		return ret ? 1 : 0;
+	}
+	if (!strncasecmp(name, "fac", 3)) {
+		double val = 200;
+		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		mp->factor = val;
+		return ret ? 1 : 0;
+	}
+	if (!strncasecmp(name, "eps", 3)) {
+		double val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		mp->epsfcn = val;
+		return ret ? 1 : 0;
+	}
+	if (!strncasecmp(name, "nprint", 3)) {
+		char val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'c' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		mp->nprint = val;
+		return ret ? 1 : 0;
+	}
+	if (!strcasecmp(name, "diag")) {
+		return setDiag(mp, src);
+	}
+	return MPT_ERROR(BadArgument);
+}
+
+/*!
+ * \ingroup mptNlSolvMinpack
+ * \brief set Minpack property
+ * 
+ * Query property of Minpack solver
+ * 
+ * \param mp   Minpack data
+ * \param prop solver property
+ * 
+ * \retval 0   default value
+ * \retval <0  failure
+ * \retval >0  changed property
+ */
+extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *mp, MPT_STRUCT(property) *prop)
 {
 	const char *name;
 	intptr_t pos = -1, id;
 	
-	if (!prop) return (src && data) ? setNls(data, src) : MPT_ENUM(TypeSolver);
-	
+	if (!prop) {
+		return MPT_ENUM(TypeSolver);
+	}
 	if (!(name = prop->name)) {
-		if (src) {
-			errno = EINVAL;
-			return MPT_ERROR(BadOperation);
-		}
 		if ((pos = (intptr_t) prop->desc) < 0) {
-			errno = EINVAL;
 			return MPT_ERROR(BadArgument);
 		}
 	}
 	else if (!*name) {
-		id = MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverDet);
-		if (data && src && (id = setNls(data, src)) < 0) return id;
 		prop->name = "minpack"; prop->desc = "solver for (overdetermined) nonlinear equotations";
-		prop->val.fmt = "ii"; prop->val.ptr = &data->nls;
-		return id;
+		prop->val.fmt = "ii"; prop->val.ptr = &mp->nls;
+		return MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverDet);
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
@@ -162,61 +218,59 @@ extern int mpt_minpack_property(MPT_SOLVER_STRUCT(minpack) *data, MPT_STRUCT(pro
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "xtol") : (pos == ++id)) {
-		if (data && (id = setXTol(data, src)) < 0) return id;
 		prop->name = "xtol"; prop->desc = "desired relative error";
-		prop->val.fmt = "d"; prop->val.ptr = &data->xtol;
-		return id;
+		prop->val.fmt = "d"; prop->val.ptr = &mp->xtol;
+		if (!mp) return id;
+		return mp->xtol ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "ftol") : (pos == ++id)) {
-		if (data && (id = setFTol(data, src)) < 0) return id;
 		prop->name = "ftol"; prop->desc = "desired residual";
-		prop->val.fmt = "d"; prop->val.ptr = &data->ftol;
-		return id;
+		prop->val.fmt = "d"; prop->val.ptr = &mp->ftol;
+		if (!mp) return id;
+		return (mp->ftol != 1e-7) ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "gtol") : (pos == ++id)) {
-		if (data && (id = setGTol(data, src)) < 0) return id;
 		prop->name = "gtol"; prop->desc = "desired orthogonality";
-		prop->val.fmt = "d"; prop->val.ptr = &data->gtol; prop->val.fmt= "d";
-		return id;
+		prop->val.fmt = "d"; prop->val.ptr = &mp->gtol; prop->val.fmt= "d";
+		if (!mp) return id;
+		return mp->gtol ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
-		if (data && (id = setJacobian(data, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "(user) jacobian settings";
-		prop->val.fmt = "ii"; prop->val.ptr = &data->mu;
-		return id;
+		prop->val.fmt = "ii"; prop->val.ptr = &mp->mu;
+		if (!mp) return id;
+		return (mp->mu || mp->ml) ? 2 : 0;
 	}
 	if (name ? !strcasecmp(name, "maxfev") : (pos == ++id)) {
-		if (data && (id = setMaxFev(data, src)) < 0) return id;
 		prop->name = "maxfev"; prop->desc = "max. function evaluations per call";
-		prop->val.fmt = "i"; prop->val.ptr = &data->maxfev;
-		return id;
+		prop->val.fmt = "i"; prop->val.ptr = &mp->maxfev;
+		if(!mp) return id;
+		return mp->maxfev ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "fac", 3) : (pos == ++id)) {
-		if (data && (id = setFactor(data, src)) < 0) return id;
 		prop->name = "factor"; prop->desc = "initial step bound";
-		prop->val.fmt = "d"; prop->val.ptr = &data->factor;
-		return id;
+		prop->val.fmt = "d"; prop->val.ptr = &mp->factor;
+		if (!mp) return id;
+		return (mp->factor == 200*(mp->nls.nval + 1)) ? 0 : 1;
 	}
 	if (name ? !strncasecmp(name, "eps", 3) : (pos == ++id)) {
-		if (data && (id = setEpsFcn(data, src)) < 0) return id;
 		prop->name = "epsfcn"; prop->desc = "initial forward-difference step length";
-		prop->val.fmt = "d"; prop->val.ptr = &data->epsfcn; prop->val.fmt= "d";
-		return id;
+		prop->val.fmt = "d"; prop->val.ptr = &mp->epsfcn;
+		if (!mp) return id;
+		return mp->epsfcn ? 1 : 0;
 	}
-	if (name ? !strncasecmp(name, "eps", 3) : (pos == ++id)) {
-		if (data && (id = setNPrint(data, src)) < 0) return id;
+	if (name ? !strncasecmp(name, "nprint", 3) : (pos == ++id)) {
 		prop->name = "nprint"; prop->desc = "iteration output";
-		prop->val.fmt = "c"; prop->val.ptr = &data->nprint;
-		return id;
+		prop->val.fmt = "c"; prop->val.ptr = &mp->nprint;
+		if (!mp) return id;
+		return mp->nprint ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "diag") : (pos == ++id)) {
-		static const char fmt[] = { 'd' | (char) MPT_ENUM(TypeVector) };
-		if (data && (id = setDiag(data, src)) < 0) return id;
+		static const char fmt[] = { MPT_value_toVector('d'), 0 };
 		prop->name = "diag"; prop->desc = "scale factor for variables";
-		prop->val.fmt = fmt; prop->val.ptr = &data->diag;
-		return id;
+		prop->val.fmt = fmt; prop->val.ptr = &mp->diag;
+		if (!mp) return id;
+		return mp->diag.iov_len / sizeof(double);
 	}
-	
-	errno = EINVAL;
 	return MPT_ERROR(BadArgument);
 }

@@ -8,66 +8,78 @@
 
 #include "portn2.h"
 
-extern int mpt_portn2_step_(MPT_SOLVER_STRUCT(portn2) *n2, double *u, double *f, const MPT_SOLVER_STRUCT(nlsfcn) *ufcn)
+struct _mpt_portn2_data {
+	MPT_SOLVER_INTERFACE      sol;
+	MPT_SOLVER_STRUCT(portn2) n2;
+	MPT_SOLVER_STRUCT(nlsfcn) uf;
+	double                   *res;
+};
+
+static void n2Unref(MPT_INTERFACE(object) *gen)
 {
-	if (!n2->iv.iov_base || ((int *) n2->iv.iov_base)[0] < 0 || !f) {
-		int err;
-		if (ufcn && (err = mpt_portn2_ufcn(n2, ufcn)) < 0) return err;
-		if ((err = mpt_portn2_prepare(n2, n2->nls.nval, n2->nls.nres)) < 0 || !f) return err;
-	}
-	return mpt_portn2_step(n2, u, f);
+	struct _mpt_portn2_data *d = (void *) gen;
+	mpt_portn2_fini(&d->n2);
+	free(gen);
+}
+static uintptr_t n2Ref()
+{
+	return 0;
+}
+static int n2Get(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
+{
+	return mpt_portn2_get((MPT_SOLVER_STRUCT(portn2) *) (gen+1), pr);
+  
+}
+static int n2Set(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metatype) *src)
+{
+	return mpt_portn2_set((MPT_SOLVER_STRUCT(portn2) *) (gen+1), pr, src);
 }
 
-static int n2Fini(MPT_INTERFACE(metatype) *gen)
-{ mpt_portn2_fini((MPT_SOLVER_STRUCT(portn2) *) (gen+1)); free(gen); return 0; }
-
-static MPT_INTERFACE(metatype) *n2Addref()
-{ return 0; }
-
-static int n2Property(MPT_INTERFACE(metatype) *gen, MPT_STRUCT(property) *pr, MPT_INTERFACE(source) *src)
-{ return mpt_portn2_property((MPT_SOLVER_STRUCT(portn2) *) (gen+1), pr, src); }
-
-static int n2Report(const MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{ return mpt_portn2_report((MPT_SOLVER_STRUCT(portn2) *) (gen+1), what, out, data); }
-
-static void *n2Cast(MPT_INTERFACE(metatype) *gen, int type)
+static int n2Report(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	switch(type) {
-	  case MPT_ENUM(TypeMeta): return gen;
-	  case MPT_ENUM(TypeSolver): return gen;
-	  default: return 0;
-	}
+	return mpt_portn2_report((MPT_SOLVER_STRUCT(portn2) *) (gen+1), what, out, data);
 }
-
-static int n2Step(MPT_SOLVER_INTERFACE *gen, double *x, double *f)
+static int n2Solve(MPT_SOLVER_INTERFACE *gen)
 {
-	MPT_INTERFACE_VPTR(Nls) *nctl = (void *) gen->_vptr;
-	return mpt_portn2_step_((MPT_SOLVER_STRUCT(portn2) *) (gen+1), x, f, nctl->ufcn(gen));
+	struct _mpt_portn2_data *d = (void *) gen;
+	int ret;
+	
+	if (d->uf.res && (ret = mpt_portn2_ufcn(&d->n2, &d->uf)) < 0) {
+		return ret;
+	}
+	if (mpt_portn2_prepare(&d->n2, d->n2.nls.nval, d->n2.nls.nres) < 0) {
+		return ret;
+	}
+	return mpt_portn2_solve(&d->n2);
 }
 
 static MPT_SOLVER_STRUCT(nlsfcn) *n2Fcn(const MPT_SOLVER_INTERFACE *gen)
-{ return (MPT_SOLVER_STRUCT(nlsfcn) *) (((MPT_SOLVER_STRUCT(portn2 *)) (gen+1)) + 1); }
-
+{
+	struct _mpt_portn2_data *d = (void *) gen;
+	return &d->uf;
+}
 static const MPT_INTERFACE_VPTR(Nls) n2Ctl = {
-	{ { n2Fini, n2Addref, n2Property, n2Cast }, n2Report },
-	n2Step,
+	{ { n2Unref, n2Ref, n2Get, n2Set }, n2Report },
+	n2Solve,
 	n2Fcn
 };
 
 extern MPT_SOLVER_INTERFACE *mpt_portn2_create()
 {
-	MPT_SOLVER_INTERFACE *gen;
-	MPT_SOLVER_STRUCT(portn2) *n2;
+	struct _mpt_portn2_data *d;
 	
-	if (!(gen = malloc(sizeof(*gen) + sizeof(*n2) + sizeof(MPT_SOLVER_STRUCT(nlsfcn)))))
+	
+	if (!(d = malloc(sizeof(*d)))) {
 		return 0;
+	}
+	if (mpt_portn2_init(&d->n2) < 0) {
+		free(d);
+		return 0;
+	}
+	(void) MPT_NLSFCN_INIT(&d->n2);
 	
-	n2 = (MPT_SOLVER_STRUCT(portn2) *) (gen+1);
-	if (mpt_portn2_init(n2) < 0) { free(n2); return 0; }
-	(void) MPT_NLSFCN_INIT(n2+1);
+	d->sol._vptr = &n2Ctl.gen;
 	
-	gen->_vptr = &n2Ctl.gen;
-	
-	return gen;
+	return &d->sol;
 }
 

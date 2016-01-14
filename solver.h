@@ -417,7 +417,7 @@ extern int mpt_solver_time(const MPT_SOLVER_INTERFACE *, double *);
 /* solver module data management */
 extern void *mpt_vecpar_alloc(struct iovec *, size_t len, size_t size);
 
-extern int mpt_vecpar_settol(MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(metatype) *);
+extern int mpt_vecpar_settol(MPT_SOLVER_TYPE(dvecpar) *, MPT_INTERFACE(metatype) *);
 extern int mpt_vecpar_cktol(MPT_SOLVER_TYPE(dvecpar) *, int len, int repeat, double def);
 
 extern int mpt_vecpar_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);

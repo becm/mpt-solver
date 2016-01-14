@@ -7,21 +7,22 @@
 #include "../minpack.h"
 #include "minpack.h"
 
-extern int mpt_minpack_step(MPT_SOLVER_STRUCT(minpack) *mpack, double *x, double *fvec)
+extern int mpt_minpack_solve(MPT_SOLVER_STRUCT(minpack) *mpack)
 {
 	MPT_SOLVER_STRUCT(nlspar) *nl = &mpack->nls;
 	double *wa1, *wa2, *wa3, *wa4, *qtf, *fjac, *r;
+	double *x, *fvec;
 	int n, m, lr, nfev = 0, njev = 0, mode, nprint, info;
 	
-	if (!mpack->fcn.hd || !x || !fvec) {
-		errno = EFAULT;
-		return -1;
+	if (!mpack->fcn.hd || !(x = mpack->val.iov_base)) {
+		return MPT_ERROR(BadArgument);
 	}
 	if ((n = nl->nval) < 1) {
-		errno = EINVAL;
-		return -1;
+		return MPT_ERROR(BadArgument);
 	}
 	m = nl->nres ? nl->nres : n;
+	
+	fvec = x + n;
 	
 	lr = mpack->work.iov_len / sizeof(double);
 	

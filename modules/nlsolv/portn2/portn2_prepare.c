@@ -4,17 +4,15 @@
 
 #include <stdlib.h>
 #include <float.h>
-#include <errno.h>
 
 #include "portn2.h"
 
 extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *n2, int nval, int nres)
 {
-	int	liv, lrv;
+	int liv, lrv;
 	
 	if (nval < 1 || nres < nval) {
-		errno = EINVAL;
-		return -2;
+		return MPT_ERROR(BadArgument);
 	}
 	
 	if (!n2->jac.jac) {
@@ -22,7 +20,7 @@ extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *n2, int nval, int nres)
 	}
 	/* full jacobian (user or numerical) */
 	if (n2->nd <= 0) {
-		if (n2->bnd.iov_base && n2->bnd.iov_len/2/sizeof(double)) {
+		if (n2->bnd) {
 			liv = 82 + 4*nres;
 			lrv = 105 + nres*(nval + 2*nres + 21) + 2*nval;
 		} else {
@@ -38,20 +36,29 @@ extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *n2, int nval, int nres)
 	}
 	
 	if (!mpt_vecpar_alloc(&n2->rv, lrv, sizeof(double))) {
-		return -1;
+		return MPT_ERROR(BadOperation);
 	}
 	if (!mpt_vecpar_alloc(&n2->iv, liv, sizeof(int))) {
-		return -1;
+		return MPT_ERROR(BadOperation);
 	}
-	if (n2->bnd.iov_base && (lrv = n2->bnd.iov_len/sizeof(double)/2) < nval) {
+	lrv = n2->pv.iov_len/sizeof(double);
+	liv = n2->bnd ? 3*nval : nval;
+	if (lrv < liv) {
 		double *bnd;
 		
-		if (!(bnd = mpt_vecpar_alloc(&n2->bnd, 2*nval, sizeof(double)))) {
-			return -1;
+		if (!(bnd = mpt_vecpar_alloc(&n2->pv, liv, sizeof(double)))) {
+			return MPT_ERROR(BadOperation);
 		}
+		/* fill default initial parameters */
 		for ( ; lrv < nval; lrv++) {
-			bnd[2*lrv]  = -DBL_MAX;
-			bnd[2*lrv+1] = DBL_MAX;
+			bnd[lrv] = 0;
+		}
+		/* set remaining boundaries */
+		if (n2->bnd) {
+			for (lrv = 0; lrv < nval; lrv++) {
+				bnd[nval+2*lrv]   = -DBL_MAX;
+				bnd[nval+2*lrv+1] =  DBL_MAX;
+			}
 		}
 	}
 	n2->nls.nval = nval;

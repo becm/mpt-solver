@@ -9,7 +9,7 @@
 extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
-	int line = 0;
+	int state, line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
 	const char *jac = "user (partial)";
@@ -23,6 +23,27 @@ extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_
 	pr.val.ptr = jac;
 	out(usr, &pr);
 	++line;
+	}
+	state = ((int *) n2->iv.iov_base)[0];
+	if ((show & MPT_SOLVER_ENUM(Values)) && state >= 0) {
+		static const char fmt[] = { MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
+		struct {
+			struct iovec x, f;
+		} d;
+		
+		d.x.iov_base = n2->pv.iov_base;
+		d.x.iov_len  = n2->nls.nval * sizeof(double);
+		
+		pr.name = 0;
+		pr.desc = MPT_tr("parameters and residual data");
+		pr.val.fmt = fmt+1;
+		pr.val.ptr = &d;
+		
+		if (state && (d.f.iov_base = (void *) mpt_portn2_residuals(n2))) {
+			d.f.iov_len = n2->nls.nres * sizeof(double);
+			pr.val.fmt  = fmt;
+		}
+		out(usr, &pr);
 	}
 	
 	return 0;
