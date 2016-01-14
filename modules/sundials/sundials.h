@@ -7,6 +7,10 @@
 #include "../solver.h"
 #define _MPT_SUNDIALS_H  _MPT_SOLVER_H
 
+#ifdef __cplusplus
+# include <sundials/sundials_types.h>
+#endif
+
 __MPT_SOLVER_BEGIN
 
 #ifndef _NVECTOR_H
@@ -219,7 +223,10 @@ class CVode : public Ivp, cvode
 {
 public:
 	CVode() : _fcn(0)
-	{ ufcn = &_fcn; _fcn.param = &ivp; }
+	{
+		ufcn = (odefcn *) &_fcn;
+		_fcn.param = &ivp;
+	}
 	virtual ~CVode()
 	{ }
 	void unref()
@@ -232,36 +239,33 @@ public:
 	}
 	int property(struct property *pr) const
 	{
-		return sundials_cvode_get(this, pr, src);
+		return sundials_cvode_get(this, pr);
 	}
 	int setProperty(const char *pr, metatype *src)
 	{
 		return sundials_cvode_set(this, pr, src);
 	}
-	int report(int what, PropertyHandler out, void *opar) const
+	int report(int what, PropertyHandler out, void *opar)
 	{
 		return sundials_cvode_report(this, what, out, opar);
 	}
 	int step(double *end)
 	{
-		if (!end) return sundials_cvode_prep(this);
-		int ret = sundials_cvode_step(*end);
-		*end = ivp.last;
+		if (!end) return sundials_cvode_prepare(this);
+		int ret = sundials_cvode_step(this, *end);
+		*end = t;
 		return ret;
 	}
-	operator ivpfcn *(int type)
+	void *functions(int type) const
 	{
-		ivpfcn *fcn = const_cast<ivpfcn *>(&_fcn);
 		switch (type) {
-		  case ODE: return ivp.pint || _fcn.dae.mas ? 0 : fcn;
-		  case DAE: return ivp.pint ? 0 : fcn;
-		  case PDE: return !ivp.pint || _fcn.dae.mas ? 0 : fcn;
-		  case PDE | ODE: return !ivp.pint ? 0 : fcn;
-		  default return 0;
+		  case ODE: return ivp.pint ? 0 : (void *) &_fcn;
+		  case PDE: return ivp.pint ? (void *) &_fcn : 0;
+		  default: return 0;
 		}
 	}
 protected:
-	ivpfcn _fcn;
+	pdefcn _fcn;
 };
 inline cvode::cvode()
 { sundials_cvode_init(this); }
@@ -272,7 +276,10 @@ class IDA : public Ivp, ida
 {
 public:
 	IDA() : _fcn(0)
-	{ ufcn = &_fcn; _fcn.param = &ivp; }
+	{
+		ufcn = (daefcn *) &_fcn;
+		_fcn.param = &ivp;
+	}
 	virtual ~IDA()
 	{ }
 	void unref()
@@ -291,23 +298,27 @@ public:
 	{
 		return sundials_ida_set(this, pr, src);
 	}
-	int report(int what, PropertyHandler out, void *opar) const
+	int report(int what, PropertyHandler out, void *opar)
 	{
 		return sundials_ida_report(this, what, out, opar);
 	}
 	int step(double *end)
 	{
-		if (!end) return sundials_ida_prep(this);
-		int ret = sundials_ida_step(*end);
-		*end = ivp.last;
+		if (!end) return sundials_ida_prepare(this);
+		int ret = sundials_ida_step(this, *end);
+		*end = t;
 		return ret;
 	}
-	operator ivpfcn *() const
+	void *functions(int type) const
 	{
-		return const_cast<ivpfcn *>(&_fcn);
+		switch (type) {
+		  case ODE: return ivp.pint ? 0 : (void *) &_fcn;
+		  case PDE: return ivp.pint ? (void *) &_fcn : 0;
+		  default: return 0;
+		}
 	}
 protected:
-	ivpfcn _fcn;
+	pdefcn _fcn;
 };
 inline ida::ida()
 { sundials_ida_init(this); }
