@@ -14,7 +14,7 @@ INC += ${DIR_SOLVER}.. ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and shared objects
 src_gen = vecpar_alloc.c vecpar_value.c
-src_ivp = ivppar_set.c vecpar_cktol.c
+src_ivp = ivppar_set.c vecpar_cktol.c vecpar_settol.c
 src_nls = nlspar_set.c
 #
 # additional objects for solver

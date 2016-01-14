@@ -81,10 +81,11 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MP
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_set(&cv->atol, src);
+		return mpt_vecpar_settol(&cv->atol, src);
+		return ret;
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_set(&cv->rtol, src);
+		return mpt_vecpar_settol(&cv->rtol, src);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return sundials_jacobian(&cv->sd, cv->ivp.neqs, src);

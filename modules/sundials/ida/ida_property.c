@@ -96,10 +96,10 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_I
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_set(&ida->atol, src);
+		return mpt_vecpar_settol(&ida->atol, src);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_set(&ida->rtol, src);
+		return mpt_vecpar_settol(&ida->rtol, src);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return sundials_jacobian(&ida->sd, ida->ivp.neqs, src);

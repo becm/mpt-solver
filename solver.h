@@ -73,14 +73,14 @@ typedef int (*MPT_SOLVER_TYPE(NlsOut))(void *opar, MPT_SOLVER_STRUCT(nlspar) *np
 
 enum MPT_SOLVER_ENUM(Flags)
 {
-	MPT_SOLVER_ENUM(CapableIvp) = 0x10,
-	MPT_SOLVER_ENUM(ODE)        = 0x11,
-	MPT_SOLVER_ENUM(DAE)        = 0x12,
-	MPT_SOLVER_ENUM(PDE)        = 0x14,
+	MPT_SOLVER_ENUM(CapableIvp) = 0x100,
+	MPT_SOLVER_ENUM(ODE)        = 0x101,
+	MPT_SOLVER_ENUM(DAE)        = 0x102,
+	MPT_SOLVER_ENUM(PDE)        = 0x104,
 	
-	MPT_SOLVER_ENUM(CapableNls) = 0x20,
-	MPT_SOLVER_ENUM(NlsVector)  = 0x21,
-	MPT_SOLVER_ENUM(NlsOverDet) = 0x22,
+	MPT_SOLVER_ENUM(CapableNls) = 0x200,
+	MPT_SOLVER_ENUM(NlsVector)  = 0x201,
+	MPT_SOLVER_ENUM(NlsOverDet) = 0x202,
 	
 	MPT_SOLVER_ENUM(Header)     = 0x1,
 	MPT_SOLVER_ENUM(Status)     = 0x2,
@@ -221,6 +221,10 @@ public:
 	inline operator pdefcn *() const
 	{ return (pdefcn *) functions(PDE); }
 };
+inline void *Ivp::functions(int) const
+{ return 0; }
+inline double *Ivp::initstate()
+{ return 0; }
 
 /*! extension for NonLinear Systems */
 class Nls : public generic
@@ -228,16 +232,10 @@ class Nls : public generic
 protected:
 	~Nls() {}
     public:
-	virtual int step(double *res) = 0;
+	virtual int solve() = 0;
 	
 	virtual operator nlsfcn *() const;
 };
-
-inline void *Ivp::functions(int) const
-{ return 0; }
-inline double *Ivp::initstate()
-{ return 0; }
-
 inline Nls::operator nlsfcn *() const
 { return 0; }
 
@@ -246,7 +244,7 @@ struct vecpar
 {
 	inline vecpar(T const &val) : base(0)
 	{ d.val = val; }
-	inline vecpar(void) : base(0)
+	inline vecpar() : base(0)
 	{ d.val = T(); }
 	inline ~vecpar()
 	{ if (base) resize(0); }
@@ -256,7 +254,7 @@ struct vecpar
 		if (base) return Slice<const T>(base, d.len / sizeof(T));
 		return Slice<const T>(&d.val, 1);
 	}
-	inline int type(void)
+	inline int type()
 	{ return typeIdentifier<T>(); }
 	
 	bool resize(size_t elem) {
@@ -347,7 +345,7 @@ MPT_INTERFACE_VPTR(Ivp)
 MPT_INTERFACE_VPTR(Nls)
 {
 	MPT_INTERFACE_VPTR(solver) gen;
-	int (*step)(MPT_SOLVER_INTERFACE *s, double *res);
+	int (*solve)(MPT_SOLVER_INTERFACE *s);
 	MPT_SOLVER_STRUCT(nlsfcn) *(*functions)(const MPT_SOLVER_INTERFACE *);
 };
 #endif
@@ -419,9 +417,11 @@ extern int mpt_solver_time(const MPT_SOLVER_INTERFACE *, double *);
 /* solver module data management */
 extern void *mpt_vecpar_alloc(struct iovec *, size_t len, size_t size);
 
+extern int mpt_vecpar_settol(MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(metatype) *);
 extern int mpt_vecpar_cktol(MPT_SOLVER_TYPE(dvecpar) *, int len, int repeat, double def);
+
 extern int mpt_vecpar_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);
-extern int mpt_vecpar_set(MPT_SOLVER_TYPE(dvecpar) *, MPT_INTERFACE(metatype) *);
+extern int mpt_vecpar_set(double **, int , MPT_INTERFACE(metatype) *);
 
 extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *, MPT_INTERFACE(metatype) *);
 extern int mpt_nlspar_set(MPT_SOLVER_STRUCT(nlspar) *, MPT_INTERFACE(metatype) *);

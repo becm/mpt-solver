@@ -8,90 +8,159 @@
 
 #include "solver.h"
 
-extern int mpt_vecpar_set(MPT_TYPE(dvecpar) *val, MPT_INTERFACE(metatype) *src)
+extern int mpt_vecpar_set(double **ptr, int max, MPT_INTERFACE(metatype) *src)
 {
 	struct iovec tmp;
-	double v1 = 0.0, v2, *dest;
-	int len, pos, full;
+	double *dst, *old = *ptr;
+	double v1 = 0.0, v2;
+	int len, pos, curr;
 	
 	if (!src) {
-		if (val->base) {
-			if (val->d.len/sizeof(double)) {
-				val->d.val = *((double *) val->base);
-			}
-			free(val->base);
-			val->base = 0;
+		if (max < 0 && old) {
+			free(old);
+			*ptr = 0;
 		}
 		return 0;
 	}
-	if ((len = src->_vptr->conv(src, MPT_value_toVector('d') | MPT_ENUM(ValueConsume), &tmp)) >= 0) {
-		size_t elem = tmp.iov_len / sizeof(double);
-		if (!elem) {
-			dest = mpt_vecpar_alloc((struct iovec *) val, 0, 0);
-			val->d.val = 0;
+	if ((curr = src->_vptr->conv(src, MPT_value_toVector('d') | MPT_ENUM(ValueConsume), &tmp)) >= 0) {
+		/* empty data */
+		if (!curr) {
+			if (!old) {
+				return 0;
+			}
+			if (max < 0) {
+				free(old);
+				*ptr = 0;
+				return 0;
+			}
+			for (pos = 0; pos < max; ++pos) {
+				old[pos] = 0;
+			}
+			return 0;
 		}
-		else if (!(dest = mpt_vecpar_alloc((struct iovec *) val, elem, sizeof(double)))) {
-			return -1;
+		len = tmp.iov_len/sizeof(double);
+		
+		/* need exact match */
+		if (max > 0) {
+			if (len != max) {
+				return MPT_ERROR(BadValue);
+			}
 		}
-		else {
-			memcpy(val->base, tmp.iov_base, val->d.len);
+		else if (!len) {
+			if (old && max < 0) {
+				free(old);
+				*ptr = 0;
+			}
+			return len;
+		}
+		/* take available */
+		if (!(dst = old) && !(dst = malloc(len * sizeof(double)))) {
+			return MPT_ERROR(BadOperation);
+		}
+		/* copy/set existing values */
+		if (tmp.iov_base) {
+			memcpy(dst, tmp.iov_base, len * sizeof(double));
+		} else {
+			memset(dst, 0, len * sizeof(double));
+			return len;
+		}
+		if (!old) {
+			*ptr = dst;
+		}
+		return len;
+	}
+	if ((curr = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v1)) < 0) {
+		return curr;
+	}
+	/* valid but empty data */
+	if (!curr) {
+		if (!old) {
+			return 0;
+		}
+		if (max < 0) {
+			free(old);
+			*ptr = 0;
+			return 0;
+		}
+		return 0;
+	}
+	/* single value only */
+	if (max == 1 || (curr = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v2)) <= 0) {
+		/* require valid values only */
+		if (curr < 0 && max >= 0) {
+			return curr;
+		}
+		if (!(dst = old) && !(dst = calloc(max > 0 ? max : 1, sizeof(double)))) {
+			return MPT_ERROR(BadOperation);
+		}
+		*dst = v1;
+		if (!old) {
+			*ptr = dst;
 		}
 		return 1;
 	}
-	if ((len = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v1)) < 0) {
-		return len;
-	}
-	if (!len) v1 = 0.0;
-	/* single value only */
-	if (!len || !(pos = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v2))) {
-		dest = mpt_vecpar_alloc((struct iovec *) val, 0, 0);
-		val->d.val = v1;
-		return len ? 1 : 0;
-	}
-	if (pos < 0) {
-		return pos;
-	}
 	/* start new vector */
-	tmp.iov_base = 0;
-	tmp.iov_len  = 0;
-	
-	full = 8;
-	if (!(dest = mpt_vecpar_alloc(&tmp, full, sizeof(double)))) {
+	len = max > 0 ? max : 8;
+	if (!(dst = malloc(len * sizeof(double)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	dest[0] = v1;
-	dest[1] = v2;
+	dst[0] = v1;
+	dst[1] = v2;
 	pos = 2;
 	
+	if (max == 2) {
+		return 2;
+	}
 	/* read further data */
-	while ((len = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v2)) > 0) {
+	while ((curr = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v2))) {
+		if (curr < 0) {
+			/* need pure data or explicit size */
+			if (max >= 0) {
+				free(dst);
+				return MPT_ERROR(BadType);
+			}
+			break;
+		}
 		/* increase vector space */
-		if (pos >= full) {
-			full += 8;
-			if (!(dest = mpt_vecpar_alloc((struct iovec *) val, full, sizeof(double)))) {
-				mpt_vecpar_alloc(&tmp, 0, 0);
+		if (pos >= len) {
+			double *next;
+			len += 8;
+			if (!(next = realloc(dst, len * sizeof(double)))) {
+				free(dst);
 				return MPT_ERROR(BadOperation);
 			}
 		}
-		dest[pos++] = v2;
-	}
-	if (len < 0) {
-		mpt_vecpar_alloc(&tmp, 0, 0);
-		return MPT_ERROR(BadType);
-	}
-	/* shrink to required size */
-	if (full > pos) {
-		mpt_vecpar_alloc((struct iovec *) &tmp, pos, sizeof(double));
+		dst[pos++] = v2;
+		
+		/* value number limit reached */
+		if (pos == max) {
+			break;
+		}
 	}
 	/* replace existing data */
-	mpt_vecpar_alloc((struct iovec *) val, 0, 0);
-	val->base = tmp.iov_base;
-	val->d.len = tmp.iov_len;
+	if (max <= 0) {
+		if (old) {
+			free(old);
+		}
+	}
+	/* copy to existing data */
+	else if (old) {
+		memcpy(old, dst, pos * sizeof(double));
+		free(dst);
+		return pos;
+	}
+	/* fill new data with zeros */
+	if (max > pos) {
+		for (len = pos; len < max; ++len) {
+			dst[len] = 0;
+		}
+	}
+	*ptr = dst;
 	
 	return pos;
 }
 
-extern int mpt_vecpar_get(const MPT_TYPE(dvecpar) *tol, MPT_STRUCT(value) *val)
+extern int mpt_vecpar_get(const MPT_SOLVER_TYPE(dvecpar) *tol, MPT_STRUCT(value) *val)
 {
 	int len = tol->base ? tol->d.len/sizeof(double) : 0;
 	
