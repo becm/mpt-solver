@@ -242,12 +242,20 @@ inline Nls::operator nlsfcn *() const
 template <typename T>
 struct vecpar
 {
+	typedef T* iterator;
+	
 	inline vecpar(T const &val) : base(0)
 	{ d.val = val; }
 	inline vecpar() : base(0)
 	{ d.val = T(); }
 	inline ~vecpar()
 	{ if (base) resize(0); }
+	
+	inline iterator begin() const
+	{ return base ? base : (T *) &d.val; }
+	
+	 inline iterator end() const
+	{ return base ? base + d.len/sizeof(*base) : (T *) ((&d.val) + 1); }
 	
 	inline Slice<const T> data() const
 	{
@@ -295,10 +303,10 @@ struct vecpar
 	{
 		if (base) {
 			static const char fmt[2] = { vectorIdentifier<T>(), 0 };
-			return value(fmt, this);
+			return ::mpt::value(fmt, this);
 		} else {
 			static const char fmt[2] = { typeIdentifier<T>(), 0 };
-			return value(fmt, &d.val);
+			return ::mpt::value(fmt, &d.val);
 		}
 	}
 protected:
