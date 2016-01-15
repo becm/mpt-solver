@@ -83,10 +83,10 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 		return len;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_set(&bac->atol, src);
+		return mpt_vecpar_settol(&bac->atol, src);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_set(&bac->rtol, src);
+		return mpt_vecpar_settol(&bac->rtol, src);
 	}
 	if (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) {
 		int32_t oint = 10;
