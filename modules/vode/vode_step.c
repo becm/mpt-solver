@@ -7,19 +7,17 @@
 
 #include "vode.h"
 
-extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *data, double *val, double tend)
+extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *data, double tend)
 {
 	MPT_SOLVER_STRUCT(ivppar) *ivp = &data->ivp;
 	double *atol, *rtol;
 	int neqs, itol, mf, iopt, itask, istate, liw, lrw;
 	
 	if (data->istate < 0) {
-		errno = EINVAL;
-		return -1;
+		return MPT_ERROR(BadArgument);
 	}
 	if (!data->fcn) {
-		errno = EFAULT;
-		return -1;
+		return MPT_ERROR(BadArgument);
 	}
 	neqs = ivp->neqs * (ivp->pint + 1);
 	
@@ -52,14 +50,14 @@ extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *data, double *val, double tend
 		case 5: mf = 5; break;
 		default: mf = 0;
 	}
-	mf += ( data->meth == 2 ) ? 20 : 10;
+	mf += (data->meth == 2) ? 20 : 10;
 	mf *= data->jsv;
 	
 	liw = data->iwork.iov_len / sizeof(int);
 	lrw = data->rwork.iov_len / sizeof(double);
 	
 	/* fortran routine call */
-	dvode_(data->fcn, &neqs, val, &ivp->last, &tend, &itol, rtol, atol,
+	dvode_(data->fcn, &neqs, data->y, &data->t, &tend, &itol, rtol, atol,
 	       &itask, &istate, &iopt,
 	       data->rwork.iov_base, &lrw, data->iwork.iov_base, &liw,
 	       data->jac, &mf, data->rpar, data->ipar);

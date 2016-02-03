@@ -22,14 +22,19 @@ public:
 	vode();
 #endif
 	MPT_SOLVER_STRUCT(ivppar) ivp; /* inherit IVP parameter */
-	MPT_TYPE(dvecpar) rtol, atol;  /* tolerances */
+	
+	double t;
+	
+	MPT_SOLVER_TYPE(dvecpar) rtol, atol;  /* tolerances */
+	
+	double *y;        /* state data */
 	
 	char meth, miter, /* method flags */
 	     jsv,         /* save jacobian iteration */
 	     iopt;        /* flag for optional input */
 	
-	short	istate;   /* dvode state */
-	short	itask;    /* type of integration step */
+	short istate;     /* dvode state */
+	short itask;      /* type of integration step */
 	
 	struct iovec rwork, /* vode real work vector */
 	             iwork; /* vode integer work vector */
@@ -49,20 +54,20 @@ extern void dvode_(vode_fcn_t *, int *, double *, double *, double *, int *, dou
 		   vode_jac_t *, int *, double *, int *);
 
 /* execute next step on supplied vode instance */
-extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *, double *, double );
-extern int mpt_vode_step_(MPT_SOLVER_STRUCT(vode) *, double *, double *, MPT_SOLVER_STRUCT(ivpfcn) *);
+extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *, double);
 
 /* set vode parameter */
-extern int mpt_vode_property(MPT_SOLVER_STRUCT(vode) *, MPT_STRUCT(property) *, MPT_INTERFACE(source) *);
+extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *, const char *, MPT_INTERFACE(metatype) *);
+extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *, MPT_STRUCT(property) *);
 
 /* validate settings and working space for use */
 extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *__vd, int __neqs, int __pdim);
 
 /* initialize/clear vode integrator descriptor */
-extern int mpt_vode_init(MPT_SOLVER_STRUCT(vode) *__vd);
+extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *__vd);
 extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *__vd);
 /* set wrapper for user functions */
-extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *__vd, MPT_SOLVER_STRUCT(ivpfcn) *__uf);
+extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *__vd, MPT_SOLVER_STRUCT(odefcn) *__uf);
 
 /* vode status information */
 extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -87,20 +92,43 @@ public:
 	{ }
 	virtual ~Vode()
 	{ }
-	Vode *addref()
-	{ return 0; }
-	int unref()
-	{ delete this; return 0; }
-	int property(struct property *pr, source *src = 0)
-	{ return mpt_vode_property(this, pr, src); }
-	int report(int what, PropertyHandler out, void *opar) const
-	{ return mpt_vode_report(this, what, out, opar); }
-	int step(double *u, double *end, double *x)
-	{ return mpt_vode_step_(this, u, end, &_fcn); }
-	operator ivpfcn *() const
-	{ return const_cast<ivpfcn *>(&_fcn); }
+	uintptr_t addref()
+	{
+		return 0;
+	}
+	void unref()
+	{
+		delete this;
+	}
+	int property(struct property *pr) const
+	{
+		return mpt_vode_get(this, pr);
+	}
+	int setProperty(const char *pr, metatype *src = 0)
+	{
+		return mpt_vode_set(this, pr, src);
+	}
+	int report(int what, PropertyHandler out, void *opar)
+	{
+		return mpt_vode_report(this, what, out, opar);
+	}
+	int step(double *end)
+	{
+		if (!end) return mpt_vode_prepare(this, ivp.neqs, ivp.pint);
+		int ret = mpt_vode_step(this, *end);
+		*end = t;
+		return ret;
+	}
+	void *functions(int type) const
+	{
+		switch (type) {
+		  case odefcn::Type: return ivp.pint ? 0 : (void *) &_fcn;
+		  case pdefcn::Type: return ivp.pint ? (void *) &_fcn : 0;
+		  default: return 0;
+		}
+	}
 protected:
-	ivpfcn _fcn;
+	pdefcn _fcn;
 };
 #endif
 

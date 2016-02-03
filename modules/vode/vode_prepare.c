@@ -3,7 +3,6 @@
  */
 
 #include <stdlib.h>
-#include <errno.h>
 
 #include "vode.h"
 
@@ -13,17 +12,17 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data, int neqs, int pint)
 	int liw, lrw, *iwk; /* length of work arrays */
 	
 	if (neqs < 1 || pint++ < 0) {
-		errno = EINVAL; return -2;
+		return MPT_ERROR(BadArgument);
 	}
 	mf = (data->atol.base && neqs > 1) ? pint : 0;
-	if (mpt_vecpar_cktol(&data->atol, neqs, mf, __MPT_IVP_ATOL) < 0)
-		return -1;
-		
+	if (mpt_vecpar_cktol(&data->atol, neqs, mf, __MPT_IVP_ATOL) < 0) {
+		return MPT_ERROR(BadOperation);
+	}
 	mf = (data->rtol.base && neqs > 1) ? pint : 0;
-	if (mpt_vecpar_cktol(&data->rtol, neqs, mf, __MPT_IVP_RTOL) < 0)
-		return -1;
-	
-	neqs *= pint;	/* total dimension for solver */
+	if (mpt_vecpar_cktol(&data->rtol, neqs, mf, __MPT_IVP_RTOL) < 0) {
+		return MPT_ERROR(BadOperation);
+	}
+	neqs *= pint;  /* total dimension for solver */
 	
 	switch ((mf = data->jsv * (data->meth * 10 + data->miter))) {
 		case  10: case 13: case 20: case 23:
@@ -31,11 +30,14 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data, int neqs, int pint)
 		default:
 			liw = 30 + neqs;
 	}
-	iwk = data->iwork.iov_base;
-	ml  = iwk[0];
-	mu  = iwk[1];
-	
-	switch ( mf ) {
+	if (data->iwork.iov_len >= 2 * sizeof(double)) {
+		iwk = data->iwork.iov_base;
+		ml  = iwk[0];
+		mu  = iwk[1];
+	} else {
+		ml = mu = 0;
+	}
+	switch (mf) {
 		case  10:
 		case -10: lrw = -2 + 16 * neqs; break;
 		case  11:
@@ -61,23 +63,22 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data, int neqs, int pint)
 		case -24:
 		case -25: lrw = 10 * neqs + (2 * ml + mu) * neqs; break;
 		default:
-			errno = ENOSYS; return -1;
+			return MPT_ERROR(BadValue);
 	}
 	
 	lrw += 22;
 	
-	if (!(iwk = mpt_vecpar_alloc(&data->iwork, liw, sizeof(int))))
-		return -1;
-	if (!mpt_vecpar_alloc(&data->rwork, lrw, sizeof(double)))
-		return -1;
-	
+	if (!(iwk = mpt_vecpar_alloc(&data->iwork, liw, sizeof(int)))) {
+		return MPT_ERROR(BadOperation);
+	}
+	if (!mpt_vecpar_alloc(&data->rwork, lrw, sizeof(double))) {
+		return MPT_ERROR(BadOperation);
+	}
 	data->istate = 1;
 	
 	/* reset counter on reinitialisation */
-	for (mf = 0; mf < 3; mf++)
-		iwk[10+mf] = 0;
-	for (mf = 0; mf < 4; mf++)
-		iwk[18+mf] = 0;
+	for (mf = 0; mf < 3; mf++) iwk[10+mf] = 0;
+	for (mf = 0; mf < 4; mf++) iwk[18+mf] = 0;
 	
 	return neqs;
 }
