@@ -55,6 +55,8 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		MPT_ABORT("missing client descriptor");
 	}
 	src = 0;
+	
+	/* running in remot-input mode */
 	if (ev->msg) {
 		MPT_STRUCT(msgtype) mt;
 		MPT_STRUCT(message) msg;
@@ -65,8 +67,9 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		    && mt.cmd == MPT_ENUM(MessageCommand)
 		    && (part = mpt_message_argv(&msg, mt.arg)) > 0) {
 			part = mpt_message_read(&msg, part, 0);
+			part = mpt_message_argv(&msg, mt.arg);
 			
-			if (!(src = mpt_meta_message(&msg, mt.arg, '='))) {
+			if (part > 0 && !(src = mpt_meta_message(&msg, mt.arg, '='))) {
 				mpt_output_log(solv->out, __func__, MPT_FCNLOG(Error), "%s",
 				               MPT_tr("failed to create argument stream"));
 				return MPT_ERROR(BadOperation);
@@ -74,10 +77,11 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			if ((fname = mpt_solver_read(solv, src))) {
 				return MPT_event_fail(ev, fname);
 			}
+			if (src) src->_vptr->unref(src);
 		}
 	}
 	/* problem config filename from configuration/terminal */
-	if (!src) {
+	else {
 		MPT_INTERFACE(metatype) *cfg;
 		cfg = solv->_vptr->cfg.query((void *) solv, 0);
 		fname = cfg ? mpt_meta_data(cfg, 0) : 0;

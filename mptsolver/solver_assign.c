@@ -75,6 +75,7 @@ static int assignSolverConfig(MPT_STRUCT(node) *conf, const MPT_STRUCT(value) *v
 extern int mpt_solver_assign(MPT_STRUCT(node) *conf, const MPT_STRUCT(path) *porg, const MPT_STRUCT(value) *val, MPT_INTERFACE(logger) *log)
 {
 	MPT_INTERFACE(metatype) *m;
+	MPT_STRUCT(node) newnode = MPT_NODE_INIT;
 	MPT_STRUCT(value) tmp;
 	const char *name;
 	int ret;
@@ -145,8 +146,19 @@ extern int mpt_solver_assign(MPT_STRUCT(node) *conf, const MPT_STRUCT(path) *por
 		tmp.ptr = name;
 		val = &tmp;
 	}
-	if ((ret = mpt_node_parse(conf, val, log)) < 0) {
+	if ((ret = mpt_node_parse(&newnode, val, log)) < 0) {
 		return ret;
+	}
+	else {
+		MPT_STRUCT(node) *curr = newnode.children;
+		
+		mpt_node_clear(conf);
+		conf->children = curr;
+		
+		while (curr) {
+			curr->parent = conf;
+			curr = curr->next;
+		}
 	}
 	/* set config file name */
 	if (!val->fmt) {

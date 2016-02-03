@@ -556,8 +556,6 @@ static int stepPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	ctl = (void *) gen->_vptr;
 	
 	while (1) {
-		MPT_STRUCT(metatype) *src;
-		
 		ctx.state = MPT_ENUM(OutputStateStep);
 		ret = 1;
 		
@@ -573,7 +571,7 @@ static int stepPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			continue;
 		}
 		ret = 1;
-		if (!(src = arg) && !(src = ivp->src)) {
+		if (!src) {
 			ctx.state |= MPT_ENUM(OutputStateFini);
 			ret = 0;
 		}
