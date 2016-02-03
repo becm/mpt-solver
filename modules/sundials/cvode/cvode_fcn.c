@@ -30,7 +30,7 @@ extern int sundials_cvode_fcn(realtype t, N_Vector y, N_Vector f, const MPT_SOLV
 	
 	if (cv->ivp.pint) {
 		const MPT_SOLVER_STRUCT(pdefcn) *pde = (void*) ode;
-		return pde->fcn(pde->param, t, yd, fd, cv->ivp.pint + 1, pde->grid, pde->rside);
+		return pde->fcn(pde->param, t, yd, fd, &cv->ivp, pde->grid, pde->rside);
 	}
 	return ode->fcn(ode->param, t, yd, fd);
 }

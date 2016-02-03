@@ -34,7 +34,7 @@ extern int sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT
 	
 	if (ida->ivp.pint) {
 		const MPT_SOLVER_STRUCT(pdefcn) *pde = (void *) dae;
-		if ((ret = pde->fcn(pde->param, t, dy, df, ida->ivp.pint+1, pde->grid, pde->rside)) < 0) {
+		if ((ret = pde->fcn(pde->param, t, dy, df, &ida->ivp, pde->grid, pde->rside)) < 0) {
 			return ret;
 		}
 	}
@@ -44,7 +44,7 @@ extern int sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT
 	neqs = ida->ivp.neqs;
 	nint = ida->ivp.pint;
 	
-	if (!dae->mas) {
+	if (ida->ivp.pint || !dae->mas) {
 		long i;
 		neqs *= nint + 1;
 		/* f -= E*yp */

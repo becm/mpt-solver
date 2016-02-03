@@ -56,7 +56,11 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	++line;
 	}
 	if (show & MPT_SOLVER_ENUM(Values)) {
-		static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
+		static const char fmt[] = {
+			MPT_SOLVER_ENUM(SundialsRealtype),
+			MPT_value_toVector(MPT_SOLVER_ENUM(SundialsRealtype)),
+			0
+		};
 		struct {
 			double t;
 			struct iovec s;
@@ -65,7 +69,7 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 		
 		val.t = ida->t;
 		val.s.iov_base = ida->sd.y ? N_VGetArrayPointer(ida->sd.y) : 0;
-		val.s.iov_len  = pts * ida->ivp.neqs;
+		val.s.iov_len  = pts * ida->ivp.neqs * sizeof(realtype);
 		
 		pr.name = 0;
 		pr.desc = MPT_tr("IDA solver state");

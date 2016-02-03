@@ -259,8 +259,8 @@ public:
 	void *functions(int type) const
 	{
 		switch (type) {
-		  case ODE: return ivp.pint ? 0 : (void *) &_fcn;
-		  case PDE: return ivp.pint ? (void *) &_fcn : 0;
+		  case odefcn::Type: return ivp.pint ? 0 : (void *) &_fcn;
+		  case pdefcn::Type: return ivp.pint ? (void *) &_fcn : 0;
 		  default: return 0;
 		}
 	}
@@ -312,8 +312,8 @@ public:
 	void *functions(int type) const
 	{
 		switch (type) {
-		  case ODE: return ivp.pint ? 0 : (void *) &_fcn;
-		  case PDE: return ivp.pint ? (void *) &_fcn : 0;
+		  case daefcn::Type: return ivp.pint ? 0 : (void *) &_fcn;
+		  case pdefcn::Type: return ivp.pint ? (void *) &_fcn : 0;
 		  default: return 0;
 		}
 	}
