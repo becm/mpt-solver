@@ -1,80 +1,58 @@
 /*!
- * read basic and specific configuration from files.
+ * setup event controller for solver events
  */
 
 #include <string.h>
-#include <errno.h>
-
-#include "node.h"
-#include "message.h"
-#include "config.h"
 
 #include "client.h"
 
-/*!
- * \ingroup mptSolver
- * \brief read client configuration
- * 
- * Try to get client and solver configuration files from message,
- * fall back to values in client configuration and read files.
- * 
- * \param conf configuration target
- * \param msg  message data
- * \param sep  message argument separator
- * \param log  logging descriptor
- * 
- * \return string describing error
- */
-extern const char *mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(message) *msg, int sep, MPT_INTERFACE(logger) *log)
+#include "solver.h"
+
+extern const char *mpt_solver_read(MPT_INTERFACE(client) *solv, MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(node) *tmp;
-	const char *fname, *format;
-	char fbuf[1024];
-	ssize_t part = -1;
+	const char *cl, *sol;
+	int err;
 	
-	if ((fname = mpt_client_read(conf, msg, sep, log))) {
-		return fname;
-	}
-	/* set format for solver configuration file */
-	tmp = mpt_node_next(conf->children, "solconf_fmt");
-	
-	if (!tmp || !(format = mpt_node_data(tmp, 0))) {
-		format = "[ ] =\n#!";
-	}
-	tmp = mpt_node_next(conf->children, "solconf");
-	
-	/* use second argument as solver configuration */
-	if (!msg || (part = mpt_message_argv(msg, sep)) <= 0) {
-		if (!tmp || !(fname = mpt_node_data(tmp, 0))) {
-			return 0;
+	if (!src) {
+		if (solv->_vptr->cfg.assign((void *) solv, 0, 0) < 0) {
+			return MPT_tr("no default configuration");
 		}
-	} else if ((size_t) part < msg->used && (!sep || !((char *) msg->base)[part])) {
-		fname = msg->base;
-		part = mpt_message_read(msg, part, 0);
-	} else if (part >= (ssize_t) sizeof(fbuf)) {
-		return MPT_tr("temporary buffer exceeded");
-	} else {
-		part = mpt_message_read(msg, part, fbuf);
-		fbuf[part] = '\0';
-		fname = fbuf;
+		return 0;
 	}
-	/* save to configuration if unset */
-	if (!tmp) {
-		static const char sc[] = "solconf";
-		if (!(tmp = mpt_node_new(sizeof(sc), part+1))) {
-			return MPT_tr("node create error");
-		}
-		mpt_identifier_set(&conf->ident, sc, strlen(sc));
-		if (mpt_gnode_insert(conf, 0, tmp) < 0) {
-			mpt_node_destroy(tmp);
-			return MPT_tr("node insert error");
-		}
-		mpt_node_set(tmp, fname);
+	if ((err = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cl)) < 0) {
+		return MPT_tr("unable to get client config filename");
 	}
-	/* read solver configuration */
-	if (mpt_config_read(tmp, fname, format, 0, log) < 0) {
-		return MPT_tr("error in solver configuration");
+	if (!err) {
+		if (solv->_vptr->cfg.assign((void *) solv, 0, 0) < 0) {
+			return MPT_tr("no default configuration");
+		}
+		return 0;
+	}
+	if ((err = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &sol)) < 0) {
+		return MPT_tr("unable to get solver config filename");
+	}
+	if (!err) {
+		sol = 0;
+	}
+	if (mpt_config_set((void *) solv, 0, cl, 0, 0) < 0) {
+		return MPT_tr("bad client config filename");
+	}
+	if (sol && mpt_config_set((void *) solv, "solconf", cl, 0, 0) < 0) {
+		return MPT_tr("bad solver config filename");
+	}
+	while (err) {
+		MPT_STRUCT(property) pr;
+		
+		if ((err = src->_vptr->conv(src, MPT_ENUM(TypeProperty) | MPT_ENUM(ValueConsume), &pr)) < 0
+		    || !pr.name) {
+			return MPT_tr("required property for extended config");
+		}
+		if (err) {
+			if (!strcmp(pr.name, "solconf")) {
+				return MPT_tr("solver config is positional argument");
+			}
+			mpt_config_set((void *) solv, pr.name, cl, '.', 0);
+		}
 	}
 	return 0;
 }
-

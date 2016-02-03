@@ -8,7 +8,7 @@
 static double *param;
 
 /* DY(i)/DY(j) */
-int rh_side(void *udata, const double *t, const double *y, double *f)
+int rh_side(void *udata, double t, const double *y, double *f)
 {
 	(void) udata; (void) t;
 	
@@ -21,7 +21,7 @@ int rh_side(void *udata, const double *t, const double *y, double *f)
 	return 0;
 }
 
-int bmat_bcf(void *udata, const double *t, const double *y, double *b, int *row_ind, int *col_ind)
+int bmat_bcf(void *udata, double t, const double *y, double *b, int *row_ind, int *col_ind)
 {
 	(void) udata; (void) t; (void) y;
 	
@@ -33,7 +33,7 @@ int bmat_bcf(void *udata, const double *t, const double *y, double *b, int *row_
 }
 
 /* DF/DY */
-int jac_eval(void *udata, const double *t, const double *y, double *jac, int ljac)
+int jac_eval(void *udata, double t, const double *y, double *jac, int ljac)
 {
 	(void) udata; (void) t; (void) y;
 	
@@ -56,7 +56,7 @@ int jac_eval(void *udata, const double *t, const double *y, double *jac, int lja
 	return 0;
 }
 
-int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+int user_init(MPT_SOLVER_STRUCT(daefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	(void) out;
 	

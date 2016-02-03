@@ -67,7 +67,7 @@ static int wrap_logger(void *file, const char *fmt, ... )
 	return ret;
 }
 
-static int wrapInfo(void *ptr, MPT_STRUCT(property) *pr)
+static int wrapInfo(void *ptr, const MPT_STRUCT(property) *pr)
 {
 	struct wrap_fmt *wp = ptr;
 	struct iovec vec;
@@ -88,7 +88,7 @@ static int wrapInfo(void *ptr, MPT_STRUCT(property) *pr)
 }
 
 /*!
- * \ingroup mptClient
+ * \ingroup mptSolver
  * \brief solver state
  * 
  * Output solver state information
@@ -96,7 +96,7 @@ static int wrapInfo(void *ptr, MPT_STRUCT(property) *pr)
  * \param gen solver descriptor
  * \param log logging descriptor
  */
-extern int mpt_solver_info(const MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out)
+extern int mpt_solver_info(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out)
 {
 	struct wrap_fmt wr;
 	
@@ -109,27 +109,36 @@ extern int mpt_solver_info(const MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger
 	return gen->_vptr->report(gen, MPT_SOLVER_ENUM(Header), wrapInfo, &wr);
 }
 
-
-static int wrapStatus(void *ptr, MPT_STRUCT(property) *pr)
+struct _wrapStatusCtx
 {
-	struct iovec *vec = ptr;
+	struct iovec vec;
+	int (*vals)(void *, const MPT_STRUCT(value) *);
+	void *ctx;
+};
+static int wrapStatus(void *ptr, const MPT_STRUCT(property) *pr)
+{
+	struct _wrapStatusCtx *out = ptr;
 	
-	if (!pr->name) return 0;
-	
+	if (!pr->name) {
+		if (!out->vals) {
+			return 0;
+		}
+		return out->vals(out->ctx, &pr->val);
+	}
 	/* save property name */
-	appendString(vec, pr->name, strlen(pr->name));
-	appendString(vec, " = ", 3);
+	appendString(&out->vec, pr->name, strlen(pr->name));
+	appendString(&out->vec, " = ", 3);
 	
 	/* print property data */
-	mpt_tostring(&pr->val, appendString, vec);
+	mpt_tostring(&pr->val, appendString, &out->vec);
 	
 	/* add delimiter */
-	appendString(vec, ", ", 2);
+	appendString(&out->vec, ", ", 2);
 	
 	return 1;
 }
 /*!
- * \ingroup mptClient
+ * \ingroup mptSolver
  * \brief solver status
  * 
  * Output current solver status
@@ -137,21 +146,26 @@ static int wrapStatus(void *ptr, MPT_STRUCT(property) *pr)
  * \param gen solver descriptor
  * \param out output descriptor
  */
-extern int mpt_solver_status(const MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out)
+extern int mpt_solver_status(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out, int (*vals)(void *, const MPT_STRUCT(value) *), void *ctx)
 {
 	char buf[1024];
-	struct iovec io;
+	struct _wrapStatusCtx io;
+	int what = MPT_SOLVER_ENUM(Status);
 	
-	io.iov_base = buf;
-	io.iov_len = sizeof(buf);
+	io.vec.iov_base = buf;
+	io.vec.iov_len = sizeof(buf);
+	io.vals = vals;
+	io.ctx = ctx;
 	
-	if (gen->_vptr->report(gen, MPT_SOLVER_ENUM(Status), wrapStatus, &io) < 0) {
+	if (vals) what |= MPT_SOLVER_ENUM(Values);
+	
+	if (gen->_vptr->report(gen, what, wrapStatus, &io) < 0) {
 		return -1;
 	}
-	if ((io.iov_len = sizeof(buf) - io.iov_len) < 2) return -2;
+	if ((io.vec.iov_len = sizeof(buf) - io.vec.iov_len) < 2) return -2;
 	
 	/* remove last delimiter */
-	((char *) io.iov_base)[-2] = 0;
+	((char *) io.vec.iov_base)[-2] = 0;
 	
 	if (!out) {
 		fputs(buf, stdout); fputc('\n', stdout);
@@ -161,7 +175,7 @@ extern int mpt_solver_status(const MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logg
 	return 1;
 }
 
-static int wrapReport(void *ptr, MPT_STRUCT(property) *pr)
+static int wrapReport(void *ptr, const MPT_STRUCT(property) *pr)
 {
 	struct wrap_fmt *wp = ptr;
 	struct iovec vec;
@@ -183,7 +197,7 @@ static int wrapReport(void *ptr, MPT_STRUCT(property) *pr)
 	return 1;
 }
 /*!
- * \ingroup mptClient
+ * \ingroup mptSolver
  * \brief solver report
  * 
  * Output solver report
@@ -191,7 +205,7 @@ static int wrapReport(void *ptr, MPT_STRUCT(property) *pr)
  * \param gen solver descriptor
  * \param out output descriptor
  */
-extern int mpt_solver_report(const MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out)
+extern int mpt_solver_report(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out)
 {
 	struct wrap_fmt wr;
 	

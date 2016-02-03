@@ -3,13 +3,13 @@
 #include <mpt/array.h>
 #include <mpt/solver.h>
 
-static double *param, *grid, damkohler, L = 1, a = 1, de = 20, R = 5;
+static double *param, damkohler, L = 1, a = 1, de = 20, R = 5;
 
-static int rfcn(int n, double t, const double *u, double x, double *f, double *d, double *v)
+static int rfcn(void *udata, double t, const double *u, double *f, double x, double *d, double *v)
 {
 	double fg;
 	
-	(void) n; (void) t; (void) x;
+	(void) udata; (void) t; (void) x;
 	
 	d[0] = 1;
 	d[1] = 1/L;
@@ -25,9 +25,8 @@ static int rfcn(int n, double t, const double *u, double x, double *f, double *d
 }
 
 /* solver right side calculation */
-static int rs_pde(void *udata, const double *t, const double *y, double *f)
+static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_STRUCT(ivppar) *ivp, const double *grid, MPT_SOLVER_TYPE(RsideFcn) rs)
 {
-	const MPT_SOLVER_STRUCT(ivppar) *ivp = udata;
 	double *fr, dx, fg;
 	int npde, nint;
 	
@@ -37,7 +36,7 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 	fr = f + npde * nint;
 	
 	/* inner residuals (central differences) */
-	mpt_residuals_cdiff(rfcn, *t, grid, nint+1, y, npde, f);
+	mpt_residuals_cdiff(udata, t, y, f, ivp, grid, rs);
 	
 	/* left boundary: neumann */
 	dx = grid[1]-grid[0];
@@ -54,16 +53,16 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 }
 
 /* set user functions for PDE step */
-extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	int npde = 2;
 	
 	(void) out;
 	
 	usr->fcn = rs_pde;
+	usr->rside = rfcn;
 	
 	param = mpt_data_param(sd);
-	grid  = mpt_data_grid (sd, npde);
 	
 	switch (sd->npar) {
 	    default: R = param[3];

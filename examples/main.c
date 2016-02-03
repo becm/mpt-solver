@@ -32,7 +32,7 @@ extern int main(int argc, char *argv[])
 		return 1;
 	}
 	/* setup problem type client */
-	c = CREATE_CLIENT();
+	c = CREATE_CLIENT("mpt.client");
 	
 	/* setup event controller for client */
 	if (mpt_solver_events(n->_disp.arg, c) < 0) {

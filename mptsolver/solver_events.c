@@ -19,35 +19,44 @@
 
 static int solevtRead(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 {
-	MPT_STRUCT(msgtype) mt = MPT_MSGTYPE_INIT;
-	MPT_INTERFACE(logger) *log;
 	const char *err;
 	
 	if (!ev) return 0;
 	
-	if (!solv->conf && !(solv->conf = mpt_client_config("client"))) {
-		return MPT_event_fail(ev, MPT_tr("unable to query configuration"));
-	}
-	log = MPT_LOGGER((MPT_INTERFACE(metatype) *) solv->out);
-	
 	if (!ev->msg) {
-		err = mpt_solver_read(solv->conf, 0, 0, log);
+		if ((err = mpt_solver_read(solv, 0))) {
+			return MPT_event_fail(ev, MPT_tr("no default configuration"));
+		}
 	}
 	else {
-		MPT_STRUCT(message) msg = *ev->msg;
-		size_t part;
+		MPT_STRUCT(msgtype) mt;
+		MPT_STRUCT(message) msg;
+		MPT_INTERFACE(metatype) *src;
+		ssize_t part;
 		
+		msg = *ev->msg;
 		if (mpt_message_read(&msg, sizeof(mt), &mt) < sizeof(mt)) {
 			return MPT_event_fail(ev, MPT_tr("missing message type"));
 		}
 		/* consume command part */
-		if ((part = mpt_message_argv(&msg, mt.arg)) > 0) {
-			mpt_message_read(&msg, part, 0);
+		if (!(part = mpt_message_argv(&msg, mt.arg)) < 0) {
+			return MPT_event_fail(ev, MPT_tr("unable to consume command"));
 		}
-		err = mpt_solver_read(solv->conf, &msg, mt.arg, log);
-	}
-	if (err) {
-		return MPT_event_fail(ev, err);
+		mpt_message_read(&msg, part, 0);
+		part = mpt_message_argv(&msg, mt.arg);
+		
+		src = 0;
+		if (part > 0 && !(src = mpt_meta_message(&msg, mt.arg, '='))) {
+			mpt_output_log(solv->out, __func__, MPT_FCNLOG(Error), "%s",
+			               MPT_tr("failed to create argument stream"));
+			return MPT_ERROR(BadOperation);
+		}
+		err = mpt_solver_read(solv, src);
+		if (src) src->_vptr->unref(src);
+		
+		if (err) {
+			return MPT_event_fail(ev, err);
+		}
 	}
 	return MPT_event_good(ev, MPT_tr("reading configuration files completed"));
 }

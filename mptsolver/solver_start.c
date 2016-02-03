@@ -46,33 +46,41 @@ static char *stripFilename(char *base)
  */
 extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 {
-	MPT_INTERFACE(logger) *log;
-	MPT_STRUCT(msgtype) mt = MPT_MSGTYPE_INIT;
-	MPT_STRUCT(message) msg = MPT_MESSAGE_INIT;
-	ssize_t part = -1;
+	MPT_INTERFACE(metatype) *src;
 	const char *fname;
 	
 	if (!ev) return 0;
 	
+	if (!solv) {
+		MPT_ABORT("missing client descriptor");
+	}
+	src = 0;
 	if (ev->msg) {
+		MPT_STRUCT(msgtype) mt;
+		MPT_STRUCT(message) msg;
+		ssize_t part = -1;
+		
 		msg = *ev->msg;
 		if (mpt_message_read(&msg, sizeof(mt), &mt) == sizeof(mt)
 		    && mt.cmd == MPT_ENUM(MessageCommand)
 		    && (part = mpt_message_argv(&msg, mt.arg)) > 0) {
 			part = mpt_message_read(&msg, part, 0);
+			
+			if (!(src = mpt_meta_message(&msg, mt.arg, '='))) {
+				mpt_output_log(solv->out, __func__, MPT_FCNLOG(Error), "%s",
+				               MPT_tr("failed to create argument stream"));
+				return MPT_ERROR(BadOperation);
+			}
+			if ((fname = mpt_solver_read(solv, src))) {
+				return MPT_event_fail(ev, fname);
+			}
 		}
 	}
-	if (!solv) {
-		MPT_ABORT("missing client descriptor");
-	}
-	solv->_vptr->clear(solv);
-	
-	if (!solv->conf && !(solv->conf = mpt_client_config("client"))) {
-		return MPT_event_fail(ev, MPT_tr("unable to query configuration"));
-	}
-	/* problem config filename from arguments/configuration/terminal */
-	if (part < 0 || mpt_message_argv(&msg, mt.arg) <= 0) {
-		fname = solv->conf ? (char *) mpt_node_data(solv->conf, 0) : 0;
+	/* problem config filename from configuration/terminal */
+	if (!src) {
+		MPT_INTERFACE(metatype) *cfg;
+		cfg = solv->_vptr->cfg.query((void *) solv, 0);
+		fname = cfg ? mpt_meta_data(cfg, 0) : 0;
 		if (!fname || access(fname, R_OK) < 0) {
 			static const char defName[] = "client.conf";
 			char *rname, buf[1024];
@@ -82,71 +90,46 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			if (!(rname = mpt_readline(buf)) || !(fname = stripFilename(rname))) {
 				fname = defName;
 			}
-			if (mpt_node_set(solv->conf, fname) < 0) {
+			if (mpt_config_set((void *) solv, 0, fname, 0, 0) < 0) {
 				return MPT_event_fail(ev, MPT_tr("unable to set client filename"));
 			}
 			free(rname);
 		}
-	}
-	log = MPT_LOGGER((MPT_INTERFACE(metatype) *) solv->out);
+		else if ((fname = mpt_solver_read(solv, 0))) {
+			return MPT_event_fail(ev, fname);
+		}
+		if (solv->out) mpt_output_log(solv->out, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("reading configuration file completed"));
 	
-	/* read configuration files */
-	if ((fname = mpt_solver_read(solv->conf, &msg, mt.arg, log))) {
-		return MPT_event_fail(ev, fname);
+		if (!mpt_config_get((void *) solv, "solconf", 0, 0)) {
+			static const char defName[] = "solver.conf\0";
+			char *rname, buf[1024];
+			int ret;
+			
+			snprintf(buf, sizeof(buf), "%s [%s]: ", MPT_tr("solver parameter"), defName);
+			
+			if (!(rname = mpt_readline(buf)) || !(fname = stripFilename(rname))) {
+				fname = defName;
+			}
+			ret = mpt_config_set((void *) solv, "solconf", fname, 0, 0);
+			free(rname);
+			
+			if (ret < 0) {
+				return MPT_event_fail(ev, MPT_tr("failed to set solver config"));
+			}
+			if (solv->out) mpt_output_log(solv->out, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("reading solver config completed"));
+		}
 	}
-	if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("reading configuration files completed"));
-	
-	/* solver config filename from terminal */
-	if (!mpt_node_next(solv->conf->children, "solconf")) {
-		MPT_STRUCT(node) *conf;
-		static const char defName[] = "solver.conf", sc[] = "solconf";
-		const char *format;
-		char *rname, buf[1024];
-		
-		snprintf(buf, sizeof(buf), "%s [%s]: ", MPT_tr("solver parameter"), defName);
-		
-		if (!(rname = mpt_readline(buf)) || !(fname = stripFilename(rname))) {
-			fname = defName;
-		}
-		/* set format for solver configuration file */
-		conf = mpt_node_next(solv->conf->children, "solconf_fmt");
-		format = conf ? mpt_node_data(conf, 0) : "[ ] =\n#!";
-		
-		if (!(conf = mpt_node_new(sizeof(sc), strlen(fname) + 1))) {
-			free(rname);
-			return MPT_event_fail(ev, MPT_tr("unable to create solver configuration"));
-		}
-		mpt_identifier_set(&conf->ident, "solconf", strlen(sc));
-		if (mpt_node_set(conf, fname) < 0) {
-			free(rname);
-			mpt_node_destroy(conf);
-			return MPT_event_fail(ev, MPT_tr("unable to set solver filename"));
-		}
-		if (mpt_config_read(conf, fname, format, 0, log) < 0) {
-			free(rname);
-			mpt_node_destroy(conf);
-			return MPT_event_fail(ev, "error in solver configuration");
-		}
-		mpt_gnode_insert(solv->conf, 0, conf);
-		free(rname);
-	}
-	
 	/* initialize solver */
-	if (solv->_vptr->init(solv) < 0) {
+	if (solv->_vptr->init(solv, 0) < 0) {
 		return MPT_event_fail(ev, MPT_tr("unable to initialize solver data"));
 	}
-	if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("client initialisation finished"));
+	if (solv->out) mpt_output_log(solv->out, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("client initialisation finished"));
 	
 	/* prepare solver for run */
 	if (solv->_vptr->prep(solv, 0) < 0) {
 		return MPT_event_fail(ev, MPT_tr("solver preparation failed"));
 	}
-	if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("client preparation finished"));
-	
-	if (solv->_vptr->output(solv, MPT_ENUM(OutputStateInit)) < 0) {
-		return MPT_event_fail(ev, MPT_tr("initial output failed"));
-	}
-	if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("initial output pushed"));
+	if (solv->out) mpt_output_log(solv->out, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("client preparation finished"));
 	
 	/* configure default event to solver step */
 	ev->id = mpt_hash("step", 4);

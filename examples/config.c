@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #ifdef __GLIBC__
 # include <mcheck.h>
@@ -22,10 +23,15 @@ static int write_fd(void *out, const char *s, size_t len)
 {
 	return fwrite(s, len, 1, out);
 }
-static int wrap_fw(void *out, MPT_STRUCT(property) *pr)
+static int wrap_fw(void *out, const MPT_STRUCT(property) *pr)
 {
-	fwrite(pr->name, strlen(pr->name), 1, out);
-	fwrite(" = ", 3, 1, out);
+	if (!pr) {
+		return 0;
+	}
+	if (pr->name) {
+		fwrite(pr->name, strlen(pr->name), 1, out);
+		fwrite(" = ", 3, 1, out);
+	}
 	mpt_tostring(&pr->val, write_fd, out);
 	fputc('\n', out);
 	return 0;
@@ -51,13 +57,16 @@ int main(void)
 		if (!(n = mpt_solver_alias(buf))) {
 			n = buf;
 		}
-		if ((err = mpt_library_assign(&h, n))) {
-			fputs(err, stderr); fputc('\n', stderr); fputs(txt, stdout); continue;
+		if ((err = mpt_library_assign(&h, n, getenv("MPT_PREFIX_LIB")))) {
+			fputs(err, stderr);
+			fputc('\n', stderr);
+			fputs(txt, stdout);
+			continue;
 		}
 		if ((s = h.create())) {
-			puts(mpt_meta_typename((void *) s));
+			puts(mpt_object_typename((void *) s));
 			s->_vptr->report(s, -1, wrap_fw, stdout);
-			s->_vptr->_mt.unref((void *) s);
+			s->_vptr->obj.unref((void *) s);
 		} else {
 			perror("failed getting solver descriptor");
 		}

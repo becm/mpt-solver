@@ -19,7 +19,7 @@ Ks   = 115.83,
 pco2 = 0.9,
 H    = 737.0;
 
-static int rs_akzo(void *udata, const double *t, const double *y, double *f)
+static int rs_akzo(void *udata, double t, const double *y, double *f)
 {
 	double Fin, r1, r2, r3, r4, r5, qy0, ry1;
 	
@@ -53,7 +53,7 @@ static int rs_akzo(void *udata, const double *t, const double *y, double *f)
 	
 	return 0;
 }
-static int bm_akzo(void *udata, const double *t, const double *y, double *b, int *idrow, int *idcol)
+static int bm_akzo(void *udata, double t, const double *y, double *b, int *idrow, int *idcol)
 {
 	int i, n = 5;
 	
@@ -67,7 +67,7 @@ static int bm_akzo(void *udata, const double *t, const double *y, double *b, int
 	return n;
 }
 
-int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+int user_init(MPT_SOLVER_STRUCT(daefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	double *param;
 	

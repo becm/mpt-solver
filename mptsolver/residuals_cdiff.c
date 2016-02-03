@@ -24,17 +24,17 @@ static void cdiff_step(int npde, const double *left, const double *curr, const d
 	}
 }
 
-extern int mpt_residuals_cdiff(MPTRsideFcn rfcn, double t, const double *grid, int np, const double *y, int npde, double *f)
+extern int mpt_residuals_cdiff(void *ctx, double t, const double *y, double *f, const MPT_SOLVER_STRUCT(ivppar) *ivp, const double *grid, MPT_SOLVER_TYPE(RsideFcn) rfcn)
 {
 	const double *left;
 	double dx, *diff, *vx;
-	int i;
+	int pts, i, npde;
 	
 	/* inner nodes required */
-	if ((np -= 2) <= 0) {
-		errno = ERANGE;
-		return -2;
+	if (!ivp || (pts = ivp->pint) <= 0 || !rfcn || !grid) {
+		return MPT_ERROR(BadArgument);
 	}
+	npde = ivp->neqs;
 	
 	diff = f;  /* initial temporary data */
 	vx   = f + npde;
@@ -43,13 +43,13 @@ extern int mpt_residuals_cdiff(MPTRsideFcn rfcn, double t, const double *grid, i
 	y   += npde;
 	
 	/* calculate non-boundary nodes */
-	while (np--) {
+	while (pts--) {
 		const double *right = y + npde;
 		
 		f = vx;  /* advance temporary data */
 		vx += npde;
 		
-		if ((i = rfcn(npde, t, y, grid[1], f, diff, vx)) < 0) {
+		if ((i = rfcn(ctx, t, y, f, grid[1], diff, vx)) < 0) {
 			return i;
 		}
 		/* average node distance */

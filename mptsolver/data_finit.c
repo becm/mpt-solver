@@ -20,17 +20,12 @@
 extern void mpt_data_clear(MPT_SOLVER_STRUCT(data) *md)
 {
 	MPT_STRUCT(buffer) *buf;
-	MPT_INTERFACE(metatype) *mt;
 	
 	if ((buf = md->param._buf)) {
 		buf->used = 0;
 	}
 	if ((buf = md->val._buf)) {
 		buf->used = 0;
-	}
-	if ((mt = (void *) md->iter)) {
-		mt->_vptr->unref(mt);
-		md->iter = 0;
 	}
 	md->npar = 0;
 	md->nval = 0;
@@ -50,12 +45,6 @@ extern void mpt_data_clear(MPT_SOLVER_STRUCT(data) *md)
  */
 extern void mpt_data_fini(MPT_SOLVER_STRUCT(data) *md)
 {
-	MPT_INTERFACE(metatype) *mt;
-	
-	if ((mt = (void *) md->iter)) {
-		mt->_vptr->unref(mt);
-		md->iter = 0;
-	}
 	mpt_array_clone(&md->param, 0);
 	mpt_array_clone(&md->val, 0);
 }

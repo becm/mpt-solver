@@ -5,13 +5,13 @@
 
 #include <mpt/solver.h>
 
-static double *param, *grid;
+static double *param;
 
-static int rfcn(int n, double t, const double *u, double x, double *f, double *d, double *v)
+static int rfcn(void *udata, double t, const double *u, double *f, double x, double *d, double *v)
 {
 	double g, fg;
 	
-	(void) n; (void) t; (void) x;
+	(void) udata; (void) t; (void) x;
 	
 	d[0] = param[0];
 	d[1] = param[1];
@@ -28,9 +28,8 @@ static int rfcn(int n, double t, const double *u, double x, double *f, double *d
 }
 
 /* solver right side calculation */
-static int rs_pde(void *udata, const double *t, const double *y, double *f)
+static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_STRUCT(ivppar) *ivp, const double *grid, MPT_SOLVER_TYPE(RsideFcn) rs)
 {
-	const MPT_SOLVER_STRUCT(ivppar) *ivp = udata;
 	const double *yr;
 	double *fr, dx;
 	int npde, nint;
@@ -42,14 +41,14 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 	fr = f + npde * nint;
 	
 	/* inner discretization (use central differences) */
-	mpt_residuals_cdiff(rfcn, *t, grid, nint+1, y, npde, f);
+	mpt_residuals_cdiff(udata, t, y, f, ivp, grid, rs);
 	
 	/* left boundary: neumann, dirichlet */
 	dx = grid[1] - grid[0];
 	f[0] = 2*(y[npde] - y[0])/dx/dx;
 	f[1] = 0.;
 	
-	/* right boundary: dirichlet,neumann */
+	/* right boundary: dirichlet, neumann */
 	dx = grid[nint] - grid[nint-1];
 	fr[0] = 0.;
 	fr[1] = 2*(yr[1-npde] - yr[1])/dx/dx;
@@ -58,16 +57,16 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 }
 
 /* set user functions for PDE step */
-extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	int npar, npde = 2;
 	
 	(void) out;
 	
 	usr->fcn = rs_pde;
+	usr->rside = rfcn;
 	
 	param = mpt_data_param(sd);
-	grid  = mpt_data_grid (sd, npde);
 	
 	if ((npar = sd->npar) < 2) {
 		mpt_output_log(out, __func__, MPT_FCNLOG(Error), "%s (npar=%d)",

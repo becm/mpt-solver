@@ -4,9 +4,9 @@
 
 static double *grid, *param, diff;
 
-static int rfcn(int npde, double t, const double *u, double x, double *f, double *d, double *v)
+static int rfcn(void *udata, double t, const double *u, double *f, double x, double *d, double *v)
 {
-	(void) npde; (void) t; (void) u; (void) x;
+	(void) udata; (void) t; (void) u; (void) x;
 	
 	d[0] = diff;
 	v[0] = 0;
@@ -16,9 +16,8 @@ static int rfcn(int npde, double t, const double *u, double x, double *f, double
 }
 
 /* solver right side calculation */
-static int rs_pde(void *udata, const double *t, const double *y, double *f)
+static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_STRUCT(ivppar) *ivp, const double *grid, MPT_SOLVER_TYPE(RsideFcn) rs)
 {
-	const MPT_SOLVER_STRUCT(ivppar) *ivp = udata;
 	const double *yr;
 	double *fr, dx;
 	int npde, nint;
@@ -26,11 +25,11 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 	npde = ivp->neqs;
 	nint = ivp->pint;
 	
-	yr = y + nint * npde;	/* last node start */
+	yr = y + nint * npde;  /* last node start */
 	fr = f + nint * npde;
 	
 	/* inner node residuals: use central differences */
-	mpt_residuals_cdiff(rfcn, *t, grid, nint+1, y, npde, f);
+	mpt_residuals_cdiff(udata, t, y, f, ivp, grid, rs);
 	
 	/* constant dirichlet left boundary */
 	f[0] = 0.;
@@ -43,13 +42,14 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 }
 
 /* set user functions for PDE step */
-extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	int npde = 1;
 	
 	(void) out;
 	
 	usr->fcn = rs_pde;
+	usr->rside = rfcn;
 	
 	/* initialize values from solver configuration */
 	grid  = mpt_data_grid (sd, npde);

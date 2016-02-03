@@ -2,16 +2,19 @@
 
 #include <mpt/solver.h>
 
-static double *param, *grid;
+static double *param;
 static const int N_PDE = 2;
 
 /* solver right side calculation */
-static int rs_pde(void *udata, const double *t, const double *y, double *f)
+static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_STRUCT(ivppar) *ivp, const double *grid, MPT_SOLVER_TYPE(RsideFcn) rs)
 {
-	const MPT_SOLVER_STRUCT(ivppar) *ivp = udata;
 	const double *yr;
 	double *fr, phi, zeta, dzeta, dzeta2, dum, alpha, beta, c = 4.0, k = 100.0;
 	int npde, nint, i;
+	
+	(void) udata;
+	(void) grid;
+	(void) rs;
 	
 	npde = ivp->neqs;
 	nint = ivp->pint;
@@ -20,7 +23,7 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 	yr = y + npde * nint;
 	fr = f + npde * nint;
 	
-	phi = (*t <= 5.0) ? 2.0 : 0;
+	phi = (t <= 5.0) ? 2.0 : 0;
 	
 	dzeta  = 1.0/(nint+1);
 	dzeta2 = dzeta*dzeta;
@@ -58,14 +61,13 @@ static int rs_pde(void *udata, const double *t, const double *y, double *f)
 }
 
 /* set user functions for PDE step */
-extern int user_init(MPT_SOLVER_STRUCT(ivpfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
 {
 	(void) out;
 	
 	usr->fcn = rs_pde;
 	
 	param = mpt_data_param(sd);
-	grid  = mpt_data_grid (sd, N_PDE);
 	
 	return N_PDE;
 }

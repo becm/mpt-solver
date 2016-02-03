@@ -25,19 +25,14 @@
  */
 extern int mpt_conf_pde(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
 {
-	const char *val;
-	int	len;
+	int len;
 	
-	if (!md->iter && mpt_conf_iterator(&md->iter, mpt_node_next(conf, val = "times")) < 0) {
-		(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %s", val,
-		               MPT_tr("invalid iterator description"));
-		return -1;
-	}
 	/* read user parameter to parameter matrix */
 	if (!md->npar) {
-		if ((len = mpt_conf_param(&md->param, mpt_node_next(conf, val = "param"), 0)) < 0) {
-			(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %s",
-			               val, MPT_tr("invalid parameter format"));
+		static const char pname[] = "param";
+		if ((len = mpt_conf_param(&md->param, mpt_node_next(conf, pname), 0)) < 0) {
+			if (out) mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s: %s",
+			                 pname, MPT_tr("invalid parameter format"));
 		} else {
 			md->npar = len;
 		}
@@ -45,11 +40,18 @@ extern int mpt_conf_pde(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *con
 	/* grid setup */
 	if (!md->nval) {
 		if ((len = mpt_conf_grid(&md->val, mpt_node_next(conf, "grid"))) < 0) {
-			(void) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
-			               MPT_tr("unable to get grid data"));
-			return -2;
+			if (out) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+			                 MPT_tr("unable to get grid data"));
+			return MPT_ERROR(BadValue);
 		}
-		return 1;
+		md->nval = len;
+		
+		if (--len < 1) {
+			if (out) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %d",
+			                 MPT_tr("bad grid interval count"), len);
+			return MPT_ERROR(BadValue);
+		}
+		return len;
 	}
 	return 0;
 }
