@@ -130,17 +130,14 @@ static int initIVP(struct IVP *ivp, int type)
 {
 	static const char _func[] = "mpt::client<IVP>::init";
 	
-	MPT_INTERFACE(logger) *log;
 	MPT_STRUCT(node) *conf, *curr;
 	MPT_INTERFACE(metatype) *m;
 	const char *val;
 	int ret = 1;
 	
-	log = mpt_object_logger((void *) ivp->cl.out);
-	
 	if (!(conf = configIVP(ivp->cfg))) {
-		mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s",
-		        MPT_tr("failed to query"), MPT_tr("client configuration"));
+		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s: %s",
+		               MPT_tr("failed to query"), MPT_tr("client configuration"));
 		return MPT_ERROR(BadOperation);
 	}
 	if (!(curr = mpt_node_find(conf, "times", 1))) {
@@ -150,8 +147,8 @@ static int initIVP(struct IVP *ivp, int type)
 		val = mpt_node_data(curr, 0);
 		
 		if (!val || !(m = mpt_iterator_create(val))) {
-			mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s",
-			        MPT_tr("failed to query"), MPT_tr("client configuration"));
+			mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s: %s",
+			               MPT_tr("failed to query"), MPT_tr("client configuration"));
 			return MPT_ERROR(BadValue);
 		}
 		if (ivp->src) {
@@ -162,17 +159,17 @@ static int initIVP(struct IVP *ivp, int type)
 	ivp->t = 0;
 	
 	if (m && (ret = m->_vptr->conv(m, 'd' | MPT_ENUM(ValueConsume), &ivp->t)) <= 0) {
-		mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s",
-		        MPT_tr("failed to query"), MPT_tr("initial time value"));
+		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s: %s",
+		               MPT_tr("failed to query"), MPT_tr("initial time value"));
 		return MPT_ERROR(BadValue);
 	}
 	if (!ivp->sd) {
 		MPT_SOLVER_STRUCT(data) *dat;
 		
 		if (!(dat = malloc(sizeof(*dat)))) {
-			mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s",
-			        MPT_tr("failed to create"), MPT_tr("solver data"));
-			return -1;
+			mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s: %s",
+			               MPT_tr("failed to create"), MPT_tr("solver data"));
+			return MPT_ERROR(BadOperation);
 		}
 		mpt_data_init(dat);
 		ivp->sd = dat;
@@ -185,15 +182,22 @@ static int initIVP(struct IVP *ivp, int type)
 	}
 	if (!val) {
 		if (!ivp->sol) {
-			(void) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
-			               MPT_tr("missing solver description"));
+			mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s",
+			                 MPT_tr("missing solver description"));
 			return MPT_ERROR(BadOperation);
 		}
 		ret = 0;
 	}
 	else {
-		const char *a = mpt_solver_alias(val);
-		if (!(ivp->sol = mpt_solver_load(&ivp->pr, a ? a : val, type, log))) {
+		MPT_INTERFACE(logger) *log;
+		
+		if (!(val = mpt_solver_alias(val))) {
+			mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s",
+			               MPT_tr("bad solver alias"));
+			return MPT_ERROR(BadValue);
+		}
+		log = mpt_object_logger((void *) ivp->cl.out);
+		if (!(ivp->sol = mpt_solver_load(&ivp->pr, val, type, log))) {
 			return MPT_ERROR(BadType);
 		}
 		ret = 1;

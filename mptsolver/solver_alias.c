@@ -6,7 +6,10 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "client.h"
+#include "config.h"
+#include "node.h"
+
+#include "solver.h"
 
 /*!
  * \ingroup mptClient
@@ -20,31 +23,14 @@
  */
 extern const char *mpt_solver_alias(const char *descr)
 {
-	static const struct
-	{
-		const char name[8];
-		const char sym[56];
-	}
-	assign[] = {
-		{ "bacol",    "mpt_bacol_create@libmpt_bacol.so.1" },
-		
-		{ "vode",     "mpt_vode_create@libmpt_vode.so.1" },
-		
-		{ "dassl",    "mpt_dassl_create@libmpt_daesolv.so.1" },
-		{ "radau",    "mpt_radau_create@libmpt_daesolv.so.1" },
-		{ "mebdfi",   "mpt_mebdfi_create@libmpt_daesolv.so.1" },
-		
-		{ "limex",    "mpt_limex_create@libmpt_limex.so.1" },
-		
-		{ "cvode",    "sundials_cvode_create@libmpt_sundials.so.1" },
-		{ "ida",      "sundials_ida_create@libmpt_sundials.so.1" },
-		
-		{ "minpack",  "mpt_minpack_create@libmpt_nlsolv.so.1" },
-		{ "portn2",   "mpt_portn2_create@libmpt_nlsolv.so.1" }
-	};
-	size_t i, vis;
+	static const char sub[] = "mpt.solver.alias\0";
+	MPT_STRUCT(path) p = MPT_PATH_INIT;
+	MPT_STRUCT(node) *conf;
+	size_t vis;
 	
-	if (!descr) {
+	mpt_path_set(&p, sub, -1);
+	if (!(conf = mpt_config_node(&p))
+	    || !(conf = conf->children)) {
 		return 0;
 	}
 	/* compare first non-space block */
@@ -52,14 +38,29 @@ extern const char *mpt_solver_alias(const char *descr)
 	while (*descr && isspace(*descr)) descr++;
 	while (descr[vis] && !isspace(descr[vis])) vis++;
 	
-	/* find library and initsymbol */
-	i = 0;
-	while (i < (sizeof(assign)/sizeof(*assign))) {
-		if (vis == strlen(assign[i].name) && !strncasecmp(assign[i].name, descr, vis)) {
-			return assign[i].sym;
+	do {
+		MPT_INTERFACE(metatype) *mt;
+		const char *id;
+		
+		if (!(id = mpt_identifier_data(&conf->ident))) {
+			continue;
 		}
-		i++;
+		if (!(mt = conf->_meta)) {
+			continue;
+		}
+		if (vis != strlen(id)) {
+			continue;
+		}
+		if (strncmp(id, descr, vis)) {
+			continue;
+		}
+		if (!(id = mpt_meta_data(mt, 0))) {
+			continue;
+		}
+		return id;
 	}
+	while ((conf = conf->next));
+	
 	return 0;
 }
 
