@@ -25,28 +25,30 @@ static int solevtRead(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	
 	if (!ev->msg) {
 		if ((err = mpt_solver_read(solv, 0))) {
-			return MPT_event_fail(ev, MPT_tr("no default configuration"));
+			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("no default configuration"));
 		}
 	}
 	else {
+		MPT_STRUCT(message) msg = *ev->msg;
 		MPT_STRUCT(msgtype) mt;
-		MPT_STRUCT(message) msg;
 		MPT_INTERFACE(metatype) *src;
 		ssize_t part;
 		
-		msg = *ev->msg;
-		if (mpt_message_read(&msg, sizeof(mt), &mt) < sizeof(mt)) {
-			return MPT_event_fail(ev, MPT_tr("missing message type"));
+		if ((part = mpt_message_read(&msg, sizeof(mt), &mt)) < (ssize_t) sizeof(mt)) {
+			if (part) return MPT_event_fail(ev, MPT_ERROR(MissingData), MPT_tr("missing message type"));
+			return MPT_event_fail(ev, MPT_ERROR(MissingData), MPT_tr("missing message header"));
 		}
-		/* consume command part */
-		if (!(part = mpt_message_argv(&msg, mt.arg)) < 0) {
-			return MPT_event_fail(ev, MPT_tr("unable to consume command"));
+		if (mt.cmd != MPT_ENUM(MessageCommand)) {
+			return MPT_event_fail(ev, MPT_ERROR(BadType), MPT_tr("bad message format"));
 		}
-		mpt_message_read(&msg, part, 0);
-		part = mpt_message_argv(&msg, mt.arg);
-		
+		/* consume command part  */
+		if ((part = mpt_message_argv(&msg, mt.arg)) >= 0) {
+			mpt_message_read(&msg, part, 0);
+			if (mt.arg) mpt_message_read(&msg, 1, 0);
+			part = mpt_message_argv(&msg, mt.arg);
+		}
 		src = 0;
-		if (part > 0 && !(src = mpt_meta_message(&msg, mt.arg, '='))) {
+		if (part > 0 && !(src = mpt_meta_message(&msg, mt.arg))) {
 			mpt_output_log(solv->out, __func__, MPT_FCNLOG(Error), "%s",
 			               MPT_tr("failed to create argument stream"));
 			return MPT_ERROR(BadOperation);
@@ -55,7 +57,7 @@ static int solevtRead(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		if (src) src->_vptr->unref(src);
 		
 		if (err) {
-			return MPT_event_fail(ev, err);
+			return MPT_event_fail(ev, MPT_ERROR(BadValue), err);
 		}
 	}
 	return MPT_event_good(ev, MPT_tr("reading configuration files completed"));

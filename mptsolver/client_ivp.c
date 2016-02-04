@@ -514,7 +514,7 @@ static int stepPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		return ret;
 	}
 	if (!ret) {
-		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Info), "%s",
+		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Warning), "%s",
 		               MPT_tr("no further values in time source"));
 		return 0;
 	}
