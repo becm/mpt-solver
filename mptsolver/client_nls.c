@@ -25,7 +25,7 @@ struct NLS {
 	MPT_SOLVER_STRUCT(data) *sd;
 	MPT_SOLVER_INTERFACE    *sol;
 	MPT_STRUCT(node)        *conf;
-	int (*uinit)(MPT_SOLVER_STRUCT(nlsfcn) *, const MPT_SOLVER_STRUCT(data) *);
+	int (*uinit)(MPT_SOLVER_STRUCT(nlsfcn) *, MPT_SOLVER_STRUCT(data) *);
 };
 
 static void deleteNLS(MPT_INTERFACE(config) *gen)
@@ -298,7 +298,7 @@ static MPT_INTERFACE_VPTR(client) ctlNLS = {
  * 
  * \return NLS client
  */
-extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER_STRUCT(nlsfcn) *, const MPT_SOLVER_STRUCT(data) *), const char *base)
+extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER_STRUCT(nlsfcn) *, MPT_SOLVER_STRUCT(data) *), const char *base)
 {
 	struct NLS *nls;
 	

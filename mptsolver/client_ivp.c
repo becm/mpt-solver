@@ -680,7 +680,7 @@ static const MPT_INTERFACE_VPTR(client) clientDAE = {
  * 
  * \return DAE client
  */
-extern MPT_INTERFACE(client) *mpt_client_dae(int (*uinit)(MPT_SOLVER_STRUCT(daefcn) *, const MPT_SOLVER_STRUCT(data) *), const char *base)
+extern MPT_INTERFACE(client) *mpt_client_dae(int (*uinit)(MPT_SOLVER_STRUCT(daefcn) *, MPT_SOLVER_STRUCT(data) *), const char *base)
 {
 	MPT_INTERFACE(client) *sol;
 	if ((sol = createSolver(uinit, base))) {
@@ -704,7 +704,7 @@ static const MPT_INTERFACE_VPTR(client) clientODE = {
  * 
  * \return ODE client
  */
-extern MPT_INTERFACE(client) *mpt_client_ode(int (*uinit)(MPT_SOLVER_STRUCT(odefcn) *, const MPT_SOLVER_STRUCT(data) *), const char *base)
+extern MPT_INTERFACE(client) *mpt_client_ode(int (*uinit)(MPT_SOLVER_STRUCT(odefcn) *, MPT_SOLVER_STRUCT(data) *), const char *base)
 {
 	MPT_INTERFACE(client) *sol;
 	if ((sol = createSolver(uinit, base))) {
@@ -728,7 +728,7 @@ static const MPT_INTERFACE_VPTR(client) ctlPDE = {
  * 
  * \return PDE client
  */
-extern MPT_INTERFACE(client) *mpt_client_pde(int (*uinit)(MPT_SOLVER_STRUCT(pdefcn) *, const MPT_SOLVER_STRUCT(data) *), const char *base)
+extern MPT_INTERFACE(client) *mpt_client_pde(int (*uinit)(MPT_SOLVER_STRUCT(pdefcn) *, MPT_SOLVER_STRUCT(data) *), const char *base)
 {
 	MPT_INTERFACE(client) *sol;
 	if ((sol = createSolver(uinit, base))) {

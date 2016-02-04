@@ -47,13 +47,11 @@ static int deriv(void *udata, const double *x, double *jac, const int *lj, const
 	return 0;
 }
 
-int user_init(MPT_SOLVER_STRUCT(nlsfcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+int user_init(MPT_SOLVER_STRUCT(nlsfcn) *usr, MPT_SOLVER_STRUCT(data) *sd)
 {
 	double *u;
 	
-	(void) out;
-	
-	u = mpt_data_grid(sd, 0);
+	u = mpt_data_grid(sd);
 	u += sd->nval;
 	
 	usr->res = res;

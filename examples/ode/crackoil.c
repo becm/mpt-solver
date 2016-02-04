@@ -19,12 +19,10 @@ static int rh_side(void *udata, double t, const double *y, double *f)
 	return 0;
 }
 
-extern int user_init(MPT_SOLVER_STRUCT(odefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+extern int user_init(MPT_SOLVER_STRUCT(odefcn) *usr, MPT_SOLVER_STRUCT(data) *sd)
 {
 	double *param;
 	int i, n;
-	
-	(void) out;
 	
 	usr->fcn = rh_side;
 	

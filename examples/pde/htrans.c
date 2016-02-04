@@ -2,8 +2,6 @@
 
 #include <mpt/solver.h>
 
-static double *grid;
-
 static int rfcn(void *udata, double t, const double *u, double *f, double x, double *d, double *v)
 {
 	(void) udata; (void) t; (void) u; (void) x;
@@ -44,16 +42,14 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 }
 
 /* set user functions for PDE step */
-extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd)
 {
 	int npde = 1;
 	
-	(void) out;
+	(void) sd;
 	
 	usr->fcn = rs_pde;
 	usr->rside = rfcn;
-	
-	grid = mpt_data_grid(sd, npde);
 	
 	return npde;
 }

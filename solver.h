@@ -371,10 +371,10 @@ __MPT_EXTDECL_BEGIN
 
 
 /* create interface to solver */
-extern MPT_INTERFACE(client) *mpt_client_ode(int (*)(MPT_SOLVER_STRUCT(odefcn) *, const MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
-extern MPT_INTERFACE(client) *mpt_client_dae(int (*)(MPT_SOLVER_STRUCT(daefcn) *, const MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
-extern MPT_INTERFACE(client) *mpt_client_pde(int (*)(MPT_SOLVER_STRUCT(pdefcn) *, const MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
-extern MPT_INTERFACE(client) *mpt_client_nls(int (*)(MPT_SOLVER_STRUCT(nlsfcn) *, const MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
+extern MPT_INTERFACE(client) *mpt_client_ode(int (*)(MPT_SOLVER_STRUCT(odefcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
+extern MPT_INTERFACE(client) *mpt_client_dae(int (*)(MPT_SOLVER_STRUCT(daefcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
+extern MPT_INTERFACE(client) *mpt_client_pde(int (*)(MPT_SOLVER_STRUCT(pdefcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
+extern MPT_INTERFACE(client) *mpt_client_nls(int (*)(MPT_SOLVER_STRUCT(nlsfcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
 
 /* register events on notifier */
 extern int mpt_solver_events(MPT_STRUCT(dispatch) *, MPT_INTERFACE(client) *);

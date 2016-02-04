@@ -2,13 +2,13 @@
 
 #include <mpt/solver.h>
 
-static double *grid, *param, diff;
-
 static int rfcn(void *udata, double t, const double *u, double *f, double x, double *d, double *v)
 {
-	(void) udata; (void) t; (void) u; (void) x;
+	double *param = udata;
 	
-	d[0] = diff;
+	(void) t; (void) u; (void) x;
+	
+	d[0] = *param;
 	v[0] = 0;
 	f[0] = 0;
 	
@@ -42,20 +42,18 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 }
 
 /* set user functions for PDE step */
-extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd)
 {
+	static double diff = 0.094;
 	int npde = 1;
-	
-	(void) out;
 	
 	usr->fcn = rs_pde;
 	usr->rside = rfcn;
 	
 	/* initialize values from solver configuration */
-	grid  = mpt_data_grid (sd, npde);
-	param = mpt_data_param(sd);
-	
-	diff = param ? param[0] : 0.094;
+	if (!(usr->param = mpt_data_param(sd))) {
+		usr->param = &diff;
+	}
 	
 	return npde;
 }
