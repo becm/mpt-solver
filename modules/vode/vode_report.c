@@ -32,9 +32,6 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	out(usr, &pr);
 	++line;
 	
-	d.ml = iwk[0];
-	d.mu = iwk[1];
-	
 	d.jac  = "full";
 	d.val  = "(user)";
 	
@@ -47,9 +44,9 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 		case 1: if (vd->jac) break;
 		case 2: d.val = "(numerical)"; break;
 		case 3: d.jac = "diagonal"; pr.val.fmt = "s"; break;
-		case 4: d.jac = "banded"; pr.val.fmt = "ssii";
+		case 4: d.jac = "banded"; pr.val.fmt = "ssii"; d.ml = iwk[0]; d.mu = iwk[1];
 			if (vd->jac) break;
-		case 5: d.jac = "banded"; d.val = "(numerical)"; pr.val.fmt = "ssii"; break;
+		case 5: d.jac = "banded"; d.val = "(numerical)"; pr.val.fmt = "ssii";  d.ml = iwk[0]; d.mu = iwk[1]; break;
 		default: d.jac = "none"; pr.val.fmt = "s";
 	}
 	d.jac = MPT_tr(d.jac);
