@@ -95,9 +95,12 @@ inline limex::~limex()
 class Limex : public Ivp
 {
 public:
-	Limex() : _fcn(0)
+	Limex() : _fcn(0, 0)
 	{
-		if ((_lx = mpt_limex_global())) _lx->ufcn = &_fcn;
+		if ((_lx = mpt_limex_global())) {
+			_lx->ufcn = &_fcn;
+			_fcn.param = &_lx->ivp;
+		}
 	}
 	virtual ~Limex()
 	{
@@ -111,21 +114,47 @@ public:
 	{
 		return _lx ? mpt_limex_get(_lx, pr) : MPT_ERROR(BadOperation);
 	}
-	int setProperty(const char *pr, class metatype *src) const
+	int setProperty(const char *pr, class metatype *src)
 	{
 		return _lx ? mpt_limex_set(_lx, pr, src) : MPT_ERROR(BadOperation);
 	}
-	int report(int what, PropertyHandler out, void *opar) const
+	int report(int what, PropertyHandler out, void *opar)
 	{
 		return _lx ? mpt_limex_report(_lx, what, out, opar) : MPT_ERROR(BadOperation);
 	}
-	int step(double *u, double *end, double *x)
+	int step(double *tend)
 	{
-		if (!end) {
-			if (
-		return _lx ? mpt_limex_step_(_lx, u, end) : 0; }
-	operator ivpfcn *() const
-	{ return _lx ? const_cast<ivpfcn *>(&_fcn) : 0; }
+		if (!_lx) {
+			return BadArgument;
+		}
+		int err;
+		if (!tend) {
+			if (!_lx->fcn && (err = mpt_limex_ufcn(_lx, &_fcn)) < 0) {
+				return err;
+			}
+			return mpt_limex_prepare(_lx);
+		}
+		err = mpt_limex_step(_lx, *tend);
+		*tend = _lx->t;
+		return err;
+	}
+	void *functions(int type)
+	{
+		if (!_lx) {
+			return 0;
+		}
+		switch (type) {
+		  case odefcn::Type: break;
+		  case daefcn::Type: return _lx->ivp.pint ? 0 : &_fcn;
+		  case pdefcn::Type: return _lx->ivp.pint ? &_fcn : 0;
+		  default: return 0;
+		}
+		if (_lx->ivp.pint) {
+			return 0;
+		}
+		_fcn.mas = 0;
+		return &_fcn;
+	}
 protected:
 	daefcn _fcn;
 	limex *_lx;

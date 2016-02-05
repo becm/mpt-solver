@@ -202,17 +202,17 @@ protected:
 	inline ~Ivp() {}
 public:
 	virtual int step(double *end) = 0;
-	virtual void *functions(int) const;
+	virtual void *functions(int);
 	virtual double *initstate();
 	
-	inline operator odefcn *() const
+	inline operator odefcn *()
 	{ return (odefcn *) functions(odefcn::Type); }
-	inline operator daefcn *() const
+	inline operator daefcn *()
 	{ return (daefcn *) functions(daefcn::Type); }
-	inline operator pdefcn *() const
+	inline operator pdefcn *()
 	{ return (pdefcn *) functions(pdefcn::Type); }
 };
-inline void *Ivp::functions(int) const
+inline void *Ivp::functions(int)
 { return 0; }
 inline double *Ivp::initstate()
 { return 0; }
@@ -225,9 +225,9 @@ protected:
     public:
 	virtual int solve() = 0;
 	
-	virtual operator nlsfcn *() const;
+	virtual operator nlsfcn *();
 };
-inline Nls::operator nlsfcn *() const
+inline Nls::operator nlsfcn *()
 { return 0; }
 
 template <typename T>
@@ -338,14 +338,14 @@ MPT_INTERFACE_VPTR(Ivp)
 {
 	MPT_INTERFACE_VPTR(solver) gen;
 	int (*step)(MPT_SOLVER_INTERFACE *, double *end);
-	void *(*functions)(const MPT_SOLVER_INTERFACE *, int);
+	void *(*functions)(MPT_SOLVER_INTERFACE *, int);
 	double *(*initstate)(MPT_SOLVER_INTERFACE *);
 };
 MPT_INTERFACE_VPTR(Nls)
 {
 	MPT_INTERFACE_VPTR(solver) gen;
 	int (*solve)(MPT_SOLVER_INTERFACE *s);
-	MPT_SOLVER_STRUCT(nlsfcn) *(*functions)(const MPT_SOLVER_INTERFACE *);
+	MPT_SOLVER_STRUCT(nlsfcn) *(*functions)(MPT_SOLVER_INTERFACE *);
 };
 #endif
 

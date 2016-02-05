@@ -45,7 +45,7 @@ static int vdStep(MPT_SOLVER_INTERFACE *gen, double *tend)
 	*tend = vd->t;
 	return ret;
 }
-static void *vdFcn(const MPT_SOLVER_INTERFACE *gen, int type)
+static void *vdFcn(MPT_SOLVER_INTERFACE *gen, int type)
 {
 	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen+1);
 	switch (type) {

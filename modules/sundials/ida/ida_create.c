@@ -41,7 +41,7 @@ static int idaStep(MPT_SOLVER_INTERFACE *gen, double *end)
 	*end = ida->t;
 	return ret;
 }
-static void *idaFcn(const MPT_SOLVER_INTERFACE *gen, int type)
+static void *idaFcn(MPT_SOLVER_INTERFACE *gen, int type)
 {
 	MPT_SOLVER_STRUCT(ida) *ida = (void *) (gen+1);
 	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (ida + 1);

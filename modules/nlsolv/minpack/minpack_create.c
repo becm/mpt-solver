@@ -51,7 +51,7 @@ static int mpSolve(MPT_SOLVER_INTERFACE *gen)
 	return mpt_minpack_solve(mp);
 }
 
-static MPT_SOLVER_STRUCT(nlsfcn) *mpFcn(const MPT_SOLVER_INTERFACE *gen)
+static MPT_SOLVER_STRUCT(nlsfcn) *mpFcn(MPT_SOLVER_INTERFACE *gen)
 {
 	MPT_SOLVER_STRUCT(minpack) *mp = (void *) (gen+1);
 	return (void *) (mp+1);

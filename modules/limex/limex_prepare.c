@@ -10,6 +10,7 @@
 extern int mpt_limex_prepare(MPT_SOLVER_STRUCT(limex) *data)
 {
 	MPT_SOLVER_STRUCT(ivppar) *ivp;
+	int neqs, pdim;
 	double *v;
 	int *ipos;
 	

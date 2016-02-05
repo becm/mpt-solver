@@ -114,10 +114,10 @@ public:
 	{
 		if (!end) {
 			int ret;
-			if (_fcn.fcn && (ret = mpt_vode_ufcn(vd, (void *) &_fcn)) < 0) {
+			if (_fcn.fcn && (ret = mpt_vode_ufcn(this, (odefcn *) &_fcn)) < 0) {
 				return ret;
 			}
-			return mpt_vode_prepare(this, ivp.neqs, ivp.pint);
+			return mpt_vode_prepare(this);
 		}
 		int ret = mpt_vode_step(this, *end);
 		*end = t;

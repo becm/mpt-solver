@@ -65,7 +65,7 @@ static int lxStep(MPT_SOLVER_INTERFACE *gen, double *tend)
 	*tend = lxGlob.t;
 	return ret;
 }
-static void *lxFcn(const MPT_SOLVER_INTERFACE *gen, int type)
+static void *lxFcn(MPT_SOLVER_INTERFACE *gen, int type)
 {
 	(void) gen;
 	switch (type) {

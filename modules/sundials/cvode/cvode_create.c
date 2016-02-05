@@ -42,7 +42,7 @@ static int cVodeStep(MPT_SOLVER_INTERFACE *gen, double *end)
 	*end = cv->t;
 	return ret;
 }
-static void *cVodeFcn(const MPT_SOLVER_INTERFACE *gen, int type)
+static void *cVodeFcn(MPT_SOLVER_INTERFACE *gen, int type)
 {
 	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (gen+1);
 	switch (type) {

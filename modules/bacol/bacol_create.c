@@ -42,10 +42,8 @@ static int bacStep(MPT_SOLVER_INTERFACE *gen, double *end)
 	*end = bac->t;
 	return ret;
 }
-static void *bacFcn(const MPT_SOLVER_INTERFACE *gen, int type)
+static void *bacFcn()
 {
-	(void) gen;
-	(void) type;
 	return 0;
 }
 static double *bacState(MPT_SOLVER_INTERFACE *gen)

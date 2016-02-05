@@ -53,7 +53,7 @@ static int n2Solve(MPT_SOLVER_INTERFACE *gen)
 	return mpt_portn2_solve(&d->n2);
 }
 
-static MPT_SOLVER_STRUCT(nlsfcn) *n2Fcn(const MPT_SOLVER_INTERFACE *gen)
+static MPT_SOLVER_STRUCT(nlsfcn) *n2Fcn(MPT_SOLVER_INTERFACE *gen)
 {
 	struct _mpt_portn2_data *d = (void *) gen;
 	return &d->uf;
