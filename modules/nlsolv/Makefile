@@ -28,6 +28,7 @@ OBJS = \
 	$(direct_wrapper:%=direct/%)
 
 HEADER = minpack/minpack.h portn2/portn2.h
+CONFIG = nlsolv.conf
 #
 # general solver build settings
 include ../mpt.solver.mk

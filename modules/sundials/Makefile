@@ -30,6 +30,7 @@ MATH_OBJS = ${MATH_OBJS_STATIC} ${MATH_OBJS_SHARED}
 #
 # headers to export
 HEADER = sundials.h
+CONFIG = sundials.conf
 #
 # general library rules
 include ../mpt.solver.mk

@@ -19,6 +19,7 @@ MATH = bacol.o bacolrr.o
 #
 # headers to export
 HEADER = bacol.h
+CONFIG = bacol.conf
 #
 # general library rules
 include ../mpt.solver.mk

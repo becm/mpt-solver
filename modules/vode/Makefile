@@ -17,6 +17,7 @@ SRCS = $(wildcard vode_*.c)
 #
 # headers to export
 HEADER = vode.h
+CONFIG = vode.conf
 #
 # solver rules
 include ../mpt.solver.mk

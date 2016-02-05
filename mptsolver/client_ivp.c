@@ -190,14 +190,15 @@ static int initIVP(struct IVP *ivp, int type)
 	}
 	else {
 		MPT_INTERFACE(logger) *log;
+		const char *res;
 		
-		if (!(val = mpt_solver_alias(val))) {
-			mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s",
-			               MPT_tr("bad solver alias"));
+		if (!(res = mpt_solver_alias(val))) {
+			mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s: %s",
+			               MPT_tr("bad solver alias"), val);
 			return MPT_ERROR(BadValue);
 		}
 		log = mpt_object_logger((void *) ivp->cl.out);
-		if (!(ivp->sol = mpt_solver_load(&ivp->pr, val, type, log))) {
+		if (!(ivp->sol = mpt_solver_load(&ivp->pr, res, type, log))) {
 			return MPT_ERROR(BadType);
 		}
 		ret = 1;
@@ -393,6 +394,11 @@ static int prepIVP(const struct IVP *ivp, MPT_INTERFACE(metatype) *arg)
 		return ret;
 	}
 	if (log) {
+		const char *name;
+		
+		if ((name = mpt_object_typename((void *) gen))) {
+			mpt_log(log, 0, MPT_ENUM(LogMessage), "%s: %s", MPT_tr("solver"), name);
+		}
 		mpt_solver_info(gen, log);
 		mpt_log(log, 0, MPT_ENUM(LogMessage), "");
 	}

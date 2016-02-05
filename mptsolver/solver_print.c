@@ -215,5 +215,7 @@ extern int mpt_solver_report(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *o
 	}
 	else wr.log = wrap_logger;
 	
+	
+	
 	return gen->_vptr->report(gen, MPT_SOLVER_ENUM(Report), wrapReport, &wr);
 }
