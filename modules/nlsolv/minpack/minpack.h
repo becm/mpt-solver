@@ -87,24 +87,24 @@ extern int lmstr1(lmstr_fcn_t *fcn, int m, int n, double *x, double *fvec,
 
 /* set hybrd parameter */
 extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *, MPT_STRUCT(property) *);
-extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *name, MPT_INTERFACE(metatype) *src);
+extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *, MPT_INTERFACE(metatype) *);
 
 /* call minpack solver routine */
-extern int mpt_minpack_solve(MPT_SOLVER_STRUCT(minpack) *mpack);
+extern int mpt_minpack_solve(MPT_SOLVER_STRUCT(minpack) *);
 
 /* initialize/terminate structured data */
-extern void mpt_minpack_init(MPT_SOLVER_STRUCT(minpack) *mpack);
-extern void mpt_minpack_fini(MPT_SOLVER_STRUCT(minpack) *mpack);
+extern void mpt_minpack_init(MPT_SOLVER_STRUCT(minpack) *);
+extern void mpt_minpack_fini(MPT_SOLVER_STRUCT(minpack) *);
 
 /* set wrapper for user functions */
-extern int mpt_minpack_ufcn_hybrid(MPT_SOLVER_STRUCT(minpack) *mpack);
-extern int mpt_minpack_ufcn_lmderv(MPT_SOLVER_STRUCT(minpack) *mpack);
+extern int mpt_minpack_ufcn_hybrid(MPT_SOLVER_STRUCT(minpack) *);
+extern int mpt_minpack_ufcn_lmderv(MPT_SOLVER_STRUCT(minpack) *);
 
 /* set wrapper for user functions */
-extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *mpack, int n, int m);
+extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *);
 
 /* minpack status information */
-extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int what, MPT_TYPE(PropertyHandler) out, void *data);
+extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *, int , MPT_TYPE(PropertyHandler) , void *);
 
 /* assign minpack solver to interface */
 #ifndef __cplusplus

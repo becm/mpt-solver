@@ -97,7 +97,7 @@ extern void mpt_portn2_fini(MPT_SOLVER_STRUCT(portn2) *);
 extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *, const MPT_SOLVER_STRUCT(nlsfcn) *);
 
 /* set wrapper for user functions */
-extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *, int , int);
+extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *);
 
 /* portdn2 status information */
 extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *, int , MPT_TYPE(PropertyHandler) , void *);

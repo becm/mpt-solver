@@ -8,7 +8,7 @@
 
 #include "solver.h"
 
-extern int mpt_vecpar_settol(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFACE(metatype) *src)
+extern int mpt_vecpar_settol(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFACE(metatype) *src, double def)
 {
 	double *tol = vec->base;
 	int ret;
@@ -17,10 +17,12 @@ extern int mpt_vecpar_settol(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFACE(metaty
 		return ret;
 	}
 	if (ret < 2) {
-		if (ret) {
+		if (!ret || !tol) {
+			vec->d.val = def;
+		}
+		else if (tol) {
 			vec->d.val = *tol;
 		}
-		free(tol);
 		vec->base = 0;
 		return ret;
 	}

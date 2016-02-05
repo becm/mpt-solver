@@ -54,20 +54,19 @@ extern int mpt_vecpar_set(double **ptr, int max, MPT_INTERFACE(metatype) *src)
 			return len;
 		}
 		/* take available */
-		if (!(dst = old) && !(dst = malloc(len * sizeof(double)))) {
-			return MPT_ERROR(BadOperation);
+		if (!(dst = old)) {
+			if (!(dst = malloc(len * sizeof(double)))) {
+				return MPT_ERROR(BadOperation);
+			}
+			*ptr = dst;
 		}
 		/* copy/set existing values */
 		if (tmp.iov_base) {
 			memcpy(dst, tmp.iov_base, len * sizeof(double));
 		} else {
 			memset(dst, 0, len * sizeof(double));
-			return len;
 		}
-		if (!old) {
-			*ptr = dst;
-		}
-		return len;
+		return 1;
 	}
 	if ((curr = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v1)) < 0) {
 		return curr;

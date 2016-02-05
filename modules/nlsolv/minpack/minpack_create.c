@@ -45,7 +45,7 @@ static int mpSolve(MPT_SOLVER_INTERFACE *gen)
 			return err;
 		}
 	}
-	if (mp->info < 0  && (err = mpt_minpack_prepare(mp, mp->nls.nval, mp->nls.nres))) {
+	if (mp->info < 0  && (err = mpt_minpack_prepare(mp))) {
 		return err;
 	}
 	return mpt_minpack_solve(mp);

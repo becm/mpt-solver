@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <errno.h>
 #include <ctype.h>
 
 #include "version.h"
@@ -65,28 +64,29 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 		return mpt_bacol_assign(bac, &val);
 	}
 	if (!*name) {
-		MPT_SOLVER_STRUCT(ivppar) ivp;
-		if ((len =  mpt_ivppar_set(&ivp, src)) < 0) {
-			return len;
-		}
-		if (len < 2) {
-			ivp.pint = MPT_BACOL_NIMAXDEF;
-		}
-		else if (!ivp.pint) {
-			return MPT_ERROR(BadValue);
+		MPT_SOLVER_STRUCT(ivppar) ivp = bac->ivp;
+		
+		if (src) {
+			if ((len =  mpt_ivppar_set(&ivp, src)) < 0) {
+				return len;
+			}
+			if (len < 2) {
+				ivp.pint = MPT_BACOL_NIMAXDEF;
+			}
+			else if (!ivp.pint) {
+				return MPT_ERROR(BadValue);
+			}
 		}
 		mpt_bacol_fini(bac);
 		mpt_bacol_init(bac);
-		if (len) {
-			bac->ivp = ivp;
-		}
+		bac->ivp = ivp;
 		return len;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&bac->atol, src);
+		return mpt_vecpar_settol(&bac->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&bac->rtol, src);
+		return mpt_vecpar_settol(&bac->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) {
 		int32_t oint = 10;
@@ -170,7 +170,6 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	}
 	}
 #endif
-	errno = EINVAL;
 	return MPT_ERROR(BadArgument);
 }
 
@@ -197,7 +196,6 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {
-			errno = EINVAL;
 			return MPT_ERROR(BadArgument);
 		}
 	}
@@ -206,7 +204,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 		prop->val.fmt = "ii"; prop->val.ptr = &bac->ivp;
 		return MPT_SOLVER_ENUM(PDE);
 	}
-	if (name && !strcasecmp(name, "version")) {
+	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
 		prop->val.fmt = 0; prop->val.ptr = version;

@@ -44,7 +44,7 @@ static void vode_jac(int *neq, double *t, double *y, int *ml, int *mu, double *j
 	}
 }
 
-extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_SOLVER_STRUCT(odefcn) *ufcn)
+extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, const MPT_SOLVER_STRUCT(odefcn) *ufcn)
 {
 	if (!ufcn->fcn) {
 		return MPT_ERROR(BadArgument);

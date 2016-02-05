@@ -75,17 +75,18 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MP
 		return ret;
 	}
 	if (!*name) {
-		if ((ret = mpt_ivppar_set(&cv->ivp, src)) >= 0) {
-			sundials_cvode_reset(cv);
+		if (src && (ret = mpt_ivppar_set(&cv->ivp, src)) < 0) {
+			return ret;
 		}
+		sundials_cvode_reset(cv);
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&cv->atol, src);
+		return mpt_vecpar_settol(&cv->atol, src, __MPT_IVP_ATOL);
 		return ret;
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&cv->rtol, src);
+		return mpt_vecpar_settol(&cv->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return sundials_jacobian(&cv->sd, cv->ivp.neqs, src);
@@ -167,7 +168,7 @@ extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(pro
 		prop->val.fmt = "ii"; prop->val.ptr = &cv->ivp;
 		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
 	}
-	if (name && !strcasecmp(name, "version")) {
+	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
 		prop->val.fmt = 0; prop->val.ptr = version;

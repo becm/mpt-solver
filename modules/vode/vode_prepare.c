@@ -6,23 +6,24 @@
 
 #include "vode.h"
 
-extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data, int neqs, int pint)
+extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data)
 {
 	int mf, mu, ml;     /* method flag, upper/lower band */
 	int liw, lrw, *iwk; /* length of work arrays */
+	int neqs;
 	
-	if (neqs < 1 || pint++ < 0) {
-		return MPT_ERROR(BadArgument);
-	}
-	mf = (data->atol.base && neqs > 1) ? pint : 0;
+	neqs = data->ivp.neqs;
+	lrw  = data->ivp.pint + 1;
+	
+	mf = (data->atol.base && neqs > 1) ? lrw : 0;
 	if (mpt_vecpar_cktol(&data->atol, neqs, mf, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	mf = (data->rtol.base && neqs > 1) ? pint : 0;
+	mf = (data->rtol.base && neqs > 1) ? lrw : 0;
 	if (mpt_vecpar_cktol(&data->rtol, neqs, mf, __MPT_IVP_RTOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	neqs *= pint;  /* total dimension for solver */
+	neqs *= lrw;  /* total dimension for solver */
 	
 	switch ((mf = data->jsv * (data->meth * 10 + data->miter))) {
 		case  10: case 13: case 20: case 23:

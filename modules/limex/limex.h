@@ -22,17 +22,23 @@ public:
 	~limex();
 #endif
 	MPT_SOLVER_STRUCT(ivppar) ivp;  /* inherit IVP parameter */
-	MPT_TYPE(dvecpar) rtol, atol;   /* tolerances */
 	
-	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn; /* user functions */
+	double  t;    /* current reference time */
+	double *y,    /* values at current time */
+	       *ys;   /* deviation at current time */
 	
-	double h;  /* initial (suggested next) step size */
+	int    *ipos; /* set to check coresponding position non-zero */
 	
-	double ropt[5];    /* double option array (min size 5) */
-	int    iopt[30];   /* integer option array (min size 30) */
+	const MPT_SOLVER_STRUCT(daefcn) *ufcn; /* user functions */
 	
-	struct iovec ipos, /* set to check coresponding position non-zero */
-	              ys; /* derivates of solution at tstart */
+	MPT_SOLVER_TYPE(dvecpar) rtol, atol;   /* tolerances */
+	
+	double h;           /* initial (suggested next) step size */
+	double ropt[5];     /* double option array (min size 5) */
+	int    iopt[30];    /* integer option array (min size 30) */
+	
+	limex_fcn_t *fcn;   /* calculate right-hand side */
+	limex_jac_t *jac;   /* user supplied jacobian */
 	
 	union {
 		int raw[3];
@@ -42,9 +48,6 @@ public:
 		    civ;    /* indicate error while CIV computation */
 		} st;
 	} ifail;
-	
-	limex_fcn_t *fcn;   /* calculate right-hand side */
-	limex_jac_t *jac;   /* user supplied jacobian */
 };
 
 __MPT_EXTDECL_BEGIN
@@ -54,14 +57,14 @@ extern void limex_(int *, limex_fcn_t *, limex_jac_t *, double *, double *, doub
                    double *, double *, double *, int *, double *, int *, int *);
 
 /* execute step on supplied limex instance */
-extern int mpt_limex_step(MPT_SOLVER_STRUCT(limex) *, double * , double );
-extern int mpt_limex_step_(MPT_SOLVER_STRUCT(limex) *, double * , double *);
+extern int mpt_limex_step(MPT_SOLVER_STRUCT(limex) *, double);
 
-/* set limex parameter */
-extern int mpt_limex_property(MPT_SOLVER_STRUCT(limex) *, MPT_STRUCT(property) *, MPT_INTERFACE(source) *);
+/* limex parameter */
+extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *, MPT_STRUCT(property) *);
+extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *, const char *, MPT_INTERFACE(metatype) *);
 
 /* validate settings and working space for use */
-extern int mpt_limex_prepare(MPT_SOLVER_STRUCT(limex) *, int , int );
+extern int mpt_limex_prepare(MPT_SOLVER_STRUCT(limex) *);
 
 /* initialize/clear/reset limex integrator descriptor */
 extern void mpt_limex_init(MPT_SOLVER_STRUCT(limex) *);
@@ -69,7 +72,7 @@ extern void mpt_limex_fini(MPT_SOLVER_STRUCT(limex) *);
 extern void mpt_limex_reset(MPT_SOLVER_STRUCT(limex) *);
 
 /* set wrapper for user functions */
-extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
+extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *, const MPT_SOLVER_STRUCT(daefcn) *);
 
 /* limex report information */
 extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -93,23 +96,38 @@ class Limex : public Ivp
 {
 public:
 	Limex() : _fcn(0)
-	{ if ((_lx = mpt_limex_global())) _lx->ufcn = &_fcn; }
+	{
+		if ((_lx = mpt_limex_global())) _lx->ufcn = &_fcn;
+	}
 	virtual ~Limex()
-	{ if (_lx) mpt_limex_fini(_lx); }
-	Limex *addref()
-	{ return 0; }
-	int unref()
-	{ delete this; return 0; }
-	int property(struct property *pr, source *src = 0)
-	{ return _lx ? mpt_limex_property(_lx, pr, src) : -1; }
+	{
+		if (_lx) mpt_limex_fini(_lx);
+	}
+	void unref()
+	{
+		delete this;
+	}
+	int property(struct property *pr) const
+	{
+		return _lx ? mpt_limex_get(_lx, pr) : MPT_ERROR(BadOperation);
+	}
+	int setProperty(const char *pr, class metatype *src) const
+	{
+		return _lx ? mpt_limex_set(_lx, pr, src) : MPT_ERROR(BadOperation);
+	}
 	int report(int what, PropertyHandler out, void *opar) const
-	{ return _lx ? mpt_limex_report(_lx, what, out, opar) : -1; }
+	{
+		return _lx ? mpt_limex_report(_lx, what, out, opar) : MPT_ERROR(BadOperation);
+	}
 	int step(double *u, double *end, double *x)
-	{ return _lx ? mpt_limex_step_(_lx, u, end) : 0; }
+	{
+		if (!end) {
+			if (
+		return _lx ? mpt_limex_step_(_lx, u, end) : 0; }
 	operator ivpfcn *() const
 	{ return _lx ? const_cast<ivpfcn *>(&_fcn) : 0; }
 protected:
-	ivpfcn _fcn;
+	daefcn _fcn;
 	limex *_lx;
 };
 #endif

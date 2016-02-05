@@ -119,7 +119,7 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, MPT
 	if (!*name) {
 		MPT_SOLVER_STRUCT(nlspar) nls = mp->nls;
 		
-		if ((ret =  mpt_nlspar_set(&nls, src)) < 0) {
+		if (src && (ret =  mpt_nlspar_set(&nls, src)) < 0) {
 			return ret;
 		}
 		mpt_minpack_fini(mp);

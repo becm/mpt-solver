@@ -47,7 +47,7 @@ static int n2Solve(MPT_SOLVER_INTERFACE *gen)
 	if (d->uf.res && (ret = mpt_portn2_ufcn(&d->n2, &d->uf)) < 0) {
 		return ret;
 	}
-	if (mpt_portn2_prepare(&d->n2, d->n2.nls.nval, d->n2.nls.nres) < 0) {
+	if (mpt_portn2_prepare(&d->n2) < 0) {
 		return ret;
 	}
 	return mpt_portn2_solve(&d->n2);

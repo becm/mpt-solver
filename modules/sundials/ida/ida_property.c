@@ -90,16 +90,17 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_I
 		return ret;
 	}
 	if (!*name) {
-		if ((ret = mpt_ivppar_set(&ida->ivp, src)) >= 0) {
-			sundials_ida_reset(ida);
+		if (src && (ret = mpt_ivppar_set(&ida->ivp, src)) < 0) {
+			return ret;
 		}
+		sundials_ida_reset(ida);
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&ida->atol, src);
+		return mpt_vecpar_settol(&ida->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&ida->rtol, src);
+		return mpt_vecpar_settol(&ida->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return sundials_jacobian(&ida->sd, ida->ivp.neqs, src);
@@ -172,7 +173,7 @@ extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(proper
 		prop->val.fmt = "ii"; prop->val.ptr = &ida->ivp;
 		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 	}
-	if (name && !strcasecmp(name, "version")) {
+	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
 		prop->val.fmt = 0; prop->val.ptr = version;

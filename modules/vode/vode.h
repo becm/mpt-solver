@@ -61,13 +61,13 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *, const char *, MPT_INTERFACE(m
 extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *, MPT_STRUCT(property) *);
 
 /* validate settings and working space for use */
-extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *__vd, int __neqs, int __pdim);
+extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *__vd);
 
 /* initialize/clear vode integrator descriptor */
 extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *__vd);
 extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *__vd);
 /* set wrapper for user functions */
-extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *__vd, MPT_SOLVER_STRUCT(odefcn) *__uf);
+extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *__vd, const MPT_SOLVER_STRUCT(odefcn) *__uf);
 
 /* vode status information */
 extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -88,14 +88,12 @@ inline vode::~vode()
 class Vode : public Ivp, vode
 {
 public:
-	Vode() : _fcn(0)
-	{ }
+	inline Vode() : _fcn(0)
+	{
+		_fcn.param = &ivp;
+	}
 	virtual ~Vode()
 	{ }
-	uintptr_t addref()
-	{
-		return 0;
-	}
 	void unref()
 	{
 		delete this;
@@ -114,7 +112,13 @@ public:
 	}
 	int step(double *end)
 	{
-		if (!end) return mpt_vode_prepare(this, ivp.neqs, ivp.pint);
+		if (!end) {
+			int ret;
+			if (_fcn.fcn && (ret = mpt_vode_ufcn(vd, (void *) &_fcn)) < 0) {
+				return ret;
+			}
+			return mpt_vode_prepare(this, ivp.neqs, ivp.pint);
+		}
 		int ret = mpt_vode_step(this, *end);
 		*end = t;
 		return ret;

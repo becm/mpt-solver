@@ -194,24 +194,24 @@ extern int sundials_ida_fcn(realtype , N_Vector , N_Vector , N_Vector , _SUNDIAL
 # ifdef _SUNDIALS_DIRECT_H
 /* Dense/Banded wrapper for CVode jacobian */
 extern int sundials_cvode_jac_dense(long int , realtype ,
-				    N_Vector , N_Vector ,
-				    DlsMat , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *,
-				    N_Vector , N_Vector , N_Vector);
+                                    N_Vector , N_Vector ,
+                                    DlsMat , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *,
+                                    N_Vector , N_Vector , N_Vector);
 extern int sundials_cvode_jac_band(long int , long int , long int , realtype ,
-				   N_Vector , N_Vector ,
-				   DlsMat , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *,
-				   N_Vector , N_Vector , N_Vector);
+                                   N_Vector , N_Vector ,
+                                   DlsMat , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *,
+                                   N_Vector , N_Vector , N_Vector);
 
 /* Dense/Banded wrapper for IDA jacobian */
 extern int sundials_ida_jac_dense(long int , realtype , realtype ,
-				  N_Vector , N_Vector , N_Vector ,
-				  DlsMat , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *,
-				  N_Vector , N_Vector , N_Vector);
+                                  N_Vector , N_Vector , N_Vector ,
+                                  DlsMat , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *,
+                                  N_Vector , N_Vector , N_Vector);
 extern int sundials_ida_jac_band(long int , long int , long int ,
-				 realtype , realtype ,
-				 N_Vector , N_Vector , N_Vector ,
-				 DlsMat , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *,
-				 N_Vector , N_Vector , N_Vector);
+                                 realtype , realtype ,
+                                 N_Vector , N_Vector , N_Vector ,
+                                 DlsMat , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *,
+                                 N_Vector , N_Vector , N_Vector);
 # endif
 #endif
 

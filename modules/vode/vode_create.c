@@ -36,10 +36,10 @@ static int vdStep(MPT_SOLVER_INTERFACE *gen, double *tend)
 	int ret;
 	
 	if (!tend) {
-		if ((ret = mpt_vode_ufcn(vd, (void *) (vd+1))) < 0) {
+		if (!vd->fcn && (ret = mpt_vode_ufcn(vd, (void *) (vd+1))) < 0) {
 			return ret;
 		}
-		return mpt_vode_prepare(vd, vd->ivp.neqs, vd->ivp.pint);
+		return mpt_vode_prepare(vd);
 	}
 	ret = mpt_vode_step(vd, *tend);
 	*tend = vd->t;

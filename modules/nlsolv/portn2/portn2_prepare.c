@@ -7,13 +7,13 @@
 
 #include "portn2.h"
 
-extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *n2, int nval, int nres)
+extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *n2)
 {
+	int nval, nres;
 	int liv, lrv;
 	
-	if (nval < 1 || nres < nval) {
-		return MPT_ERROR(BadArgument);
-	}
+	nval = n2->nls.nval;
+	nres = n2->nls.nres;
 	
 	if (!n2->jac.jac) {
 		n2->nd = -1;

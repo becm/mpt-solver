@@ -44,12 +44,18 @@ static int idaStep(MPT_SOLVER_INTERFACE *gen, double *end)
 static void *idaFcn(const MPT_SOLVER_INTERFACE *gen, int type)
 {
 	MPT_SOLVER_STRUCT(ida) *ida = (void *) (gen+1);
+	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (ida + 1);
 	switch (type) {
-	  case MPT_SOLVER_ENUM(ODE): return ida->ivp.pint ? 0 : (ida+1);
-	  case MPT_SOLVER_ENUM(DAE): return ida->ivp.pint ? 0 : (ida+1);
-	  case MPT_SOLVER_ENUM(PDE): return ida->ivp.pint ? (ida+1) : 0;
+	  case MPT_SOLVER_ENUM(ODE): break;
+	  case MPT_SOLVER_ENUM(DAE): return ida->ivp.pint ? 0 : ivp;
+	  case MPT_SOLVER_ENUM(PDE): return ida->ivp.pint ? ivp : 0;
 	  default: return 0;
 	}
+	if (ida->ivp.pint) {
+		return 0;
+	}
+	ivp->dae.mas = 0;
+	return ivp;
 }
 static double *idaState(MPT_SOLVER_INTERFACE *gen)
 {

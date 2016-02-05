@@ -154,11 +154,12 @@ static int setMethod(MPT_SOLVER_STRUCT(vode) *data, MPT_INTERFACE(metatype) *src
 
 extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTERFACE(metatype) *src)
 {
-	int ret;
+	int ret = 0;
 	
 	if (!name) {
-		double t = 0, *dat;
+		double t = vd->t;
 		size_t required;
+		
 		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
 			if (ret < 0) {
 				return ret;
@@ -166,10 +167,6 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTER
 			src = 0;
 		}
 		required = vd->ivp.neqs * (vd->ivp.pint + 1);
-		if (!(dat = realloc(vd->y, required * sizeof(*dat)))) {
-			return MPT_ERROR(BadOperation);
-		}
-		vd->y = dat;
 		if ((ret = mpt_vecpar_set(&vd->y, required, src)) < 0) {
 			return ret;
 		}
@@ -179,7 +176,8 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTER
 	}
 	else if (!*name) {
 		MPT_SOLVER_STRUCT(ivppar) ivp = vd->ivp;
-		if ((ret =  mpt_ivppar_set(&ivp, src)) < 0) {
+		ret = 0;
+		if (src && (ret =  mpt_ivppar_set(&ivp, src)) < 0) {
 			return ret;
 		}
 		mpt_vode_fini(vd);
@@ -189,10 +187,10 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTER
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&vd->atol, src);
+		return mpt_vecpar_settol(&vd->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&vd->rtol, src);
+		return mpt_vecpar_settol(&vd->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return setJacobian(vd, src);
@@ -207,39 +205,39 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTER
 	if (!strcasecmp(name, "maxord") || !strcasecmp(name, "iwork5")) {
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if ((ret = setInt(vd, 4, val)) < 0) return ret;
-		return 1;
+		if (setInt(vd, 4, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "mxstep") || !strcasecmp(name, "iwork6")) {
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if ((ret = setInt(vd, 5, val)) < 0) return ret;
-		return 1;
+		if (setInt(vd, 5, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "mxhnil") || !strcasecmp(name, "iwork7")) {
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if ((ret = setInt(vd, 6, val)) < 0) return ret;
-		return 1;
+		if (setInt(vd, 6, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
 	}
 	/* real array parameter */
 	if (!strcasecmp(name, "h0") || !strcasecmp(name, "rwork5")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if ((ret = setReal(vd, 4, val)) < 0) return ret;
-		return 1;
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (setReal(vd, 4, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hmax") || !strcasecmp(name, "rwork6")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if ((ret = setReal(vd, 5, val)) < 0) return ret;
-		return 1;
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (setReal(vd, 5, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hmin") || !strcasecmp(name, "rwork7")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if ((ret = setReal(vd, 6, val)) < 0) return ret;
-		return 1;
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (setReal(vd, 6, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
 	}
 	return MPT_ERROR(BadArgument);
 }
@@ -261,7 +259,7 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 		prop->val.fmt  = "iid"; prop->val.ptr = &vd->ivp;
 		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
 	}
-	else if (name && !strcasecmp(name, "version")) {
+	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
 		prop->val.fmt = 0; prop->val.ptr = version;

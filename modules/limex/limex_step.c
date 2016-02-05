@@ -7,42 +7,41 @@
 
 #include "limex.h"
 
-extern int mpt_limex_step(MPT_SOLVER_STRUCT(limex) *data, double *val, double tend)
+extern int mpt_limex_step(MPT_SOLVER_STRUCT(limex) *lx, double tend)
 {
-	MPT_SOLVER_STRUCT(ivppar) *ivp = &data->ivp;
 	double *atol, *rtol;
 	struct {
 		int neqs, pint;
 		const void *ufcn;
 	} neq;
 	
-	if (data->iopt[15] < 0) {
-		errno = EINVAL;
-		return -1;
+	if (lx->iopt[15] < 0) {
+		return MPT_ERROR(BadOperation);
 	}
-	if (!data->fcn) {
-		errno = EFAULT;
-		return -1;
+	if (!lx->fcn) {
+		return MPT_ERROR(BadArgument);
 	}
-	neq.neqs = ivp->neqs * (ivp->pint + 1);
-	neq.pint = ivp->pint;
-	neq.ufcn = data->ufcn;
+	neq.neqs = lx->ivp.neqs * (lx->ivp.pint + 1);
+	neq.pint = lx->ivp.pint;
+	neq.ufcn = lx->ufcn;
 	
 	/* set tolerance flags and adresses */
-	if (neq.neqs > 1 && (rtol = data->rtol.base) && (atol = data->atol.base)) {
-		data->iopt[10] = 1;
+	if (neq.neqs > 1 && (rtol = lx->rtol.base) && (atol = lx->atol.base)) {
+		lx->iopt[10] = 1;
 	} else {
-		data->iopt[10] = 0; rtol = &data->rtol.d.val; atol = &data->atol.d.val;
+		lx->iopt[10] = 0;
+		rtol = &lx->rtol.d.val;
+		atol = &lx->atol.d.val;
 	}
-	if (!data->jac) {
-		data->iopt[6] = 0;
+	if (!lx->jac) {
+		lx->iopt[6] = 0;
 	}
 	/* fortran routine call */
-	limex_(&neq.neqs, data->fcn, data->jac, &ivp->last, &tend, val, data->ys.iov_base,
-	       rtol, atol, &data->h, data->iopt, data->ropt, data->ipos.iov_base, data->ifail.raw);
+	limex_(&neq.neqs, lx->fcn, lx->jac, &lx->t, &tend, lx->y, lx->ys,
+	       rtol, atol, &lx->h, lx->iopt, lx->ropt, lx->ipos, lx->ifail.raw);
 	
-	if (data->ifail.st.code < 0) {
-		return data->ifail.st.code;
+	if (lx->ifail.st.code < 0) {
+		return lx->ifail.st.code;
 	}
 	return 0;
 }
