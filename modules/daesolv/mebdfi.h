@@ -23,14 +23,18 @@ public:
 #endif
 	MPT_SOLVER_STRUCT(ivppar) ivp; /* inherit IVP parameter */
 	
-	MPT_TYPE(dvecpar) rtol, atol; /* tolerances */
+	double t;        /* reference time */
 	
-	struct iovec rwork, /* mebdfi real work vector */
-	             iwork, /* mebdfi integer work vector */
-	             yp;    /* (initia)l values of DY/DT */
+	double *y,       /* state data */
+	       *yp,      /* (initia)l values of DY/DT */
+	       *dmas;    /* temporal partial mass matrix */
 	
-	int    *ipar;  /* integer user parameters */
-	double *rpar;  /* real user parameters */
+	MPT_SOLVER_TYPE(dvecpar) rtol, atol; /* tolerances */
+	
+	struct iovec rwork, iwork; /* mebdfi work vectors */
+	
+	int    *ipar;    /* integer user parameters */
+	double *rpar;    /* real user parameters */
 	
 	char jnum, jbnd, /* numeric/banded jacobian */
 	     type,       /* iteration type */
@@ -40,12 +44,11 @@ public:
 	      maxder;    /* maximum order */
 	int   mbnd[4];   /* banded matrix parameter */
 	
-	double h;  /* initial/previous step size */
+	double h;        /* initial/previous step size */
 	
 	mebdfi_fcn_t *fcn;  /* calculate right-hand side */
 	mebdfi_jac_t *jac;  /* user supplied jacobian */
 	
-	void *dmas;  /* temporal partial mass matrix */
 };
 
 __MPT_EXTDECL_BEGIN
@@ -58,20 +61,20 @@ extern void mebdfi_(int *, double *, double *, double *, double *, double *, dou
                     mebdfi_jac_t *, mebdfi_fcn_t *, int *);
 
 /* execute step on supplied mebdfi instance */
-extern int mpt_mebdfi_step(MPT_SOLVER_STRUCT(mebdfi) *, double *, double );
-extern int mpt_mebdfi_step_(MPT_SOLVER_STRUCT(mebdfi) *, double *, double *, const MPT_SOLVER_STRUCT(ivpfcn) *);
+extern int mpt_mebdfi_step(MPT_SOLVER_STRUCT(mebdfi) *, double);
 
 /* set mebdfi parameter */
-extern int mpt_mebdfi_property(MPT_SOLVER_STRUCT(mebdfi) *, MPT_STRUCT(property) *, MPT_INTERFACE(source) *);
+extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *, MPT_STRUCT(property) *);
+extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *, const char *, MPT_INTERFACE(metatype) *);
 
 /* validate settings and working space for use */
-extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *, int , int );
+extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *);
 
 /* initialize/free mebdfi integrator descriptor */
-extern int mpt_mebdfi_init(MPT_SOLVER_STRUCT(mebdfi) *);
+extern void mpt_mebdfi_init(MPT_SOLVER_STRUCT(mebdfi) *);
 extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *);
 /* set wrapper for user functions */
-extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
+extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *, const MPT_SOLVER_STRUCT(daefcn) *);
 
 /* mebdfi status information */
 extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -92,24 +95,59 @@ inline mebdfi::~mebdfi()
 class Mebdfi : public Ivp, mebdfi
 {
     public:
-	Mebdfi() : _fcn(0)
+	Mebdfi() : _fcn(0, 0)
 	{ }
 	virtual ~Mebdfi()
 	{ }
-	Mebdfi *addref()
-	{ return 0; }
-	int unref()
-	{ delete this; return 0; }
-	int property(struct property *pr, source *src = 0)
-	{ return mpt_mebdfi_property(this, pr, src); }
-	int report(int what, PropertyHandler out, void *opar) const
-	{ return mpt_mebdfi_report(this, what, out, opar); }
-	int step(double *u, double *end, double *x)
-	{ return mpt_mebdfi_step_(this, u, end, &_fcn); }
-	operator ivpfcn *() const
-	{ return const_cast<ivpfcn *>(&_fcn); }
+	void unref()
+	{
+		delete this;
+	}
+	int property(struct property *pr) const
+	{
+		return mpt_mebdfi_get(this, pr);
+	}
+	int setProperty(const char *pr, metatype *src)
+	{
+		return mpt_mebdfi_set(this, pr, src);
+	}
+	int report(int what, PropertyHandler out, void *opar)
+	{
+		return mpt_mebdfi_report(this, what, out, opar);
+	}
+	int step(double *tend)
+	{
+		int ret;
+		if (!tend) {
+			if (!fcn && (ret = mpt_mebdfi_ufcn(this, &_fcn)) < 0) {
+				return ret;
+			}
+			return mpt_mebdfi_prepare(this);
+		}
+		ret = mpt_mebdfi_step(this, *tend);
+		*tend = t;
+		return ret;
+	}
+	void *funstions(int type)
+	{
+		switch (type) {
+		  case odefcn::Type: break;
+		  case daefcn::Type: return ivp.pint ? 0 : &_fcn;
+		  case pdefcn::Type: return ivp.pint ? &_fcn : 0;
+		  default: return 0;
+		}
+		if (ivp.pint) {
+			return 0;
+		}
+		_fcn.mas = 0;
+		return &_fcn;
+	}
+	double *initstate()
+	{
+		return y;
+	}
 protected:
-	ivpfcn _fcn;
+	daefcn _fcn;
 };
 #endif
 

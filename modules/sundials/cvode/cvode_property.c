@@ -38,7 +38,7 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(metatype) *src)
  * \ingroup mptSundialsCVode
  * \brief set CVode property
  * 
- * Query property of CVode solver
+ * Assign property of CVode solver
  * 
  * \param cv   CVode data
  * \param name name of property to change

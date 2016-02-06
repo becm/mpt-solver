@@ -12,6 +12,7 @@ MATH =  zib/LIMEX4_2A1.o zib/LIMEX4_2_Dense.o
 #
 # headers to export
 HEADER = limex.h
+CONFIG = limex.conf
 #
 # general library rules
 include ../mpt.solver.mk

@@ -3,61 +3,64 @@
  */
 
 #include <stdlib.h>
-#include <errno.h>
+#include <string.h>
 
 #include "mebdfi.h"
 
-extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *data, int neqs, int pdim)
+extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *me)
 {
-	MPT_SOLVER_STRUCT(ivppar) *ivp;
 	int liw, lrw, *iwk;
-	double *yp;
+	int neqs, pdim;
+	double *v;
+	size_t len;
 	
-	if (neqs < 1 || pdim < 0) {
-		errno = EINVAL;
-		return -2;
-	}
-	ivp = &data->ivp;
-	pdim = (ivp->pint = pdim) + 1;
-	neqs = (ivp->neqs = neqs) * pdim;
+	pdim = me->ivp.pint + 1;
+	neqs = me->ivp.neqs * pdim;
 	
 	/* vector tolerances in sufficent dimension */
-	if (neqs < 2 || (!data->rtol.base && !data->atol.base)) {
+	if (neqs < 2 || (!me->rtol.base && !me->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_vecpar_cktol(&data->atol, ivp->neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_vecpar_cktol(&me->atol, me->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return -1;
 	}
-	if (mpt_vecpar_cktol(&data->rtol, ivp->neqs, pdim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_vecpar_cktol(&me->rtol, me->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
 		return -1;
 	}
 	/* set banded matrix parameters */
-	if (!data->jbnd) {
-		data->mbnd[3] = neqs;
+	if (!me->jbnd) {
+		me->mbnd[3] = neqs;
 	}
 	else {
-		data->mbnd[2] = data->mbnd[0] + data->mbnd[1] + 1;
-		data->mbnd[3] = 2*data->mbnd[0] + data->mbnd[1] + 1;
+		me->mbnd[2] = me->mbnd[0] + me->mbnd[1] + 1;
+		me->mbnd[3] = 2*me->mbnd[0] + me->mbnd[1] + 1;
 	}
 	
-	liw	= neqs + 14;
+	liw = neqs + 14;
 	/* ignore wrong comments in mebdfi.f and set ACTUALLY needed size */
-	lrw	= (32 + 2 * data->mbnd[3]) * neqs + 2;
+	lrw = (32 + 2 * me->mbnd[3]) * neqs + 2;
 	
-	if (!(iwk = mpt_vecpar_alloc(&data->iwork, liw, sizeof(int)))) {
+	if (!(iwk = mpt_vecpar_alloc(&me->iwork, liw, sizeof(int)))) {
 		return -1;
 	}
-	if (!mpt_vecpar_alloc(&data->rwork, lrw, sizeof(double))) {
+	if (!mpt_vecpar_alloc(&me->rwork, lrw, sizeof(double))) {
 		return -1;
 	}
-	pdim = data->yp.iov_len / sizeof(double);
-	
-	if (!(yp = mpt_vecpar_alloc(&data->yp, neqs, sizeof(double)))) {
-		return -1;
+	len = sizeof(*v) * neqs;
+	if (!(v = me->y)) {
+		if (!(v = malloc(len))) {
+			return MPT_ERROR(BadOperation);
+		}
+		me->y = memset(v, 0, len);
 	}
-	for ( ; pdim < neqs; pdim++) yp[pdim] = 0.0;
+	if (!(v = me->yp)) {
+		if (!(v = malloc(len))) {
+			return MPT_ERROR(BadOperation);
+		}
+		me->yp = memset(v, 0, len);
+	}
 	
-	data->state = 1;	/* initial call for mebdfi() */
+	me->state = 1; /* initial call for mebdfi() */
 	
 	/* reset counter on reinitialisation */
 	for (liw = 0; liw < 7; liw++) iwk[4+liw] = 0;

@@ -11,102 +11,96 @@
 
 static void radau_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)
 {
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
+	MPT_SOLVER_TYPE(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_STRUCT(radau) *rd = (void *) rpar;
 	
 	(void) neq;
 	(void) rpar;
-	fcn = (MPT_SOLVER_STRUCT(ivpfcn) *) ipar;
 	
-	if (fcn->fcn(fcn->param, t, y, f) < 0) {
+	if (rd->ivp.pint) {
+		MPT_SOLVER_STRUCT(pdefcn) *pde = &fcn->pde;
+		MPT_SOLVER_STRUCT(ivppar) ivp = rd->ivp;
+		if (pde->fcn(pde->param, *t, y, f, &ivp, pde->grid, pde->rside) < 0) {
+			abort();
+		}
+		return;
+	}
+	if (fcn->dae.fcn(fcn->dae.param, *t, y, f) < 0) {
 		abort();
 	}
 }
 
 static void radau_jac(int *neq, double *t, double *y, double *jac, int *ljac, double *rpar, int *ipar)
 {
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
-	MPT_SOLVER_STRUCT(radau)  *data;
+	MPT_SOLVER_TYPE(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_STRUCT(radau) *rd = (void *) rpar;
 	int ld;
 	
 	(void) neq;
-	fcn  = (MPT_SOLVER_STRUCT(ivpfcn) *) ipar;
-	data = (MPT_SOLVER_STRUCT(radau) *) rpar;
 	
-	if (data->mljac >= *neq) {
+	if (rd->mljac >= *neq) {
 		ld = *ljac;
 	}
 	else {
 		/* irow = i - j + mujac + 1 */
-		jac += data->mujac;
+		jac += rd->mujac;
 		ld   = *ljac - 1;
 	}
-	if (fcn->jac(fcn->param, t, y, jac, ld) < 0)
+	if (fcn->dae.jac(fcn->dae.param, *t, y, jac, ld) < 0) {
 		abort();
+	}
 }
 
-static void radau_mas(int *neq, double *b, int *lmas, double *rpar, int *ipar)
+static void radau_mas(int *neq, double *b, int *lmasp, double *rpar, int *ipar)
 {
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
-	MPT_SOLVER_STRUCT(radau) *data;
+	MPT_SOLVER_TYPE(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_STRUCT(radau) *rd = (void *) rpar;
 	double *mas;
 	int *idrow, *idcol;
-	int i, nl, dmas = (*lmas) * (*neq);
+	int i, nz, lmas, dmas;
 	
-	fcn  = (MPT_SOLVER_STRUCT(ivpfcn) *) ipar;
-	data = (MPT_SOLVER_STRUCT(radau) *) rpar;
-	mas  = data->dmas;
+	lmas = *lmasp;
+	dmas = lmas * (*neq);
+	nz = rd->ivp.neqs * rd->ivp.neqs;
 	
-	nl = data->ivp.neqs * data->ivp.neqs;
+	mas = rd->dmas;
+	idrow = (int *) (mas + nz);
+	idcol = idrow + nz;
 	
-	idrow = (int *) (mas + nl);
-	idcol = idrow + nl;
+	*idrow = nz;
+	*idcol = rd->ivp.neqs;
 	
-/* 	(void) memset(b, 0, sizeof(*b) * dmas);*/
-	
-	nl = data->ivp.pint;
-	
-	for (i = 0; i <= nl; i++) {
-		int j, nb;
-		
-		*idrow = i;
-		
-		if ((nb = fcn->mas(fcn->param, &data->ivp.last, 0, mas, idrow, idcol)) < 0) {
-			abort();
-		}
-		for (j = 0; j < nb; j++) {
-			int pos = idrow[i] + (*lmas) * idcol[i];
-			if (pos < dmas) b[pos] = mas[i];
+	if ((nz = fcn->dae.mas(fcn->dae.param, rd->t, 0, mas, idrow, idcol)) < 0) {
+		abort();
+	}
+	for (i = 0; i < nz; i++) {
+		int pos = idrow[i] + lmas * idcol[i];
+		if (pos < dmas) {
+			b[pos] = mas[i];
 		}
 	}
 }
 
-extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *data, const MPT_SOLVER_STRUCT(ivpfcn) *ufcn)
+extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, const MPT_SOLVER_STRUCT(daefcn) *ufcn)
 {
-	if (!ufcn->fcn) {
-		errno = EFAULT;
-		return -1;
+	if (!ufcn || !ufcn->fcn) {
+		return MPT_ERROR(BadArgument);
 	}
-	/* need temporal mass matrix */
-	if (!ufcn->mas) {
-		data->mas = 0;
-	}
-	else {
-		double	*mas;
-		size_t	mlen = sizeof(double) + 2 * sizeof(int);
-		mlen *= data->ivp.neqs * data->ivp.neqs;
-		
-		if (!(mas = realloc(data->dmas, mlen))) {
-			return -1;
+	if (rd->ivp.pint) {
+		rd->jac = 0;
+		rd->mas = 0;
+	} else {
+		size_t nz = rd->ivp.neqs * rd->ivp.neqs;
+		if (!rd->dmas && !(rd->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double))))) {
+			return MPT_ERROR(BadOperation);
 		}
-		data->dmas = mas;
+		rd->jac = ufcn->jac ? radau_jac : 0;
+		rd->mas = ufcn->mas ? radau_mas : 0;
 	}
+	rd->fcn = radau_fcn;
 	
-	data->jac = ufcn->jac ? radau_jac : 0;
-	data->mas = ufcn->mas ? radau_mas : 0;
-	data->fcn = radau_fcn;
-	
-	data->ipar = (int *) ufcn;
-	data->rpar = (data->jac || data->mas) ? (double *) data : 0;
+	rd->ipar = (int *) ufcn;
+	rd->rpar = (double *) rd;
 	
 	return 0;
 }

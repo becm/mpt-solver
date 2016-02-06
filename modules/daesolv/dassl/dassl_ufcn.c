@@ -11,60 +11,56 @@
 
 static void dassl_fcn(double *t, double *y, double *yp, double *f, int *ires, double *rpar, int *ipar)
 {
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
-	MPT_SOLVER_STRUCT(dassl) *data;
-	int i, neqs, pint;
+	MPT_SOLVER_STRUCT(daefcn) *dae = (void *) ipar;
+	MPT_SOLVER_STRUCT(dassl) *data = (void *) rpar;
+	int i, neqs;
 	
-	fcn  = (MPT_SOLVER_STRUCT(ivpfcn) *) ipar;
+	neqs = data->ivp.neqs;
 	
-	if ((*ires = fcn->fcn(fcn->param, t, y, f)) < 0) {
+	if (data->ivp.pint) {
+		MPT_SOLVER_STRUCT(pdefcn) *pde = (void *) rpar;
+		*ires = pde->fcn(pde->param, *t, y, f, &data->ivp, pde->grid, pde->rside);
 		return;
 	}
-	data = (MPT_SOLVER_STRUCT(dassl) *) rpar;
-	neqs = data->ivp.neqs;
-	pint = data->ivp.pint;
-	
-	if (!fcn->mas) {
-		neqs *= pint + 1;
+	if ((*ires = dae->fcn(dae->param, *t, y, f)) < 0) {
+		return;
+	}
+	if (!dae->mas) {
 		for (i = 0; i < neqs; i++) {
 			f[i] -= yp[i];
 		}
 	}
 	else {
 		double *mas = data->dmas;
-		int *idrow, *idcol;
+		int *idrow, *idcol, nz;
 		
-		idrow = (int *) (mas + neqs * neqs);
-		idcol = idrow + neqs * neqs;
+		nz = neqs * neqs;
 		
-		for (i = 0; i <= pint; i++) {
-			int nz, j;
-			
-			*idrow = i;
-			
-			if ((nz = fcn->mas(fcn->param, t, y, mas, idrow, idcol)) < 0) {
-				*ires = nz;
-				return;
-			}
-			/* f -= B*yp */
-			for (j = 0; j < nz; j++) {
-				f[idrow[j]] -= mas[j] * yp[idcol[j]];
-			}
-			y += neqs;
-			f += neqs;
+		idrow = (int *) (mas + nz);
+		idcol = idrow + nz;
+		
+		*idrow = nz;
+		*idcol = neqs;
+		
+		if ((nz = dae->mas(dae->param, *t, y, mas, idrow, idcol)) < 0) {
+			*ires = nz;
+			return;
+		}
+		/* f -= B*yp */
+		for (i = 0; i < nz; i++) {
+			f[idrow[i]] -= mas[i] * yp[idcol[i]];
 		}
 	}
 }
 
-static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cj, double *rpar, int *ipar)
+static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cjp, double *rpar, int *ipar)
 {
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
-	MPT_SOLVER_STRUCT(dassl) *data;
+	MPT_SOLVER_STRUCT(daefcn) *dae = (void *) ipar;
+	MPT_SOLVER_STRUCT(dassl) *data = (void *) rpar;
+	double cj = *cjp;
 	int ld, neqs, pint;
 	
 	(void) ys;
-	fcn  = (MPT_SOLVER_STRUCT(ivpfcn) *) ipar;
-	data = (MPT_SOLVER_STRUCT(dassl) *) rpar;
 	
 	neqs = data->ivp.neqs;
 	pint = data->ivp.pint;
@@ -81,64 +77,53 @@ static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cj,
 		jac += mu + ml;
 		ld   = 2*ml + mu;
 	}
-	if (fcn->jac(fcn->param, t, y, jac, ld) < 0) {
+	if (dae->jac(dae->param, *t, y, jac, ld) < 0) {
 		abort();
 	}
 	/* Jac -= con*B */
-	if (!fcn->mas) {
+	if (!dae->mas) {
 		int i;
 		neqs *= (pint+1);
 		for (i = 0; i < neqs; i++, jac += ld) {
-			jac[i] -= *cj;
+			jac[i] -= cj;
 		}
 	}
 	else {
 		double *mas = data->dmas;
-		int i, *idrow, *idcol;
+		int nz, i, *idrow, *idcol;
 		
 		idrow = (int *) (mas + neqs * neqs);
 		idcol = idrow + neqs * neqs;
 		
-		for (i = 0; i <= pint; i++) {
-			int nz, j;
-			
-			*idrow = i;
-			
-			if ((nz = fcn->mas(fcn->param, t, y, mas, idrow, idcol)) < 0)
-				abort();
-			
-			/* Jac -= con*B */
-			for (j = 0; j < nz; j++) {
-				jac[(i*neqs+idcol[i])*ld+idrow[i]] -= (*cj) * mas[i];
-			}
-			y += neqs;
+		if ((nz = dae->mas(dae->param, *t, y, mas, idrow, idcol)) < 0) {
+			abort();
+		}
+		/* Jac -= con*B */
+		for (i = 0; i < nz; i++) {
+			jac[(i*neqs+idcol[i])*ld+idrow[i]] -= cj * mas[i];
 		}
 	}
 }
 
-extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *data, const MPT_SOLVER_STRUCT(ivpfcn) *ufcn)
+extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, const MPT_SOLVER_STRUCT(daefcn) *ufcn)
 {
-	if (!ufcn->fcn) {
-		errno = EFAULT;
-		return -1;
+	if (!ufcn || !ufcn->fcn) {
+		return MPT_ERROR(BadArgument);
 	}
-	/* need temporal mass matrix */
-	if (ufcn->mas) {
-		double *mas;
-		int mlen = sizeof(double) + 2 * sizeof(int);
-		
-		mlen *= data->ivp.neqs * data->ivp.neqs;
-		
-		if (!mlen || !(mas = realloc(data->dmas, mlen))) {
-			return -1;
-		}
-		data->dmas = mas;
-	}
-	data->ipar = (int *) ufcn;
-	data->rpar = (double *) data;
 	
-	data->jac = ufcn->jac ? dassl_jac : 0;
-	data->fcn = dassl_fcn;
+	if (da->ivp.pint) {
+		da->jac = 0;
+	} else {
+		size_t nz = da->ivp.neqs * da->ivp.neqs;
+		if (!da->dmas && !(da->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double))))) {
+			return MPT_ERROR(BadOperation);
+		}
+		da->jac = ufcn->jac ? dassl_jac : 0;
+	}
+	da->fcn = dassl_fcn;
+	
+	da->ipar = (int *) ufcn;
+	da->rpar = (double *) da;
 	
 	return 0;
 }

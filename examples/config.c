@@ -14,8 +14,8 @@
 #endif
 
 #include <mpt/convert.h>
-
 #include <mpt/client.h>
+#include <mpt/parse.h>
 
 #include <mpt/solver.h>
 
@@ -46,6 +46,8 @@ int main(void)
 	
 	mtrace();
 	
+	mpt_config_load(getenv("MPT_PREFIX"), 0, 0);
+	
 	fputs(txt, stdout);
 	while (fgets(buf, sizeof(buf), stdin)) {
 		MPT_SOLVER_INTERFACE *s;
@@ -64,7 +66,7 @@ int main(void)
 			continue;
 		}
 		if ((s = h.create())) {
-			puts(mpt_object_typename((void *) s));
+			if ((n = mpt_object_typename((void *) s))) puts(n);
 			s->_vptr->report(s, -1, wrap_fw, stdout);
 			s->_vptr->obj.unref((void *) s);
 		} else {

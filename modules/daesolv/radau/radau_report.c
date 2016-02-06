@@ -8,7 +8,7 @@
 
 #include "radau.h"
 
-extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
 	int32_t val;
@@ -22,26 +22,45 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	pr.val.fmt = "s";
 	pr.val.ptr = &miter;
 	
-	val = data->ivp.neqs * (data->ivp.pint + 1);
+	val = rd->ivp.neqs * (rd->ivp.pint + 1);
 	
-	if ((miter.ml = data->mljac) >= 0 && miter.ml < val) {
-		miter.mu   = data->mujac;
-		miter.type = data->jac ? "banded(user)" : "banded";
+	if ((miter.ml = rd->mljac) >= 0 && miter.ml < val) {
+		miter.mu   = rd->mujac;
+		miter.type = rd->jac ? "banded(user)" : "banded";
 		pr.val.fmt = "sii";
 	}
 	else {
-		miter.type = data->jac ? "full(user)" : "full";
+		miter.type = rd->jac ? "full(user)" : "full";
 	}
 	
 	out(usr, &pr);
 	++line;
 	}
 	
+	if (show & MPT_SOLVER_ENUM(Values)) {
+	static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
+	struct {
+		double t;
+		struct iovec vec;
+	} dat;
+	size_t len = rd->ivp.pint + 1;
+	
+	dat.t = rd->t;
+	dat.vec.iov_base = rd->y;
+	dat.vec.iov_len  = len * rd->ivp.neqs * sizeof(double);
+	
+	pr.name = 0;
+	pr.desc = MPT_tr("LIMEX solver state");
+	pr.val.fmt = fmt;
+	pr.val.ptr = &dat;
+	out(usr, &pr);
+	}
+	
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
 	pr.val.fmt = "d";
-	pr.val.ptr = &data->ivp.last;
+	pr.val.ptr = &rd->t;
 	out(usr, &pr);
 	++line;
 	}
@@ -49,7 +68,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	pr.name = "n";
 	pr.desc = "integration steps";
 	pr.val.fmt = "i";
-	pr.val.ptr = &val; val = data->count.st.nsteps;
+	pr.val.ptr = &val; val = rd->count.st.nsteps;
 	out(usr, &pr);
 	++line;
 	}
@@ -58,7 +77,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	pr.name = "h";
 	pr.desc = "current step size";
 	pr.val.fmt = "d";
-	pr.val.ptr = &data->h;
+	pr.val.ptr = &rd->h;
 	out(usr, &pr);
 	++line;
 	}
@@ -67,18 +86,18 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 		return line;
 	}
 	
-	if (data->count.st.nsteps != data->count.st.naccpt) {
+	if (rd->count.st.nsteps != rd->count.st.naccpt) {
 		pr.name = "nacc";
 		pr.desc = MPT_tr("accepted steps");
 		pr.val.fmt = "i";
-		pr.val.ptr = &val; val = data->count.st.naccpt;
+		pr.val.ptr = &val; val = rd->count.st.naccpt;
 		out(usr, &pr);
 		++line;
 	}
 	pr.name = "feval";
 	pr.desc = MPT_tr("function evaluations");
 	pr.val.fmt = "i";
-	pr.val.ptr = &val; val = data->count.st.nfev;
+	pr.val.ptr = &val; val = rd->count.st.nfev;
 	if (val < 0) val = 0;
 	out(usr, &pr);
 	++line;
@@ -86,14 +105,14 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *data, int show, MPT_
 	pr.name = "jeval";
 	pr.desc = MPT_tr("jacobian evaluations");
 	pr.val.fmt = "i";
-	pr.val.ptr = &val; val = data->count.st.njac;
+	pr.val.ptr = &val; val = rd->count.st.njac;
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
 	pr.val.fmt = "i";
-	pr.val.ptr = &val; val = data->count.st.nlud;
+	pr.val.ptr = &val; val = rd->count.st.nlud;
 	out(usr, &pr);
 	++line;
 	

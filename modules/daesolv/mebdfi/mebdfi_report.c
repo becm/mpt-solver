@@ -8,37 +8,40 @@
 
 #include "mebdfi.h"
 
-extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *data, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
-	int line = 0, *iwk = data->iwork.iov_base;
-	double *rwk = data->rwork.iov_base;
+	int line = 0, *iwk = me->iwork.iov_base;
+	double *rwk = me->rwork.iov_base;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("method for jacobian");
-	if (data->jbnd) {
+	if (me->jbnd) {
 		struct { const char *t; int32_t mu, ml; } val;
-		val.t = (data->jac && !data->jnum) ? "banded(user)" : "banded";
+		val.t = (me->jac && !me->jnum) ? "banded(user)" : "banded";
 		val.t = MPT_tr(val.t);
-		val.ml = data->mbnd[0]; val.mu = data->mbnd[0];
+		val.ml = me->mbnd[0]; val.mu = me->mbnd[0];
 		pr.val.fmt = "sii";
 		pr.val.ptr = &val;
 		out(usr, &pr);
 	} else {
 		pr.val.fmt  = 0;
-		pr.val.ptr = (data->jac && !data->jnum) ? "full(user)" : "full";
+		pr.val.ptr = (me->jac && !me->jnum) ? "full(user)" : "full";
 		pr.val.ptr = MPT_tr(pr.val.ptr);
 		out(usr, &pr);
 	}
 	++line;
 	}
 	
+	if (show & MPT_SOLVER_ENUM(Values)) {
+	}
+	
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
 	pr.val.fmt = "d";
-	pr.val.ptr = &data->ivp.last;
+	pr.val.ptr = &me->t;
 	out(usr, &pr);
 	++line;
 	}

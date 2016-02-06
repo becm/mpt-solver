@@ -28,6 +28,7 @@ MATH = \
 #
 # headers to export
 HEADER = mebdfi.h radau.h dassl.h
+CONFIG = daesolv.conf
 #
 # general library rules
 include ../mpt.solver.mk

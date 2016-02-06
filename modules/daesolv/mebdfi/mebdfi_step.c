@@ -2,60 +2,54 @@
  * C wrapper to MEBDFI fortran routine
  */
 
-#include <errno.h>
-
 #include "mebdfi.h"
 
-extern int mpt_mebdfi_step(MPT_SOLVER_STRUCT(mebdfi) *data, double *val, double tend)
+extern int mpt_mebdfi_step(MPT_SOLVER_STRUCT(mebdfi) *me, double tend)
 {
-	MPT_SOLVER_STRUCT(ivppar) *ivp = &data->ivp;
 	double *atol, *rtol, tout = tend;
 	int itol, mf, ierr = 0, neqs, idid, lout, maxder, liw, lrw;
 	
-	if ( data->state < 0 ) {
-		errno = EINVAL; return -1;
+	if (me->state < 0 || !me->fcn || !me->y) {
+		return MPT_ERROR(BadArgument);
 	}
-	if ( !data->fcn ) {
-		errno = EFAULT; return -1;
-	}
-	neqs = ivp->neqs * (ivp->pint + 1);
+	neqs = me->ivp.neqs * (me->ivp.pint + 1);
 	
 	/* set tolerance flags and adresses */
-	if (!(rtol = data->rtol.base)) {
-		if ((atol = data->atol.base)) {
+	if (!(rtol = me->rtol.base)) {
+		if ((atol = me->atol.base)) {
 			itol = 3;
 		} else {
-			itol = 2; atol = &data->atol.d.val;
+			itol = 2; atol = &me->atol.d.val;
 		}
-		rtol = &data->rtol.d.val;
+		rtol = &me->rtol.d.val;
 	}
-	else if ((atol = data->atol.base)) {
+	else if ((atol = me->atol.base)) {
 		itol = 5;
 	} else {
-		itol = 4; atol = &data->atol.d.val;
+		itol = 4; atol = &me->atol.d.val;
 	}
-	if (!data->jac) {
-		data->jnum = 1;
+	if (!me->jac) {
+		me->jnum = 1;
 	}
-	mf = data->jbnd ? (data->jnum ? 24 : 23) : (data->jnum ? 22 : 21);
+	mf = me->jbnd ? (me->jnum ? 24 : 23) : (me->jnum ? 22 : 21);
 	
 	/* initial call */
-	if ((idid = data->state) == 1 && !data->h) {
-		data->h = (tend - ivp->last) / 128;
+	if ((idid = me->state) == 1 && !me->h) {
+		me->h = (tend - me->t) / 128;
 	}
-	liw = data->iwork.iov_len / sizeof(int);
-	lrw = data->rwork.iov_len / sizeof(double);
-	lout = data->lout;
-	maxder = data->maxder;
+	liw = me->iwork.iov_len / sizeof(int);
+	lrw = me->rwork.iov_len / sizeof(double);
+	lout = me->lout;
+	maxder = me->maxder;
 	
 	/* fortran routine call */
-	mebdfi_(&neqs, &ivp->last, &data->h, val, data->yp.iov_base, &tout, &tend, &mf,
-	        &idid, &lout, &lrw, data->rwork.iov_base, &liw, data->iwork.iov_base,
-	        data->mbnd, &maxder, &itol, rtol, atol, data->rpar, data->ipar,
-	        data->jac, data->fcn, &ierr);
+	mebdfi_(&neqs, &me->t, &me->h, me->y, me->yp, &tout, &tend, &mf,
+	        &idid, &lout, &lrw, me->rwork.iov_base, &liw, me->iwork.iov_base,
+	        me->mbnd, &maxder, &itol, rtol, atol, me->rpar, me->ipar,
+	        me->jac, me->fcn, &ierr);
 	
 	
-	data->state = data->type;
+	me->state = me->type;
 	
 	return ierr ? ierr : (idid < 0 ? idid : 0);
 }

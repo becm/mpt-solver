@@ -23,7 +23,7 @@ public:
 #endif
 	MPT_SOLVER_STRUCT(ivppar) ivp;  /* inherit IVP parameter */
 	
-	double  t;    /* current reference time */
+	double  t;    /* reference time */
 	double *y,    /* values at current time */
 	       *ys;   /* deviation at current time */
 	

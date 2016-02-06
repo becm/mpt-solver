@@ -9,65 +9,64 @@
 
 #include "mebdfi.h"
 
-extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *data)
+extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *me)
 {
-	mpt_vecpar_alloc(&data->rwork, 0, 0);
-	mpt_vecpar_alloc(&data->iwork, 0, 0);
-	mpt_vecpar_alloc(&data->yp, 0, 0);
+	if (me->y) {
+		free(me->y);
+		me->y = 0;
+	}
+	if (me->yp) {
+		free(me->yp);
+		me->yp = 0;
+	}
+	if (me->dmas) {
+		free(me->dmas);
+		me->dmas = 0;
+	}
+	mpt_vecpar_alloc(&me->rwork, 0, 0);
+	mpt_vecpar_alloc(&me->iwork, 0, 0);
 	
-	mpt_vecpar_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_vecpar_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_vecpar_cktol(&me->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_vecpar_cktol(&me->atol, 0, 0, __MPT_IVP_ATOL);
 	
-	if (data->dmas) free(data->dmas);
-	data->dmas = 0;
-	
-	data->state = -1;
+	me->state = -1;
 }
 
-extern int mpt_mebdfi_init(MPT_SOLVER_STRUCT(mebdfi) *data)
+extern void mpt_mebdfi_init(MPT_SOLVER_STRUCT(mebdfi) *me)
 {
+	MPT_IVPPAR_INIT(&me->ivp);
+	
+	me->t = 0.;
+	me->h = 0.;
+	
+	me->y = 0;
+	me->yp = 0;
+	me->dmas = 0;
+	
 	/* allocate inital space for parameters */
-	data->rwork.iov_base = data->iwork.iov_base = 0;
-	if (!mpt_vecpar_alloc(&data->rwork, 64, sizeof(double))) {
-		return -1;
-	}
-	if (!mpt_vecpar_alloc(&data->iwork, 16, sizeof(int))) {
-		mpt_vecpar_alloc(&data->rwork, 0, 0); return -1;
-	}
-	/* initialize work data */
-	memset(data->rwork.iov_base, 0, data->rwork.iov_len);
-	memset(data->iwork.iov_base, 0, data->iwork.iov_len);
+	me->rwork.iov_base = 0; me->rwork.iov_len = 0;
+	me->iwork.iov_base = 0; me->iwork.iov_len = 0;
 	
-	MPT_IVPPAR_INIT(&data->ivp);
+	MPT_VECPAR_INIT(&me->rtol, __MPT_IVP_RTOL);
+	MPT_VECPAR_INIT(&me->atol, __MPT_IVP_ATOL);
 	
-	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
-	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);
 	
-	data->yp.iov_base = 0;
-	data->yp.iov_len  = 0;
+	me->jnum   = 0;  /* allow analytical jacobian */
+	me->jbnd   = 0;  /* jacobian is banded */
+	me->type   = 0;  /* normal step strategy */
+	me->state  = -1; /* invalid initial state */
 	
-	data->h = 0.;
+	me->lout   = 6;  /* FORTRAN stdout */
+	me->maxder = 7;  /* default value */
 	
-	data->jnum	= 0;	/* allow analytical jacobian */
-	data->jbnd	= 0;	/* jacobian is banded */
-	data->type	= 0;	/* normal step strategy */
-	data->state	= -1;	/* invalid initial state */
+	(void) memset(me->mbnd, 0,sizeof(me->mbnd));
 	
-	data->lout	= 6;	/* FORTRAN stdout */
-	data->maxder	= 7;	/* default value */
+	me->rpar = 0;
+	me->ipar = 0;
 	
-	(void) memset(data->mbnd, 0,sizeof(data->mbnd));
+	me->fcn = 0;
+	me->jac = 0;
 	
-	((int *) data->iwork.iov_base)[13] = 2000;
-	
-	data->rpar = 0;
-	data->ipar = 0;
-	
-	data->fcn = 0;
-	data->jac = 0;
-	
-	data->dmas = 0;
-	
-	return 0;
+	me->state = -1;
 }
 

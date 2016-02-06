@@ -10,139 +10,183 @@
 
 #include "mebdfi.h"
 
-static int setIvp(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_INTERFACE(source) *src)
+static int setInt(MPT_SOLVER_STRUCT(mebdfi) *me, size_t pos, int val)
 {
-	if (!src) {
-		return mpt_ivppar_set(&data->ivp, src);
+	int *d;
+	if (!(d = mpt_vecpar_alloc(&me->iwork, 8, sizeof(int)))) {
+		return MPT_ERROR(BadOperation);
 	}
-	else {
-		MPT_SOLVER_STRUCT(ivppar) ivp = data->ivp;
-		int ret;
-		
-		if ((ret =  mpt_ivppar_set(&ivp, src)) < 0) {
-			return ret;
-		}
-		mpt_mebdfi_fini(data);
-		mpt_mebdfi_init(data);
-		data->ivp = ivp;
-		return ret;
-	}
-}
-static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_INTERFACE(source) *src)
-{
-	char *key;
-	int l1, l2, l3;
-	
-	if (!src) return data->jnum + data->jbnd * 2;
-	
-	if ((l1 = src->_vptr->conv(src, 'k', &key)) < 0) return l1;
-	
-	if (!l1 || !key) return data->jnum = data->jbnd = 0;
-	
-	switch (key[0]) {
-		case 'F': data->jnum = 0; data->jbnd = 0; return l1;
-		case 'f': data->jnum = 1; data->jbnd = 0; return l1;
-		case 'B': data->jnum = 0; data->jbnd = 1; break;
-		case 'b': data->jnum = 1; data->jbnd = 1; break;
-		default:  errno = EINVAL; return -2;
-	}
-	l3 = 0;
-	
-	if ((l2 = src->_vptr->conv(src, 'i', data->mbnd)) <= 0) {
-		l2 = 0; data->mbnd[1] = data->mbnd[0] = data->ivp.neqs;
-	}
-	else if ((l3 = src->_vptr->conv(src, 'i', data->mbnd+1)) <= 0 ) {
-		l3 = 0; data->mbnd[1] = data->mbnd[0];
-	}
-	data->mbnd[2] = data->mbnd[0] + data->mbnd[1] + 1;
-	data->mbnd[3] = 2*data->mbnd[0] + data->mbnd[1] + 1;
-	
-	return l1 + l2 + l3;
-}
-static int setH0(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_INTERFACE(source) *src)
-{
-	int len;
-	
-	if (!src) return data->h ? 1 : 0;
-	if (!(len = src->_vptr->conv(src, 'd', &data->h))) data->h = 0.0;
-	return len;
-}
-static int setMaxNSteps(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_INTERFACE(source) *src)
-{
-	int len, *addr = ((int *) data->iwork.iov_base) + 13;
-	
-	if (!src) return *addr;
-	if (!(len = src->_vptr->conv(src, 'i', addr))) *addr = 0;
-	return len;
-}
-static int setNind1(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_INTERFACE(source) *src)
-{
-	int len, *addr = (int *) data->iwork.iov_base;
-	
-	if (!src) return *addr;
-	if (!(len = src->_vptr->conv(src, 'i', addr))) *addr = 0;
-	return len;
-}
-static int setNind2(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_INTERFACE(source) *src)
-{
-	int len, *addr = ((int *) data->iwork.iov_base) + 1;
-	
-	if (!src) return *addr;
-	if (!(len = src->_vptr->conv(src, 'i', addr))) *addr = 0;
-	return len;
-}
-static int setNind3(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_INTERFACE(source) *src)
-{
-	int len, *addr = ((int *) data->iwork.iov_base) + 2;
-	
-	if (!src) return *addr;
-	if (!(len = src->_vptr->conv(src, 'i', addr))) *addr = 0;
-	return len;
-}
-static int setYP(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_INTERFACE(source) *src)
-{
-	double *yp;
-	int len;
-	
-	if (!src) return data->yp.iov_len / sizeof(double);
-	
-	if ((len = data->ivp.neqs * (data->ivp.pint + 1)) <= 0) {
-		errno = EOVERFLOW; return -1;
-	}
-	if (!(yp = mpt_vecpar_alloc(&data->yp, len, sizeof(*yp))))
-		return -1;
-	
-	while (src->_vptr->conv(src, 'd', yp) > 0) {
-		yp++; if (!--len) return 0;
-	}
-	return (data->yp.iov_len -= len * sizeof(*yp)) / sizeof(*yp);
+	d[pos] = val;
+	return 0;
 }
 
-extern int mpt_mebdfi_property(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_STRUCT(property) *prop, MPT_INTERFACE(source) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_INTERFACE(metatype) *src)
+{
+	char *key;
+	int32_t ld, ud;
+	int ret, len, jnum;
+	
+	if (!src) {
+		me->jnum = me->jbnd = 0;
+		return 0;
+	}
+	if ((ret = src->_vptr->conv(src, 'k' | MPT_ENUM(ValueConsume), &key)) < 0) {
+		return ret;
+	}
+	if (!ret || !key) {
+		me->jnum = me->jbnd = 0;
+		return 0;
+	}
+	switch (key[0]) {
+		case 'F': me->jnum = 0; me->jbnd = 0; return 1;
+		case 'f': me->jnum = 1; me->jbnd = 0; return 1;
+		case 'B': jnum = 0; break;
+		case 'b': jnum = 1; break;
+		default: return MPT_ERROR(BadValue);
+	}
+	if ((ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &ld)) < 0) {
+		return ret;
+	}
+	if (!ld) {
+		ld = me->ivp.neqs;
+		ud = ld;
+		len = 1;
+	}
+	else if ((ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &ud)) < 0) {
+		return ret;
+	}
+	else if (!ret) {
+		ud = ld;
+		len = 2;
+	}
+	else {
+		len = 3;
+	}
+	ret = me->ivp.neqs * (me->ivp.pint + 1);
+	if (ld < 0 || ld > ret
+	    || ud < 0 || ud > ret) {
+		return MPT_ERROR(BadValue);
+	}
+	
+	me->jbnd = 1;
+	me->jnum = jnum;
+	
+	me->mbnd[0] = ld;
+	me->mbnd[1] = ud;
+	me->mbnd[2] =   ld + ud + 1;
+	me->mbnd[3] = 2*ld + ud + 1;
+	
+	return len;
+}
+
+extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, MPT_INTERFACE(metatype) *src)
+{
+	int maxval;
+	int ret = 0;
+	
+	/* initial values */
+	if (!name) {
+		double t = me->t;
+		int required;
+		
+		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
+			if (ret < 0) {
+				return ret;
+			}
+			src = 0;
+		}
+		required = me->ivp.neqs * (me->ivp.pint + 1);
+		if ((ret = mpt_vecpar_set(&me->y, required, src)) < 0) {
+			return ret;
+		}
+		me->t = t;
+		
+		return src ? ++ret : 0;
+	}
+	/* change solver dimensions, reinit */
+	if (!*name) {
+		MPT_SOLVER_STRUCT(ivppar) ivp = me->ivp;
+		
+		if (src && (ret =  mpt_ivppar_set(&ivp, src)) < 0) {
+			return ret;
+		}
+		mpt_mebdfi_fini(me);
+		mpt_mebdfi_init(me);
+		
+		me->ivp = ivp;
+		return ret;
+	}
+	
+	if (!strcasecmp(name, "atol")) {
+		return mpt_vecpar_settol(&me->atol, src, __MPT_IVP_ATOL);
+	}
+	if (!strcasecmp(name, "rtol")) {
+		return mpt_vecpar_settol(&me->rtol, src, __MPT_IVP_RTOL);
+	}
+	if (!strncasecmp(name, "jacobian", 3)) {
+		return setJacobian(me, src);
+	}
+	if (!strcasecmp(name, "h0") || !strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) {
+		double val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (val < 0) return MPT_ERROR(BadValue);
+		me->h = val;
+		return ret ? 1 : 0;
+	}
+	if (!strcasecmp(name, "maxstp") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "iwork14")) {
+		int32_t val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
+		if (val < 0) return MPT_ERROR(BadValue);
+		if (setInt(me, 13, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
+	}
+	maxval = me->ivp.neqs * (me->ivp.pint + 1);
+	if (!strcasecmp(name, "nind1")) {
+		int32_t val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
+		if (val < 0 || val > maxval) return MPT_ERROR(BadValue);
+		if (setInt(me, 0, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
+	}
+	if (!strcasecmp(name, "nind2")) {
+		int32_t val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
+		if (val < 0 || val > maxval) return MPT_ERROR(BadValue);
+		if (setInt(me, 1, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
+	}
+	if (!strcasecmp(name, "nind3")) {
+		int32_t val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
+		if (val < 0 || val > maxval) return MPT_ERROR(BadValue);
+		if (setInt(me, 2, val) < 0) return MPT_ERROR(BadOperation);
+		return ret ? 1 : 0;
+	}
+	if (!strncasecmp(name, "yp", 2)) {
+		return mpt_vecpar_set(&me->y, maxval, src);
+	}
+	return MPT_ERROR(BadArgument);
+}
+
+extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(property) *prop)
 {
 	const char *name;
 	intptr_t pos = -1, id;
 	
-	if (!prop) return (src && data) ? setIvp(data, src) : MPT_ENUM(TypeSolver);
-	
+	if (!prop) {
+		return MPT_ENUM(TypeSolver);
+	}
 	if (!(name = prop->name)) {
-		if (src) {
-			errno = EINVAL;
-			return MPT_ERROR(BadOperation);
-		}
 		if ((pos = (intptr_t) prop->desc) < 0) {
-			errno = EINVAL;
 			return MPT_ERROR(BadArgument);
 		}
 	}
 	else if (!*name) {
-		id = MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
-		if (data && src && (id = setIvp(data, src)) < 0) return id;
 		prop->name = "mebdfi"; prop->desc = "implicit DAE solver with BDF";
-		prop->val.fmt = "iid"; prop->val.ptr = &data->ivp;
-		return id;
+		prop->val.fmt = "iid"; prop->val.ptr = &me->ivp;
+		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 	}
-	if (name && !strcasecmp(name, "version")) {
+	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
 		prop->val.fmt= 0; prop->val.ptr = version;
@@ -151,61 +195,71 @@ extern int mpt_mebdfi_property(MPT_SOLVER_STRUCT(mebdfi) *data, MPT_STRUCT(prope
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
-		if (data && (id = mpt_vecpar_value(&data->atol, &prop->val, src)) < 0) return id;
+		if (!me) { prop->val.fmt = "d"; prop->val.ptr = &me->atol.d.val; }
+		else { id = mpt_vecpar_get(&me->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
-		if (data && (id = mpt_vecpar_value(&data->rtol, &prop->val, src)) < 0) return id;
+		if (!me) { prop->val.fmt = "d"; prop->val.ptr = &me->rtol.d.val; }
+		else { id = mpt_vecpar_get(&me->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == ++id) {
-		if (data && (id = setJacobian(data, src)) < 0) return id;
 		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
-		prop->val.fmt = "ii"; prop->val.ptr = data->mbnd;
-		return id;
+		prop->val.fmt = "ii"; prop->val.ptr = me->mbnd;
+		if (!me) return id;
+		return me->jbnd ? 1 : 0;
 	}
-	if (name ? (!strcasecmp(name, "h0") || !strcasecmp(name, "stepinit")) : pos == ++id) {
-		if (data && (id = setH0(data, src)) < 0) return id;
+	if (name ? (!strcasecmp(name, "h0") || !strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) : pos == ++id) {
 		prop->name = "stepinit"; prop->desc = "explicit initial step size";
-		prop->val.fmt = "d"; prop->val.ptr = &data->h;
-		return id;
+		prop->val.fmt = "d"; prop->val.ptr = &me->h;
+		if (!me) return id;
+		return me->h ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "maxstp") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "iwork14")) : pos == ++id) {
-		if (data && (id = setMaxNSteps(data, src)) < 0) return id;
+		int *v;
 		prop->name = "maxstep"; prop->desc = "max. internal steps per call";
-		prop->val.fmt = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base)+13 : 0;
-		return id;
+		prop->val.fmt = "i"; prop->val.ptr = 0;
+		if (!me) return id;
+		if (me->iwork.iov_len / sizeof(int) <= 13) return 0;
+		prop->val.ptr = v = ((int *) me->iwork.iov_base);
+		return v[13] ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "nind1") : pos == ++id) {
-		if (data && (id = setNind1(data, src)) < 0) return id;
+		int *v;
 		prop->name = "nind1"; prop->desc = "index1 variables";
-		prop->val.fmt = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base) : 0;
-		return id;
+		prop->val.fmt = "i"; prop->val.ptr = 0;
+		if (!me) return id;
+		if (me->iwork.iov_len / sizeof(int) <= 0) return 0;
+		prop->val.ptr = v = ((int *) me->iwork.iov_base);
+		return v[0] ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "nind2") : pos == ++id) {
-		if (data && (id = setNind2(data, src)) < 0) return id;
-		prop->name = "nind2"; prop->desc = "index2 variables";
-		prop->val.fmt = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base)+1 : 0;
-		return id;
+		int *v;
+		prop->name = "nind1"; prop->desc = "index1 variables";
+		prop->val.fmt = "i"; prop->val.ptr = 0;
+		if (!me) return id;
+		if (me->iwork.iov_len / sizeof(int) <= 1) return 0;
+		prop->val.ptr = v = ((int *) me->iwork.iov_base);
+		return v[1] ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "nind3") : pos == ++id) {
-		if (data && (id = setNind3(data, src)) < 0) return id;
-		prop->name = "nind3"; prop->desc = "index3 variables";
-		prop->val.fmt = "i"; prop->val.ptr = (data && data->iwork.iov_base) ? ((int *) data->iwork.iov_base)+2 : 0;
-		return id;
+		int *v;
+		prop->name = "nind1"; prop->desc = "index1 variables";
+		prop->val.fmt = "i"; prop->val.ptr = 0;
+		if (!me) return id;
+		if (me->iwork.iov_len / sizeof(int) <= 2) return 0;
+		prop->val.ptr = v = ((int *) me->iwork.iov_base);
+		return v[2] ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "yp", 2) : pos == ++id) {
-		static const char fmt[] = { 'd' | (char) MPT_ENUM(TypeVector) };
-		if (data && (id = setYP(data, src)) < 0) return id;
 		prop->name = "yp"; prop->desc = "max. internal steps per call";
-		prop->val.fmt = fmt; prop->val.ptr = data ? &data->yp : 0;
-		return id;
+		prop->val.fmt = "d"; prop->val.ptr = 0;
+		if (!me) return id;
+		if (!(prop->val.ptr = me->y)) return 0;
+		return me->ivp.neqs * (me->ivp.pint + 1);
 	}
-	
-	errno = EINVAL;
-	
 	return MPT_ERROR(BadArgument);
 }
-

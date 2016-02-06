@@ -23,7 +23,7 @@ public:
 #endif
 	MPT_SOLVER_STRUCT(ivppar) ivp; /* inherit IVP parameter */
 	
-	double t;
+	double t;         /* reference time */
 	
 	MPT_SOLVER_TYPE(dvecpar) rtol, atol;  /* tolerances */
 	

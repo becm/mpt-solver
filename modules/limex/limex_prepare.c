@@ -52,7 +52,7 @@ extern int mpt_limex_prepare(MPT_SOLVER_STRUCT(limex) *data)
 		}
 		data->ys = memset(v, 0, len);
 		
-		/* determine consisten initstate */
+		/* determine consistent initstate */
 		data->iopt[5] = 1;
 	}
 	/* reset counter on reinitialisation */

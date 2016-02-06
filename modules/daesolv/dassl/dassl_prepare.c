@@ -3,24 +3,21 @@
  */
 
 #include <stdlib.h>
-#include <errno.h>
+#include <string.h>
 
 #include "dassl.h"
 
-extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data, int neqs, int pdim)
+extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data)
 {
 	MPT_SOLVER_STRUCT(ivppar) *ivp;
-	double *yp;
+	double *v;
 	int *iwork, lrw, liw;
-	
-	if (neqs < 1 || pdim < 0) {
-		errno = EINVAL;
-		return -2;
-	}
+	int neqs, pdim;
+	size_t len;
 	
 	ivp  = &data->ivp;
-	pdim = (ivp->pint = pdim) + 1;
-	neqs = (ivp->neqs = neqs) * pdim;
+	pdim = ivp->pint + 1;
+	neqs = ivp->neqs * pdim;
 	
 	/* vector tolerances in sufficent dimension */
 	if (ivp->neqs < 2 || (!data->rtol.base && !data->atol.base)) {
@@ -54,13 +51,18 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data, int neqs, int pdim)
 	if (!mpt_vecpar_alloc(&data->rwork, lrw, sizeof(double))) {
 		return -1;
 	}
-	pdim = data->yp.iov_len / sizeof(*yp);
-	
-	if (!(yp = mpt_vecpar_alloc(&data->yp, neqs, sizeof(*yp)))) {
-		return -1;
+	len = neqs * sizeof(double);
+	if (!(v = data->y)) {
+		if (!(v = malloc(len))) {
+			return MPT_ERROR(BadOperation);
+		}
+		data->y = memset(v, 0, len);
 	}
-	for ( ; pdim < neqs; pdim++) {
-		yp[pdim] = 0.0;
+	if (!(v = data->yp)) {
+		if (!(v = malloc(len))) {
+			return MPT_ERROR(BadOperation);
+		}
+		data->yp = memset(v, 0, len);
 	}
 	data->info[0] = 0;
 	

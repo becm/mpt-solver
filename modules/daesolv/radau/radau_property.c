@@ -10,103 +10,166 @@
 
 #include "radau.h"
 
-static int setIvp(MPT_SOLVER_STRUCT(radau) *data, MPT_INTERFACE(source) *src)
-{
-	if (!src) {
-		return mpt_ivppar_set(&data->ivp, src);
-	}
-	else {
-		MPT_SOLVER_STRUCT(ivppar) ivp = data->ivp;
-		int ret;
-		
-		if ((ret =  mpt_ivppar_set(&ivp, src)) < 0) {
-			return ret;
-		}
-		mpt_radau_fini(data);
-		if (mpt_radau_init(data) < 0) {
-			return MPT_ERROR(BadOperation);
-		}
-		data->ivp = ivp;
-		return ret;
-	}
-}
-static int setJacobian(MPT_SOLVER_STRUCT(radau) *data, MPT_INTERFACE(source) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, MPT_INTERFACE(metatype) *src)
 {
 	char *key;
-	int l1, l2, l3;
+	int32_t ld, ud;
+	int ret, len;
 	
-	if (!src) return data->ijac;
-	
-	if ((l1 = src->_vptr->conv(src, 'k', &key)) < 0) {
-		return l1;
+	if (!src) {
+		rd->ijac = 0;
+		return 0;
 	}
-	if (!l1 || !key) {
-		return data->ijac = 0;
+	if ((ret = src->_vptr->conv(src, 'k' | MPT_ENUM(ValueConsume), &key)) < 0) {
+		return ret;
 	}
-	l2 = l3 = 0;
+	if (!ret || !key) {
+		rd->ijac = 0;
+		return 0;
+	}
+	len = rd->ivp.neqs * (rd->ivp.pint + 1);
+	ld = len;
+	ud = ld;
 	
 	switch (key[0]) {
 		case 'f':
-			data->ijac = 0;
+			rd->ijac = 0;
 		case 'F':
-			l2 = data->ivp.neqs * (data->ivp.pint + 1);
-			data->mljac = data->mujac = l2;
-			l2 = 0;
 			break;
 		case 'b':
-			data->ijac = 0;
+			rd->ijac = 0;
 		case 'B':
-			if ((l2 = src->_vptr->conv(src, 'i', &data->mljac)) <= 0) {
-				l2 = 0; data->mljac = data->mujac = data->ivp.neqs;
+			if ((ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &ld)) < 0) {
+				return ret;
 			}
-			else if ((l3 = src->_vptr->conv(src, 'i', &data->mujac)) <= 0) {
-				l3 = 0; data->mujac = data->mljac;
+			if (!ret) {
+				ld = rd->ivp.neqs;
+				ud = ld;
+				break;
 			}
+			if (ld < 0 || ld > len) {
+				return MPT_ERROR(BadValue);
+			}
+			if ((ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &ud)) < 0) {
+				return ret;
+			}
+			if (!ret) {
+				len = 2;
+				break;
+			}
+			if (ud < 0 || ud > len) {
+				return MPT_ERROR(BadValue);
+			}
+			len = 3;
 			break;
 		default:
-			errno = EINVAL;
 			return MPT_ERROR(BadValue);
 	}
-	if (data->mlmas > data->mljac) data->mlmas = data->mljac;
-	if (data->mumas > data->mujac) data->mumas = data->mujac;
+	rd->mljac = ld;
+	rd->mujac = ud;
+	if (rd->mlmas > ld) rd->mlmas = ld;
+	if (rd->mumas > ud) rd->mumas = ud;
 	
-	return l1 + l2 + l3;
-}
-static int setInitStep(MPT_SOLVER_STRUCT(radau) *data, MPT_INTERFACE(source) *src)
-{
-	int len;
-	
-	if (!src) return data->h ? 1 : 0;
-	
-	if ((len = src->_vptr->conv(src, 'd', &data->h)) == 0) data->h = 0.0;
 	return len;
 }
 
-extern int mpt_radau_property(MPT_SOLVER_STRUCT(radau) *data, MPT_STRUCT(property) *prop, MPT_INTERFACE(source) *src)
+extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *name, MPT_INTERFACE(metatype) *src)
+{
+	int ret = 0;
+	
+	/* initial values */
+	if (!name) {
+		double t = rd->t;
+		size_t required;
+		
+		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
+			if (ret < 0) {
+				return ret;
+			}
+			src = 0;
+		}
+		required = rd->ivp.neqs * (rd->ivp.pint + 1);
+		if ((ret = mpt_vecpar_set(&rd->y, required, src)) < 0) {
+			return ret;
+		}
+		rd->t = t;
+		
+		return src ? ++ret : 0;
+	}
+	/* change solver dimensions, reinit */
+	if (!*name) {
+		MPT_SOLVER_STRUCT(ivppar) ivp = rd->ivp;
+		
+		if (src && (ret =  mpt_ivppar_set(&ivp, src)) < 0) {
+			return ret;
+		}
+		mpt_radau_fini(rd);
+		mpt_radau_init(rd);
+		
+		rd->ivp = ivp;
+		return ret;
+	}
+	if (!strcasecmp(name, "atol")) {
+		return mpt_vecpar_settol(&rd->atol, src, __MPT_IVP_ATOL);
+	}
+	if (!strcasecmp(name, "rtol")) {
+		return mpt_vecpar_settol(&rd->rtol, src, __MPT_IVP_RTOL);
+	}
+	if (!strncasecmp(name, "jacobian", 3)) {
+		return setJacobian(rd, src);
+	}
+	/* set initial stepsize */
+	if (!strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) {
+		double val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (val < 0) return MPT_ERROR(BadValue);
+		rd->h = val;
+		return ret ? 1 : 0;
+	}
+	/* set integer parameter
+	if ( !strncasecmp(param, "iwork", 5) ) {
+		char	*end;
+		long	val = strtol(param+=5, &end, 0);
+		
+		if ( end <= param ) return -2;
+		
+		if ( val < 1 || val > 13 ) return -3;
+		
+		return fcn(data->iwork + (val - 1), 'i', fpar);
+	}
+	set double parameter
+	if ( !strncasecmp(param, "work", 4) ) {
+		char	*end;
+		long	val = strtol(param+=4, &end, 0);
+		
+		if ( end <= param ) return -2;
+		
+		if ( val < 1 || val > 13 ) return -3;
+		
+		return fcn(data->iwork + (val - 1), 'd', fpar);
+	} */
+	return MPT_ERROR(BadArgument);
+}
+
+extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property) *prop)
 {
 	const char *name;
 	intptr_t pos = -1, id;
 	
-	if (!prop) return (src && data) ? setIvp(data, src) : MPT_ENUM(TypeSolver);
-	
+	if (!prop) {
+		return MPT_ENUM(TypeSolver);
+	}
 	if (!(name = prop->name)) {
-		if (src) {
-			errno = EINVAL;
-			return MPT_ERROR(BadOperation);
-		}
 		if ((pos = (intptr_t) prop->desc) < 0) {
-			errno = EINVAL;
 			return MPT_ERROR(BadArgument);
 		}
 	}
 	else if (!*name) {
-		id = MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
-		if (data && src && (id = setIvp(data, src)) < 0) return id;
 		prop->name = "radau"; prop->desc = "implicit Runge-Kutta DAE solver";
-		prop->val.fmt  = "iid"; prop->val.ptr = &data->ivp;
-		return id;
+		prop->val.fmt  = "ii"; prop->val.ptr = &rd->ivp;
+		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 	}
-	if (name && !strcasecmp(name, "version")) {
+	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version"; prop->desc = "solver release information";
 		prop->val.fmt = 0; prop->val.ptr = version;
@@ -115,27 +178,28 @@ extern int mpt_radau_property(MPT_SOLVER_STRUCT(radau) *data, MPT_STRUCT(propert
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
-		if (data && (id = mpt_vecpar_value(&data->atol, &prop->val, src)) < 0) return id;
+		if (!rd) { prop->val.fmt = "d"; prop->val.ptr = &rd->atol.d.val; }
+		else { id = mpt_vecpar_get(&rd->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
-		if (data && (id = mpt_vecpar_value(&data->rtol, &prop->val, src)) < 0) return id;
+		if (!rd) { prop->val.fmt = "d"; prop->val.ptr = &rd->rtol.d.val; }
+		else { id = mpt_vecpar_get(&rd->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}
-	if (name ? !strncasecmp(name, "jac", 3) : pos == ++id) {
-		if (data && (id = setJacobian(data, src)) < 0) return id;
+	if (name ? !strncasecmp(name, "jacobian", 3) : pos == ++id) {
 		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
-		prop->val.fmt  = "i"; prop->val.ptr = &data->ijac;
+		prop->val.fmt  = "i"; prop->val.ptr = &rd->ijac;
 		return id;
 	}
 	/* set initial stepsize */
-	if (name ? !strcasecmp(name, "stepinit") : pos == ++id) {
-		if (data && (id = setInitStep(data, src)) < 0) return id;
+	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) : pos == ++id) {
 		prop->name = "stepinit"; prop->desc = "explicit initial stepsize";
-		prop->val.fmt = "d"; prop->val.ptr = &data->h;
-		return id;
+		prop->val.fmt = "d"; prop->val.ptr = &rd->h;
+		if (!rd) return id;
+		return rd->h ? 1 : 0;
 	}
 	/* set integer parameter
 	if ( !strncasecmp(param, "iwork", 5) ) {

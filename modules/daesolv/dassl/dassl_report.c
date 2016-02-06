@@ -4,11 +4,11 @@
 
 #include "dassl.h"
 
-extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
-	int *iwork = data->iwork.iov_base;
-	double *rwork = data->rwork.iov_base;
+	int *iwork = da->iwork.iov_base;
+	double *rwork = da->rwork.iov_base;
 	int line =  0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -20,16 +20,37 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	pr.val.ptr = &d;
 	
 	d.jac = "full";
-	d.val = data->info[4] ? "(user)" : "(numerical)";
-	if (data->info[5]) { d.jac = "banded"; pr.val.fmt = "ssii"; }
-	
-	d.ml = iwork[0];
-	d.mu = iwork[1];
-	
+	d.val = da->info[4] ? "(user)" : "(numerical)";
+	if (da->info[5]) {
+		d.jac = "banded";
+		d.ml = iwork[0];
+		d.mu = iwork[1];
+		pr.val.fmt = "ssii";
+	}
 	out(usr, &pr);
 	++line;
 	}
-	if (show & MPT_SOLVER_ENUM(Status)) {
+	
+	if (show & MPT_SOLVER_ENUM(Values)) {
+	static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
+	struct {
+		double t;
+		struct iovec vec;
+	} dat;
+	size_t len = da->ivp.pint + 1;
+	
+	dat.t = da->t;
+	dat.vec.iov_base = da->y;
+	dat.vec.iov_len  = len * da->ivp.neqs * sizeof(double);
+	
+	pr.name = 0;
+	pr.desc = MPT_tr("LIMEX solver state");
+	pr.val.fmt = fmt;
+	pr.val.ptr = &dat;
+	out(usr, &pr);
+	}
+	
+	if (show & MPT_SOLVER_ENUM(Status) && rwork) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
 	pr.val.fmt = "d";
@@ -38,7 +59,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	++line;
 	}
 	
-	if (show & (MPT_SOLVER_ENUM(Report) | MPT_SOLVER_ENUM(Status))) {
+	if (show & (MPT_SOLVER_ENUM(Report) | MPT_SOLVER_ENUM(Status)) && iwork) {
 	pr.name = "n";
 	pr.desc = "integration steps";
 	pr.val.fmt = "i";
@@ -47,7 +68,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	++line;
 	}
 	
-	if (show & MPT_SOLVER_ENUM(Status)) {
+	if (show & MPT_SOLVER_ENUM(Status) && rwork) {
 	pr.name = "h";
 	pr.desc = "current step size";
 	pr.val.fmt = "d";
@@ -56,7 +77,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *data, int show, MPT_
 	++line;
 	}
 	
-	if ((show & MPT_SOLVER_ENUM(Report))) {
+	if ((show & MPT_SOLVER_ENUM(Report)) && iwork) {
 	
 	pr.name = "reval";
 	pr.desc = "residual evaluations";

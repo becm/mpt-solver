@@ -9,73 +9,87 @@
 
 #include "dassl.h"
 
-extern int mpt_dassl_step_(MPT_SOLVER_STRUCT(dassl) *ds, double *u, double *end, const MPT_SOLVER_STRUCT(ivpfcn) *ufcn)
+static void ddFini(MPT_INTERFACE(object) *gen)
 {
-	int	err;
+	mpt_dassl_fini((MPT_SOLVER_STRUCT(dassl *)) (gen+1));
+	free(gen);
+}
+static uintptr_t ddAddref()
+{
+	return 0;
+}
+static int ddGet(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
+{
+	return mpt_dassl_get((void *) (gen+1), pr);
+}
+static int ddSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metatype) *src)
+{
+	return mpt_dassl_set((void *) (gen+1), pr, src);
+}
+
+static int ddReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
+{
+	return mpt_dassl_report((MPT_SOLVER_STRUCT(dassl *)) (gen+1), what, out, data);
+}
+
+static int dasslStep(MPT_SOLVER_INTERFACE *gen, double *tend)
+{
+	MPT_SOLVER_STRUCT(dassl) *da = (void *) (gen + 1);
+	int err;
 	
-	if (!end || (ds->info[0] < 0)) {
-		if (ufcn && (err = mpt_dassl_ufcn(ds, ufcn)) < 0) {
+	if (!tend) {
+		if (!da->fcn && (err = mpt_dassl_ufcn(da, (void *)(da + 1))) < 0) {
 			return err;
 		}
-		if ((err = mpt_dassl_prepare(ds, ds->ivp.neqs, ds->ivp.pint)) < 0 || !end) {
-			return err;
-		}
+		return mpt_dassl_prepare(da);
 	}
-	err = u ? mpt_dassl_step(ds, u, *end) : 0;
-	*end = ds->ivp.last;
+	err = mpt_dassl_step(da, *tend);
+	*tend = da->t;
 	return err;
 }
-
-static int ddFini(MPT_INTERFACE(metatype) *gen)
-{ mpt_dassl_fini((MPT_SOLVER_STRUCT(dassl *)) (gen+1)); free(gen); return 0; }
-
-static MPT_INTERFACE(metatype) *ddAddref()
-{ return 0; }
-
-static int ddProperty(MPT_INTERFACE(metatype) *gen, MPT_STRUCT(property) *pr, MPT_INTERFACE(source) *src)
-{ return mpt_dassl_property((void *) (gen+1), pr, src); }
-
-static int ddReport(const MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{ return mpt_dassl_report((MPT_SOLVER_STRUCT(dassl *)) (gen+1), what, out, data); }
-
-static void *ddCast(MPT_INTERFACE(metatype) *gen, int type)
+static void *ddFcn(MPT_SOLVER_INTERFACE *gen, int type)
 {
-	switch(type) {
-	  case MPT_ENUM(TypeMeta): return gen;
-	  case MPT_ENUM(TypeSolver): return gen;
+	MPT_SOLVER_STRUCT(dassl) *da = (void *) (gen + 1);
+	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (da + 1);
+	
+	switch (type) {
+	  case MPT_SOLVER_ENUM(ODE): break;
+	  case MPT_SOLVER_ENUM(DAE): return da->ivp.pint ? 0 : &ivp->dae;
+	  case MPT_SOLVER_ENUM(PDE): return da->ivp.pint ? &ivp->pde : 0;
 	  default: return 0;
 	}
+	if (da->ivp.pint) {
+		return 0;
+	}
+	ivp->dae.mas = 0;
+	return &ivp->ode;
 }
-
-static int dasslStep(MPT_SOLVER_INTERFACE *gen, double *u, double *end, double *x)
+static double *ddState(MPT_SOLVER_INTERFACE *gen)
 {
-	MPT_SOLVER_STRUCT(dassl) *ds = (void *) (gen+1);
-	(void) x;
-	return mpt_dassl_step_(ds, u, end, (void *) (ds+1));
+	MPT_SOLVER_STRUCT(dassl *) da = (void *) (gen + 1);
+	return da->y;
 }
-
-static MPT_SOLVER_STRUCT(ivpfcn) *ddFcn(const MPT_SOLVER_INTERFACE *gen)
-{ return (void *) (((MPT_SOLVER_STRUCT(dassl *)) (gen+1)) + 1); }
-
 static const MPT_INTERFACE_VPTR(Ivp) dasslCtl = {
-	{ { ddFini, ddAddref, ddProperty, ddCast }, ddReport },
+	{ { ddFini, ddAddref, ddGet, ddSet }, ddReport },
 	dasslStep,
-	ddFcn
+	ddFcn,
+	ddState
 };
 
 extern MPT_SOLVER_INTERFACE *mpt_dassl_create()
 {
 	MPT_SOLVER_INTERFACE *gen;
-	MPT_SOLVER_STRUCT(dassl) *ds;
+	MPT_SOLVER_STRUCT(dassl) *da;
 	
-	if (!(gen = malloc(sizeof(*gen) + sizeof(*ds) + sizeof(MPT_SOLVER_STRUCT(ivpfcn))))) {
+	if (!(gen = malloc(sizeof(*gen) + sizeof(*da) + sizeof(MPT_SOLVER_TYPE(ivpfcn))))) {
 		return 0;
 	}
-	ds = (MPT_SOLVER_STRUCT(dassl *)) (gen+1);
-	if (mpt_dassl_init(ds) < 0) { free(ds); return 0; }
+	da = (MPT_SOLVER_STRUCT(dassl *)) (gen+1);
+	mpt_dassl_init(da);
+	
 	gen->_vptr = &dasslCtl.gen;
 	
-	MPT_IVPFCN_INIT(ds+1)->param = &ds->ivp;
+	MPT_IVPFCN_INIT(da+1)->dae.param = &da->ivp;
 	
 	return gen;
 }
