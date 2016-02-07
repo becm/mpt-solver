@@ -374,7 +374,7 @@ __MPT_EXTDECL_BEGIN
 extern MPT_INTERFACE(client) *mpt_client_ode(int (*)(MPT_SOLVER_STRUCT(odefcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
 extern MPT_INTERFACE(client) *mpt_client_dae(int (*)(MPT_SOLVER_STRUCT(daefcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
 extern MPT_INTERFACE(client) *mpt_client_pde(int (*)(MPT_SOLVER_STRUCT(pdefcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
-extern MPT_INTERFACE(client) *mpt_client_nls(int (*)(MPT_SOLVER_STRUCT(nlsfcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
+extern MPT_INTERFACE(client) *mpt_client_nls(int (*)(MPT_SOLVER_INTERFACE *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *), const char *__MPT_DEFPAR(0));
 
 /* register events on notifier */
 extern int mpt_solver_events(MPT_STRUCT(dispatch) *, MPT_INTERFACE(client) *);
@@ -404,6 +404,9 @@ extern int mpt_conf_nls(MPT_SOLVER_STRUCT(data) *, const MPT_STRUCT(node) *, MPT
 extern int mpt_conf_pde(MPT_SOLVER_STRUCT(data) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *, double , const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
+/* initialize solver from data */
+extern MPT_SOLVER_STRUCT(nlsfcn) *mpt_init_nls(MPT_SOLVER_INTERFACE *, const MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+
 /* get/initialize solver data parameters */
 extern double *mpt_data_grid (MPT_SOLVER_STRUCT(data) *);
 extern double *mpt_data_param(MPT_SOLVER_STRUCT(data) *);
@@ -416,6 +419,8 @@ extern int mpt_residuals_cdiff(void *, double , const double *, double *, const 
 
 /* generate library description form short form */
 extern const char *mpt_solver_alias(const char *);
+/* load solver of specific type */
+extern MPT_SOLVER_INTERFACE *mpt_solver_load(MPT_STRUCT(proxy) *, const char *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* set solver parameter */
 extern int  mpt_solver_pset (MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
@@ -430,15 +435,9 @@ extern void mpt_solver_statistics(MPT_SOLVER_INTERFACE *, MPT_INTERFACE(logger) 
 
 
 /* output for NLS solvers */
-extern int mpt_output_nls(MPT_INTERFACE(output) *, int , const MPT_STRUCT(value) *, int);
+extern int mpt_output_nls(MPT_INTERFACE(output) *, int , const MPT_STRUCT(value) *, const MPT_SOLVER_STRUCT(data) *);
 extern int mpt_output_pde(MPT_INTERFACE(output) *, int , const MPT_STRUCT(value) *, const MPT_SOLVER_STRUCT(data) *);
 
-
-/* get solver time info from report */
-extern int mpt_solver_time(const MPT_SOLVER_INTERFACE *, double *);
-
-/* load solver of specific type */
-extern MPT_SOLVER_INTERFACE *mpt_solver_load(MPT_STRUCT(proxy) *, const char *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* solver module data management */
 extern void *mpt_vecpar_alloc(struct iovec *, size_t len, size_t size);

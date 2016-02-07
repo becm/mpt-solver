@@ -12,7 +12,7 @@
 
 #include "solver.h"
 
-extern int mpt_output_nls(MPT_INTERFACE(output) *out, int state, const MPT_STRUCT(value) *val, int dest)
+extern int mpt_output_nls(MPT_INTERFACE(output) *out, int state, const MPT_STRUCT(value) *val, const MPT_SOLVER_STRUCT(data) *dat)
 {
 	const char *fmt;
 	const struct iovec *vec;
@@ -56,15 +56,34 @@ extern int mpt_output_nls(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 		out->_vptr->push(out, sizeof(hdr), &hdr);
 		out->_vptr->push(out, np * sizeof(*par), par);
 		out->_vptr->push(out, 0, 0);
-		
-		mpt_output_history(out, 1, par, np, 0, 0);
+	}
+	if (!res) {
+		return 1;
 	}
 	/* output residuals */
-	if (res && (state & (MPT_ENUM(OutputStateInit) | MPT_ENUM(OutputStateStep) | MPT_ENUM(OutputStateFini)))) {
-		if (dest >= 0) {
-			mpt_output_data(out, state, dest, nr, res, 1);
+	if (state & MPT_ENUM(OutputStateStep)) {
+		if (!dat || !mpt_bitmap_get(dat->mask, sizeof(dat->mask), 0)) {
+			mpt_output_data(out, state, 0, nr, res, 1);
 		}
-		mpt_output_history(out, nr, 0, 0, res, 1);
 	}
-	return res ? 2 : 1;
+	if (dat && dat->val._buf &&
+	    (np = dat->val._buf->used / sizeof(double))) {
+		if (dat->nval && nr > dat->nval) {
+			nr = dat->nval;
+		}
+		np /= nr;
+		par = np ? ((double *) (dat->val._buf + 1)) : 0;
+	}
+	if (state & MPT_ENUM(OutputStateInit)) {
+		int i;
+		for (i = 0; i < np; ++i) {
+			if (!dat || !mpt_bitmap_get(dat->mask, sizeof(dat->mask), i+1)) {
+				mpt_output_data(out, state, i+1, nr, par+i, 1);
+			}
+		}
+	}
+	if (state & MPT_ENUM(OutputStateFini)) {
+		mpt_output_history(out, nr, res, 1, par, np);
+	}
+	return np ? 3 : 2;
 }

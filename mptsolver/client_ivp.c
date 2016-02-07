@@ -116,8 +116,7 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 		return MPT_ERROR(BadOperation);
 	}
 	if (!porg) {
-		mpt_node_clear(conf);
-		return 0;
+		return MPT_ERROR(BadArgument);
 	}
 	if (!(conf = mpt_node_query(conf->children, &p, -1))) {
 		return MPT_ERROR(BadArgument);

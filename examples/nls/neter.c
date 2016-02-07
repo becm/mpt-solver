@@ -47,13 +47,16 @@ static int deriv(void *udata, const double *x, double *jac, const int *lj, const
 	return 0;
 }
 
-int user_init(MPT_SOLVER_STRUCT(nlsfcn) *usr, MPT_SOLVER_STRUCT(data) *sd)
+int user_init(MPT_SOLVER_INTERFACE *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *log)
 {
+	MPT_SOLVER_STRUCT(nlsfcn) *usr;
 	double *u;
 	
 	u = mpt_data_grid(sd);
-	u += sd->nval;
 	
+	if (!(usr = mpt_init_nls(sol, sd, log))) {
+		return MPT_ERROR(BadType);
+	}
 	usr->res = res;
 	usr->jac = deriv;
 	usr->rpar = usr->jpar = u;
