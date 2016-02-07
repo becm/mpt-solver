@@ -70,7 +70,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *, int , MPT_TYPE(Pro
 
 /* handle for generic solver type */
 #ifndef __cplusplus
-extern MPT_SOLVER_INTERFACE *mpt_dassl_create(void);
+extern MPT_SOLVER(IVP) *mpt_dassl_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -80,7 +80,7 @@ inline dassl::dassl()
 inline dassl::~dassl()
 { mpt_dassl_fini(this); }
 
-class Dassl : public Ivp, dassl
+class Dassl : public IVP, dassl
 {
 public:
 	Dassl() : _fcn(0, 0)

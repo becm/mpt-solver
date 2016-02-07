@@ -27,14 +27,14 @@ static int meSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metat
 	return mpt_mebdfi_set((MPT_SOLVER_STRUCT(mebdfi *)) (gen+1), pr, src);
 }
 
-static int meReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int meReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
 	return mpt_mebdfi_report((MPT_SOLVER_STRUCT(mebdfi *)) (gen+1), what, out, data);
 }
 
-static int meStep(MPT_SOLVER_INTERFACE *gen, double *tend)
+static int meStep(MPT_SOLVER(IVP) *sol, double *tend)
 {
-	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (gen + 1);
+	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (sol + 1);
 	int err;
 	
 	if (!tend) {
@@ -47,9 +47,9 @@ static int meStep(MPT_SOLVER_INTERFACE *gen, double *tend)
 	*tend = me->t;
 	return err;
 }
-static void *meFcn(MPT_SOLVER_INTERFACE *gen, int type)
+static void *meFcn(MPT_SOLVER(IVP) *sol, int type)
 {
-	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (gen + 1);
+	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (sol + 1);
 	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (me + 1);
 	
 	switch (type) {
@@ -64,34 +64,34 @@ static void *meFcn(MPT_SOLVER_INTERFACE *gen, int type)
 	ivp->dae.mas = 0;
 	return &ivp->ode;
 }
-static double *meState(MPT_SOLVER_INTERFACE *gen)
+static double *meState(MPT_SOLVER(IVP) *sol)
 {
-	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (gen + 1);
+	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (sol + 1);
 	return me->y;
 }
 
-static const MPT_INTERFACE_VPTR(Ivp) mebdfiCtl = {
+static const MPT_INTERFACE_VPTR(solver_ivp) mebdfiCtl = {
 	{ { meFini, meAddref, meGet, meSet }, meReport },
 	meStep,
 	meFcn,
 	meState
 };
 
-extern MPT_SOLVER_INTERFACE *mpt_mebdfi_create()
+extern MPT_SOLVER(IVP) *mpt_mebdfi_create()
 {
-	MPT_SOLVER_INTERFACE *gen;
+	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(mebdfi) *md;
 	
-	if (!(gen = malloc(sizeof(*gen) + sizeof(*md) + sizeof(MPT_SOLVER_TYPE(ivpfcn))))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*md) + sizeof(MPT_SOLVER_TYPE(ivpfcn))))) {
 		return 0;
 	}
-	md = (MPT_SOLVER_STRUCT(mebdfi) *) (gen+1);
+	md = (MPT_SOLVER_STRUCT(mebdfi) *) (sol+1);
 	mpt_mebdfi_init(md);
 	
 	MPT_IVPFCN_INIT(md + 1)->ode.param = &md->ivp;
 	
-	gen->_vptr = &mebdfiCtl.gen;
+	sol->_vptr = &mebdfiCtl;
 	
-	return gen;
+	return sol;
 }
 

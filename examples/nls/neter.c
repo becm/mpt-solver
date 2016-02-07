@@ -47,7 +47,7 @@ static int deriv(void *udata, const double *x, double *jac, const int *lj, const
 	return 0;
 }
 
-int user_init(MPT_SOLVER_INTERFACE *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *log)
+int user_init(MPT_SOLVER(NLS) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *log)
 {
 	MPT_SOLVER_STRUCT(nlsfcn) *usr;
 	double *u;

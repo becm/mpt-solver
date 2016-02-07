@@ -20,10 +20,10 @@
  * \return untracked solver interface instance
  */
 /* load solver of specific type */
-extern MPT_SOLVER_INTERFACE *mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf, int type, MPT_INTERFACE(logger) *log)
+extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf, int type, MPT_INTERFACE(logger) *log)
 {
-	MPT_SOLVER_INTERFACE *sol;
 	MPT_STRUCT(property) prop;
+	MPT_SOLVER(generic) *sol;
 	int mode;
 	
 	if (!conf) {

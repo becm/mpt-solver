@@ -108,7 +108,7 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *, int , MPT_TYPE
 
 /* assign minpack solver to interface */
 #ifndef __cplusplus
-extern MPT_SOLVER_INTERFACE *mpt_minpack_create(void);
+extern MPT_SOLVER(NLS) *mpt_minpack_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -119,7 +119,7 @@ inline minpack::minpack()
 inline minpack::~minpack()
 { mpt_minpack_fini(this); }
 
-class MinPack : public Nls, minpack
+class MinPack : public NLS, minpack
 {
     public:
 	MinPack() : _fcn(0)

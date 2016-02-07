@@ -74,7 +74,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(Prope
 
 /* setup generic solver to use vode */
 #ifndef __cplusplus
-extern MPT_SOLVER_INTERFACE *mpt_vode_create();
+extern MPT_SOLVER(IVP) *mpt_vode_create();
 #endif
 
 __MPT_EXTDECL_END
@@ -85,7 +85,7 @@ inline vode::vode()
 inline vode::~vode()
 { mpt_vode_fini(this); }
 
-class Vode : public Ivp, vode
+class Vode : public IVP, vode
 {
 public:
 	inline Vode() : _fcn(0)
@@ -123,7 +123,7 @@ public:
 		*end = t;
 		return ret;
 	}
-	void *functions(int type) const
+	void *functions(int type)
 	{
 		switch (type) {
 		  case odefcn::Type: return ivp.pint ? 0 : (void *) &_fcn;

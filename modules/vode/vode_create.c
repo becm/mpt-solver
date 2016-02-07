@@ -26,13 +26,14 @@ static int vdSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metat
 	return mpt_vode_set((MPT_SOLVER_STRUCT(vode) *) (gen+1), pr, src);
 }
 
-static int vdReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int vdReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
 	return mpt_vode_report((MPT_SOLVER_STRUCT(vode) *) (gen+1), what, out, data);
 }
-static int vdStep(MPT_SOLVER_INTERFACE *gen, double *tend)
+
+static int vdStep(MPT_SOLVER(IVP) *sol, double *tend)
 {
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen+1);
+	MPT_SOLVER_STRUCT(vode) *vd = (void *) (sol+1);
 	int ret;
 	
 	if (!tend) {
@@ -45,42 +46,42 @@ static int vdStep(MPT_SOLVER_INTERFACE *gen, double *tend)
 	*tend = vd->t;
 	return ret;
 }
-static void *vdFcn(MPT_SOLVER_INTERFACE *gen, int type)
+static void *vdFcn(MPT_SOLVER(IVP) *sol, int type)
 {
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen+1);
+	MPT_SOLVER_STRUCT(vode) *vd = (void *) (sol+1);
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): return vd->ivp.pint ? 0 : (vd+1);
 	  case MPT_SOLVER_ENUM(PDE): return vd->ivp.pint ? (vd+1) : 0;
 	  default: return 0;
 	}
 }
-static double *vdInitState(MPT_SOLVER_INTERFACE *gen)
+static double *vdInitState(MPT_SOLVER(IVP) *sol)
 {
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen+1);
+	MPT_SOLVER_STRUCT(vode) *vd = (void *) (sol+1);
 	return vd->y;
 }
-static const MPT_INTERFACE_VPTR(Ivp) vodeCtl = {
+static const MPT_INTERFACE_VPTR(solver_ivp) vodeCtl = {
 	{ { vdFini, vdAddref, vdGet, vdSet }, vdReport },
 	vdStep,
 	vdFcn,
 	vdInitState
 };
 
-extern MPT_SOLVER_INTERFACE *mpt_vode_create()
+extern MPT_SOLVER(IVP) *mpt_vode_create()
 {
-	MPT_SOLVER_INTERFACE *gen;
+	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(vode) *vd;
 	
-	if (!(gen = malloc(sizeof(*gen) + sizeof(*vd) + sizeof(MPT_SOLVER_STRUCT(pdefcn))))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*vd) + sizeof(MPT_SOLVER_STRUCT(pdefcn))))) {
 		return 0;
 	}
-	vd = (void *) (gen + 1);
+	vd = (void *) (sol + 1);
 	mpt_vode_init(vd);
 	
 	MPT_IVPFCN_INIT(vd + 1)->ode.param = &vd->ivp;
 	
-	gen->_vptr = &vodeCtl.gen;
+	sol->_vptr = &vodeCtl;
 	
-	return gen;
+	return sol;
 }
 

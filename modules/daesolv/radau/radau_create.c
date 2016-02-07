@@ -27,14 +27,14 @@ static int rdSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metat
 	return mpt_radau_set((MPT_SOLVER_STRUCT(radau) *) (gen+1), pr, src);
 }
 
-static int rdReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int rdReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
 	return mpt_radau_report((MPT_SOLVER_STRUCT(radau) *) (gen+1), what, out, data);
 }
 
-extern int rdStep(MPT_SOLVER_INTERFACE *gen, double *tend)
+extern int rdStep(MPT_SOLVER(IVP) *sol, double *tend)
 {
-	MPT_SOLVER_STRUCT(radau) *rd = (void *) (gen + 1);
+	MPT_SOLVER_STRUCT(radau) *rd = (void *) (sol + 1);
 	int err;
 	
 	if (!tend) {
@@ -47,9 +47,9 @@ extern int rdStep(MPT_SOLVER_INTERFACE *gen, double *tend)
 	*tend = rd->t;
 	return err;
 }
-static void *rdFcn(MPT_SOLVER_INTERFACE *gen, int type)
+static void *rdFcn(MPT_SOLVER(IVP) *sol, int type)
 {
-	MPT_SOLVER_STRUCT(radau) *rd = (void *) (gen + 1);
+	MPT_SOLVER_STRUCT(radau) *rd = (void *) (sol + 1);
 	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (rd + 1);
 	
 	switch (type) {
@@ -64,36 +64,36 @@ static void *rdFcn(MPT_SOLVER_INTERFACE *gen, int type)
 	ivp->dae.mas = 0;
 	return &ivp->ode;
 }
-static double *rdState(MPT_SOLVER_INTERFACE *gen)
+static double *rdState(MPT_SOLVER(IVP) *sol)
 {
-	MPT_SOLVER_STRUCT(radau) *rd = (void *) (gen + 1);
+	MPT_SOLVER_STRUCT(radau) *rd = (void *) (sol + 1);
 	return rd->y;
 }
 
-static const MPT_INTERFACE_VPTR(Ivp) radauCtl = {
+static const MPT_INTERFACE_VPTR(solver_ivp) radauCtl = {
 	{ { rdFini, rdAddref, rdGet, rdSet }, rdReport },
 	rdStep,
 	rdFcn,
 	rdState
 };
 
-extern MPT_SOLVER_INTERFACE *mpt_radau_create()
+extern MPT_SOLVER(IVP) *mpt_radau_create()
 {
-	MPT_SOLVER_INTERFACE *gen;
+	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(radau) *data;
 	MPT_SOLVER_TYPE(ivpfcn) *fcn;
 	
-	if (!(gen = malloc(sizeof(*gen) + sizeof(*data) + sizeof(*fcn)))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*data) + sizeof(*fcn)))) {
 		return 0;
 	}
-	data = (MPT_SOLVER_STRUCT(radau *)) (gen+1);
+	data = (MPT_SOLVER_STRUCT(radau *)) (sol+1);
 	mpt_radau_init(data);
 	
 	fcn = MPT_IVPFCN_INIT(data+1);
 	fcn->ode.param = &data->ivp;
 	
-	gen->_vptr = &radauCtl.gen;
+	sol->_vptr = &radauCtl;
 	
-	return gen;
+	return sol;
 }
 

@@ -16,7 +16,7 @@
  * 
  * \return pointer to nonlinear user funtions
  */
-extern MPT_SOLVER_STRUCT(nlsfcn) *mpt_init_nls(MPT_SOLVER_INTERFACE *sol, const MPT_SOLVER_STRUCT(data) *dat, MPT_INTERFACE(logger) *log)
+extern MPT_SOLVER_STRUCT(nlsfcn) *mpt_init_nls(MPT_SOLVER(NLS) *sol, const MPT_SOLVER_STRUCT(data) *dat, MPT_INTERFACE(logger) *log)
 {
 	static const char fmt[] = { MPT_value_toVector('d'), 0 };
 	
@@ -26,18 +26,7 @@ extern MPT_SOLVER_STRUCT(nlsfcn) *mpt_init_nls(MPT_SOLVER_INTERFACE *sol, const 
 	int32_t dim[2];
 	int ret;
 	
-	pr.name = "";
-	if ((ret = sol->_vptr->obj.property((void *) sol, &pr)) < 0) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
-		                 MPT_tr("unavle to get solver type"));
-		return 0;
-	}
-	if (!(ret & MPT_SOLVER_ENUM(CapableNls))) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
-		                 MPT_tr("con not handle  nonlinear problem"));
-		return 0;
-	}
-	if (!(fcns = ((const MPT_INTERFACE_VPTR(Nls) *) sol->_vptr)->functions(sol))) {
+	if (!(fcns = sol->_vptr->functions(sol))) {
 		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
 		                 MPT_tr("unable to get user functions"));
 	}

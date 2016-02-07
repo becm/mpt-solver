@@ -94,7 +94,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *, int , MPT_TYPE(Pro
 
 /* setup generic solver to use radau */
 #ifndef __cplusplus
-extern MPT_SOLVER_INTERFACE *mpt_radau_create(void);
+extern MPT_SOLVER(IVP) *mpt_radau_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -108,7 +108,7 @@ inline radau::~radau()
 {
 	mpt_radau_fini(this);
 }
-class Radau : public Ivp, radau
+class Radau : public IVP, radau
 {
 public:
 	Radau() : _fcn(0, 0)

@@ -28,23 +28,23 @@ static int idaSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(meta
 	return sundials_ida_set((MPT_SOLVER_STRUCT(ida) *) (gen+1), pr, src);
 }
 
-static int idaReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int idaReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
 	return sundials_ida_report((MPT_SOLVER_STRUCT(ida) *) (gen+1), what, out, data);
 }
-static int idaStep(MPT_SOLVER_INTERFACE *gen, double *end)
+static int idaStep(MPT_SOLVER(IVP) *sol, double *end)
 {
-	MPT_SOLVER_STRUCT(ida) *ida = (void *) (gen+1);
+	MPT_SOLVER_STRUCT(ida) *ida = (void *) (sol+1);
 	int ret;
 	if (!end) return sundials_ida_prepare(ida);
 	ret = sundials_ida_step(ida, *end);
 	*end = ida->t;
 	return ret;
 }
-static void *idaFcn(MPT_SOLVER_INTERFACE *gen, int type)
+static void *idaFcn(MPT_SOLVER(IVP) *sol, int type)
 {
-	MPT_SOLVER_STRUCT(ida) *ida = (void *) (gen+1);
-	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (ida + 1);
+	MPT_SOLVER_STRUCT(ida) *ida = (void *) (sol+1);
+	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (ida+1);
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
 	  case MPT_SOLVER_ENUM(DAE): return ida->ivp.pint ? 0 : ivp;
@@ -57,9 +57,9 @@ static void *idaFcn(MPT_SOLVER_INTERFACE *gen, int type)
 	ivp->dae.mas = 0;
 	return ivp;
 }
-static double *idaState(MPT_SOLVER_INTERFACE *gen)
+static double *idaState(MPT_SOLVER(IVP) *sol)
 {
-	MPT_SOLVER_STRUCT(ida) *ida = (void *) (gen+1);
+	MPT_SOLVER_STRUCT(ida) *ida = (void *) (sol+1);
 #ifdef SUNDIALS_DOUBLE_PRECISION
 	if (ida->sd.y) {
 		return N_VGetArrayPointer(ida->sd.y);
@@ -68,7 +68,7 @@ static double *idaState(MPT_SOLVER_INTERFACE *gen)
 	return 0;
 }
 
-static const MPT_INTERFACE_VPTR(Ivp) idaCtl = {
+static const MPT_INTERFACE_VPTR(solver_ivp) idaCtl = {
 	{ { idaUnref, idaRef, idaGet, idaSet }, idaReport },
 	idaStep,
 	idaFcn,
@@ -83,16 +83,16 @@ static const MPT_INTERFACE_VPTR(Ivp) idaCtl = {
  * 
  * \return IDA solver instance
  */
-extern MPT_SOLVER_INTERFACE *sundials_ida_create()
+extern MPT_SOLVER(IVP) *sundials_ida_create()
 {
-	MPT_SOLVER_INTERFACE *gen;
+	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_TYPE(ivpfcn) *uf;
 	MPT_SOLVER_STRUCT(ida) *ida;
 	
-	if (!(gen = malloc(sizeof(*gen)+sizeof(*ida)+sizeof(*uf)))) {
+	if (!(sol = malloc(sizeof(*sol)+sizeof(*ida)+sizeof(*uf)))) {
 		return 0;
 	}
-	ida = (MPT_SOLVER_STRUCT(ida) *) (gen+1);
+	ida = (MPT_SOLVER_STRUCT(ida) *) (sol+1);
 	
 	if (sundials_ida_init(ida) < 0) {
 		free(ida);
@@ -104,7 +104,7 @@ extern MPT_SOLVER_INTERFACE *sundials_ida_create()
 	ida->ufcn = &uf->dae;
 	IDASetUserData(ida->mem, ida);
 	
-	gen->_vptr = &idaCtl.gen;
+	sol->_vptr = &idaCtl;
 	
-	return gen;
+	return sol;
 }

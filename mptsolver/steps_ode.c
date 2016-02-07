@@ -58,15 +58,14 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  * 
  * Execute generic DAE/ODE solver steps.
  * 
- * \param gen  solver descriptor
+ * \param sol  IVP solver descriptor
  * \param md   client data
  * \param out  logging descriptor
  * 
  * \return step operation result
  */
-extern int mpt_steps_ode(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(metatype) *src, MPT_SOLVER_STRUCT(data) *md, MPT_INTERFACE(logger) *out)
+extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(metatype) *src, MPT_SOLVER_STRUCT(data) *md, MPT_INTERFACE(logger) *out)
 {
-	MPT_INTERFACE_VPTR(Ivp) *ictl = (void *) gen->_vptr;
 	struct rusage pre, post;
 	double curr, end, *data;
 	int err, cont, neqs;
@@ -91,11 +90,11 @@ extern int mpt_steps_ode(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(metatype) *src
 		curr = end;
 		
 		/* call ODE/DAE solver with current/target time and in/out-data */
-		err = ictl->step(gen, &curr);
+		err = sol->_vptr->step(sol, &curr);
 		
 		/* retry current end time */
 		if (curr < end) {
-			if (out) mpt_solver_status(gen, out, 0, 0);
+			if (out) mpt_solver_status((void *) sol, out, 0, 0);
 			curr = end;
 			cont = 1;
 			if (err < 0) {
@@ -117,8 +116,8 @@ extern int mpt_steps_ode(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(metatype) *src
 		} else {
 			cont = 0;
 		}
-		if (out) mpt_solver_status(gen, out, updateIvpData, md);
-		else ictl->gen.report(gen, MPT_SOLVER_ENUM(Values), updateIvpDataWrap, md);
+		if (out) mpt_solver_status((void *) sol, out, updateIvpData, md);
+		else sol->_vptr->gen.report((void *) sol, MPT_SOLVER_ENUM(Values), updateIvpDataWrap, md);
 		
 	} while (neqs > 1 && cont);
 	

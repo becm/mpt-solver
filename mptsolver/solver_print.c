@@ -96,7 +96,7 @@ static int wrapInfo(void *ptr, const MPT_STRUCT(property) *pr)
  * \param gen solver descriptor
  * \param log logging descriptor
  */
-extern int mpt_solver_info(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out)
+extern int mpt_solver_info(MPT_SOLVER(generic) *gen, MPT_INTERFACE(logger) *out)
 {
 	struct wrap_fmt wr;
 	
@@ -146,7 +146,7 @@ static int wrapStatus(void *ptr, const MPT_STRUCT(property) *pr)
  * \param gen solver descriptor
  * \param out output descriptor
  */
-extern int mpt_solver_status(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out, int (*vals)(void *, const MPT_STRUCT(value) *), void *ctx)
+extern int mpt_solver_status(MPT_SOLVER(generic) *gen, MPT_INTERFACE(logger) *out, int (*vals)(void *, const MPT_STRUCT(value) *), void *ctx)
 {
 	char buf[1024];
 	struct _wrapStatusCtx io;
@@ -205,7 +205,7 @@ static int wrapReport(void *ptr, const MPT_STRUCT(property) *pr)
  * \param gen solver descriptor
  * \param out output descriptor
  */
-extern int mpt_solver_report(MPT_SOLVER_INTERFACE *gen, MPT_INTERFACE(logger) *out)
+extern int mpt_solver_report(MPT_SOLVER(generic) *gen, MPT_INTERFACE(logger) *out)
 {
 	struct wrap_fmt wr;
 	

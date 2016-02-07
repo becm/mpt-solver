@@ -79,7 +79,7 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *, int , MPT_TYPE(Pro
 
 /* setup generic solver to use limex */
 #ifndef __cplusplus
-extern MPT_SOLVER_INTERFACE *mpt_limex_create(void);
+extern MPT_SOLVER(IVP) *mpt_limex_create(void);
 #else
 extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global(void);
 #endif
@@ -92,7 +92,7 @@ inline limex::limex()
 inline limex::~limex()
 { mpt_limex_fini(this); }
 
-class Limex : public Ivp
+class Limex : public IVP
 {
 public:
 	Limex() : _fcn(0, 0)

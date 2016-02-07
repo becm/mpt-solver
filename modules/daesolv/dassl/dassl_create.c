@@ -27,14 +27,14 @@ static int ddSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metat
 	return mpt_dassl_set((void *) (gen+1), pr, src);
 }
 
-static int ddReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int ddReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
 	return mpt_dassl_report((MPT_SOLVER_STRUCT(dassl *)) (gen+1), what, out, data);
 }
 
-static int dasslStep(MPT_SOLVER_INTERFACE *gen, double *tend)
+static int dasslStep(MPT_SOLVER(IVP) *sol, double *tend)
 {
-	MPT_SOLVER_STRUCT(dassl) *da = (void *) (gen + 1);
+	MPT_SOLVER_STRUCT(dassl) *da = (void *) (sol + 1);
 	int err;
 	
 	if (!tend) {
@@ -47,9 +47,9 @@ static int dasslStep(MPT_SOLVER_INTERFACE *gen, double *tend)
 	*tend = da->t;
 	return err;
 }
-static void *ddFcn(MPT_SOLVER_INTERFACE *gen, int type)
+static void *ddFcn(MPT_SOLVER(IVP) *sol, int type)
 {
-	MPT_SOLVER_STRUCT(dassl) *da = (void *) (gen + 1);
+	MPT_SOLVER_STRUCT(dassl) *da = (void *) (sol + 1);
 	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (da + 1);
 	
 	switch (type) {
@@ -64,32 +64,32 @@ static void *ddFcn(MPT_SOLVER_INTERFACE *gen, int type)
 	ivp->dae.mas = 0;
 	return &ivp->ode;
 }
-static double *ddState(MPT_SOLVER_INTERFACE *gen)
+static double *ddState(MPT_SOLVER(IVP) *sol)
 {
-	MPT_SOLVER_STRUCT(dassl *) da = (void *) (gen + 1);
+	MPT_SOLVER_STRUCT(dassl *) da = (void *) (sol + 1);
 	return da->y;
 }
-static const MPT_INTERFACE_VPTR(Ivp) dasslCtl = {
+static const MPT_INTERFACE_VPTR(solver_ivp) dasslCtl = {
 	{ { ddFini, ddAddref, ddGet, ddSet }, ddReport },
 	dasslStep,
 	ddFcn,
 	ddState
 };
 
-extern MPT_SOLVER_INTERFACE *mpt_dassl_create()
+extern MPT_SOLVER(IVP) *mpt_dassl_create()
 {
-	MPT_SOLVER_INTERFACE *gen;
+	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(dassl) *da;
 	
-	if (!(gen = malloc(sizeof(*gen) + sizeof(*da) + sizeof(MPT_SOLVER_TYPE(ivpfcn))))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*da) + sizeof(MPT_SOLVER_TYPE(ivpfcn))))) {
 		return 0;
 	}
-	da = (MPT_SOLVER_STRUCT(dassl *)) (gen+1);
+	da = (MPT_SOLVER_STRUCT(dassl *)) (sol+1);
 	mpt_dassl_init(da);
 	
-	gen->_vptr = &dasslCtl.gen;
+	sol->_vptr = &dasslCtl;
 	
 	MPT_IVPFCN_INIT(da+1)->dae.param = &da->ivp;
 	
-	return gen;
+	return sol;
 }

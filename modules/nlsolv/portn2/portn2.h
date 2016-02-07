@@ -107,7 +107,7 @@ extern const double *mpt_portn2_residuals(const MPT_SOLVER_STRUCT(portn2) *);
 
 /* assign portdn2 solver to interface */
 #ifndef __cplusplus
-extern MPT_SOLVER_INTERFACE *mpt_portn2_create(void);
+extern MPT_SOLVER(NLS) *mpt_portn2_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -118,7 +118,7 @@ inline portn2::portn2()
 inline portn2::~portn2()
 { mpt_portn2_fini(this); }
 
-class PortN2 : public Nls, portn2
+class PortN2 : public NLS, portn2
 {
     public:
 	PortN2() : _fcn(0)

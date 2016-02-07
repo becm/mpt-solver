@@ -81,7 +81,7 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *, int , MPT_TYPE(P
 
 /* setup generic solver to use mebfi */
 #ifndef __cplusplus
-extern MPT_SOLVER_INTERFACE *mpt_mebdfi_create(void);
+extern MPT_SOLVER(IVP) *mpt_mebdfi_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -92,7 +92,7 @@ inline mebdfi::mebdfi()
 inline mebdfi::~mebdfi()
 { mpt_mebdfi_fini(this); }
 
-class Mebdfi : public Ivp, mebdfi
+class Mebdfi : public IVP, mebdfi
 {
     public:
 	Mebdfi() : _fcn(0, 0)

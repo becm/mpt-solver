@@ -123,7 +123,7 @@ extern int mpt_bacol_grid_init(int , const double *, int , double *, int);
 
 #ifndef __cplusplus
 /* open/close handler for generic solver type */
-extern MPT_SOLVER_INTERFACE *mpt_bacol_create(void);
+extern MPT_SOLVER(IVP) *mpt_bacol_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -140,13 +140,11 @@ inline bacol::bacol(int type) : backend(type)
 inline bacol::~bacol()
 { mpt_bacol_fini(this); }
 
-class Bacol : public Ivp, bacol
+class Bacol : public IVP, bacol
 {
 public:
-	Bacol(int npde = -1, const char *t = 0) : bacol(t ? *t : 'd')
-	{
-		if (npde >= 0) ivp.neqs = npde;
-	}
+	Bacol(const char *t = 0) : bacol(t ? *t : 'd')
+	{ }
 	virtual ~Bacol()
 	{ }
 	void unref()

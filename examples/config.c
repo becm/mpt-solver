@@ -50,7 +50,7 @@ int main(void)
 	
 	fputs(txt, stdout);
 	while (fgets(buf, sizeof(buf), stdin)) {
-		MPT_SOLVER_INTERFACE *s;
+		MPT_SOLVER(generic) *s;
 		const char *n;
 		size_t len;
 		if (!(len = strlen(buf))) break;

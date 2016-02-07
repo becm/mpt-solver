@@ -172,8 +172,8 @@ extern int sundials_ida_step(MPT_SOLVER_STRUCT(ida) *, realtype);
 #endif
 
 #ifndef _cplusplus
-extern MPT_SOLVER_INTERFACE *sundials_cvode_create(void);
-extern MPT_SOLVER_INTERFACE *sundials_ida_create(void);
+extern MPT_SOLVER(IVP) *sundials_cvode_create(void);
+extern MPT_SOLVER(IVP) *sundials_ida_create(void);
 #endif
 
 /* setup Sundials jacobian parameters */
@@ -219,7 +219,7 @@ __MPT_EXTDECL_END
 
 
 #ifdef __cplusplus
-class CVode : public Ivp, cvode
+class CVode : public IVP, cvode
 {
 public:
 	CVode() : _fcn(0)
@@ -256,7 +256,7 @@ public:
 		*end = t;
 		return ret;
 	}
-	void *functions(int type) const
+	void *functions(int type)
 	{
 		switch (type) {
 		  case odefcn::Type: return ivp.pint ? 0 : (void *) &_fcn;
@@ -272,7 +272,7 @@ inline cvode::cvode()
 inline cvode::~cvode()
 { sundials_cvode_fini(this); }
 
-class IDA : public Ivp, ida
+class IDA : public IVP, ida
 {
 public:
 	IDA() : _fcn(0)
@@ -309,7 +309,7 @@ public:
 		*end = t;
 		return ret;
 	}
-	void *functions(int type) const
+	void *functions(int type)
 	{
 		switch (type) {
 		  case daefcn::Type: return ivp.pint ? 0 : (void *) &_fcn;

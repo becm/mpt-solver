@@ -29,31 +29,32 @@ static int cVodeSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(me
 	return sundials_cvode_set((MPT_SOLVER_STRUCT(cvode) *) (gen+1), pr, src);
 }
 
-static int cVodeReport(MPT_SOLVER_INTERFACE *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int cVodeReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
 	return sundials_cvode_report((MPT_SOLVER_STRUCT(cvode) *) (gen+1), what, out, data);
 }
-static int cVodeStep(MPT_SOLVER_INTERFACE *gen, double *end)
+
+static int cVodeStep(MPT_SOLVER(IVP) *sol, double *end)
 {
-	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (gen+1);
+	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (sol+1);
 	int ret;
 	if (!end) return sundials_cvode_prepare(cv);
 	ret = sundials_cvode_step(cv, *end);
 	*end = cv->t;
 	return ret;
 }
-static void *cVodeFcn(MPT_SOLVER_INTERFACE *gen, int type)
+static void *cVodeFcn(MPT_SOLVER(IVP) *sol, int type)
 {
-	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (gen+1);
+	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (sol+1);
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): return cv->ivp.pint ? 0 : (cv + 1);
 	  case MPT_SOLVER_ENUM(PDE): return cv->ivp.pint ? (cv + 1) : 0;
 	  default: return 0;
 	}
 }
-static double *cVodeState(MPT_SOLVER_INTERFACE *gen)
+static double *cVodeState(MPT_SOLVER(IVP) *sol)
 {
-	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (gen+1);
+	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (sol+1);
 #ifdef SUNDIALS_DOUBLE_PRECISION
 	if (cv->sd.y) {
 		return N_VGetArrayPointer(cv->sd.y);
@@ -61,26 +62,26 @@ static double *cVodeState(MPT_SOLVER_INTERFACE *gen)
 #endif
 	return 0;
 }
-static const MPT_INTERFACE_VPTR(Ivp) cVodeCtl = {
+static const MPT_INTERFACE_VPTR(solver_ivp) cVodeCtl = {
 	{ { cVodeUnref, cVodeRef, cVodeGet, cVodeSet }, cVodeReport },
 	cVodeStep,
 	cVodeFcn,
 	cVodeState
 };
 
-extern MPT_SOLVER_INTERFACE *sundials_cvode_create()
+extern MPT_SOLVER(IVP) *sundials_cvode_create()
 {
-	MPT_SOLVER_INTERFACE *gen;
+	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_TYPE(ivpfcn) *uf;
 	MPT_SOLVER_STRUCT(cvode) *cv;
 	
-	if (!(gen = malloc(sizeof(*gen)+sizeof(*cv)+sizeof(*uf)))) {
+	if (!(sol = malloc(sizeof(*sol)+sizeof(*cv)+sizeof(*uf)))) {
 		return 0;
 	}
-	cv = (MPT_SOLVER_STRUCT(cvode) *) (gen+1);
+	cv = (MPT_SOLVER_STRUCT(cvode) *) (sol+1);
 	
 	if (sundials_cvode_init(cv) < 0) {
-		free(gen);
+		free(sol);
 		return 0;
 	}
 	uf = MPT_IVPFCN_INIT(cv + 1);
@@ -89,7 +90,7 @@ extern MPT_SOLVER_INTERFACE *sundials_cvode_create()
 	cv->ufcn = &uf->ode;
 	CVodeSetUserData(cv->mem, cv);
 	
-	gen->_vptr = &cVodeCtl.gen;
+	sol->_vptr = &cVodeCtl;
 	
-	return gen;
+	return sol;
 }

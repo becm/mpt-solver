@@ -25,7 +25,7 @@ struct IVP {
 	MPT_INTERFACE(client)    cl;
 	MPT_STRUCT(proxy)        pr;
 	MPT_SOLVER_STRUCT(data) *sd;
-	MPT_SOLVER_INTERFACE    *sol;
+	MPT_SOLVER(IVP)         *sol;
 	MPT_INTERFACE(metatype) *src;
 	char                    *cfg;
 	double                   t;
@@ -197,7 +197,7 @@ static int initIVP(struct IVP *ivp, int type)
 			return MPT_ERROR(BadValue);
 		}
 		log = mpt_object_logger((void *) ivp->cl.out);
-		if (!(ivp->sol = mpt_solver_load(&ivp->pr, res, type, log))) {
+		if (!(ivp->sol = (void *) mpt_solver_load(&ivp->pr, res, type, log))) {
 			return MPT_ERROR(BadType);
 		}
 		ret = 1;
@@ -213,7 +213,7 @@ static int initDiff(struct IVP *ivp, MPT_INTERFACE(metatype) *args, int type)
 	
 	MPT_SOLVER_STRUCT(data) *dat;
 	MPT_INTERFACE(logger) *log;
-	MPT_SOLVER_INTERFACE *gen;
+	MPT_SOLVER(IVP) *sol;
 	void *fcn;
 	MPT_STRUCT(node) *conf;
 	struct {
@@ -241,8 +241,8 @@ static int initDiff(struct IVP *ivp, MPT_INTERFACE(metatype) *args, int type)
 		return ret;
 	}
 	/* user configuration */
-	gen = ivp->sol;
-	fcn = ((const MPT_INTERFACE_VPTR(Ivp) *) gen->_vptr)->functions(gen, type);
+	sol = ivp->sol;
+	fcn = sol->_vptr->functions(sol, type);
 	if ((ret = ivp->uinit(fcn, dat)) < 0) {
 		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s",
 		               MPT_tr("user init function encountered error"));
@@ -304,12 +304,11 @@ static int initPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 {
 	static const char _func[] = "mpt::client<PDE>::init";
 	struct IVP *ivp = (void *) cl;
-	const MPT_INTERFACE_VPTR(Ivp) *ctl;
 	MPT_SOLVER_STRUCT(pdefcn) *pde;
 	MPT_SOLVER_STRUCT(data) *dat;
 	MPT_INTERFACE(logger) *log;
-	MPT_SOLVER_INTERFACE *gen;
 	MPT_STRUCT(node) *conf;
+	MPT_SOLVER(IVP) *sol;
 	double *grid, *profile;
 	int ret, len;
 	
@@ -317,6 +316,7 @@ static int initPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	if ((ret = initIVP(ivp, MPT_SOLVER_ENUM(PDE))) < 0) {
 		return ret;
 	}
+	sol = ivp->sol;
 	log = mpt_object_logger((void *) ivp->cl.out);
 	dat = ivp->sd;
 	
@@ -330,14 +330,12 @@ static int initPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	}
 	grid = mpt_data_grid(dat);
 	/* trigger PDE mode in solver */
-	if (mpt_object_set((void *) ivp->sol, "", "ii", 1, len) < 0) {
+	if (mpt_object_set((void *) sol, "", "ii", 1, len) < 0) {
 		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s", MPT_tr("failed to set pde dimension"));
 		return MPT_ERROR(BadOperation);
 	}
 	/* user configuration */
-	gen = ivp->sol;
-	ctl = (const MPT_INTERFACE_VPTR(Ivp) *) gen->_vptr;
-	pde = ctl->functions(gen, MPT_SOLVER_ENUM(PDE));
+	pde = sol->_vptr->functions(sol, MPT_SOLVER_ENUM(PDE));
 	if (pde) pde->grid = grid;
 	
 	if ((ret = ivp->uinit(pde, dat)) < 0) {
@@ -351,7 +349,7 @@ static int initPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s", MPT_tr("failed to set initial time"));
 		return MPT_ERROR(BadOperation);
 	}
-	if (!(profile = ctl->initstate(gen))) {
+	if (!(profile = sol->_vptr->initstate(sol))) {
 		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s", MPT_tr("failed to get initial state"));
 		return MPT_ERROR(BadOperation);
 	}
@@ -365,15 +363,14 @@ static int prepIVP(const struct IVP *ivp, MPT_INTERFACE(metatype) *arg)
 {
 	static const char _func[] = "mpt::client<IVP>::prep";
 	
-	const MPT_INTERFACE_VPTR(Ivp) *ctl;
 	MPT_INTERFACE(logger) *log;
-	MPT_SOLVER_INTERFACE *gen;
 	MPT_STRUCT(node) *conf;
+	MPT_SOLVER(IVP) *sol;
 	int ret;
 	
 	log = mpt_object_logger((MPT_INTERFACE(object) *) ivp->cl.out);
 	
-	if (!(gen = ivp->sol)) {
+	if (!(sol = ivp->sol)) {
 		mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
 		        MPT_tr("failed to set initial values"));
 		return MPT_ERROR(BadArgument);
@@ -384,10 +381,9 @@ static int prepIVP(const struct IVP *ivp, MPT_INTERFACE(metatype) *arg)
 	if ((ret = mpt_conf_history(ivp->cl.out, conf)) < 0) {
 		return ret;
 	}
-	mpt_solver_param((void *) gen, conf, arg, log);
+	mpt_solver_param((void *) sol, conf, arg, log);
 	
-	ctl = (void *) gen->_vptr;
-	if ((ret = ctl->step(gen, 0)) < 0) {
+	if ((ret = sol->_vptr->step(sol, 0)) < 0) {
 		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s",
 		               MPT_tr("preparing solver backend failed"));
 		return ret;
@@ -395,10 +391,10 @@ static int prepIVP(const struct IVP *ivp, MPT_INTERFACE(metatype) *arg)
 	if (log) {
 		const char *name;
 		
-		if ((name = mpt_object_typename((void *) gen))) {
+		if ((name = mpt_object_typename((void *) sol))) {
 			mpt_log(log, 0, MPT_ENUM(LogMessage), "%s: %s", MPT_tr("solver"), name);
 		}
-		mpt_solver_info(gen, log);
+		mpt_solver_info((void *) sol, log);
 		mpt_log(log, 0, MPT_ENUM(LogMessage), "");
 	}
 	return ret;
@@ -417,7 +413,7 @@ static int prepODE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		return ret;
 	}
 	log = mpt_object_logger((void *) out);
-	mpt_solver_status(ivp->sol, log, 0, 0);
+	mpt_solver_status((void *) ivp->sol, log, 0, 0);
 	
 	return ret;
 }
@@ -451,7 +447,7 @@ static int prepPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	ctx.state = MPT_ENUM(OutputStateInit);
 	
 	log = mpt_object_logger((void *) ivp->cl.out);
-	mpt_solver_status(ivp->sol, log, outPDE, &ctx);
+	mpt_solver_status((void *) ivp->sol, log, outPDE, &ctx);
 	
 	return ret;
 }
@@ -499,15 +495,14 @@ static int stepPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	static const char _func[] = "mpt::client<PDE>::step";
 	
 	struct IVP *ivp = (void *) cl;
-	const MPT_INTERFACE_VPTR(Ivp) *ctl;
 	MPT_INTERFACE(metatype) *src;
 	MPT_INTERFACE(logger) *log;
-	MPT_SOLVER_INTERFACE *gen;
+	MPT_SOLVER(IVP) *sol;
 	struct _clientPdeOut ctx;
 	double end;
 	int ret;
 	
-	if (!(gen = ivp->sol) || !(ctx.dat = ivp->sd)) {
+	if (!(sol = ivp->sol) || !(ctx.dat = ivp->sd)) {
 		return -1;
 	}
 	
@@ -527,8 +522,6 @@ static int stepPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		               MPT_tr("no further values in time source"));
 		return 0;
 	}
-	log = mpt_object_logger((void *) ivp->cl.out);
-	
 	/* time soure date too low */
 	while (end <= ivp->t) {
 		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Info), "%s (%g <= %g)",
@@ -562,21 +555,20 @@ static int stepPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	}
 	
 	log = mpt_object_logger((void *) ivp->cl.out);
-	ctl = (void *) gen->_vptr;
 	
 	while (1) {
 		ctx.state = MPT_ENUM(OutputStateStep);
 		ret = 1;
 		
 		ivp->t = end;
-		if ((ret = ctl->step(gen, &ivp->t)) < 0) {
+		if ((ret = sol->_vptr->step(sol, &ivp->t)) < 0) {
 			ctx.state |= MPT_ENUM(OutputStateFail);
 			mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s (t = %g)",
 			               MPT_tr("solver step failed"), end);
 			break;
 		}
 		else if (ivp->t < end) {
-			mpt_solver_status(gen, log, outPDE, &ctx);
+			mpt_solver_status((void *) sol, log, outPDE, &ctx);
 			continue;
 		}
 		ret = 1;
@@ -615,7 +607,7 @@ static int stepPDE(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			               MPT_tr("skip time value argument"), end, ivp->t);
 		}
 		if ((ctx.out = ivp->cl.out)) {
-			mpt_solver_status(gen, log, outPDE, &ctx);
+			mpt_solver_status((void *) sol, log, outPDE, &ctx);
 		}
 		if (!arg || ret < 1) {
 			break;
