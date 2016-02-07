@@ -95,8 +95,10 @@ inline mebdfi::~mebdfi()
 class Mebdfi : public IVP, mebdfi
 {
     public:
-	Mebdfi() : _fcn(0, 0)
-	{ }
+	Mebdfi()
+	{
+		_fcn.dae.param = &ivp;
+	}
 	virtual ~Mebdfi()
 	{ }
 	void unref()

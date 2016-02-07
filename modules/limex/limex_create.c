@@ -9,8 +9,8 @@
 
 #include "limex.h"
 
-static MPT_SOLVER_STRUCT(limex)  lxGlob;
-static MPT_SOLVER_TYPE(ivpfcn) lxGlobFcn;
+static MPT_SOLVER_STRUCT(limex) lxGlob;
+static MPT_SOLVER_STRUCT(ivpfcn) lxGlobFcn;
 
 extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global()
 {
@@ -18,7 +18,7 @@ extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global()
 	
 	mpt_limex_init(&lxGlob);
 	
-	lxGlob.ufcn = &MPT_IVPFCN_INIT(&lxGlobFcn)->dae;
+	lxGlob.ufcn = MPT_IVPFCN_INIT(&lxGlobFcn);
 	lxGlobFcn.dae.param = &lxGlob.ivp;
 	
 	return &lxGlob;
@@ -56,7 +56,7 @@ static int lxStep(MPT_SOLVER(IVP) *sol, double *tend)
 	(void) sol;
 	
 	if (!tend) {
-		if (!lxGlob.fcn && (ret = mpt_limex_ufcn(&lxGlob, &lxGlobFcn.dae))) {
+		if (!lxGlob.fcn && (ret = mpt_limex_ufcn(&lxGlob, &lxGlobFcn))) {
 			return ret;
 		}
 		return mpt_limex_prepare(&lxGlob);
@@ -71,14 +71,15 @@ static void *lxFcn(MPT_SOLVER(IVP) *sol, int type)
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
 	  case MPT_SOLVER_ENUM(DAE): return lxGlob.ivp.pint ? 0 : &lxGlobFcn.dae;
-	  case MPT_SOLVER_ENUM(PDE): return lxGlob.ivp.pint ? &lxGlobFcn.pde : 0;
+	  case MPT_SOLVER_ENUM(PDE): if (!lxGlob.ivp.pint) return 0; lxGlob.jac = 0;
+	  case MPT_SOLVER_ENUM(IVP): return &lxGlobFcn;
 	  default: return 0;
 	}
 	if (lxGlob.ivp.pint) {
 		return 0;
 	}
 	lxGlobFcn.dae.mas = 0;
-	return &lxGlobFcn.ode;
+	return &lxGlobFcn.dae;
 }
 static double *lxState(MPT_SOLVER(IVP) *sol)
 {

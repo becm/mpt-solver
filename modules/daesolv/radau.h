@@ -111,8 +111,10 @@ inline radau::~radau()
 class Radau : public IVP, radau
 {
 public:
-	Radau() : _fcn(0, 0)
-	{ }
+	Radau()
+	{
+		_fcn.dae.param = &ivp;
+	}
 	virtual ~Radau()
 	{ }
 	void unref()
@@ -163,7 +165,7 @@ public:
 		return y;
 	}
 protected:
-	daefcn _fcn;
+	ivpfcn _fcn;
 };
 #endif
 

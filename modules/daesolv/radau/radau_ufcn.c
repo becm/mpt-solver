@@ -11,28 +11,20 @@
 
 static void radau_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)
 {
-	MPT_SOLVER_TYPE(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(radau) *rd = (void *) rpar;
+	MPT_SOLVER_STRUCT(ivppar) ivp = rd->ivp;
 	
 	(void) neq;
-	(void) rpar;
 	
-	if (rd->ivp.pint) {
-		MPT_SOLVER_STRUCT(pdefcn) *pde = &fcn->pde;
-		MPT_SOLVER_STRUCT(ivppar) ivp = rd->ivp;
-		if (pde->fcn(pde->param, *t, y, f, &ivp, pde->grid, pde->rside) < 0) {
-			abort();
-		}
-		return;
-	}
-	if (fcn->dae.fcn(fcn->dae.param, *t, y, f) < 0) {
+	if (((MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, *t, y, f, &ivp, fcn->grid, fcn->rside) < 0) {
 		abort();
 	}
 }
 
 static void radau_jac(int *neq, double *t, double *y, double *jac, int *ljac, double *rpar, int *ipar)
 {
-	MPT_SOLVER_TYPE(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(radau) *rd = (void *) rpar;
 	int ld;
 	
@@ -53,51 +45,53 @@ static void radau_jac(int *neq, double *t, double *y, double *jac, int *ljac, do
 
 static void radau_mas(int *neq, double *b, int *lmasp, double *rpar, int *ipar)
 {
-	MPT_SOLVER_TYPE(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(radau) *rd = (void *) rpar;
 	double *mas;
 	int *idrow, *idcol;
-	int i, nz, lmas, dmas;
+	int i, pint, max, lmas, dmas;
 	
 	lmas = *lmasp;
 	dmas = lmas * (*neq);
-	nz = rd->ivp.neqs * rd->ivp.neqs;
+	
+	max  = rd->ivp.neqs * rd->ivp.neqs;
+	pint = rd->ivp.pint;
 	
 	mas = rd->dmas;
-	idrow = (int *) (mas + nz);
-	idcol = idrow + nz;
+	idrow = (int *) (mas + max);
+	idcol = idrow + max;
 	
-	*idrow = nz;
-	*idcol = rd->ivp.neqs;
-	
-	if ((nz = fcn->dae.mas(fcn->dae.param, rd->t, 0, mas, idrow, idcol)) < 0) {
-		abort();
-	}
-	for (i = 0; i < nz; i++) {
-		int pos = idrow[i] + lmas * idcol[i];
-		if (pos < dmas) {
-			b[pos] = mas[i];
+	for (i = 0; i <= pint; ++i) {
+		int j, nz;
+		
+		idrow[0] = max;
+		idcol[0] = i;
+		
+		if ((nz = fcn->dae.mas(fcn->dae.param, rd->t, 0, mas, idrow, idcol)) < 0) {
+			abort();
+		}
+		for (j = 0; j < nz; j++) {
+			int pos = idrow[j] + lmas * idcol[j];
+			if (pos < dmas) {
+				b[pos] = mas[j];
+			}
 		}
 	}
 }
 
 extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, const MPT_SOLVER_STRUCT(daefcn) *ufcn)
 {
+	size_t nz = rd->ivp.neqs * rd->ivp.neqs;
+	
 	if (!ufcn || !ufcn->fcn) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (rd->ivp.pint) {
-		rd->jac = 0;
-		rd->mas = 0;
-	} else {
-		size_t nz = rd->ivp.neqs * rd->ivp.neqs;
-		if (!rd->dmas && !(rd->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double))))) {
-			return MPT_ERROR(BadOperation);
-		}
-		rd->jac = ufcn->jac ? radau_jac : 0;
-		rd->mas = ufcn->mas ? radau_mas : 0;
+	if (ufcn->mas && !rd->dmas && (!nz || !(rd->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double)))))) {
+		return MPT_ERROR(BadOperation);
 	}
 	rd->fcn = radau_fcn;
+	rd->jac = ufcn->jac ? radau_jac : 0;
+	rd->mas = ufcn->mas ? radau_mas : 0;
 	
 	rd->ipar = (int *) ufcn;
 	rd->rpar = (double *) rd;

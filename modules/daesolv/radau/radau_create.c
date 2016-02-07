@@ -50,19 +50,17 @@ extern int rdStep(MPT_SOLVER(IVP) *sol, double *tend)
 static void *rdFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(radau) *rd = (void *) (sol + 1);
-	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (rd + 1);
+	MPT_SOLVER_STRUCT(ivpfcn) *ivp = (void *) (rd + 1);
 	
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
 	  case MPT_SOLVER_ENUM(DAE): return rd->ivp.pint ? 0 : &ivp->dae;
-	  case MPT_SOLVER_ENUM(PDE): return rd->ivp.pint ? &ivp->pde : 0;
+	  case MPT_SOLVER_ENUM(PDE): if (!rd->ivp.pint) return 0;
+	  case MPT_SOLVER_ENUM(IVP): return ivp;
 	  default: return 0;
 	}
-	if (rd->ivp.pint) {
-		return 0;
-	}
 	ivp->dae.mas = 0;
-	return &ivp->ode;
+	return &ivp->dae;
 }
 static double *rdState(MPT_SOLVER(IVP) *sol)
 {
@@ -80,17 +78,17 @@ static const MPT_INTERFACE_VPTR(solver_ivp) radauCtl = {
 extern MPT_SOLVER(IVP) *mpt_radau_create()
 {
 	MPT_SOLVER(IVP) *sol;
-	MPT_SOLVER_STRUCT(radau) *data;
-	MPT_SOLVER_TYPE(ivpfcn) *fcn;
+	MPT_SOLVER_STRUCT(radau) *rd;
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*data) + sizeof(*fcn)))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*rd) + sizeof(*fcn)))) {
 		return 0;
 	}
-	data = (MPT_SOLVER_STRUCT(radau *)) (sol+1);
-	mpt_radau_init(data);
+	rd = (MPT_SOLVER_STRUCT(radau *)) (sol+1);
+	mpt_radau_init(rd);
 	
-	fcn = MPT_IVPFCN_INIT(data+1);
-	fcn->ode.param = &data->ivp;
+	fcn = MPT_IVPFCN_INIT(rd+1);
+	fcn->dae.param = rd;
 	
 	sol->_vptr = &radauCtl;
 	

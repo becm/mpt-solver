@@ -70,17 +70,16 @@ typedef int (*MPT_SOLVER_TYPE(PdeFcn))(void *upar, double t, const double *y, do
 /* non-linear solver functions */
 typedef int (*MPT_SOLVER_TYPE(NlsFcn))(void *rpar, const double *p, double *res, const int *lres);
 typedef int (*MPT_SOLVER_TYPE(NlsJac))(void *jpar, const double *p, double *jac, const int *ld, const double *res);
-
-MPT_SOLVER_STRUCT(nlspar);
-typedef int (*MPT_SOLVER_TYPE(NlsOut))(void *opar, MPT_SOLVER_STRUCT(nlspar) *np, const double *p, const double *res);
+typedef int (*MPT_SOLVER_TYPE(NlsOut))(void *opar, const MPT_STRUCT(value) *val);
 
 
 enum MPT_SOLVER_ENUM(Flags)
 {
 	MPT_SOLVER_ENUM(CapableIvp) = 0x100,
-	MPT_SOLVER_ENUM(ODE)        = 0x101,
-	MPT_SOLVER_ENUM(DAE)        = 0x102,
-	MPT_SOLVER_ENUM(PDE)        = 0x104,
+	MPT_SOLVER_ENUM(ODE)        = 0x100,
+	MPT_SOLVER_ENUM(DAE)        = 0x101,
+	MPT_SOLVER_ENUM(PDE)        = 0x102,
+	MPT_SOLVER_ENUM(IVP)        = 0x103,
 	
 	MPT_SOLVER_ENUM(CapableNls) = 0x200,
 	MPT_SOLVER_ENUM(NlsVector)  = 0x201,
@@ -126,21 +125,26 @@ MPT_SOLVER_STRUCT(pdefcn)
 	inline pdefcn(PdeFcn f, RsideFcn r = 0) : fcn(f), param(0), rside(r)
 	{ }
 #endif
-	MPT_SOLVER_TYPE(PdeFcn)    fcn;   /* right side function */
-	void                      *param; /* user parameter for handler functions */
 	MPT_SOLVER_TYPE(RsideFcn)  rside; /* right side function */
 	double                    *grid;  /* solver grid data */
+	MPT_SOLVER_TYPE(PdeFcn)    fcn;   /* right side function */
+	void                      *param; /* user parameter for handler functions */
 };
 
-#ifndef __cplusplus
-typedef union
+MPT_SOLVER_STRUCT(ivpfcn)
 {
-# define MPT_IVPFCN_INIT(d)  ((MPT_SOLVER_TYPE(ivpfcn) *) memset(d, 0, sizeof(MPT_SOLVER_TYPE(ivpfcn))))
-	MPT_SOLVER_STRUCT(odefcn) ode;
-	MPT_SOLVER_STRUCT(daefcn) dae;
-	MPT_SOLVER_STRUCT(pdefcn) pde;
-} MPT_SOLVER_TYPE(ivpfcn);
+#ifdef __cplusplus
+	inline ivpfcn(void *par = 0) : rside(0), grid(0), dae(0, 0)
+	{
+		dae.param = par;
+	}
+#else
+# define MPT_IVPFCN_INIT(d)  ((MPT_SOLVER_STRUCT(ivpfcn) *) memset(d, 0, sizeof(MPT_SOLVER_STRUCT(ivpfcn))))
 #endif
+	MPT_SOLVER_TYPE(RsideFcn) rside; /* right side function */
+	double                   *grid;  /* solver grid data */
+	MPT_SOLVER_STRUCT(daefcn) dae;
+};
 
 /*! general IVP parameter */
 MPT_SOLVER_STRUCT(ivppar)

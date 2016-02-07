@@ -44,18 +44,16 @@ static int idaStep(MPT_SOLVER(IVP) *sol, double *end)
 static void *idaFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(ida) *ida = (void *) (sol+1);
-	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (ida+1);
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) (ida+1);
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
-	  case MPT_SOLVER_ENUM(DAE): return ida->ivp.pint ? 0 : ivp;
-	  case MPT_SOLVER_ENUM(PDE): return ida->ivp.pint ? ivp : 0;
+	  case MPT_SOLVER_ENUM(DAE): return ida->ivp.pint ? 0 : &fcn->dae;
+	  case MPT_SOLVER_ENUM(PDE): if (!ida->ivp.pint) return 0; fcn->dae.mas = 0; fcn->dae.jac = 0;
+	  case MPT_SOLVER_ENUM(IVP): return fcn;
 	  default: return 0;
 	}
-	if (ida->ivp.pint) {
-		return 0;
-	}
-	ivp->dae.mas = 0;
-	return ivp;
+	fcn->dae.mas = 0;
+	return &fcn->dae;
 }
 static double *idaState(MPT_SOLVER(IVP) *sol)
 {
@@ -86,7 +84,7 @@ static const MPT_INTERFACE_VPTR(solver_ivp) idaCtl = {
 extern MPT_SOLVER(IVP) *sundials_ida_create()
 {
 	MPT_SOLVER(IVP) *sol;
-	MPT_SOLVER_TYPE(ivpfcn) *uf;
+	MPT_SOLVER_STRUCT(ivpfcn) *uf;
 	MPT_SOLVER_STRUCT(ida) *ida;
 	
 	if (!(sol = malloc(sizeof(*sol)+sizeof(*ida)+sizeof(*uf)))) {
@@ -99,9 +97,9 @@ extern MPT_SOLVER(IVP) *sundials_ida_create()
 		return 0;
 	}
 	uf = MPT_IVPFCN_INIT(ida + 1);
-	uf->dae.param = &ida->ivp;
+	uf->dae.param = ida;
 	
-	ida->ufcn = &uf->dae;
+	ida->ufcn = uf;
 	IDASetUserData(ida->mem, ida);
 	
 	sol->_vptr = &idaCtl;

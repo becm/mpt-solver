@@ -11,14 +11,10 @@
 
 static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, int *ipar, double *rpar, int *flg)
 {
-	MPT_SOLVER_TYPE(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) rpar;
 	
-	if (me->ivp.pint) {
-		*flg = fcn->pde.fcn(fcn->pde.param, *t, y, f, &me->ivp, fcn->pde.grid, fcn->pde.rside);
-		return;
-	}
-	if ((*flg = fcn->dae.fcn(fcn->dae.param, *t, y, f)) < 0) {
+	if ((*flg = ((MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, *t, y, f, &me->ivp, fcn->grid, fcn->rside)) < 0) {
 		return;
 	}
 	if (!fcn->dae.mas) {
@@ -59,7 +55,7 @@ static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, in
 
 static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, int *mbnd, double *con, int *ipar, double *rpar, int *info)
 {
-	MPT_SOLVER_TYPE(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) ipar;
 	int i, neqs = *neq, ljac;
 	
 	(void) yp;
@@ -84,47 +80,45 @@ static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, 
 	else {
 		MPT_SOLVER_STRUCT(mebdfi) *me = (MPT_SOLVER_STRUCT(mebdfi) *) rpar;
 		double *mas, c = *con;
-		int *idrow, *idcol, nz, i;
+		int *idrow, *idcol, nz, i, pint;
 		
-		nz = me->ivp.neqs * me->ivp.neqs;
+		neqs = me->ivp.neqs;
+		pint = me->ivp.pint;
+		nz   = neqs * neqs;
 		
-		if (!(mas = me->dmas)) {
-			if (!(mas = malloc(nz * (2 * sizeof(int) + sizeof(double))))) {
-				*info = MPT_ERROR(BadOperation);
-			}
-			return;
-		}
+		mas   = me->dmas;
 		idrow = (int *) (mas + nz);
 		idcol = idrow + nz;
 		
-		*idrow = nz;
-		*idcol = me->ivp.neqs;
-		
-		if ((nz = fcn->dae.mas(fcn->dae.param, *t, y, mas, idrow, idcol)) < 0) {
-			*info = nz;
-			return;
-		}
-		for (i = 0; i < nz ; i++) {
-			jac[idcol[i]*ljac+idrow[i]] -= c * mas[i];
+		for (i = 0; i <= pint; ++i) {
+			int j;
+			
+			idrow[0] = nz;
+			idcol[0] = i;
+			
+			if ((nz = fcn->dae.mas(fcn->dae.param, *t, y, mas, idrow, idcol)) < 0) {
+				*info = nz;
+				return;
+			}
+			for (j = 0; j < nz ; j++) {
+				jac[idcol[j]*ljac+idrow[j]] -= c * mas[j];
+			}
+			y += neqs;
 		}
 	}
 }
 
 extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_SOLVER_STRUCT(daefcn) *ufcn)
 {
+	size_t nz = me->ivp.neqs * me->ivp.neqs;
 	if (!ufcn || !ufcn->fcn) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (me->ivp.pint) {
-		me->jac = 0;
-	} else {
-		size_t nz = me->ivp.neqs * me->ivp.neqs;
-		if (!me->dmas && !(me->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double))))) {
-			return MPT_ERROR(BadOperation);
-		}
-		me->jac = ufcn->jac ? mebdfi_jac : 0;
+	if (ufcn->mas && !me->dmas && (!nz || !(me->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double)))))) {
+		return MPT_ERROR(BadOperation);
 	}
 	me->fcn = mebdfi_fcn;
+	me->jac = ufcn->jac ? mebdfi_jac : 0;
 	
 	me->ipar = (int *) ufcn;
 	me->rpar = (double *) me;

@@ -50,19 +50,19 @@ static int dasslStep(MPT_SOLVER(IVP) *sol, double *tend)
 static void *ddFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(dassl) *da = (void *) (sol + 1);
-	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (da + 1);
+	MPT_SOLVER_STRUCT(ivpfcn) *ivp = (void *) (da + 1);
 	
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
 	  case MPT_SOLVER_ENUM(DAE): return da->ivp.pint ? 0 : &ivp->dae;
-	  case MPT_SOLVER_ENUM(PDE): return da->ivp.pint ? &ivp->pde : 0;
+	  case MPT_SOLVER_ENUM(PDE): return da->ivp.pint ? ivp : 0;
 	  default: return 0;
 	}
 	if (da->ivp.pint) {
 		return 0;
 	}
 	ivp->dae.mas = 0;
-	return &ivp->ode;
+	return &ivp->dae;
 }
 static double *ddState(MPT_SOLVER(IVP) *sol)
 {
@@ -80,8 +80,9 @@ extern MPT_SOLVER(IVP) *mpt_dassl_create()
 {
 	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(dassl) *da;
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*da) + sizeof(MPT_SOLVER_TYPE(ivpfcn))))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*da) + sizeof(*fcn)))) {
 		return 0;
 	}
 	da = (MPT_SOLVER_STRUCT(dassl *)) (sol+1);
@@ -89,7 +90,8 @@ extern MPT_SOLVER(IVP) *mpt_dassl_create()
 	
 	sol->_vptr = &dasslCtl;
 	
-	MPT_IVPFCN_INIT(da+1)->dae.param = &da->ivp;
+	fcn = MPT_IVPFCN_INIT(da+1);
+	fcn->dae.param = da;
 	
 	return sol;
 }

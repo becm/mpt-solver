@@ -71,14 +71,16 @@ extern MPT_SOLVER(IVP) *mpt_vode_create()
 {
 	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(vode) *vd;
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*vd) + sizeof(MPT_SOLVER_STRUCT(pdefcn))))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*vd) + sizeof(*fcn)))) {
 		return 0;
 	}
 	vd = (void *) (sol + 1);
 	mpt_vode_init(vd);
 	
-	MPT_IVPFCN_INIT(vd + 1)->ode.param = &vd->ivp;
+	fcn = MPT_IVPFCN_INIT(vd + 1);
+	fcn->dae.param = vd;
 	
 	sol->_vptr = &vodeCtl;
 	

@@ -29,7 +29,7 @@ public:
 	
 	int    *ipos; /* set to check coresponding position non-zero */
 	
-	const MPT_SOLVER_STRUCT(daefcn) *ufcn; /* user functions */
+	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn; /* user functions */
 	
 	MPT_SOLVER_TYPE(dvecpar) rtol, atol;   /* tolerances */
 	
@@ -72,7 +72,7 @@ extern void mpt_limex_fini(MPT_SOLVER_STRUCT(limex) *);
 extern void mpt_limex_reset(MPT_SOLVER_STRUCT(limex) *);
 
 /* set wrapper for user functions */
-extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *, const MPT_SOLVER_STRUCT(daefcn) *);
+extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
 
 /* limex report information */
 extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -95,7 +95,7 @@ inline limex::~limex()
 class Limex : public IVP
 {
 public:
-	Limex() : _fcn(0, 0)
+	Limex()
 	{
 		if ((_lx = mpt_limex_global())) {
 			_lx->ufcn = &_fcn;
@@ -156,7 +156,7 @@ public:
 		return &_fcn;
 	}
 protected:
-	daefcn _fcn;
+	ivpfcn _fcn;
 	limex *_lx;
 };
 #endif

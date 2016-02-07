@@ -86,7 +86,7 @@ public:
 	realtype t;                     /* current time step */
 	realtype hmax;                  /* CVode only saves inverse */
 	
-	const MPT_SOLVER_STRUCT(odefcn) *ufcn;
+	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn;
 }
 #endif
 ;
@@ -111,7 +111,7 @@ protected:
 	realtype t;                     /* current time step */
 	realtype hmax;                  /* IDA only saves inverse */
 	
-	const MPT_SOLVER_STRUCT(daefcn) *ufcn;
+	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn;
 	
 	N_Vector yp;                    /* deviation vector */
 	
@@ -222,9 +222,9 @@ __MPT_EXTDECL_END
 class CVode : public IVP, cvode
 {
 public:
-	CVode() : _fcn(0)
+	CVode()
 	{
-		ufcn = (odefcn *) &_fcn;
+		ufcn = &_fcn;
 		_fcn.param = &ivp;
 	}
 	virtual ~CVode()
@@ -259,13 +259,15 @@ public:
 	void *functions(int type)
 	{
 		switch (type) {
-		  case odefcn::Type: return ivp.pint ? 0 : (void *) &_fcn;
-		  case pdefcn::Type: return ivp.pint ? (void *) &_fcn : 0;
+		  case odefcn::Type: if (ivp.pint) return 0; break;
+		  case pdefcn::Type: if (!ivp.pint) return 0; break;
 		  default: return 0;
 		}
+		_fcn.dae.mas = 0;
+		return ivp.pint ? &_fcn : &_fcn.dae;
 	}
 protected:
-	pdefcn _fcn;
+	ivpfcn _fcn;
 };
 inline cvode::cvode()
 { sundials_cvode_init(this); }

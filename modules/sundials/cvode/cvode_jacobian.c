@@ -2,8 +2,6 @@
  * wrapper for CVode Jacobian.
  */
 
-#include <errno.h>
-
 #include <sundials/sundials_direct.h>
 #include <cvode/cvode.h>
 
@@ -23,7 +21,7 @@ extern int sundials_cvode_jac_dense(long int n, realtype t,
                                     DlsMat Jac, const MPT_SOLVER_STRUCT(cvode) *cv,
                                     N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-	const MPT_SOLVER_STRUCT(odefcn) *ode;
+	const MPT_SOLVER_STRUCT(ivpfcn) *fcn;
 	double *jac;
 	int ld;
 	
@@ -31,15 +29,14 @@ extern int sundials_cvode_jac_dense(long int n, realtype t,
 	(void) fy;
 	(void) tmp1; (void) tmp2; (void) tmp3;
 	
-	if (!cv || !(ode = cv->ufcn) || !ode->jac) {
-		errno = EFAULT;
+	if (!cv || !(fcn = cv->ufcn) || !fcn->dae.jac) {
 		return CV_MEM_NULL;
 	}
 	jac = DENSE_COL(Jac,0);
 	ld = DENSE_COL(Jac,1) - jac;
 	
 	/* calculate jacobian */
-	return ode->jac(ode->param, t, N_VGetArrayPointer(y), jac, ld);
+	return fcn->dae.jac(fcn->dae.param, t, N_VGetArrayPointer(y), jac, ld);
 }
 
 /*!
@@ -56,7 +53,7 @@ extern int sundials_cvode_jac_band(long int n, long int mu, long int ml,
                                    DlsMat Jac, const MPT_SOLVER_STRUCT(cvode) *cv,
                                    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-	const MPT_SOLVER_STRUCT(odefcn) *ode;
+	const MPT_SOLVER_STRUCT(ivpfcn) *fcn;
 	double *jac;
 	int ld;
 	
@@ -65,8 +62,7 @@ extern int sundials_cvode_jac_band(long int n, long int mu, long int ml,
 	(void) fy;
 	(void) tmp1; (void) tmp2; (void) tmp3;
 	
-	if (!cv || !(ode = cv->ufcn) || !ode->jac) {
-		errno = EFAULT;
+	if (!cv || !(fcn = cv->ufcn) || !fcn->dae.jac) {
 		return CV_MEM_NULL;
 	}
 	/* BAND_COL(Jac,i) is diagonal element */
@@ -74,6 +70,6 @@ extern int sundials_cvode_jac_band(long int n, long int mu, long int ml,
 	ld  = BAND_COL(Jac,1) - jac - 1;
 	
 	/* calculate jacobian */
-	return ode->jac(ode->param, t, N_VGetArrayPointer(y), jac, ld);
+	return fcn->dae.jac(fcn->dae.param, t, N_VGetArrayPointer(y), jac, ld);
 }
 

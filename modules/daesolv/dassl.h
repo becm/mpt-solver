@@ -83,8 +83,10 @@ inline dassl::~dassl()
 class Dassl : public IVP, dassl
 {
 public:
-	Dassl() : _fcn(0, 0)
-	{ }
+	Dassl()
+	{
+		_fcn.dae.param = &ivp;
+	}
 	virtual ~Dassl()
 	{ }
 	void unref()
@@ -135,7 +137,7 @@ public:
 		return y;
 	}
 protected:
-	daefcn _fcn;
+	ivpfcn _fcn;
 };
 #endif
 

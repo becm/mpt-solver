@@ -19,21 +19,14 @@
  */
 extern int sundials_cvode_fcn(realtype t, N_Vector y, N_Vector f, const MPT_SOLVER_STRUCT(cvode) *cv)
 {
-	const MPT_SOLVER_STRUCT(odefcn) *ode;
+	const MPT_SOLVER_STRUCT(ivpfcn) *fcn;
 	double *fd, *yd;
-	if (!cv || !(ode = cv->ufcn) || !ode->fcn) {
+	if (!cv || !(fcn = cv->ufcn) || !fcn->dae.fcn) {
 		errno = EFAULT;
 		return CV_MEM_NULL;
 	}
 	yd = N_VGetArrayPointer(y);
 	fd = N_VGetArrayPointer(f);
 	
-	if (cv->ivp.pint) {
-		const MPT_SOLVER_STRUCT(pdefcn) *pde = (void*) ode;
-		return pde->fcn(pde->param, t, yd, fd, &cv->ivp, pde->grid, pde->rside);
-	}
-	return ode->fcn(ode->param, t, yd, fd);
+	return ((const MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, t, yd, fd, &cv->ivp, fcn->grid, fcn->rside);
 }
-
-
-

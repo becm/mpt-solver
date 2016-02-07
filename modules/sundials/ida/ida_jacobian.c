@@ -11,15 +11,15 @@
 
 static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double t, const double *y, double cj, double *jac, int ldjac)
 {
-	const MPT_SOLVER_STRUCT(daefcn) *dae = ida->ufcn;
+	const MPT_SOLVER_STRUCT(ivpfcn) *fcn = ida->ufcn;
 	int ret;
 	
 	/* calculate jacobian */
-	if ((ret = dae->jac(dae->param, t, y, jac, ldjac)) < 0) {
+	if ((ret = fcn->dae.jac(fcn->dae.param, t, y, jac, ldjac)) < 0) {
 		return ret;
 	}
 	/* Jac -= cj*B */
-	if (!dae->mas) {
+	if (!fcn->dae.mas) {
 		int i;
 		for (i = 0; i < n; i++, jac += ldjac) {
 			jac[i] -= cj;
@@ -27,24 +27,25 @@ static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double
 	}
 	else {
 		double *mas;
-		int i, neqs, nint, *idrow, *idcol;
+		int i, max, neqs, nint, *idrow, *idcol;
 		
 		neqs = ida->ivp.neqs;
 		nint = ida->ivp.pint;
-		i    = neqs * neqs;
+		max  = neqs * neqs;
 		
-		if (!(mas = sundials_ida_tmp(ida, sizeof(*mas) + sizeof(*idrow) + sizeof(*idcol), i))) {
+		if (!(mas = sundials_ida_tmp(ida, sizeof(*mas) + sizeof(*idrow) + sizeof(*idcol), max))) {
 			return -1;
 		}
-		idrow = (int *)(mas + i);
-		idcol = idrow + i;
+		idrow = (int *)(mas + max);
+		idcol = idrow + max;
 		
 		for (i = 0; i <= nint; i++) {
 			int nz, j;
 			
-			*idrow = i;
+			*idrow = max;
+			*idcol = i;
 			
-			if ((nz = dae->mas(dae->param, t, y, mas, idrow, idcol)) < 0) {
+			if ((nz = fcn->dae.mas(fcn->dae.param, t, y, mas, idrow, idcol)) < 0) {
 				return nz;
 			}
 			for (j = 0 ; j < nz ; j++) {

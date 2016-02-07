@@ -11,44 +11,45 @@
 
 static void dassl_fcn(double *t, double *y, double *yp, double *f, int *ires, double *rpar, int *ipar)
 {
-	MPT_SOLVER_STRUCT(daefcn) *dae = (void *) ipar;
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(dassl) *data = (void *) rpar;
 	int i, neqs;
 	
 	neqs = data->ivp.neqs;
 	
-	if (data->ivp.pint) {
-		MPT_SOLVER_STRUCT(pdefcn) *pde = (void *) rpar;
-		*ires = pde->fcn(pde->param, *t, y, f, &data->ivp, pde->grid, pde->rside);
+	if ((*ires = ((const MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, *t, y, f, &data->ivp, fcn->grid, fcn->rside)) < 0) {
 		return;
 	}
-	if ((*ires = dae->fcn(dae->param, *t, y, f)) < 0) {
-		return;
-	}
-	if (!dae->mas) {
+	if (!fcn->dae.mas) {
+		neqs *= data->ivp.pint + 1;
 		for (i = 0; i < neqs; i++) {
 			f[i] -= yp[i];
 		}
 	}
 	else {
 		double *mas = data->dmas;
-		int *idrow, *idcol, nz;
+		int *idrow, *idcol, max, pint;
 		
-		nz = neqs * neqs;
+		max  = neqs * neqs;
+		pint = data->ivp.pint;
 		
-		idrow = (int *) (mas + nz);
-		idcol = idrow + nz;
+		idrow = (int *) (mas + max);
+		idcol = idrow + max;
 		
-		*idrow = nz;
-		*idcol = neqs;
-		
-		if ((nz = dae->mas(dae->param, *t, y, mas, idrow, idcol)) < 0) {
-			*ires = nz;
-			return;
-		}
-		/* f -= B*yp */
-		for (i = 0; i < nz; i++) {
-			f[idrow[i]] -= mas[i] * yp[idcol[i]];
+		for (i = 0; i <= pint; ++i) {
+			int j, nz;
+			
+			*idrow = max;
+			*idcol = i;
+			
+			if ((nz = fcn->dae.mas(fcn->dae.param, *t, y+i*neqs, mas, idrow, idcol)) < 0) {
+				*ires = nz;
+				return;
+			}
+			/* f -= B*yp */
+			for (j = 0; j < nz; j++) {
+				f[i*neqs+idrow[j]] -= mas[j] * yp[i*neqs+idcol[j]];
+			}
 		}
 	}
 }

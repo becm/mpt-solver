@@ -88,9 +88,9 @@ inline vode::~vode()
 class Vode : public IVP, vode
 {
 public:
-	inline Vode() : _fcn(0)
+	inline Vode()
 	{
-		_fcn.param = &ivp;
+		_fcn.dae.param = &ivp;
 	}
 	virtual ~Vode()
 	{ }
@@ -132,7 +132,7 @@ public:
 		}
 	}
 protected:
-	pdefcn _fcn;
+	ivpfcn _fcn;
 };
 #endif
 

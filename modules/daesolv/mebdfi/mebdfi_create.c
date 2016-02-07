@@ -50,19 +50,20 @@ static int meStep(MPT_SOLVER(IVP) *sol, double *tend)
 static void *meFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (sol + 1);
-	MPT_SOLVER_TYPE(ivpfcn) *ivp = (void *) (me + 1);
+	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) (me + 1);
 	
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
-	  case MPT_SOLVER_ENUM(DAE): return me->ivp.pint ? 0 : &ivp->dae;
-	  case MPT_SOLVER_ENUM(PDE): return me->ivp.pint ? &ivp->pde : 0;
+	  case MPT_SOLVER_ENUM(DAE): return me->ivp.pint ? 0 : &fcn->dae;
+	  case MPT_SOLVER_ENUM(PDE): if (me->ivp.pint) return 0; fcn->dae.mas = 0; fcn->dae.jac = 0;
+	  case MPT_SOLVER_ENUM(IVP): return fcn;
 	  default: return 0;
 	}
 	if (me->ivp.pint) {
 		return 0;
 	}
-	ivp->dae.mas = 0;
-	return &ivp->ode;
+	fcn->dae.mas = 0;
+	return &fcn->dae;
 }
 static double *meState(MPT_SOLVER(IVP) *sol)
 {
@@ -82,13 +83,13 @@ extern MPT_SOLVER(IVP) *mpt_mebdfi_create()
 	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(mebdfi) *md;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*md) + sizeof(MPT_SOLVER_TYPE(ivpfcn))))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*md) + sizeof(MPT_SOLVER_STRUCT(ivpfcn))))) {
 		return 0;
 	}
 	md = (MPT_SOLVER_STRUCT(mebdfi) *) (sol+1);
 	mpt_mebdfi_init(md);
 	
-	MPT_IVPFCN_INIT(md + 1)->ode.param = &md->ivp;
+	MPT_IVPFCN_INIT(md + 1)->dae.param = &md;
 	
 	sol->_vptr = &mebdfiCtl;
 	
