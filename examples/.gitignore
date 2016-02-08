@@ -1,0 +1,5 @@
+# exclude solver example binaries
+config
+
+# exclude output files
+*.out

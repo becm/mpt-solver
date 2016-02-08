@@ -50,7 +50,7 @@ libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
 .PHONY : module_config
 shared : module_config
 module_config : ${CONFIG}; $(call install_files,${DIR_TOP}/etc/mpt.conf.d,${CONFIG})
-CLEAR_FILES += $(CONFIG:%=${DIR_TOP}/etc/mpt.conf.d/%)
+CLEAR_FILES += $(CONFIG:%=${DIR_TOP}/etc/mpt.conf.d/%) libinfo.o
 #
 # additional service targets
 .PHONY : clean_math

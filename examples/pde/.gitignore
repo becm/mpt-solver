@@ -1,0 +1,6 @@
+# exclude PDE example binaries
+diff
+flame
+htrans
+makzo
+twoeq
