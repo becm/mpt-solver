@@ -2,10 +2,11 @@
  * create client for IVP problem types
  */
 
+#define _POSIX_C_SOURCE 200809L /* need for strdup() */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 #include <sys/uio.h>
 

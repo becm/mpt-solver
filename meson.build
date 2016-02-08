@@ -5,6 +5,8 @@ project('mptsolver', 'c', default_options : [
   'c_std=c11'
 ])
 
+pkg = import('pkgconfig')
+
 libs = get_option('libraries')
 if libs == 'shared'
   with_static = false

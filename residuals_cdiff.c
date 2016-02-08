@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "solver.h"
+#include <mpt/solver.h>
 
 static void cdiff_step(int npde, const double *left, const double *curr, const double *right, double dx, double *f, double *diff, double *vx)
 {
@@ -31,7 +31,7 @@ extern int mpt_residuals_cdiff(void *ctx, double t, const double *y, double *f, 
 	int pts, i, npde;
 	
 	/* require PDE arguments */
-	if (!ivp || (npde = ivp->neqs) < 1 ||  || !rfcn || !grid) {
+	if (!ivp || (npde = ivp->neqs) < 1 || !rfcn || !grid) {
 		return MPT_ERROR(BadArgument);
 	}
 	/* inner nodes required */

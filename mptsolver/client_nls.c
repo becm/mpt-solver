@@ -2,6 +2,8 @@
  * create client for solving nonlinear systems.
  */
 
+#define _POSIX_C_SOURCE 200809L /* need for strdup() */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
