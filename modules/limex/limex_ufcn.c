@@ -20,20 +20,17 @@ static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double
 	MPT_SOLVER_STRUCT(ivppar) ivp;
 	int res, nint = neq[1];
 	
-	ivp.neqs = neq[0] / nint;
-	ivp.pint = nint - 1;
+	ivp.neqs = neq[0] / (nint + 1);
+	ivp.pint = nint;
 	
 	/* calcualte PDE */
-	if (!(res = ((const MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, *t, y, f, &ivp, fcn->grid, fcn->rside)) < 0) {
-		*info = 0;
-	}
-	if (res < 0) {
+	if ((res = ((const MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, *t, y, f, &ivp, fcn->grid, fcn->rside)) < 0) {
 		*info = res;
 		return;
 	}
 	/* identity matrix */
-	if (fcn->dae.mas) {
-		int i, n = ivp.neqs;
+	if (!fcn->dae.mas) {
+		int i, n = neq[0];
 		for (i = 0; i < n; ++i) {
 			ir[i] = i + 1;
 		}
@@ -78,7 +75,7 @@ static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double
 			y += neqs;
 		}
 	}
-	*info = (res < 0) ? -2 : -1;
+	*info = 0;
 }
 
 static void limex_jac(int *neq, double *t, double *y, double *ys, double *jac, int *ldjac, int *ml, int *mu, int *banded, int *info)
