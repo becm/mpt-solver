@@ -106,22 +106,21 @@ static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cjp
 	}
 }
 
-extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, const MPT_SOLVER_STRUCT(daefcn) *ufcn)
+extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, const MPT_SOLVER_STRUCT(ivpfcn) *ufcn)
 {
-	if (!ufcn || !ufcn->fcn) {
+	if (!ufcn || !ufcn->dae.fcn) {
 		return MPT_ERROR(BadArgument);
 	}
 	
-	if (da->ivp.pint) {
-		da->jac = 0;
-	} else {
+	if (ufcn->dae.mas) {
 		size_t nz = da->ivp.neqs * da->ivp.neqs;
+		
 		if (!da->dmas && !(da->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double))))) {
 			return MPT_ERROR(BadOperation);
 		}
-		da->jac = ufcn->jac ? dassl_jac : 0;
 	}
 	da->fcn = dassl_fcn;
+	da->jac = ufcn->dae.jac ? dassl_jac : 0;
 	
 	da->ipar = (int *) ufcn;
 	da->rpar = (double *) da;

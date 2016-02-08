@@ -76,10 +76,10 @@ typedef int (*MPT_SOLVER_TYPE(NlsOut))(void *opar, const MPT_STRUCT(value) *val)
 enum MPT_SOLVER_ENUM(Flags)
 {
 	MPT_SOLVER_ENUM(CapableIvp) = 0x100,
-	MPT_SOLVER_ENUM(ODE)        = 0x100,
-	MPT_SOLVER_ENUM(DAE)        = 0x101,
-	MPT_SOLVER_ENUM(PDE)        = 0x102,
-	MPT_SOLVER_ENUM(IVP)        = 0x103,
+	MPT_SOLVER_ENUM(ODE)        = 0x101,
+	MPT_SOLVER_ENUM(DAE)        = 0x102,
+	MPT_SOLVER_ENUM(PDE)        = 0x104,
+	MPT_SOLVER_ENUM(IVP)        = 0x107,
 	
 	MPT_SOLVER_ENUM(CapableNls) = 0x200,
 	MPT_SOLVER_ENUM(NlsVector)  = 0x201,
@@ -122,28 +122,13 @@ MPT_SOLVER_STRUCT(pdefcn)
 #ifdef __cplusplus
 	enum { Type = PDE };
 	
-	inline pdefcn(PdeFcn f, RsideFcn r = 0) : fcn(f), param(0), rside(r)
+	inline pdefcn(PdeFcn f, RsideFcn r = 0) : rside(r), grid(0), fcn(f), param(0)
 	{ }
 #endif
-	MPT_SOLVER_TYPE(RsideFcn)  rside; /* right side function */
+	MPT_SOLVER_TYPE(RsideFcn)  rside; /* per node right side */
 	double                    *grid;  /* solver grid data */
 	MPT_SOLVER_TYPE(PdeFcn)    fcn;   /* right side function */
 	void                      *param; /* user parameter for handler functions */
-};
-
-MPT_SOLVER_STRUCT(ivpfcn)
-{
-#ifdef __cplusplus
-	inline ivpfcn(void *par = 0) : rside(0), grid(0), dae(0, 0)
-	{
-		dae.param = par;
-	}
-#else
-# define MPT_IVPFCN_INIT(d)  ((MPT_SOLVER_STRUCT(ivpfcn) *) memset(d, 0, sizeof(MPT_SOLVER_STRUCT(ivpfcn))))
-#endif
-	MPT_SOLVER_TYPE(RsideFcn) rside; /* right side function */
-	double                   *grid;  /* solver grid data */
-	MPT_SOLVER_STRUCT(daefcn) dae;
 };
 
 /*! general IVP parameter */
@@ -158,7 +143,47 @@ MPT_SOLVER_STRUCT(ivppar)
 	int32_t neqs,  /* number of equotations */
 	        pint;  /* number pde intervals */
 };
+/*! initial value problem functions */
+MPT_SOLVER_STRUCT(ivpfcn)
+{
+#ifdef __cplusplus
+	enum { Type = IVP };
+	
+	inline ivpfcn(void *par = 0) : rside(0), grid(0), dae(0, 0)
+	{
+		dae.param = par;
+	}
+	void *functions(int type, const MPT_SOLVER_STRUCT(ivppar) &par)
+	{
+		switch (type) {
+		  case odefcn::Type: if (par.pint) return 0; dae.mas = 0; return &dae;
+		  case daefcn::Type: return par.pint ? 0 : &dae;
+		  case pdefcn::Type: if (!par.pint) return 0; dae.jac = 0; dae.mas = 0;
+		  case ivpfcn::Type: return this;
+		  default: return 0;
+		}
+	}
+#else
+# define MPT_IVPFCN_INIT(d)  ((MPT_SOLVER_STRUCT(ivpfcn) *) memset(d, 0, sizeof(MPT_SOLVER_STRUCT(ivpfcn))))
+#endif
+	MPT_SOLVER_TYPE(RsideFcn) rside; /* right side function */
+	double                   *grid;  /* solver grid data */
+	MPT_SOLVER_STRUCT(daefcn) dae;
+};
 
+
+/*! general nonlinear system parameter */
+MPT_SOLVER_STRUCT(nlspar)
+{
+#ifdef __cplusplus
+	inline nlspar() : nval(0), nres(0)
+	{ }
+#else
+# define MPT_NLSPAR_INIT(d)  ((d)->nres = (d)->nval = 0)
+#endif
+	int32_t nval,  /* parameters to optimize */
+	        nres;  /* number of residuals */
+};
 /*! generic nonlinear system functions */
 MPT_SOLVER_STRUCT(nlsfcn)
 {
@@ -174,18 +199,6 @@ MPT_SOLVER_STRUCT(nlsfcn)
 	
 	MPT_SOLVER_TYPE(NlsOut) out;  /* output current parameter/residuals */
 	void *opar;                   /* output function parameter */
-};
-/*! general nonlinear system parameter */
-MPT_SOLVER_STRUCT(nlspar)
-{
-#ifdef __cplusplus
-	inline nlspar() : nval(0), nres(0)
-	{ }
-#else
-# define MPT_NLSPAR_INIT(d)  ((d)->nres = (d)->nval = 0)
-#endif
-	int32_t nval,  /* parameters to optimize */
-	        nres;  /* number of residuals */
 };
 
 #ifdef __cplusplus

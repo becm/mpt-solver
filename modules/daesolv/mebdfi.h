@@ -3,7 +3,7 @@
  */
 
 #ifndef _MPT_MEBDFI_H
-#define _MPT_MEBDFI_H  201502
+#define _MPT_MEBDFI_H  @INTERFACE_VERSION@
 
 #include "../solver.h"
 
@@ -74,7 +74,7 @@ extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *);
 extern void mpt_mebdfi_init(MPT_SOLVER_STRUCT(mebdfi) *);
 extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *);
 /* set wrapper for user functions */
-extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *, const MPT_SOLVER_STRUCT(daefcn) *);
+extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
 
 /* mebdfi status information */
 extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -130,26 +130,16 @@ class Mebdfi : public IVP, mebdfi
 		*tend = t;
 		return ret;
 	}
-	void *funstions(int type)
+	void *functions(int type)
 	{
-		switch (type) {
-		  case odefcn::Type: break;
-		  case daefcn::Type: return ivp.pint ? 0 : &_fcn;
-		  case pdefcn::Type: return ivp.pint ? &_fcn : 0;
-		  default: return 0;
-		}
-		if (ivp.pint) {
-			return 0;
-		}
-		_fcn.mas = 0;
-		return &_fcn;
+		return _fcn.functions(type, ivp);
 	}
 	double *initstate()
 	{
 		return y;
 	}
 protected:
-	daefcn _fcn;
+	ivpfcn _fcn;
 };
 #endif
 

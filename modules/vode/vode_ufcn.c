@@ -44,12 +44,12 @@ static void vode_jac(int *neq, double *t, double *y, int *ml, int *mu, double *j
 	}
 }
 
-extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, const MPT_SOLVER_STRUCT(odefcn) *ufcn)
+extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, const MPT_SOLVER_STRUCT(ivpfcn) *ufcn)
 {
-	if (!ufcn->fcn) {
+	if (!ufcn || !ufcn->dae.fcn) {
 		return MPT_ERROR(BadArgument);
 	}
-	vd->jac = ufcn->jac ? vode_jac : 0;
+	vd->jac = ufcn->dae.jac ? vode_jac : 0;
 	vd->fcn = vode_fcn;
 	vd->ipar = (int *) ufcn;
 	vd->rpar = (double *) vd;

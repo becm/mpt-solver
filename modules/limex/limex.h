@@ -3,7 +3,7 @@
  */
 
 #ifndef _MPT_LIMEX_H
-#define _MPT_LIMEX_H  201502
+#define _MPT_LIMEX_H  @INTERFACE_VERSION@
 
 #include "../solver.h"
 
@@ -99,7 +99,7 @@ public:
 	{
 		if ((_lx = mpt_limex_global())) {
 			_lx->ufcn = &_fcn;
-			_fcn.param = &_lx->ivp;
+			_fcn.dae.param = _lx;
 		}
 	}
 	virtual ~Limex()
@@ -140,20 +140,7 @@ public:
 	}
 	void *functions(int type)
 	{
-		if (!_lx) {
-			return 0;
-		}
-		switch (type) {
-		  case odefcn::Type: break;
-		  case daefcn::Type: return _lx->ivp.pint ? 0 : &_fcn;
-		  case pdefcn::Type: return _lx->ivp.pint ? &_fcn : 0;
-		  default: return 0;
-		}
-		if (_lx->ivp.pint) {
-			return 0;
-		}
-		_fcn.mas = 0;
-		return &_fcn;
+		return _lx ? _fcn.functions(type, _lx->ivp) : 0;
 	}
 protected:
 	ivpfcn _fcn;

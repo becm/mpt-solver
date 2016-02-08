@@ -3,7 +3,7 @@
  */
 
 #ifndef _MPT_DASSL_H
-#define _MPT_DASSL_H  201502
+#define _MPT_DASSL_H  @INTERFACE_VERSION@
 
 #include "../solver.h"
 
@@ -63,7 +63,7 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *);
 extern void mpt_dassl_init(MPT_SOLVER_STRUCT(dassl) *);
 extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *);
 /* set wrapper for user functions */
-extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *, const MPT_SOLVER_STRUCT(daefcn) *);
+extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
 
 /* dassl status information */
 extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -120,17 +120,7 @@ public:
 	}
 	void *functions(int type)
 	{
-		switch (type) {
-		  case odefcn::Type: break;
-		  case daefcn::Type: return ivp.pint ? 0 : &_fcn;
-		  case pdefcn::Type: return ivp.pint ? &_fcn : 0;
-		  default: return 0;
-		}
-		if (ivp.pint) {
-			return 0;
-		}
-		_fcn.mas = 0;
-		return &_fcn;
+		return _fcn.functions(type, ivp);
 	}
 	double *initstate()
 	{

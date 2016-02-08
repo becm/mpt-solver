@@ -3,12 +3,12 @@
  */
 
 #ifndef _MPT_SUNDIALS_H
+#define _MPT_SUNDIALS_H  @INTERFACE_VERSION@
 
 #include "../solver.h"
-#define _MPT_SUNDIALS_H  _MPT_SOLVER_H
 
 #ifdef __cplusplus
-# include <sundials/sundials_types.h>
+# include <sundials/sundials_nvector.h>
 #endif
 
 __MPT_SOLVER_BEGIN
@@ -225,7 +225,7 @@ public:
 	CVode()
 	{
 		ufcn = &_fcn;
-		_fcn.param = &ivp;
+		_fcn.dae.param = &ivp;
 	}
 	virtual ~CVode()
 	{ }
@@ -258,13 +258,16 @@ public:
 	}
 	void *functions(int type)
 	{
-		switch (type) {
-		  case odefcn::Type: if (ivp.pint) return 0; break;
-		  case pdefcn::Type: if (!ivp.pint) return 0; break;
-		  default: return 0;
+		return (type == DAE) ? 0 : _fcn.functions(type, ivp);
+	}
+	double *initstate()
+	{
+#if defined(SUNDIALS_DOUBLE_PRECISION)
+		if (sd.y) {
+			return N_VGetArrayPointer(sd.y);
 		}
-		_fcn.dae.mas = 0;
-		return ivp.pint ? &_fcn : &_fcn.dae;
+#endif
+		return 0;
 	}
 protected:
 	ivpfcn _fcn;
@@ -277,10 +280,10 @@ inline cvode::~cvode()
 class IDA : public IVP, ida
 {
 public:
-	IDA() : _fcn(0)
+	IDA()
 	{
-		ufcn = (daefcn *) &_fcn;
-		_fcn.param = &ivp;
+		ufcn = &_fcn;
+		_fcn.dae.param = &ivp;
 	}
 	virtual ~IDA()
 	{ }
@@ -313,14 +316,19 @@ public:
 	}
 	void *functions(int type)
 	{
-		switch (type) {
-		  case daefcn::Type: return ivp.pint ? 0 : (void *) &_fcn;
-		  case pdefcn::Type: return ivp.pint ? (void *) &_fcn : 0;
-		  default: return 0;
+		return _fcn.functions(type, ivp);
+	}
+	double *initstate()
+	{
+#if defined(SUNDIALS_DOUBLE_PRECISION)
+		if (sd.y) {
+			return N_VGetArrayPointer(sd.y);
 		}
+#endif
+		return 0;
 	}
 protected:
-	pdefcn _fcn;
+	ivpfcn _fcn;
 };
 inline ida::ida()
 { sundials_ida_init(this); }

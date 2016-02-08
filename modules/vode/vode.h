@@ -3,7 +3,7 @@
  */
 
 #ifndef _MPT_VODE_H
-#define _MPT_VODE_H	201405
+#define _MPT_VODE_H  @INTERFACE_VERSION@
 
 #include "../solver.h"
 
@@ -50,8 +50,8 @@ __MPT_EXTDECL_BEGIN
 
 /* c definition for vode fortran call */
 extern void dvode_(vode_fcn_t *, int *, double *, double *, double *, int *, double *, double *,
-		   int *, int *, int *, double *, int *, int *, int *,
-		   vode_jac_t *, int *, double *, int *);
+                   int *, int *, int *, double *, int *, int *, int *,
+                   vode_jac_t *, int *, double *, int *);
 
 /* execute next step on supplied vode instance */
 extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *, double);
@@ -61,13 +61,13 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *, const char *, MPT_INTERFACE(m
 extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *, MPT_STRUCT(property) *);
 
 /* validate settings and working space for use */
-extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *__vd);
+extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *);
 
 /* initialize/clear vode integrator descriptor */
-extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *__vd);
-extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *__vd);
+extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *);
+extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *);
 /* set wrapper for user functions */
-extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *__vd, const MPT_SOLVER_STRUCT(odefcn) *__uf);
+extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
 
 /* vode status information */
 extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -114,7 +114,7 @@ public:
 	{
 		if (!end) {
 			int ret;
-			if (_fcn.fcn && (ret = mpt_vode_ufcn(this, (odefcn *) &_fcn)) < 0) {
+			if (!vode::fcn && _fcn.dae.fcn && (ret = mpt_vode_ufcn(this, &_fcn)) < 0) {
 				return ret;
 			}
 			return mpt_vode_prepare(this);
@@ -125,11 +125,7 @@ public:
 	}
 	void *functions(int type)
 	{
-		switch (type) {
-		  case odefcn::Type: return ivp.pint ? 0 : (void *) &_fcn;
-		  case pdefcn::Type: return ivp.pint ? (void *) &_fcn : 0;
-		  default: return 0;
-		}
+		return (type == DAE) ? 0 : _fcn.functions(type, ivp);
 	}
 protected:
 	ivpfcn _fcn;

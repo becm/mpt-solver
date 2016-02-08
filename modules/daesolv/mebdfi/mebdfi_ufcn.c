@@ -108,17 +108,19 @@ static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, 
 	}
 }
 
-extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_SOLVER_STRUCT(daefcn) *ufcn)
+extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_SOLVER_STRUCT(ivpfcn) *ufcn)
 {
-	size_t nz = me->ivp.neqs * me->ivp.neqs;
-	if (!ufcn || !ufcn->fcn) {
+	if (!ufcn || !ufcn->dae.fcn) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (ufcn->mas && !me->dmas && (!nz || !(me->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double)))))) {
-		return MPT_ERROR(BadOperation);
+	if (ufcn->dae.mas) {
+		size_t nz = me->ivp.neqs * me->ivp.neqs;
+		if (!me->dmas && (!nz || !(me->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double)))))) {
+			return MPT_ERROR(BadOperation);
+		}
 	}
 	me->fcn = mebdfi_fcn;
-	me->jac = ufcn->jac ? mebdfi_jac : 0;
+	me->jac = ufcn->dae.jac ? mebdfi_jac : 0;
 	
 	me->ipar = (int *) ufcn;
 	me->rpar = (double *) me;

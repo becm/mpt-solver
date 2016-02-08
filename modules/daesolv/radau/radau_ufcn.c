@@ -79,19 +79,22 @@ static void radau_mas(int *neq, double *b, int *lmasp, double *rpar, int *ipar)
 	}
 }
 
-extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, const MPT_SOLVER_STRUCT(daefcn) *ufcn)
+extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, const MPT_SOLVER_STRUCT(ivpfcn) *ufcn)
 {
-	size_t nz = rd->ivp.neqs * rd->ivp.neqs;
 	
-	if (!ufcn || !ufcn->fcn) {
+	if (!ufcn || !ufcn->dae.fcn) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (ufcn->mas && !rd->dmas && (!nz || !(rd->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double)))))) {
-		return MPT_ERROR(BadOperation);
+	if (ufcn->dae.mas) {
+		size_t nz = rd->ivp.neqs * rd->ivp.neqs;
+		
+		if (!rd->dmas && (!nz || !(rd->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double)))))) {
+			return MPT_ERROR(BadOperation);
+		}
 	}
 	rd->fcn = radau_fcn;
-	rd->jac = ufcn->jac ? radau_jac : 0;
-	rd->mas = ufcn->mas ? radau_mas : 0;
+	rd->jac = ufcn->dae.jac ? radau_jac : 0;
+	rd->mas = ufcn->dae.mas ? radau_mas : 0;
 	
 	rd->ipar = (int *) ufcn;
 	rd->rpar = (double *) rd;

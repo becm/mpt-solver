@@ -3,7 +3,7 @@
  */
 
 #ifndef _MPT_RADAU_H
-#define _MPT_RADAU_H	201405
+#define _MPT_RADAU_H  @INTERFACE_VERSION@
 
 #include "../solver.h"
 
@@ -87,7 +87,7 @@ extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *);
 extern void mpt_radau_init(MPT_SOLVER_STRUCT(radau) *);
 extern void mpt_radau_fini(MPT_SOLVER_STRUCT(radau) *);
 /* set wrapper for user functions */
-extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *, const MPT_SOLVER_STRUCT(daefcn) *);
+extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
 
 /* radau status information */
 extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -137,7 +137,7 @@ public:
 	{
 		int ret;
 		if (!tend) {
-			if (!fcn && (ret = mpt_radau_ufcn(this, &_fcn)) < 0) {
+			if (!fcn && _fcn.dae.fcn && (ret = mpt_radau_ufcn(this, &_fcn)) < 0) {
 				return ret;
 			}
 			return mpt_radau_prepare(this);
@@ -148,17 +148,7 @@ public:
 	}
 	void *functions(int type)
 	{
-		switch (type) {
-		  case odefcn::Type: break;
-		  case daefcn::Type: return ivp.pint ? 0 : &_fcn;
-		  case pdefcn::Type: return ivp.pint ? &_fcn : 0;
-		  default: return 0;
-		}
-		if (ivp.pint) {
-			return 0;
-		}
-		_fcn.mas = 0;
-		return &_fcn;
+		return _fcn.functions(type, ivp);
 	}
 	double *initstate()
 	{
