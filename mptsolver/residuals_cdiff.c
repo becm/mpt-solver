@@ -30,12 +30,14 @@ extern int mpt_residuals_cdiff(void *ctx, double t, const double *y, double *f, 
 	double dx, *diff, *vx;
 	int pts, i, npde;
 	
-	/* inner nodes required */
-	if (!ivp || (pts = ivp->pint) <= 0 || !rfcn || !grid) {
+	/* require PDE arguments */
+	if (!ivp || (npde = ivp->neqs) < 1 ||  || !rfcn || !grid) {
 		return MPT_ERROR(BadArgument);
 	}
-	npde = ivp->neqs;
-	
+	/* inner nodes required */
+	if ((pts = ivp->pint - 1) <= 0) {
+		return MPT_ERROR(BadArgument);
+	}
 	diff = f;  /* initial temporary data */
 	vx   = f + npde;
 	

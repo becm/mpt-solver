@@ -17,11 +17,11 @@ extern int mpt_vecpar_settol(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFACE(metaty
 		return ret;
 	}
 	if (ret < 2) {
-		if (!ret || !tol) {
+		if (!ret) {
 			vec->d.val = def;
 		}
-		else if (tol) {
-			vec->d.val = *tol;
+		if (tol) {
+			free(tol);
 		}
 		vec->base = 0;
 		return ret;
