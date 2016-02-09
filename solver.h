@@ -374,31 +374,43 @@ MPT_SOLVER(NLS)
 #endif
 
 MPT_SOLVER_STRUCT(data)
-#ifdef _MPT_ARRAY_H
 {
 #ifdef __cplusplus
 	inline data() : npar(0), nval(0)
 	{ for (size_t i = 0; i < sizeof(mask)/sizeof(*mask); ++i) mask[i] = 0; }
 #endif
+#ifdef _MPT_ARRAY_H
 	MPT_STRUCT(array)        param,    /* parameter matrix */
 	                         val;      /* input/output (matrix) data */
+#else
+	void *_pad[2];
+#endif
 	int                      npar,     /* leading dimension of parameter data */
 	                         nval;     /* length of value matrix row */
-	uint8_t                  mask[16]; /* masked dimensions (0..255) */
+	uint8_t                  mask[24]; /* masked dimensions (0..191) */
 	struct timeval           ru_usr,   /* user time in solver backend */
 	                         ru_sys;   /* system time in solver backend */
 }
-#endif
 ;
 
 __MPT_EXTDECL_BEGIN
 
 
 /* create interface to solver */
-extern MPT_INTERFACE(client) *mpt_client_ode(int (*)(MPT_SOLVER_STRUCT(odefcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
-extern MPT_INTERFACE(client) *mpt_client_dae(int (*)(MPT_SOLVER_STRUCT(daefcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
-extern MPT_INTERFACE(client) *mpt_client_pde(int (*)(MPT_SOLVER_STRUCT(pdefcn) *, MPT_SOLVER_STRUCT(data) *), const char *__MPT_DEFPAR(0));
+extern MPT_INTERFACE(client) *mpt_client_ivp(int (*)(MPT_SOLVER(IVP) *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *), const char *__MPT_DEFPAR(0));
 extern MPT_INTERFACE(client) *mpt_client_nls(int (*)(MPT_SOLVER(NLS) *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *), const char *__MPT_DEFPAR(0));
+
+
+/* initialize IVP solver states */
+extern int mpt_init_ivp(MPT_SOLVER(IVP) *, double , int , const double *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+
+extern MPT_SOLVER_STRUCT(daefcn) *mpt_init_dae(MPT_SOLVER(IVP) *, const MPT_STRUCT(array) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern MPT_SOLVER_STRUCT(odefcn) *mpt_init_ode(MPT_SOLVER(IVP) *, const MPT_STRUCT(array) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern MPT_SOLVER_STRUCT(pdefcn) *mpt_init_pde(MPT_SOLVER(IVP) *, int , int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+
+/* initialize NLS solver states */
+extern MPT_SOLVER_STRUCT(nlsfcn) *mpt_init_nls(MPT_SOLVER(NLS) *, const MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+
 
 /* register events on notifier */
 extern int mpt_solver_events(MPT_STRUCT(dispatch) *, MPT_INTERFACE(client) *);
@@ -427,9 +439,6 @@ extern void mpt_data_timeradd(MPT_SOLVER_STRUCT(data) *, const struct rusage *, 
 extern int mpt_conf_nls(MPT_SOLVER_STRUCT(data) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern int mpt_conf_pde(MPT_SOLVER_STRUCT(data) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *, double , const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-
-/* initialize solver from data */
-extern MPT_SOLVER_STRUCT(nlsfcn) *mpt_init_nls(MPT_SOLVER(NLS) *, const MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* get/initialize solver data parameters */
 extern double *mpt_data_grid (MPT_SOLVER_STRUCT(data) *);

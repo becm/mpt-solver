@@ -42,11 +42,16 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 }
 
 /* set user functions for PDE step */
-extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd)
+extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
 {
+	MPT_SOLVER_STRUCT(pdefcn) *usr;
 	static double diff = 0.094;
 	int npde = 1;
 	
+	if (!(usr = mpt_init_pde(sol, npde, sd->nval, out))
+	    || !(usr->grid = mpt_data_grid(sd))) {
+		return MPT_ERROR(BadArgument);
+	}
 	usr->fcn = rs_pde;
 	usr->rside = rfcn;
 	

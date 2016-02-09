@@ -67,12 +67,14 @@ static int bm_akzo(void *udata, double t, const double *y, double *b, int *idrow
 	return n;
 }
 
-int user_init(MPT_SOLVER_STRUCT(daefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
 {
+	MPT_SOLVER_STRUCT(daefcn) *usr;
 	double *param;
 	
-	(void) out;
-	
+	if (!(usr = mpt_init_dae(sol, &sd->val, out))) {
+		return MPT_ERROR(BadArgument);
+	}
 	usr->fcn = rs_akzo;
 	usr->mas = bm_akzo;
 	

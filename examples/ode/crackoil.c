@@ -19,11 +19,15 @@ static int rh_side(void *udata, double t, const double *y, double *f)
 	return 0;
 }
 
-extern int user_init(MPT_SOLVER_STRUCT(odefcn) *usr, MPT_SOLVER_STRUCT(data) *sd)
+extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
 {
+	MPT_SOLVER_STRUCT(odefcn) *usr;
 	double *param;
 	int i, n;
 	
+	if (!(usr = mpt_init_ode(sol, &sd->val, out))) {
+		return MPT_ERROR(BadArgument);
+	}
 	usr->fcn = rh_side;
 	
 	param = mpt_data_param(sd);

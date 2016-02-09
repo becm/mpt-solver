@@ -4,7 +4,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include "solver.h"
 
@@ -14,8 +13,7 @@ extern int mpt_vecpar_cktol(MPT_SOLVER_TYPE(dvecpar) *tol, int neqs, int post, d
 	int  i, len;
 	
 	if (post < 0) {
-		errno = EINVAL;
-		return -1;
+		return MPT_ERROR(BadArgument);
 	}
 	if (neqs < 1) post = 0;
 	
@@ -40,7 +38,7 @@ extern int mpt_vecpar_cktol(MPT_SOLVER_TYPE(dvecpar) *tol, int neqs, int post, d
 	}
 	
 	if (!(tmp = realloc(tmp, neqs * post * sizeof(*tmp)))) {
-		return -1;
+		return MPT_ERROR(BadOperation);
 	}
 	tol->d.len = neqs * post * sizeof(*tmp);
 	

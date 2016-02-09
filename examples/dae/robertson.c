@@ -56,10 +56,13 @@ int jac_eval(void *udata, double t, const double *y, double *jac, int ljac)
 	return 0;
 }
 
-int user_init(MPT_SOLVER_STRUCT(daefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
 {
-	(void) out;
+	MPT_SOLVER_STRUCT(daefcn) *usr;
 	
+	if (!(usr = mpt_init_dae(sol, &sd->val, out))) {
+		return MPT_ERROR(BadArgument);
+	}
 	usr->fcn = rh_side;
 	usr->jac = jac_eval;
 	usr->mas = bmat_bcf;

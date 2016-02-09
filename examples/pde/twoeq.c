@@ -57,22 +57,26 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 }
 
 /* set user functions for PDE step */
-extern int user_init(MPT_SOLVER_STRUCT(pdefcn) *usr, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(output) *out)
+extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
 {
+	MPT_SOLVER_STRUCT(pdefcn) *usr;
 	int npar, npde = 2;
 	
-	(void) out;
+	/* require minimal parameter count */
+	if ((npar = sd->npar) < 2) {
+		mpt_log(out, __func__, MPT_FCNLOG(Error), "%s (npar=%d)",
+		        "missing parameters", npar);
+		return MPT_ERROR(BadValue);
+	}
+	param = mpt_data_param(sd);
 	
+	if (!(usr = mpt_init_pde(sol, npde, sd->nval, out))
+	    || !(usr->grid = mpt_data_grid(sd))) {
+		return MPT_ERROR(BadArgument);
+	}
 	usr->fcn = rs_pde;
 	usr->rside = rfcn;
 	
-	param = mpt_data_param(sd);
-	
-	if ((npar = sd->npar) < 2) {
-		mpt_output_log(out, __func__, MPT_FCNLOG(Error), "%s (npar=%d)",
-		               "missing parameters", npar);
-		return MPT_ERROR(BadValue);
-	}
 	
 	return npde;
 }

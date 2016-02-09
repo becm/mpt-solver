@@ -78,7 +78,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(metatype) *src
 	}
 	
 	if (setInt(vd, 0, ml) < 0
-	    || setInt(vd, 0, ml) < 0) {
+	    || setInt(vd, 1, mu) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	vd->miter = (key[0] == 'B') ? 4 : 5;

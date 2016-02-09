@@ -16,10 +16,10 @@ flame flame_static : LDLIBS+=-lm
 test_flame : ARGS=flame.conf
 
 diff : diff.o
-test_diff : ARGS=twoeq.conf
+test_diff : ARGS=diff.conf
 
 htrans : htrans.o
-test_htrans : ARGS=twoeq.conf
+test_htrans : ARGS=htrans.conf
 
 twoeq : twoeq.o
 twoeq : LDLIBS+=-lmptcore

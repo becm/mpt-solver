@@ -2,6 +2,8 @@
  * sys4.c: BACOL user functions for PDE system
  */
 
+#include <mpt/solver.h>
+
 void derivf_(
 	double *t, double *x,
 	double *u, double *ux, double *uxx,
@@ -231,7 +233,15 @@ void f_(
 }
 
 /* map functions to bacol parameters */
-extern int user_init(void)
+extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *log)
 {
-	return 4;
+	int ret, npde = 4;
+	
+	(void) sd;
+	if ((ret = mpt_object_set((void *) sol, "", "i", npde)) < 0) {
+		mpt_log(log, __func__, MPT_FCNLOG(Error), "%s", "unable to set PDE count");
+		return ret;
+	}
+	/* no profile operation */
+	return 0;
 }

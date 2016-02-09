@@ -12,5 +12,6 @@ include ../solver.example.mk
 ${PROGS} : main.o
 
 sys4 : sys4.o
+sys4 : LDLIBS+=-lmptcore
 sys4 : LDFLAGS+=-Wl,--export-dynamic
 test_sys4 : ARGS=sys4.conf
