@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <sys/resource.h>
 #include <sys/uio.h>
 
 #include "node.h"
@@ -24,12 +25,14 @@
 
 struct IVP {
 	MPT_INTERFACE(client)    cl;
-	MPT_STRUCT(proxy)        pr;
 	MPT_SOLVER_STRUCT(data) *sd;
 	MPT_SOLVER(IVP)         *sol;
 	MPT_INTERFACE(metatype) *src;
 	char                    *cfg;
 	int (*uinit)(MPT_SOLVER(IVP) *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *);
+	struct timeval           ru_usr,   /* user time in solver backend */
+	                         ru_sys;   /* system time in solver backend */
+	MPT_STRUCT(proxy)        pr;
 	double t;
 	int pdim;
 };
@@ -365,6 +368,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	MPT_INTERFACE(logger) *log;
 	MPT_SOLVER(IVP) *sol;
 	struct _clientPdeOut ctx;
+	struct rusage pre, post;
 	double end;
 	int ret;
 	
@@ -385,11 +389,22 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		const double *val;
 		int i, ld, len;
 		
+		/* current time data */
+		getrusage(RUSAGE_SELF, &pre);
+		/* execute possible steps */
 		ret = mpt_steps_ode(ivp->sol, src, ivp->sd, log);
+		/* add time difference */
+		getrusage(RUSAGE_SELF, &post);
+		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
+		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
 		
 		ctx.state = MPT_ENUM(OutputStateStep);
-		if (!ret) ctx.state |= MPT_ENUM(OutputStateFini);
-		if (ret < 0) ctx.state |= MPT_ENUM(OutputStateFail);
+		if (!ret) {
+			ctx.state |= MPT_ENUM(OutputStateFini);
+		}
+		else if (ret < 0) {
+			ctx.state |= MPT_ENUM(OutputStateFail);
+		}
 		
 		ld  = ctx.dat->nval;
 		val = mpt_data_grid(ctx.dat);
@@ -402,6 +417,9 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 				continue;
 			}
 			mpt_output_data(ivp->cl.out, ctx.state, i, len, val+i, ld);
+		}
+		if (!ret && log) {
+			mpt_solver_statistics((void *) sol, log, &ivp->ru_sys, &ivp->ru_sys);
 		}
 		return ret;
 	}
@@ -452,6 +470,8 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		ctx.state = MPT_ENUM(OutputStateStep);
 		ret = 1;
 		
+		getrusage(RUSAGE_SELF, &pre);
+		
 		ivp->t = end;
 		if ((ret = sol->_vptr->step(sol, &ivp->t)) < 0) {
 			ctx.state |= MPT_ENUM(OutputStateFail);
@@ -459,10 +479,15 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			               MPT_tr("solver step failed"), end);
 			break;
 		}
-		else if (ivp->t < end) {
+		getrusage(RUSAGE_SELF, &post);
+		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
+		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
+		
+		if (ivp->t < end) {
 			mpt_solver_status((void *) sol, log, outPDE, &ctx);
 			continue;
 		}
+		
 		ret = 1;
 		while (1) {
 			int curr;
@@ -495,7 +520,10 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			               MPT_tr("skip time value argument"), end, ivp->t);
 		}
 		if ((ctx.out = ivp->cl.out)) {
-			mpt_solver_status((void *) sol, log, outPDE, &ctx);
+			if (log) mpt_solver_status((void *) sol, log, outPDE, &ctx);
+		}
+		if (!ret && log) {
+			mpt_solver_statistics((void *) sol, log, &ivp->ru_sys, &ivp->ru_sys);
 		}
 		if (!arg || ret < 1) {
 			break;
@@ -563,6 +591,9 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(int (*uinit)(MPT_SOLVER(IVP) *, MPT
 	ivp->pdim = 0;
 	
 	ivp->uinit = uinit;
+	
+	memset(&ivp->ru_usr, 0, sizeof(ivp->ru_usr));
+	memset(&ivp->ru_sys, 0, sizeof(ivp->ru_sys));
 	
 	return &ivp->cl;
 }

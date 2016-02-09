@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include <sys/uio.h>
-#include <sys/resource.h>
 
 #include "array.h"
 #include "values.h"
@@ -66,7 +65,6 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  */
 extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(metatype) *src, MPT_SOLVER_STRUCT(data) *md, MPT_INTERFACE(logger) *out)
 {
-	struct rusage pre, post;
 	double curr, end, *data;
 	int err, cont, neqs;
 	
@@ -82,9 +80,6 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(metatype) *src, MPT
 	if ((neqs = md->nval) < 1 || !(data = mpt_data_grid(md))) {
 		return MPT_ERROR(BadArgument);
 	}
-	/* current time data */
-	getrusage(RUSAGE_SELF, &pre);
-	
 	/* try to complete full run */
 	do {
 		curr = end;
@@ -120,10 +115,6 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(metatype) *src, MPT
 		else sol->_vptr->gen.report((void *) sol, MPT_SOLVER_ENUM(Values), updateIvpDataWrap, md);
 		
 	} while (neqs > 1 && cont);
-	
-	/* add solver runtime */
-	getrusage(RUSAGE_SELF, &post);
-	mpt_data_timeradd(md, &pre, &post);
 	
 	return err;
 }

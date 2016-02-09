@@ -31,9 +31,6 @@ extern void mpt_data_clear(MPT_SOLVER_STRUCT(data) *md)
 	md->nval = 0;
 	
 	memset(md->mask, 0, sizeof(md->mask));
-	
-	memset(&md->ru_usr, 0, sizeof(md->ru_usr));
-	memset(&md->ru_sys, 0, sizeof(md->ru_sys));
 }
 /*!
  * \ingroup mptSolver

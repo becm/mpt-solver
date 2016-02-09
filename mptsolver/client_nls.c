@@ -28,6 +28,8 @@ struct NLS {
 	MPT_SOLVER(NLS)         *sol;
 	char                    *cfg;
 	int (*uinit)(MPT_SOLVER(NLS) *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *);
+	struct timeval           ru_usr,   /* user time in solver backend */
+	                         ru_sys;   /* system time in solver backend */
 	MPT_STRUCT(proxy)        pr;
 };
 
@@ -298,7 +300,7 @@ static int prepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 }
 static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 {
-	const struct NLS *nls = (void *) cl;
+	struct NLS *nls = (void *) cl;
 	MPT_SOLVER_STRUCT(data) *dat;
 	MPT_SOLVER(NLS) *sol;
 	MPT_INTERFACE(logger) *log;
@@ -321,7 +323,8 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	
 	/* add solver runtime */
 	getrusage(RUSAGE_SELF, &post);
-	mpt_data_timeradd(dat, &pre, &post);
+	mpt_timeradd_sys(&nls->ru_sys, &pre, &post);
+	mpt_timeradd_usr(&nls->ru_usr, &pre, &post);
 	
 	ctx.out = nls->cl.out;
 	ctx.dat = dat;
@@ -365,7 +368,7 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 			               desc, i+1, par[i]);
 		}
 	}
-	mpt_solver_statistics((void *) sol, log, &dat->ru_usr, &dat->ru_sys);
+	mpt_solver_statistics((void *) sol, log, &nls->ru_usr, &nls->ru_sys);
 	
 	return res;
 }
@@ -431,6 +434,10 @@ extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER(NLS) *, MPT
 		free(nls);
 		return 0;
 	}
+	
+	memset(&nls->ru_usr, 0, sizeof(nls->ru_usr));
+	memset(&nls->ru_sys, 0, sizeof(nls->ru_sys));
+	
 	return &nls->cl;
 }
 

@@ -6,8 +6,6 @@
 #ifndef _MPT_SOLVER_H
 #define _MPT_SOLVER_H  @INTERFACE_VERSION@
 
-#include <sys/time.h>
-
 #include "core.h"
 
 #ifdef __cplusplus
@@ -16,6 +14,7 @@
 
 struct iovec;
 struct rusage;
+struct timeval;
 
 __MPT_NAMESPACE_BEGIN
 
@@ -379,17 +378,15 @@ MPT_SOLVER_STRUCT(data)
 	inline data() : npar(0), nval(0)
 	{ for (size_t i = 0; i < sizeof(mask)/sizeof(*mask); ++i) mask[i] = 0; }
 #endif
+	int                      npar,     /* leading dimension of parameter data */
+	                         nval;     /* length of value matrix row */
+	uint8_t                  mask[24]; /* masked dimensions (0..191) */
 #ifdef _MPT_ARRAY_H
 	MPT_STRUCT(array)        param,    /* parameter matrix */
 	                         val;      /* input/output (matrix) data */
 #else
 	void *_pad[2];
 #endif
-	int                      npar,     /* leading dimension of parameter data */
-	                         nval;     /* length of value matrix row */
-	uint8_t                  mask[24]; /* masked dimensions (0..191) */
-	struct timeval           ru_usr,   /* user time in solver backend */
-	                         ru_sys;   /* system time in solver backend */
 }
 ;
 
@@ -432,7 +429,8 @@ extern void mpt_data_clear(MPT_SOLVER_STRUCT(data) *);
 extern int mpt_data_nls(MPT_SOLVER_STRUCT(data) *, const MPT_STRUCT(value) *);
 
 /* add usage time difference */
-extern void mpt_data_timeradd(MPT_SOLVER_STRUCT(data) *, const struct rusage *, const struct rusage *);
+extern void mpt_timeradd_sys(struct timeval *, const struct rusage *, const struct rusage *);
+extern void mpt_timeradd_usr(struct timeval *, const struct rusage *, const struct rusage *);
 
 
 /* set problem specific parameters */
