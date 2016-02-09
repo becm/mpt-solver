@@ -1,5 +1,6 @@
 # exclude solver example binaries
 config
+check
 
 # exclude output files
 *.out

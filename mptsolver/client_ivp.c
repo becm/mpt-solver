@@ -316,11 +316,11 @@ static int prepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	struct _clientPdeOut ctx;
 	int ret;
 	
-	log = mpt_object_logger((MPT_INTERFACE(object) *) ivp->cl.out);
+	log = mpt_object_logger((const MPT_INTERFACE(object) *) ivp->cl.out);
 	
 	if (!(sol = ivp->sol)) {
 		mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
-		        MPT_tr("failed to set initial values"));
+		        MPT_tr("missing solver descriptor"));
 		return MPT_ERROR(BadArgument);
 	}
 	if ((conf = configIVP(ivp->cfg))) {
@@ -333,7 +333,7 @@ static int prepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	
 	if ((ret = sol->_vptr->step(sol, 0)) < 0) {
 		mpt_output_log(ivp->cl.out, _func, MPT_FCNLOG(Error), "%s",
-		               MPT_tr("preparing solver backend failed"));
+		               MPT_tr("solver backend prepare failed"));
 		return ret;
 	}
 	if (log) {
@@ -349,12 +349,12 @@ static int prepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		return ret;
 	}
 	if (!ivp->pdim) {
-		mpt_solver_status((void *) ivp->sol, log, 0, 0);
+		mpt_solver_status((void *) sol, log, 0, 0);
 	}
 	else {
 		ctx.dat = ivp->sd;
 		ctx.state = MPT_ENUM(OutputStateInit);
-		mpt_solver_status((void *) ivp->sol, log, outPDE, &ctx);
+		mpt_solver_status((void *) sol, log, outPDE, &ctx);
 	}
 	return ret;
 }
