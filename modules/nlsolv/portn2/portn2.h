@@ -21,7 +21,7 @@ public:
 	portn2();
 	~portn2();
 #endif
-	MPT_SOLVER_STRUCT(nlspar) nls; /* inherit nonlinear system parameter */
+	MPT_SOLVER_NLS_STRUCT(parameters) nls; /* inherit nonlinear system parameter */
 	
 	int          nd,  /* partial residual dimension, no jacobian if < 0 */
 	             bnd; /* apply parameter boundaries */
@@ -94,7 +94,7 @@ extern int mpt_portn2_init(MPT_SOLVER_STRUCT(portn2) *);
 extern void mpt_portn2_fini(MPT_SOLVER_STRUCT(portn2) *);
 
 /* set wrapper for user functions */
-extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *, const MPT_SOLVER_STRUCT(nlsfcn) *);
+extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *, const MPT_SOLVER_NLS_STRUCT(functions) *);
 
 /* set wrapper for user functions */
 extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *);
@@ -157,17 +157,17 @@ class PortN2 : public NLS, portn2
 		}
 		return mpt_portn2_solve(this);
 	}
-	operator nlsfcn *() const
+	operator struct functions *() const
 	{
-		return const_cast<nlsfcn *>(&_fcn);
+		return const_cast<functions *>(&_fcn);
 	}
 	
-	inline operator const nlspar *() const
+	inline operator const struct parameters *() const
 	{
 		return &nls;
 	}
     protected:
-	nlsfcn _fcn;
+	struct functions _fcn;
 };
 #endif
 

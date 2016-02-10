@@ -6,7 +6,7 @@ static double *param;
 static const int N_PDE = 2;
 
 /* solver right side calculation */
-static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_STRUCT(ivppar) *ivp, const double *grid, MPT_SOLVER_TYPE(RsideFcn) rs)
+static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const double *grid, MPT_SOLVER_IVP(Rside) rs)
 {
 	const double *yr;
 	double *fr, phi, zeta, dzeta, dzeta2, dum, alpha, beta, c = 4.0, k = 100.0;
@@ -68,7 +68,6 @@ extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTE
 	if (!(usr = mpt_init_pde(sol, N_PDE, sd->nval, out))) {
 		return MPT_ERROR(BadArgument);
 	}
-	
 	usr->fcn = rs_pde;
 	
 	param = mpt_data_param(sd);

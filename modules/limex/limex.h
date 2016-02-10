@@ -21,7 +21,7 @@ public:
 	limex();
 	~limex();
 #endif
-	MPT_SOLVER_STRUCT(ivppar) ivp;  /* inherit IVP parameter */
+	MPT_SOLVER_IVP_STRUCT(parameters) ivp;  /* inherit IVP parameter */
 	
 	double  t;    /* reference time */
 	double *y,    /* values at current time */
@@ -29,7 +29,7 @@ public:
 	
 	int    *ipos; /* set to check coresponding position non-zero */
 	
-	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn; /* user functions */
+	const MPT_SOLVER_IVP_STRUCT(functions) *ufcn; /* user functions */
 	
 	MPT_SOLVER_TYPE(dvecpar) rtol, atol;   /* tolerances */
 	
@@ -72,7 +72,7 @@ extern void mpt_limex_fini(MPT_SOLVER_STRUCT(limex) *);
 extern void mpt_limex_reset(MPT_SOLVER_STRUCT(limex) *);
 
 /* set wrapper for user functions */
-extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
+extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *, const MPT_SOLVER_IVP_STRUCT(functions) *);
 
 /* limex report information */
 extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -140,10 +140,10 @@ public:
 	}
 	void *functions(int type)
 	{
-		return _lx ? _fcn.functions(type, _lx->ivp) : 0;
+		return _lx ? _fcn.select(type, _lx->ivp) : 0;
 	}
 protected:
-	ivpfcn _fcn;
+	struct functions _fcn;
 	limex *_lx;
 };
 #endif

@@ -46,15 +46,13 @@ static int cVodeStep(MPT_SOLVER(IVP) *sol, double *end)
 static void *cVodeFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (sol+1);
-	MPT_SOLVER_STRUCT(ivpfcn) *uf = (void *) (cv+1);
+	MPT_SOLVER_IVP_STRUCT(functions) *uf = (void *) (cv+1);
 	switch (type) {
-	  case MPT_SOLVER_ENUM(ODE): if (cv->ivp.pint) return 0; break;
+	  case MPT_SOLVER_ENUM(ODE): if (cv->ivp.pint) return 0; uf->dae.mas = 0; return &uf->dae;
 	  case MPT_SOLVER_ENUM(PDE): if (!cv->ivp.pint) return 0; uf->dae.jac = 0; uf->dae.mas = 0;
 	  case MPT_SOLVER_ENUM(IVP): return uf;
 	  default: return 0;
 	}
-	uf->dae.mas = 0;
-	return &uf->dae;
 }
 static double *cVodeState(MPT_SOLVER(IVP) *sol)
 {
@@ -76,8 +74,8 @@ static const MPT_INTERFACE_VPTR(solver_ivp) cVodeCtl = {
 extern MPT_SOLVER(IVP) *sundials_cvode_create()
 {
 	MPT_SOLVER(IVP) *sol;
-	MPT_SOLVER_STRUCT(ivpfcn) *uf;
 	MPT_SOLVER_STRUCT(cvode) *cv;
+	MPT_SOLVER_IVP_STRUCT(functions) *uf;
 	
 	if (!(sol = malloc(sizeof(*sol)+sizeof(*cv)+sizeof(*uf)))) {
 		return 0;

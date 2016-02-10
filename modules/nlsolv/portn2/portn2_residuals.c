@@ -8,7 +8,7 @@
 
 extern const double *mpt_portn2_residuals(const MPT_SOLVER_STRUCT(portn2) *n2)
 {
-	const MPT_SOLVER_STRUCT(nlspar) *nl = &n2->nls;
+	const MPT_SOLVER_NLS_STRUCT(parameters) *nl = &n2->nls;
 	double *p, *r;
 	int nf = -1;
 	

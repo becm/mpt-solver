@@ -50,12 +50,12 @@ extern int rdStep(MPT_SOLVER(IVP) *sol, double *tend)
 static void *rdFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(radau) *rd = (void *) (sol + 1);
-	MPT_SOLVER_STRUCT(ivpfcn) *ivp = (void *) (rd + 1);
+	MPT_SOLVER_IVP_STRUCT(functions) *ivp = (void *) (rd + 1);
 	
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
 	  case MPT_SOLVER_ENUM(DAE): return rd->ivp.pint ? 0 : &ivp->dae;
-	  case MPT_SOLVER_ENUM(PDE): if (!rd->ivp.pint) return 0;
+	  case MPT_SOLVER_ENUM(PDE): if (!rd->ivp.pint) return 0; ivp->dae.jac = 0; ivp->dae.mas = 0;
 	  case MPT_SOLVER_ENUM(IVP): return ivp;
 	  default: return 0;
 	}
@@ -79,7 +79,7 @@ extern MPT_SOLVER(IVP) *mpt_radau_create()
 {
 	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(radau) *rd;
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn;
 	
 	if (!(sol = malloc(sizeof(*sol) + sizeof(*rd) + sizeof(*fcn)))) {
 		return 0;

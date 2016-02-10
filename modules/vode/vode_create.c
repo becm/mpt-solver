@@ -49,11 +49,18 @@ static int vdStep(MPT_SOLVER(IVP) *sol, double *tend)
 static void *vdFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(vode) *vd = (void *) (sol+1);
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) (vd+1);
 	switch (type) {
-	  case MPT_SOLVER_ENUM(ODE): return vd->ivp.pint ? 0 : (vd+1);
-	  case MPT_SOLVER_ENUM(PDE): return vd->ivp.pint ? (vd+1) : 0;
+	  case MPT_SOLVER_ENUM(ODE): break;
+	  case MPT_SOLVER_ENUM(PDE): if (!vd->ivp.pint) return 0; fcn->dae.jac = 0; fcn->dae.mas = 0;
+	  case MPT_SOLVER_ENUM(IVP): return fcn;
 	  default: return 0;
 	}
+	if (vd->ivp.pint) {
+		return 0;
+	}
+	fcn->dae.mas = 0;
+	return &fcn->dae;
 }
 static double *vdInitState(MPT_SOLVER(IVP) *sol)
 {
@@ -71,7 +78,7 @@ extern MPT_SOLVER(IVP) *mpt_vode_create()
 {
 	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(vode) *vd;
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn;
 	
 	if (!(sol = malloc(sizeof(*sol) + sizeof(*vd) + sizeof(*fcn)))) {
 		return 0;

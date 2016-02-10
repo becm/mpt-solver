@@ -9,7 +9,7 @@
 
 extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *data, double tend)
 {
-	MPT_SOLVER_STRUCT(ivppar) *ivp = &data->ivp;
+	MPT_SOLVER_IVP_STRUCT(parameters) *ivp = &data->ivp;
 	double *atol, *rtol;
 	int neqs, itol, mf, iopt, itask, istate, liw, lrw;
 	

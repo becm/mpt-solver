@@ -9,7 +9,6 @@
 
 extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *mpack)
 {
-	MPT_SOLVER_STRUCT(nlspar) *nl = &mpack->nls;
 	int npar, nres;
 	int lw;
 	
@@ -54,5 +53,5 @@ extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *mpack)
 	}
 	mpack->info = 0;
 	
-	return nl->nres ? 0 : 1;
+	return mpack->nls.nres ? 0 : 1;
 }

@@ -7,7 +7,7 @@
 static void lmdif_fcn(int *m, int *n, double *x, double *f, int *flag)
 {
 	MPT_SOLVER_STRUCT(minpack) *mp;
-	const MPT_SOLVER_STRUCT(nlsfcn) *uf;
+	const MPT_SOLVER_NLS_STRUCT(functions) *uf;
 	int flg, ld[2];
 	
 	mp = (MPT_SOLVER_STRUCT(minpack) *) n;
@@ -42,7 +42,7 @@ static void lmder_fcn(int *m, int *n, double *x, double *f, double *jac, int *ld
 {
 	if (*flag == 2) {
 		MPT_SOLVER_STRUCT(minpack) *mp = (MPT_SOLVER_STRUCT(minpack) *) n;
-		const MPT_SOLVER_STRUCT(nlsfcn) *uf = mp->ufcn;
+		const MPT_SOLVER_NLS_STRUCT(functions) *uf = mp->ufcn;
 		int flg, ld[3];
 		
 		ld[0] = *ldjac;

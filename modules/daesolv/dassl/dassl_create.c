@@ -50,12 +50,13 @@ static int dasslStep(MPT_SOLVER(IVP) *sol, double *tend)
 static void *ddFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(dassl) *da = (void *) (sol + 1);
-	MPT_SOLVER_STRUCT(ivpfcn) *ivp = (void *) (da + 1);
+	MPT_SOLVER_IVP_STRUCT(functions) *ivp = (void *) (da + 1);
 	
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
 	  case MPT_SOLVER_ENUM(DAE): return da->ivp.pint ? 0 : &ivp->dae;
-	  case MPT_SOLVER_ENUM(PDE): return da->ivp.pint ? ivp : 0;
+	  case MPT_SOLVER_ENUM(PDE): if (!da->ivp.pint) return 0; ivp->dae.jac = 0; ivp->dae.mas = 0;
+	  case MPT_SOLVER_ENUM(IVP): return ivp;
 	  default: return 0;
 	}
 	if (da->ivp.pint) {
@@ -80,7 +81,7 @@ extern MPT_SOLVER(IVP) *mpt_dassl_create()
 {
 	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(dassl) *da;
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn;
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn;
 	
 	if (!(sol = malloc(sizeof(*sol) + sizeof(*da) + sizeof(*fcn)))) {
 		return 0;

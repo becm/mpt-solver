@@ -9,24 +9,22 @@
 
 extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data)
 {
-	MPT_SOLVER_STRUCT(ivppar) *ivp;
 	double *v;
 	int *iwork, lrw, liw;
 	int neqs, pdim;
 	size_t len;
 	
-	ivp  = &data->ivp;
-	pdim = ivp->pint + 1;
-	neqs = ivp->neqs * pdim;
+	pdim = data->ivp.pint + 1;
+	neqs = data->ivp.neqs * pdim;
 	
 	/* vector tolerances in sufficent dimension */
-	if (ivp->neqs < 2 || (!data->rtol.base && !data->atol.base)) {
+	if (data->ivp.neqs < 2 || (!data->rtol.base && !data->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_vecpar_cktol(&data->atol, ivp->neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_vecpar_cktol(&data->atol, data->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return -1;
 	}
-	if (mpt_vecpar_cktol(&data->rtol, ivp->neqs, pdim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_vecpar_cktol(&data->rtol, data->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
 		return -1;
 	}
 	iwork = data->iwork.iov_base;

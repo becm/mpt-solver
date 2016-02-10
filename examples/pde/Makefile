@@ -6,9 +6,6 @@ OBJS  = main.o $(PROGS:%=%.o)
 # general targets and definitions
 include ../solver.example.mk
 
-# need central difference creator
-flame diff htrans twoeq : ../../residuals_cdiff.o
-
 ${PROGS} ${STATIC} : main.o
 
 flame : flame.o

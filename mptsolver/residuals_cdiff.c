@@ -2,10 +2,7 @@
  * calculate central difference residuals for inner nodes.
  */
 
-#include <errno.h>
-#include <string.h>
-
-#include <mpt/solver.h>
+#include "solver.h"
 
 static void cdiff_step(int npde, const double *left, const double *curr, const double *right, double dx, double *f, double *diff, double *vx)
 {
@@ -24,7 +21,7 @@ static void cdiff_step(int npde, const double *left, const double *curr, const d
 	}
 }
 
-extern int mpt_residuals_cdiff(void *ctx, double t, const double *y, double *f, const MPT_SOLVER_STRUCT(ivppar) *ivp, const double *grid, MPT_SOLVER_TYPE(RsideFcn) rfcn)
+extern int mpt_residuals_cdiff(void *ctx, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const double *grid, MPT_SOLVER_IVP(Rside) rfcn)
 {
 	const double *left;
 	double dx, *diff, *vx;

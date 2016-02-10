@@ -9,9 +9,9 @@
 #include "portn2.h"
 
 struct _mpt_portn2_data {
-	MPT_SOLVER(NLS)           sol;
+	MPT_SOLVER(NLS) sol;
 	MPT_SOLVER_STRUCT(portn2) n2;
-	MPT_SOLVER_STRUCT(nlsfcn) uf;
+	MPT_SOLVER_NLS_STRUCT(functions) uf;
 };
 
 static void n2Unref(MPT_INTERFACE(object) *gen)
@@ -52,7 +52,7 @@ static int n2Solve(MPT_SOLVER(NLS) *sol)
 	return mpt_portn2_solve(&d->n2);
 }
 
-static MPT_SOLVER_STRUCT(nlsfcn) *n2Fcn(MPT_SOLVER(NLS) *sol)
+static MPT_SOLVER_NLS_STRUCT(functions) *n2Fcn(MPT_SOLVER(NLS) *sol)
 {
 	struct _mpt_portn2_data *d = (void *) sol;
 	return &d->uf;

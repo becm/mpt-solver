@@ -6,6 +6,7 @@ src_lib = files(
   'conf_nls.c', 'conf_ode.c', 'conf_pde.c',
   'data_finit.c', 'data_grid.c', 'data_param.c', 'data_nls.c', 'data_timeradd.c',
   'output_nls.c', 'output_pde.c',
+  'residuals_cdiff.c',
   'solver_alias.c', 'solver_assign.c', 'solver_events.c', 'solver_load.c', 'solver_param.c',
   'solver_print.c', 'solver_pset.c', 'solver_read.c',
   'solver_start.c', 'solver_statistics.c',

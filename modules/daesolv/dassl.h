@@ -21,7 +21,7 @@ public:
 	~dassl();
 	dassl();
 #endif
-	MPT_SOLVER_STRUCT(ivppar) ivp; /* inherit IVP parameter */
+	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
 	double  t;     /* reference time */
 	
@@ -63,7 +63,7 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *);
 extern void mpt_dassl_init(MPT_SOLVER_STRUCT(dassl) *);
 extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *);
 /* set wrapper for user functions */
-extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
+extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *, const MPT_SOLVER_IVP_STRUCT(functions) *);
 
 /* dassl status information */
 extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -120,14 +120,14 @@ public:
 	}
 	void *functions(int type)
 	{
-		return _fcn.functions(type, ivp);
+		return _fcn.select(type, ivp);
 	}
 	double *initstate()
 	{
 		return y;
 	}
 protected:
-	ivpfcn _fcn;
+	struct functions _fcn;
 };
 #endif
 

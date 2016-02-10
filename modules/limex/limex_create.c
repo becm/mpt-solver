@@ -10,7 +10,7 @@
 #include "limex.h"
 
 static MPT_SOLVER_STRUCT(limex) lxGlob;
-static MPT_SOLVER_STRUCT(ivpfcn) lxGlobFcn;
+static MPT_SOLVER_IVP_STRUCT(functions) lxGlobFcn;
 
 extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global()
 {
@@ -71,7 +71,7 @@ static void *lxFcn(MPT_SOLVER(IVP) *sol, int type)
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
 	  case MPT_SOLVER_ENUM(DAE): return lxGlob.ivp.pint ? 0 : &lxGlobFcn.dae;
-	  case MPT_SOLVER_ENUM(PDE): if (!lxGlob.ivp.pint) return 0; lxGlob.jac = 0;
+	  case MPT_SOLVER_ENUM(PDE): if (!lxGlob.ivp.pint) return 0; lxGlobFcn.dae.jac = 0; lxGlobFcn.dae.mas = 0;
 	  case MPT_SOLVER_ENUM(IVP): return &lxGlobFcn;
 	  default: return 0;
 	}

@@ -40,7 +40,7 @@ public:
 # define MPT_BACOL_NIMAXDEF 127
 # define MPT_BACOL_NCONTI   2
 #endif
-	MPT_SOLVER_STRUCT(ivppar) ivp; /* inherit IVP parameter */
+	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
 	double  t,           /* reached time step */
 	       *x,           /* x-values for internal grid points (nintmx+1) */

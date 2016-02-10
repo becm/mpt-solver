@@ -75,7 +75,7 @@ public:
 	cvode();
 	~cvode();
 # endif
-	MPT_SOLVER_STRUCT(ivppar) ivp;  /* inherit IVP parameter */
+	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
 	MPT_SOLVER_TYPE(dvecpar) rtol,  /* relative tolerance scalar/vector */
 	                         atol;  /* absolute tolerance scalar/vector */
@@ -83,10 +83,10 @@ public:
 	MPT_SOLVER_STRUCT(sundials) sd; /* general sundials data */
 	void *mem;                      /* CVode memory block */
 	
-	realtype t;                     /* current time step */
-	realtype hmax;                  /* CVode only saves inverse */
+	realtype t;     /* current time step */
+	realtype hmax;  /* CVode only saves inverse */
 	
-	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn;
+	const MPT_SOLVER_IVP_STRUCT(functions) *ufcn;
 }
 #endif
 ;
@@ -100,7 +100,7 @@ public:
 	~ida();
 protected:
 # endif
-	MPT_SOLVER_STRUCT(ivppar) ivp;  /* inherit IVP parameter */
+	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
 	MPT_SOLVER_TYPE(dvecpar) rtol,  /* relative tolerance scalar/vector */
 	                         atol;  /* absolute tolerance scalar/vector */
@@ -108,17 +108,17 @@ protected:
 	MPT_SOLVER_STRUCT(sundials) sd; /* general sundials data */
 	void *mem;                      /* IDA memory block */
 	
-	realtype t;                     /* current time step */
-	realtype hmax;                  /* IDA only saves inverse */
+	realtype t;     /* current time step */
+	realtype hmax;  /* IDA only saves inverse */
 	
-	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn;
+	const MPT_SOLVER_IVP_STRUCT(functions) *ufcn;
 	
-	N_Vector yp;                    /* deviation vector */
+	N_Vector yp;    /* deviation vector */
 	
 	struct {
 		void   *base;
 		size_t  size;
-	} tmp;                          /* temporary data buffer */
+	} tmp;          /* temporary data buffer */
 }
 #endif
 ;
@@ -258,7 +258,7 @@ public:
 	}
 	void *functions(int type)
 	{
-		return (type == DAE) ? 0 : _fcn.functions(type, ivp);
+		return (type == DAE) ? 0 : _fcn.select(type, ivp);
 	}
 	double *initstate()
 	{
@@ -270,7 +270,7 @@ public:
 		return 0;
 	}
 protected:
-	ivpfcn _fcn;
+	struct functions _fcn;
 };
 inline cvode::cvode()
 { sundials_cvode_init(this); }
@@ -316,7 +316,7 @@ public:
 	}
 	void *functions(int type)
 	{
-		return _fcn.functions(type, ivp);
+		return _fcn.select(type, ivp);
 	}
 	double *initstate()
 	{
@@ -328,7 +328,7 @@ public:
 		return 0;
 	}
 protected:
-	ivpfcn _fcn;
+	struct functions _fcn;
 };
 inline ida::ida()
 { sundials_ida_init(this); }

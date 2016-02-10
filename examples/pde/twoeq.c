@@ -28,7 +28,7 @@ static int rfcn(void *udata, double t, const double *u, double *f, double x, dou
 }
 
 /* solver right side calculation */
-static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_STRUCT(ivppar) *ivp, const double *grid, MPT_SOLVER_TYPE(RsideFcn) rs)
+static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const double *grid, MPT_SOLVER_IVP(Rside) rs)
 {
 	const double *yr;
 	double *fr, dx;

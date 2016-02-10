@@ -51,7 +51,7 @@ static int mpSolve(MPT_SOLVER(NLS) *sol)
 	return mpt_minpack_solve(mp);
 }
 
-static MPT_SOLVER_STRUCT(nlsfcn) *mpFcn(MPT_SOLVER(NLS) *sol)
+static MPT_SOLVER_NLS_STRUCT(functions) *mpFcn(MPT_SOLVER(NLS) *sol)
 {
 	MPT_SOLVER_STRUCT(minpack) *mp = (void *) (sol+1);
 	return (void *) (mp+1);
@@ -67,7 +67,7 @@ extern MPT_SOLVER(NLS) *mpt_minpack_create()
 	MPT_SOLVER(NLS) *sol;
 	MPT_SOLVER_STRUCT(minpack) *mp;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*mp) + sizeof(MPT_SOLVER_STRUCT(nlsfcn))))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*mp) + sizeof(MPT_SOLVER_NLS_STRUCT(functions))))) {
 		return 0;
 	}
 	mp = (MPT_SOLVER_STRUCT(minpack) *) (sol+1);

@@ -21,7 +21,7 @@ extern int sundials_cvode_jac_dense(long int n, realtype t,
                                     DlsMat Jac, const MPT_SOLVER_STRUCT(cvode) *cv,
                                     N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-	const MPT_SOLVER_STRUCT(ivpfcn) *fcn;
+	const MPT_SOLVER_IVP_STRUCT(functions) *fcn;
 	double *jac;
 	int ld;
 	
@@ -53,7 +53,7 @@ extern int sundials_cvode_jac_band(long int n, long int mu, long int ml,
                                    DlsMat Jac, const MPT_SOLVER_STRUCT(cvode) *cv,
                                    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-	const MPT_SOLVER_STRUCT(ivpfcn) *fcn;
+	const MPT_SOLVER_IVP_STRUCT(functions) *fcn;
 	double *jac;
 	int ld;
 	

@@ -31,7 +31,7 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data)
 		default:
 			liw = 30 + neqs;
 	}
-	if (data->iwork.iov_len >= 2 * sizeof(double)) {
+	if (data->iwork.iov_len >= 2 * sizeof(int)) {
 		iwk = data->iwork.iov_base;
 		ml  = iwk[0];
 		mu  = iwk[1];

@@ -92,7 +92,7 @@ extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, MPT_INT
 	}
 	/* change solver dimensions, reinit */
 	if (!*name) {
-		MPT_SOLVER_STRUCT(ivppar) ivp = lx->ivp;
+		MPT_SOLVER_IVP_STRUCT(parameters) ivp = lx->ivp;
 		int ret;
 		
 		if (src && (ret = mpt_ivppar_set(&ivp, src)) < 0) {

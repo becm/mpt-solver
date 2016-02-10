@@ -11,7 +11,7 @@
 
 static void dassl_fcn(double *t, double *y, double *yp, double *f, int *ires, double *rpar, int *ipar)
 {
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(dassl) *data = (void *) rpar;
 	int i, neqs;
 	
@@ -56,7 +56,7 @@ static void dassl_fcn(double *t, double *y, double *yp, double *f, int *ires, do
 
 static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cjp, double *rpar, int *ipar)
 {
-	MPT_SOLVER_STRUCT(daefcn) *dae = (void *) ipar;
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(dassl) *data = (void *) rpar;
 	double cj = *cjp;
 	int ld, neqs, pint;
@@ -78,11 +78,11 @@ static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cjp
 		jac += mu + ml;
 		ld   = 2*ml + mu;
 	}
-	if (dae->jac(dae->param, *t, y, jac, ld) < 0) {
+	if (fcn->dae.jac(fcn->dae.param, *t, y, jac, ld) < 0) {
 		abort();
 	}
 	/* Jac -= con*B */
-	if (!dae->mas) {
+	if (!fcn->dae.mas) {
 		int i;
 		neqs *= (pint+1);
 		for (i = 0; i < neqs; i++, jac += ld) {
@@ -96,7 +96,7 @@ static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cjp
 		idrow = (int *) (mas + neqs * neqs);
 		idcol = idrow + neqs * neqs;
 		
-		if ((nz = dae->mas(dae->param, *t, y, mas, idrow, idcol)) < 0) {
+		if ((nz = fcn->dae.mas(fcn->dae.param, *t, y, mas, idrow, idcol)) < 0) {
 			abort();
 		}
 		/* Jac -= con*B */
@@ -106,7 +106,7 @@ static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cjp
 	}
 }
 
-extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, const MPT_SOLVER_STRUCT(ivpfcn) *ufcn)
+extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, const MPT_SOLVER_IVP_STRUCT(functions) *ufcn)
 {
 	if (!ufcn || !ufcn->dae.fcn) {
 		return MPT_ERROR(BadArgument);

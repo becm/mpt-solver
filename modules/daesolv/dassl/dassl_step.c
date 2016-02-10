@@ -9,14 +9,13 @@
 
 extern int mpt_dassl_step(MPT_SOLVER_STRUCT(dassl) *data, double tend)
 {
-	MPT_SOLVER_STRUCT(ivppar) *ivp = &data->ivp;
 	double *atol, *rtol;
 	int neqs, idid, lrw, liw;
 	
 	if (data->info[0] < 0 || !data->fcn) {
 		return MPT_ERROR(BadArgument);
 	}
-	neqs = ivp->neqs * (ivp->pint + 1);
+	neqs = data->ivp.neqs * (data->ivp.pint + 1);
 	
 	/* set tolerance flags and adresses */
 	if (neqs > 1 && (rtol = data->rtol.base) && (atol = data->atol.base)) {

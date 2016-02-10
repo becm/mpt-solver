@@ -7,7 +7,7 @@
 static void hybrd_fcn(int *neq, double *x, double *f, int *flag)
 {
 	MPT_SOLVER_STRUCT(minpack) *mp;
-	const MPT_SOLVER_STRUCT(nlsfcn) *uf;
+	const MPT_SOLVER_NLS_STRUCT(functions) *uf;
 	int flg, ld[2];
 	
 	mp = (MPT_SOLVER_STRUCT(minpack) *) neq;
@@ -41,7 +41,7 @@ static void hybrj_fcn(int *neq, double *x, double *f, double *jac, int *ldjac, i
 {
 	if (*flag == 2) {
 		MPT_SOLVER_STRUCT(minpack) *mp = (MPT_SOLVER_STRUCT(minpack) *) neq;
-		const MPT_SOLVER_STRUCT(nlsfcn) *uf = mp->ufcn;
+		const MPT_SOLVER_NLS_STRUCT(functions) *uf = mp->ufcn;
 		int flg, ld[3];
 		
 		ld[0] = *ldjac;

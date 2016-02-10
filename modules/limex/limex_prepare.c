@@ -9,20 +9,18 @@
 
 extern int mpt_limex_prepare(MPT_SOLVER_STRUCT(limex) *data)
 {
-	MPT_SOLVER_STRUCT(ivppar) *ivp;
 	int neqs, pdim;
 	double *v;
 	int *ipos;
 	
-	ivp  = &data->ivp;
-	pdim = ivp->pint + 1;
-	neqs = ivp->neqs * pdim;
+	pdim = data->ivp.pint + 1;
+	neqs = data->ivp.neqs * pdim;
 	
-	if (data->iopt[7] < 0) data->iopt[7] = ivp->neqs;
-	if (data->iopt[8] < 0) data->iopt[8] = ivp->neqs;
+	if (data->iopt[7] < 0) data->iopt[7] = data->ivp.neqs;
+	if (data->iopt[8] < 0) data->iopt[8] = data->ivp.neqs;
 	
 	/* vector tolerances in sufficent dimension */
-	if (ivp->neqs < 2 || (!data->rtol.base && !data->atol.base)) {
+	if (data->ivp.neqs < 2 || (!data->rtol.base && !data->atol.base)) {
 		pdim = 0;
 	}
 	if (mpt_vecpar_cktol(&data->atol, neqs, pdim, __MPT_IVP_ATOL) < 0) {

@@ -12,12 +12,12 @@
 struct _limexParam
 {
 	int neq, pdim;
-	const MPT_SOLVER_STRUCT(ivpfcn) *ufcn;
+	const MPT_SOLVER_IVP_STRUCT(functions) *ufcn;
 };
 static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double *b, int *ir, int *ic, int *info)
 {
-	const MPT_SOLVER_STRUCT(ivpfcn) *fcn = ((struct _limexParam *) neq)->ufcn;
-	MPT_SOLVER_STRUCT(ivppar) ivp;
+	const MPT_SOLVER_IVP_STRUCT(functions) *fcn = ((struct _limexParam *) neq)->ufcn;
+	MPT_SOLVER_IVP_STRUCT(parameters) ivp;
 	int res, nint = neq[1];
 	
 	ivp.neqs = neq[0] / (nint + 1);
@@ -80,7 +80,7 @@ static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double
 
 static void limex_jac(int *neq, double *t, double *y, double *ys, double *jac, int *ldjac, int *ml, int *mu, int *banded, int *info)
 {
-	const MPT_SOLVER_STRUCT(ivpfcn) *fcn = ((struct _limexParam *) neq)->ufcn;
+	const MPT_SOLVER_IVP_STRUCT(functions) *fcn = ((struct _limexParam *) neq)->ufcn;
 	int ld;
 	
 	(void) ys;
@@ -96,7 +96,7 @@ static void limex_jac(int *neq, double *t, double *y, double *ys, double *jac, i
 	*info = fcn->dae.jac(fcn->dae.param, *t, y, jac, ld);
 }
 
-extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *lx, const MPT_SOLVER_STRUCT(ivpfcn) *usr)
+extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *lx, const MPT_SOLVER_IVP_STRUCT(functions) *usr)
 {
 	if (!usr || !usr->dae.fcn) {
 		return MPT_ERROR(BadArgument);

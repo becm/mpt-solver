@@ -11,7 +11,7 @@
 
 static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, int *ipar, double *rpar, int *flg)
 {
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) rpar;
 	
 	if ((*flg = ((MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, *t, y, f, &me->ivp, fcn->grid, fcn->rside)) < 0) {
@@ -55,7 +55,7 @@ static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, in
 
 static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, int *mbnd, double *con, int *ipar, double *rpar, int *info)
 {
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) ipar;
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) ipar;
 	int i, neqs = *neq, ljac;
 	
 	(void) yp;
@@ -108,7 +108,7 @@ static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, 
 	}
 }
 
-extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_SOLVER_STRUCT(ivpfcn) *ufcn)
+extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_SOLVER_IVP_STRUCT(functions) *ufcn)
 {
 	if (!ufcn || !ufcn->dae.fcn) {
 		return MPT_ERROR(BadArgument);

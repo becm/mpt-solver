@@ -2,13 +2,11 @@
  * generic user function wrapper for PORT N2 instance
  */
 
-#include <errno.h>
-
 #include "portn2.h"
 
 static void portn2_fcn(const int *n, const int *p, const double *x, int *nf, double *r, int *ui, double *ur, void (*uf)())
 {
-	MPT_SOLVER_STRUCT(nlsfcn) *ufcn = (MPT_SOLVER_STRUCT(nlsfcn) *) ui;
+	MPT_SOLVER_NLS_STRUCT(functions) *ufcn = (void *) ui;
 	int ld[2];
 	
 	(void) ur;
@@ -23,7 +21,7 @@ static void portn2_fcn(const int *n, const int *p, const double *x, int *nf, dou
 
 static void portn2_jac(const int *n, const int *p, const double *x, int *nf, double *jac, int *ui, double *ur, void (*uf)())
 {
-	MPT_SOLVER_STRUCT(nlsfcn) *ufcn = (MPT_SOLVER_STRUCT(nlsfcn) *) ui;
+	MPT_SOLVER_NLS_STRUCT(functions) *ufcn = (void *) ui;
 	int ld[3];
 	
 	(void) ur;
@@ -38,11 +36,10 @@ static void portn2_jac(const int *n, const int *p, const double *x, int *nf, dou
 	}
 }
 
-extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *n2, const MPT_SOLVER_STRUCT(nlsfcn) *ufcn)
+extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *n2, const MPT_SOLVER_NLS_STRUCT(functions) *ufcn)
 {
-	if (!ufcn->res) {
-		errno = EINVAL;
-		return -1;
+	if (!ufcn || !ufcn->res) {
+		return MPT_ERROR(BadArgument);
 	}
 	n2->res.res = portn2_fcn;
 	n2->jac.jac = ufcn->jac ? portn2_jac : 0;

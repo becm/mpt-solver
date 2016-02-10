@@ -33,7 +33,7 @@ public:
 	minpack();
 	~minpack();
 #endif
-	MPT_SOLVER_STRUCT(nlspar) nls; /* inherit nonlinear system parameter */
+	MPT_SOLVER_NLS_STRUCT(parameters) nls; /* inherit nonlinear system parameter */
 	
 	char solv;    /* solver selection */
 	char mode;    /* mode of operation */
@@ -66,7 +66,7 @@ public:
 		lmstr_fcn_t *str;
 	} fcn;  /* residual calculation */
 	
-	const MPT_SOLVER_STRUCT(nlsfcn) *ufcn;
+	const MPT_SOLVER_NLS_STRUCT(functions) *ufcn;
 };
 
 __MPT_EXTDECL_BEGIN
@@ -151,17 +151,17 @@ class MinPack : public NLS, minpack
 	{
 		return mpt_minpack_solve(this);
 	}
-	operator nlsfcn *() const
+	operator struct functions *() const
 	{
-		return const_cast<nlsfcn *>(&_fcn);
+		return const_cast<struct functions *>(&_fcn);
 	}
 	
-	operator const nlspar *() const
+	inline operator const struct parameters *() const
 	{
 		return &nls;
 	}
     protected:
-	nlsfcn _fcn;
+	struct functions _fcn;
 };
 #endif
 

@@ -64,7 +64,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 		return mpt_bacol_assign(bac, &val);
 	}
 	if (!*name) {
-		MPT_SOLVER_STRUCT(ivppar) ivp = bac->ivp;
+		MPT_SOLVER_IVP_STRUCT(parameters) ivp = bac->ivp;
 		
 		if (src) {
 			if ((len =  mpt_ivppar_set(&ivp, src)) < 0) {

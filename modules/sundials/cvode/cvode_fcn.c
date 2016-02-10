@@ -19,7 +19,7 @@
  */
 extern int sundials_cvode_fcn(realtype t, N_Vector y, N_Vector f, const MPT_SOLVER_STRUCT(cvode) *cv)
 {
-	const MPT_SOLVER_STRUCT(ivpfcn) *fcn;
+	const MPT_SOLVER_IVP_STRUCT(functions) *fcn;
 	double *fd, *yd;
 	if (!cv || !(fcn = cv->ufcn) || !fcn->dae.fcn) {
 		errno = EFAULT;

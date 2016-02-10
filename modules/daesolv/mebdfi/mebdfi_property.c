@@ -105,7 +105,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, MPT_I
 	}
 	/* change solver dimensions, reinit */
 	if (!*name) {
-		MPT_SOLVER_STRUCT(ivppar) ivp = me->ivp;
+		MPT_SOLVER_IVP_STRUCT(parameters) ivp = me->ivp;
 		
 		if (src && (ret =  mpt_ivppar_set(&ivp, src)) < 0) {
 			return ret;

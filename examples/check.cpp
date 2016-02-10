@@ -66,6 +66,7 @@ int main()
 	MinPack mp; info(mp);
 	PortN2 n2;  info(n2);
 	
+#if __cplusplus >= 201103L
 	dvecpar vd(7.6);
 	std::cout << vd.value().fmt << ": ";
 	for (auto &a : vd) {
@@ -92,7 +93,6 @@ int main()
 	  std::cout << a << ' ';
 	}
 	std::cout << std::endl;
-	
-	
+#endif
 	return 0;
 }

@@ -141,7 +141,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, MPT_INT
 		return src ? ++ret : 0;
 	}
 	if (!*name) {
-		MPT_SOLVER_STRUCT(ivppar) ivp = da->ivp;
+		MPT_SOLVER_IVP_STRUCT(parameters) ivp = da->ivp;
 		
 		if (src && (ret =  mpt_ivppar_set(&ivp, src)) < 0) {
 			return ret;

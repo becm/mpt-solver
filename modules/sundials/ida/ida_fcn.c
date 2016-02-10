@@ -19,7 +19,7 @@
  */
 extern int sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT_SOLVER_STRUCT(ida) *ida)
 {
-	const MPT_SOLVER_STRUCT(ivpfcn) *fcn;
+	const MPT_SOLVER_IVP_STRUCT(functions) *fcn;
 	double *df, *dyp, *dy;
 	long neqs;
 	int ret, nint;

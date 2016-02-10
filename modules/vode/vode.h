@@ -21,7 +21,7 @@ public:
 	~vode();
 	vode();
 #endif
-	MPT_SOLVER_STRUCT(ivppar) ivp; /* inherit IVP parameter */
+	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
 	double t;         /* reference time */
 	
@@ -67,7 +67,7 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *);
 extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *);
 extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *);
 /* set wrapper for user functions */
-extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *, const MPT_SOLVER_STRUCT(ivpfcn) *);
+extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *, const MPT_SOLVER_IVP_STRUCT(functions) *);
 
 /* vode status information */
 extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -125,10 +125,10 @@ public:
 	}
 	void *functions(int type)
 	{
-		return (type == DAE) ? 0 : _fcn.functions(type, ivp);
+		return (type == DAE) ? 0 : _fcn.select(type, ivp);
 	}
 protected:
-	ivpfcn _fcn;
+	struct functions _fcn;
 };
 #endif
 

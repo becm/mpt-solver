@@ -11,7 +11,7 @@
 
 static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double t, const double *y, double cj, double *jac, int ldjac)
 {
-	const MPT_SOLVER_STRUCT(ivpfcn) *fcn = ida->ufcn;
+	const MPT_SOLVER_IVP_STRUCT(functions) *fcn = ida->ufcn;
 	int ret;
 	
 	/* calculate jacobian */

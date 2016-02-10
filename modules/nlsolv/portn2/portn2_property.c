@@ -50,7 +50,7 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, MPT_I
 		return mpt_vecpar_set(&dst, n2->nls.nval, src);
 	}
 	if (!*name) {
-		MPT_SOLVER_STRUCT(nlspar) nls = n2->nls;
+		MPT_SOLVER_NLS_STRUCT(parameters) nls = n2->nls;
 		if (src && (ret = mpt_nlspar_set(&nls, src)) < 0) {
 			return ret;
 		}

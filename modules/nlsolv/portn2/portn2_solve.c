@@ -8,7 +8,7 @@
 
 extern int mpt_portn2_solve(MPT_SOLVER_STRUCT(portn2) *n2)
 {
-	MPT_SOLVER_STRUCT(nlspar) *nl = &n2->nls;
+	MPT_SOLVER_NLS_STRUCT(parameters) *nl = &n2->nls;
 	const double *bnd;
 	double *p;
 	int liv, lrv;

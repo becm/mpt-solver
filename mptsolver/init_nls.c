@@ -16,11 +16,11 @@
  * 
  * \return pointer to nonlinear user funtions
  */
-extern MPT_SOLVER_STRUCT(nlsfcn) *mpt_init_nls(MPT_SOLVER(NLS) *sol, const MPT_SOLVER_STRUCT(data) *dat, MPT_INTERFACE(logger) *log)
+extern MPT_SOLVER_NLS_STRUCT(functions) *mpt_init_nls(MPT_SOLVER(NLS) *sol, const MPT_SOLVER_STRUCT(data) *dat, MPT_INTERFACE(logger) *log)
 {
 	static const char fmt[] = { MPT_value_toVector('d'), 0 };
 	
-	MPT_SOLVER_STRUCT(nlsfcn) *fcns;
+	MPT_SOLVER_NLS_STRUCT(functions) *fcns;
 	struct iovec vec;
 	MPT_STRUCT(property) pr;
 	int32_t dim[2];

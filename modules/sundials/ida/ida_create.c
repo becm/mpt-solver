@@ -44,7 +44,7 @@ static int idaStep(MPT_SOLVER(IVP) *sol, double *end)
 static void *idaFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(ida) *ida = (void *) (sol+1);
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) (ida+1);
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) (ida+1);
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
 	  case MPT_SOLVER_ENUM(DAE): return ida->ivp.pint ? 0 : &fcn->dae;
@@ -84,7 +84,7 @@ static const MPT_INTERFACE_VPTR(solver_ivp) idaCtl = {
 extern MPT_SOLVER(IVP) *sundials_ida_create()
 {
 	MPT_SOLVER(IVP) *sol;
-	MPT_SOLVER_STRUCT(ivpfcn) *uf;
+	MPT_SOLVER_IVP_STRUCT(functions) *uf;
 	MPT_SOLVER_STRUCT(ida) *ida;
 	
 	if (!(sol = malloc(sizeof(*sol)+sizeof(*ida)+sizeof(*uf)))) {

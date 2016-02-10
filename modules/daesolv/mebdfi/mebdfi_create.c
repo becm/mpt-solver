@@ -50,7 +50,7 @@ static int meStep(MPT_SOLVER(IVP) *sol, double *tend)
 static void *meFcn(MPT_SOLVER(IVP) *sol, int type)
 {
 	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (sol + 1);
-	MPT_SOLVER_STRUCT(ivpfcn) *fcn = (void *) (me + 1);
+	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) (me + 1);
 	
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
@@ -83,7 +83,7 @@ extern MPT_SOLVER(IVP) *mpt_mebdfi_create()
 	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(mebdfi) *md;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*md) + sizeof(MPT_SOLVER_STRUCT(ivpfcn))))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*md) + sizeof(MPT_SOLVER_IVP_STRUCT(functions))))) {
 		return 0;
 	}
 	md = (MPT_SOLVER_STRUCT(mebdfi) *) (sol+1);
