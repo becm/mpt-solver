@@ -43,8 +43,7 @@ static int solevtRead(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		}
 		/* consume command part  */
 		if ((part = mpt_message_argv(&msg, mt.arg)) >= 0) {
-			mpt_message_read(&msg, part, 0);
-			if (mt.arg) mpt_message_read(&msg, 1, 0);
+			mpt_message_read(&msg, part+1, 0);
 			part = mpt_message_argv(&msg, mt.arg);
 		}
 		src = 0;
