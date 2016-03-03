@@ -419,7 +419,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			mpt_output_data(ivp->cl.out, ctx.state, i, len, val+i, ld);
 		}
 		if (!ret && log) {
-			mpt_solver_statistics((void *) sol, log, &ivp->ru_sys, &ivp->ru_sys);
+			mpt_solver_statistics((void *) sol, log, &ivp->ru_usr, &ivp->ru_sys);
 		}
 		return ret;
 	}
@@ -523,7 +523,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			if (log) mpt_solver_status((void *) sol, log, outPDE, &ctx);
 		}
 		if (!ret && log) {
-			mpt_solver_statistics((void *) sol, log, &ivp->ru_sys, &ivp->ru_sys);
+			mpt_solver_statistics((void *) sol, log, &ivp->ru_usr, &ivp->ru_sys);
 		}
 		if (!arg || ret < 1) {
 			break;
