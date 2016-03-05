@@ -6,7 +6,7 @@
 
 #include "solver.h"
 
-extern int mpt_nlspar_set(MPT_SOLVER_STRUCT(nlspar) *nls, MPT_INTERFACE(metatype) *src)
+extern int mpt_nlspar_set(MPT_SOLVER_NLS_STRUCT(parameters) *nls, MPT_INTERFACE(metatype) *src)
 {
 	int32_t nv, nr;
 	int res;

@@ -6,7 +6,7 @@
 
 #include "solver.h"
 
-extern int mpt_ivppar_set(MPT_SOLVER_STRUCT(ivppar) *ivp, MPT_INTERFACE(metatype) *src)
+extern int mpt_ivppar_set(MPT_SOLVER_IVP_STRUCT(parameters) *ivp, MPT_INTERFACE(metatype) *src)
 {
 	int32_t neqs, pint;
 	int len;
