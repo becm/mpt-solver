@@ -28,18 +28,27 @@ plot = find_library('mptplot', required : false, dirs : mpt_lib)
 load = find_library('mptloader', required : false, dirs : mpt_lib)
 
 if core.found() and plot.found() and load.found()
+  # base libraries in target location
   mpt_inc = get_option('prefix') + '/' + get_option('includedir') + '/mpt'
   global += declare_dependency(include_directories : include_directories(mpt_inc))
-
-  # only install header when base is present in same location
-  install_headers('solver.h', subdir : 'mpt')
 else
-  core = dependency('mptcore')
-  plot = dependency('mptplot')
-  load = dependency('mptloader')
-  global += dependency('mpt-local-headers')
+  # build dependant libraries
+  inc = include_directories('base')
+  with_core = true
+  subdir('base/mptcore')
+  with_plot = true
+  subdir('base/mptplot')
+  with_loader = true
+  subdir('base/mptloader')
+  
+  # select via meson options
+  with_io = get_option('with_io')
+  subdir('base/mptio')
 endif
+
+install_headers('solver.h', subdir : 'mpt')
 
 mpt = [ plot, core, load, global ]
 
 subdir('mptsolver')
+subdir('modules/sundials')

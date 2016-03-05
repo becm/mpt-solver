@@ -1,3 +1,9 @@
 # mpt-solver/meson_options.txt: mpt solver build options
 option('libraries', type : 'combo', choices : ['static', 'shared', 'both'], value : 'shared',
        description : 'library types to build')
+option('with_io', type : 'boolean', value : true,
+       description : 'build I/O library/components')
+option('sundials', type : 'string', value : '',
+       description : 'SUNDIALS install path')
+option('sundials_vec', type : 'string', value : 'serial',
+       description : 'SUNDIALS vector implementation')
