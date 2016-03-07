@@ -57,6 +57,10 @@ static int assignSolverConfig(MPT_STRUCT(node) *conf, const MPT_STRUCT(value) *v
 			return MPT_ERROR(BadValue);
 		}
 	}
+	else {
+		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("unable to get file parameters"));
+		return MPT_ERROR(BadType);
+	}
 	if (fname && !(fd = fopen(fname, "r"))) {
 		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s", MPT_tr("error opening solver config"), fname);
 		return MPT_ERROR(BadValue);
