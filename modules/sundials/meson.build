@@ -4,11 +4,11 @@
 sundials_dir = get_option('sundials')
 
 if not (sundials_dir == '')
-  sundials_deps = [find_library('sundials_nvec' + get_option('sundials_vec'), dirs : sundials_dir + '/lib')]
+  sundials_deps = [ cc.find_library('sundials_nvec' + get_option('sundials_vec'), link : false, dirs : sundials_dir + '/lib') ]
   
-  sundials_ida = find_library('sundials_ida', required : false, dirs : sundials_dir + '/lib')
-  sundials_cvode = find_library('sundials_cvode', required : false, dirs : sundials_dir + '/lib')
-  sundials_kinsol = find_library('sundials_kinsol', required : false, dirs : sundials_dir + '/lib')
+  sundials_ida = cc.find_library('sundials_ida', required : false, link : false, dirs : sundials_dir + '/lib')
+  sundials_cvode = cc.find_library('sundials_cvode', required : false, link : false, dirs : sundials_dir + '/lib')
+  sundials_kinsol = cc.find_library('sundials_kinsol', required : false, link : false, dirs : sundials_dir + '/lib')
 
   sundials_src = files(
     'ewtfcn.c', 'jacobian.c', 'nvector.c',
@@ -33,7 +33,7 @@ if not (sundials_dir == '')
   mod_sundials = shared_library('mpt_sundials', sundials_src, 'libinfo.c',
     include_directories : include_directories(sundials_dir + '/include', '..', '../..', '../../base', '../../base/mptcore'),
     install_rpath : sundials_dir + '/lib',
-    dependencies : [ sundials_deps, find_library('m') ],
+    dependencies : [ sundials_deps, cc.find_library('m') ],
     version : '1.0.0', soversion : '1',
     install : true)
 
