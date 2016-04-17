@@ -19,41 +19,47 @@ else
   with_shared = true
 endif
 
-global = [ declare_dependency(include_directories : include_directories('.')) ]
+mpt_lib = get_option('prefix') + '/' + get_option('libdir')
+mpt_inc = get_option('prefix') + '/' + get_option('includedir') + '/mpt'
 
 # find base libraries in target location
 cc = meson.get_compiler('c')
-mpt_lib = get_option('prefix') + '/' + get_option('libdir')
-core = cc.find_library('mptcore', required : false, dirs : [mpt_lib])
-plot = cc.find_library('mptplot', required : false, dirs : [mpt_lib])
-load = cc.find_library('mptloader', required : false, dirs : [mpt_lib])
+core = cc.find_library('mptcore', required : false, dirs : mpt_lib)
+plot = cc.find_library('mptplot', required : false, dirs : mpt_lib)
+load = cc.find_library('mptloader', required : false, dirs : mpt_lib)
 
-if core.found() and plot.found() and load.found()
-  # base libraries in target location
-  mpt_inc = get_option('prefix') + '/' + get_option('includedir') + '/mpt'
-  global += declare_dependency(include_directories : include_directories(mpt_inc))
-else
-  # build required libraries
-  with_core = not core.found()
+mpt = [ '.' ]
+if core.found() or plot.found() or load.found()
+  mpt += mpt_inc
+endif
+mpt = declare_dependency(include_directories : include_directories(mpt))
+
+# build required libraries
+with_core = not core.found()
+if with_core
   subdir('base/mptcore')
-  with_plot = not plot.found()
+endif
+
+with_plot = not plot.found()
+if with_plot
   subdir('base/mptplot')
-  with_loader = not load.found()
+endif
+
+with_loader = not load.found()
+if with_loader
   subdir('base/mptloader')
-  
-  # select via meson options
-  with_io = get_option('with_io')
-  if with_io
-    io = cc.find_library('mptio', required : false, dirs : [mpt_lib])
-    if not io.found()
-      subdir('base/mptio')
-    endif
+endif
+
+# optional library for client
+with_io = get_option('with_io')
+if with_io
+  io = cc.find_library('mptio', required : false, dirs : mpt_lib)
+  if not io.found()
+    subdir('base/mptio')
   endif
 endif
 
 install_headers('solver.h', subdir : 'mpt')
-
-mpt = [ plot, core, load, global ]
 
 subdir('mptsolver')
 subdir('modules/sundials')

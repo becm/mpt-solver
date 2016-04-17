@@ -1,7 +1,7 @@
 # mpt-solver/mptsolver/meson.build
 # build definition for mpt solver library
 
-src_lib = files(
+solv_src = files(
   'client_ivp.c', 'client_nls.c',
   'conf_nls.c', 'conf_ode.c', 'conf_pde.c',
   'init_ivp.c', 'init_pde.c', 'init_nls.c',
@@ -15,15 +15,15 @@ src_lib = files(
   'residuals_cdiff.c'
 )
 
-lib = shared_library('mptsolver', src_lib, 'libinfo.c',
+solv = shared_library('mptsolver', solv_src, 'libinfo.c',
   include_directories : include_directories('../base'),
   install_rpath : '$ORIGIN',
-  dependencies : mpt,
+  dependencies : [ plot, load, core, mpt ],
   version : '1.0.0', soversion : '1',
   install : true)
 
 pkg.generate(
   description : 'mpt solver library',
-  libraries : lib,
+  libraries : solv,
   version : '1.0.0',
   name : 'mptsolver')

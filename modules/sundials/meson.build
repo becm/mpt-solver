@@ -4,11 +4,11 @@
 sundials_dir = get_option('sundials')
 
 if not (sundials_dir == '')
-  sundials_deps = [ cc.find_library('sundials_nvec' + get_option('sundials_vec'), link : false, dirs : sundials_dir + '/lib') ]
+  sundials_deps = [ cc.find_library('sundials_nvec' + get_option('sundials_vec'), dirs : sundials_dir + '/lib') ]
   
-  sundials_ida = cc.find_library('sundials_ida', required : false, link : false, dirs : sundials_dir + '/lib')
-  sundials_cvode = cc.find_library('sundials_cvode', required : false, link : false, dirs : sundials_dir + '/lib')
-  sundials_kinsol = cc.find_library('sundials_kinsol', required : false, link : false, dirs : sundials_dir + '/lib')
+  sundials_ida = cc.find_library('sundials_ida', required : false, dirs : sundials_dir + '/lib')
+  sundials_cvode = cc.find_library('sundials_cvode', required : false, dirs : sundials_dir + '/lib')
+  sundials_kinsol = cc.find_library('sundials_kinsol', required : false, dirs : sundials_dir + '/lib')
 
   sundials_src = files(
     'ewtfcn.c', 'jacobian.c', 'nvector.c',
