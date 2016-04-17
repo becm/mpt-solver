@@ -28,26 +28,24 @@ core = cc.find_library('mptcore', required : false, dirs : mpt_lib)
 plot = cc.find_library('mptplot', required : false, dirs : mpt_lib)
 load = cc.find_library('mptloader', required : false, dirs : mpt_lib)
 
-mpt = [ '.' ]
-if core.found() or plot.found() or load.found()
-  mpt += mpt_inc
-endif
-mpt = declare_dependency(include_directories : include_directories(mpt))
-
-# build required libraries
+# require core library
 with_core = not core.found()
 if with_core
   subdir('base/mptcore')
+else
+  core = [ core, declare_dependency(include_directories : include_directories(mpt_inc)) ]
 endif
 
-with_plot = not plot.found()
-if with_plot
-  subdir('base/mptplot')
-endif
-
-with_loader = not load.found()
-if with_loader
-  subdir('base/mptloader')
+# query required plot sources
+if not plot.found()
+  plot_src = []
+  foreach d : [ 'base/mptplot/output', 'base/mptplot/values' ]
+    subdir(d)
+    plot_src += src
+  endforeach
+elif with_core
+  # need target include path addition
+  core = [ core, declare_dependency(include_directories : include_directories(mpt_inc)) ]
 endif
 
 # optional library for client

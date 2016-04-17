@@ -14,11 +14,40 @@ solv_src = files(
   'solver_start.c', 'solver_statistics.c',
   'residuals_cdiff.c'
 )
+solv_inc = [ '..', '../base' ]
+
+# add loader sources
+if not load.found()
+  src = []
+  fname = '../base/mptloader/@0@'
+  foreach f : [
+    'proxy_type.c',
+    'library_assign.c',
+    'library_open.c',
+    'meta_open.c',
+    'library_bind.c',
+    'readline.c'
+  ]
+    src += fname.format(f)
+  endforeach
+  solv_src += files(src)
+  
+  # need explicit dynamic loader library
+  if host_machine.system() == 'linux'
+    load = meson.get_compiler('c').find_library('dl')
+  endif
+endif
+
+# add plot sources
+if not plot.found()
+  solv_src += plot_src
+  solv_inc += '../base/mptplot'
+endif
 
 solv = shared_library('mptsolver', solv_src, 'libinfo.c',
-  include_directories : include_directories('../base'),
+  include_directories : include_directories(solv_inc),
   install_rpath : '$ORIGIN',
-  dependencies : [ plot, load, core, mpt ],
+  dependencies : [ plot, load, core ],
   version : '1.0.0', soversion : '1',
   install : true)
 
