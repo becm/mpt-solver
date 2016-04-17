@@ -48,7 +48,7 @@ extern int mpt_data_nls(MPT_SOLVER_STRUCT(data) *dat, const MPT_STRUCT(value) *v
 	if (res && (dst = mpt_data_grid(dat))) {
 		int len;
 		if ((len = dat->nval) > lr) {
-			len = len;
+			len = lr;
 		}
 		memcpy(dst, res, len * sizeof(*dst));
 		ret = 2;

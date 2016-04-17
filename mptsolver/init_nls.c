@@ -68,4 +68,3 @@ extern MPT_SOLVER_NLS_STRUCT(functions) *mpt_init_nls(MPT_SOLVER(NLS) *sol, cons
 	}
 	return fcns;
 }
-	
