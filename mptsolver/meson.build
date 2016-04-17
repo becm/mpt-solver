@@ -15,6 +15,9 @@ solv_src = files(
   'residuals_cdiff.c'
 )
 solv_inc = [ '..', '../base' ]
+solv_add = []
+
+solv_reqires = 'mptcore'
 
 # add loader sources
 if not load.found()
@@ -30,29 +33,39 @@ if not load.found()
   ]
     src += fname.format(f)
   endforeach
-  solv_src += files(src)
+  solv_add += files(src)
   
   # need explicit dynamic loader library
-  if host_machine.system() == 'linux'
+  if with_shared and host_machine.system() == 'linux'
     load = meson.get_compiler('c').find_library('dl')
   endif
+else
+  solv_reqires = 'mptloader ' + solv_reqires
 endif
 
 # add plot sources
 if not plot.found()
-  solv_src += plot_src
+  solv_add += plot_src
   solv_inc += '../base/mptplot'
+else
+  solv_reqires = 'mptplot ' + solv_reqires
 endif
 
-solv = shared_library('mptsolver', solv_src, 'libinfo.c',
-  include_directories : include_directories(solv_inc),
-  install_rpath : '$ORIGIN',
-  dependencies : [ plot, load, core ],
-  version : '1.0.0', soversion : '1',
-  install : true)
+if with_shared
+  libsolv = shared_library('mptsolver', solv_src, solv_add, 'libinfo.c',
+    include_directories : include_directories(solv_inc),
+    install_rpath : '$ORIGIN',
+    dependencies : [ plot, load, core ],
+    version : '1.0.0', soversion : '1',
+    install : true)
 
-pkg.generate(
-  description : 'mpt solver library',
-  libraries : solv,
-  version : '1.0.0',
-  name : 'mptsolver')
+  pkg.generate(
+    description : 'mpt solver library',
+    libraries : libsolv,
+    requires : solv_reqires,
+    version : '1.0.0',
+    name : 'mptsolver')
+
+  solv = declare_dependency(link_with : libsolv,
+    include_directories : include_directories(solv_inc))
+endif
