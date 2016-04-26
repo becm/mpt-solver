@@ -1,6 +1,5 @@
-# meson.build.gen: suffix=c
+# meson.build.gen: cvode_*.c
 src = files(
- # match: *.c
   'cvode_create.c',
   'cvode_fcn.c',
   'cvode_finit.c',

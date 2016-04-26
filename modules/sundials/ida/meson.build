@@ -1,6 +1,5 @@
-# meson.build.gen: suffix=c
+# meson.build.gen: ida_*.c
 src = files(
- # match: *.c
   'ida_create.c',
   'ida_fcn.c',
   'ida_finit.c',
