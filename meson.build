@@ -36,6 +36,12 @@ else
   core = [ core, declare_dependency(include_directories : include_directories(mpt_inc)) ]
 endif
 
+# require loader library
+with_loader = not load.found()
+if with_loader
+  subdir('base/mptloader')
+endif
+
 # query required plot sources
 if not plot.found()
   plot_src = []
