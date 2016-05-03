@@ -43,7 +43,6 @@ extern const char *mpt_solver_alias(const char *descr)
 	/* compare non-space blocks */
 	while (1) {
 		MPT_STRUCT(node) *curr;
-		MPT_STRUCT(metatype) *mt;
 		const char *id;
 		size_t vis = 0;
 		
@@ -57,8 +56,7 @@ extern const char *mpt_solver_alias(const char *descr)
 		}
 		/* get symbol for alias element */
 		if ((curr = mpt_node_locate(conf, 1, descr, vis))
-		    && (mt = curr->_meta)
-		    && (id = mpt_meta_data(mt, 0))) {
+		    && (id = mpt_node_data(curr, 0))) {
 			return id;
 		}
 		/* advance alias alement */
