@@ -26,41 +26,44 @@ extern const char *mpt_solver_alias(const char *descr)
 	static const char sub[] = "mpt.solver.alias\0";
 	MPT_STRUCT(path) p = MPT_PATH_INIT;
 	MPT_STRUCT(node) *conf;
-	size_t vis;
 	
 	mpt_path_set(&p, sub, -1);
 	if (!(conf = mpt_config_node(&p))
 	    || !(conf = conf->children)) {
 		return 0;
 	}
-	/* compare first non-space block */
-	vis = 0;
-	while (*descr && isspace(*descr)) descr++;
-	while (descr[vis] && !isspace(descr[vis])) vis++;
-	
-	do {
+	if (!descr) {
 		MPT_INTERFACE(metatype) *mt;
-		const char *id;
 		
-		if (!(id = mpt_identifier_data(&conf->ident))) {
-			continue;
-		}
 		if (!(mt = conf->_meta)) {
-			continue;
+			return 0;
 		}
-		if (vis != strlen(id)) {
-			continue;
-		}
-		if (strncmp(id, descr, vis)) {
-			continue;
-		}
-		if (!(id = mpt_meta_data(mt, 0))) {
-			continue;
-		}
-		return id;
+		return mpt_meta_data(mt, 0);
 	}
-	while ((conf = conf->next));
-	
+	/* compare non-space blocks */
+	while (1) {
+		MPT_STRUCT(node) *curr;
+		MPT_STRUCT(metatype) *mt;
+		const char *id;
+		size_t vis = 0;
+		
+		/* start/length of alias element */
+		while (*descr && isspace(*descr)) descr++;
+		while (descr[vis] && !isspace(descr[vis])) vis++;
+		
+		/* alias string terminated */
+		if (!vis) {
+			return 0;
+		}
+		/* get symbol for alias element */
+		if ((curr = mpt_node_locate(conf, 1, descr, vis))
+		    && (mt = curr->_meta)
+		    && (id = mpt_meta_data(mt, 0))) {
+			return id;
+		}
+		/* advance alias alement */
+		descr += vis;
+	}
 	return 0;
 }
 
