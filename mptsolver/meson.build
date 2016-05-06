@@ -22,7 +22,7 @@ if not plot.found()
   solv_src += plot_src
   solv_inc += '../base/mptplot'
 else
-  solv_req = 'mptplot ' + solv_reqires
+  solv_req = 'mptplot ' + solv_req
 endif
 
 if with_shared
