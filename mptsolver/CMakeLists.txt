@@ -1,35 +1,23 @@
-# create mpt solver resources
+# create mpt solver library
 cmake_minimum_required(VERSION 2.6)
 
-project(mptsolver)
+# solver library sources
+file(GLOB sources
+  client_*.c conf_*.c data_*.c init_*.c solver_*.c output_*.c
+  steps_ode.c residuals_cdiff.c timeradd.c)
 
-include(base/mpt-config.cmake)
+# require libraries in target location
+find_library(MPT_PLOT NAMES mptplot PATHS "${MPT_INSTALL_LIB}" NO_DEFAULT_PATH DOC "mpt plotting library")
+find_library(MPT_LOADER NAMES mptloader PATHS "${MPT_INSTALL_LIB}" NO_DEFAULT_PATH DOC "mpt loader library")
+# use headers from install location
+include_directories(${MPT_INSTALL_INCLUDE}/mpt)
 
-# non-generated sources
-file(GLOB sources "client_*.c" "util/*.c")
+# local version information
+include_directories(${CMAKE_SOURCE_DIR}/base)
 
-# additional header locations
-include_directories(${CMAKE_CURRENT_BINARY_DIR} .)
-include_directories(base base/mptcore base/mptplot base/mptclient)
-link_directories(${MPT_INSTALL_LIB})
-
-# header files
-set(headers solver.h)
-
+# library creation
 add_library(mptsolver SHARED ${sources} libinfo.c)
 set_target_properties(mptsolver PROPERTIES VERSION 1.0.0 SOVERSION 1)
-target_link_libraries(mptsolver mptio mptplot mptcore ${QT_LIBRARIES})
+target_link_libraries(mptsolver ${MPT_PLOT} ${MPT_LOADER})
 
 install(TARGETS mptsolver DESTINATION ${MPT_INSTALL_LIB})
-install(FILES ${headers}  DESTINATION ${MPT_INSTALL_INCLUDE}/mpt)
-
-set(CPACK_PACKAGE_NAME "mpt-solver")
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MPT solver interface library")
-
-SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Marc Becker") #required
-
-INCLUDE(CPack)
