@@ -7,6 +7,7 @@ file(GLOB sources
   steps_ode.c residuals_cdiff.c timeradd.c)
 
 # require libraries in target location
+find_library(MPT_CORE NAMES mptcore PATHS "${MPT_INSTALL_LIB}" NO_DEFAULT_PATH DOC "mpt core library")
 find_library(MPT_PLOT NAMES mptplot PATHS "${MPT_INSTALL_LIB}" NO_DEFAULT_PATH DOC "mpt plotting library")
 find_library(MPT_LOADER NAMES mptloader PATHS "${MPT_INSTALL_LIB}" NO_DEFAULT_PATH DOC "mpt loader library")
 # use headers from install location
@@ -18,6 +19,6 @@ include_directories(${CMAKE_SOURCE_DIR}/base)
 # library creation
 add_library(mptsolver SHARED ${sources} libinfo.c)
 set_target_properties(mptsolver PROPERTIES VERSION 1.0.0 SOVERSION 1)
-target_link_libraries(mptsolver ${MPT_PLOT} ${MPT_LOADER})
+target_link_libraries(mptsolver ${MPT_PLOT} ${MPT_LOADER} ${MPT_CORE})
 
 install(TARGETS mptsolver DESTINATION ${MPT_INSTALL_LIB})
