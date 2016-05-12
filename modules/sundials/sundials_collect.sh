@@ -27,7 +27,7 @@ COLLISIONS=
   case "$d" in
     nvec_ser)      s="nvecserial";;
     nvec_openmp)   s="nvecopenmp";;
-    nvec_pthreads) s="nvecopenmp";;
+    nvec_pthreads) s="nvecpthreads";;
     *) s="$d";;
   esac
   # loop over module objects
@@ -49,7 +49,7 @@ COLLISIONS=
         hv=${h%% *}
       }
       # look for existing collisions
-      for s in $COLLISIONS; do \
+      for s in ${COLLISIONS}; do \
         so=${s%%:*}
         sv=${s%:*}
         sv=${sv##*:}
