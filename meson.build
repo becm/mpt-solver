@@ -40,18 +40,22 @@ endif
 with_loader = not load.found()
 if with_loader
   subdir('base/mptloader')
+else
+  load = [ load, declare_dependency(include_directories : include_directories(mpt_inc)) ]
 endif
 
 # query required plot sources
-if not plot.found()
+with_plot = not plot.found()
+if with_plot
   plot_src = []
   foreach d : [ 'base/mptplot/output', 'base/mptplot/values' ]
     subdir(d)
     plot_src += src
   endforeach
-elif with_core
+  plot = [ core, declare_dependency(include_directories : include_directories('base/mptplot')) ]
+else
   # need target include path addition
-  core = [ core, declare_dependency(include_directories : include_directories(mpt_inc)) ]
+  plot = [ plot, declare_dependency(include_directories : include_directories(mpt_inc)) ]
 endif
 
 # optional library for client
@@ -65,5 +69,15 @@ endif
 
 install_headers('solver.h', subdir : 'mpt')
 
+# solver library creation
+solv_inc = include_directories('.', 'base')
 subdir('mptsolver')
+
+# solver modules creation
+solv_mod_inc = [ solv_inc, include_directories('modules') ]
+if with_core
+  solv_mod_inc += core_inc
+else
+  solv_mod_inc += include_directories(mpt_inc)
+endif
 subdir('modules/sundials')

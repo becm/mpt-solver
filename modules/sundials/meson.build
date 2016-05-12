@@ -33,7 +33,7 @@ if not (sundials_dir == '')
   install_data(sources : 'sundials.conf', install_dir : 'etc/mpt.conf.d')
   
   mod_sundials = shared_library('mpt_sundials', sundials_src, 'libinfo.c',
-    include_directories : include_directories(sundials_dir + '/include', '..', '../..', '../../base', '../../base/mptcore'),
+    include_directories : [ include_directories(sundials_dir + '/include') ] + solv_mod_inc,
     install_rpath : sundials_dir + '/lib',
     dependencies : [ sundials_deps, cc.find_library('m') ],
     version : '1.0.0', soversion : '1',

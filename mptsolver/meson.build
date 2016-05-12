@@ -14,20 +14,19 @@ solv_src = files(
   'solver_start.c', 'solver_statistics.c',
   'residuals_cdiff.c'
 )
-solv_inc = [ '..', '../base' ]
-solv_req = 'mptloader mptcore'
+solv_req = 'mptloader'
 
-# add plot sources
-if not plot.found()
+# add plot elements
+if with_plot
   solv_src += plot_src
-  solv_inc += '../base/mptplot'
+  solv_req += ' mptcore'
 else
-  solv_req = 'mptplot ' + solv_req
+  solv_req += ' mptplot'
 endif
 
 if with_shared
-  libsolv = shared_library('mptsolver', solv_src, 'libinfo.c',
-    include_directories : include_directories(solv_inc),
+  solv_lib = shared_library('mptsolver', solv_src, 'libinfo.c',
+    include_directories : solv_inc,
     install_rpath : '$ORIGIN',
     dependencies : [ plot, load, core ],
     version : '1.0.0', soversion : '1',
@@ -35,11 +34,13 @@ if with_shared
 
   pkg.generate(
     description : 'mpt solver library',
-    libraries : libsolv,
-    requires : solv_req,
+    libraries : solv_lib,
+    requires_private : solv_req,
     version : '1.0.0',
     name : 'mptsolver')
 
-  solv = declare_dependency(link_with : libsolv,
-    include_directories : include_directories(solv_inc))
+  solv = declare_dependency(
+    link_with : solv_lib,
+    include_directories : solv_inc
+  )
 endif
