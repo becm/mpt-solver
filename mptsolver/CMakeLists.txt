@@ -6,10 +6,6 @@ file(GLOB sources
   client_*.c conf_*.c data_*.c init_*.c solver_*.c output_*.c
   steps_ode.c residuals_cdiff.c timeradd.c)
 
-# require libraries in target location
-find_library(MPT_CORE NAMES mptcore PATHS "${MPT_INSTALL_LIB}" NO_DEFAULT_PATH DOC "mpt core library")
-find_library(MPT_PLOT NAMES mptplot PATHS "${MPT_INSTALL_LIB}" NO_DEFAULT_PATH DOC "mpt plotting library")
-find_library(MPT_LOADER NAMES mptloader PATHS "${MPT_INSTALL_LIB}" NO_DEFAULT_PATH DOC "mpt loader library")
 # use headers from install location
 include_directories(${MPT_INSTALL_INCLUDE}/mpt)
 
