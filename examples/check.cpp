@@ -46,22 +46,29 @@ static void info(generic &s)
 	mpt_solver_report(&s, 0);
 	puts("");
 }
+static void pde(generic &s)
+{
+	// PDE equotations and intervals
+	mpt_object_set(&s, "", "ii", 3, 10);
+	// PDE time and start values
+	mpt_object_set(&s, 0, "dddd", 0.5, 1.1, 1.2, 1.3);
+}
 
 int main()
 {
 	mtrace();
 	
 #ifndef _STATIC
-	Vode v;     info(v);
+	Vode v;     pde(v); info(v);
 #endif
-	Dassl d;    info(d);
-	Mebdfi m;   info(m);
-	Radau r;    info(r);
+	Dassl d;    pde(d); info(d);
+	Mebdfi m;   pde(m); info(m);
+	Radau r;    pde(r); info(r);
 	
-	Limex l;    info(l);
+	Limex l;    pde(l); info(l);
 
-	CVode cv;   info(cv);
-	IDA ida;    info(ida);
+	CVode cv;   pde(cv); info(cv);
+	IDA ida;    pde(ida); info(ida);
 	
 	MinPack mp; info(mp);
 	PortN2 n2;  info(n2);

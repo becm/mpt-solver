@@ -15,4 +15,4 @@ solvers = nlsolv sundials vode limex daesolv
 check check.o check_static : CPPFLAGS+=-std=c++14
 
 check : CC=${CXX}
-check : LDLIBS=-lmptsolver $(solvers:%=-lmpt_%)
+check : LDLIBS=-lmptsolver -lmptcore $(solvers:%=-lmpt_%)
