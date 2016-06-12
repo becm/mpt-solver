@@ -53,6 +53,7 @@ extern void sundials_ida_fini(MPT_SOLVER_STRUCT(ida) *data)
 	sundials_ida_reset(data);
 	if (data->mem) {
 		IDAFree(&data->mem);
+		data->mem = NULL;
 	}
 }
 
@@ -68,23 +69,26 @@ extern void sundials_ida_fini(MPT_SOLVER_STRUCT(ida) *data)
  */
 extern int sundials_ida_init(MPT_SOLVER_STRUCT(ida) *data)
 {
+	if (!(data->mem = IDACreate())) {
+		return IDA_MEM_NULL;
+	}
+	IDASetUserData(data->mem, data);
+	
 	MPT_IVPPAR_INIT(&data->ivp);
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);
 	
 	memset(&data->sd, 0, sizeof(data->sd));
 	
-	data->ufcn = 0;
+	data->t = 0.0;
+	data->hmax = 0.0;
 	
-	data->tmp.base = 0;
-	data->tmp.size = 0;
+	data->ufcn = 0;
 	
 	data->yp = NULL;
 	
-	if (!(data->mem = IDACreate()))
-		return IDA_MEM_NULL;
-	
-	IDASetUserData(data->mem, data);
+	data->tmp.base = 0;
+	data->tmp.size = 0;
 	
 	return 0;
 }

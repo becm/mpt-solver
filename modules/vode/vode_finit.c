@@ -25,6 +25,8 @@ extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *data)
 	data->iwork.iov_base = 0; data->iwork.iov_len = 0;
 	
 	MPT_IVPPAR_INIT(&data->ivp);
+	data->t = 0.0;
+	data->y = 0;
 	
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);

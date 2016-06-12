@@ -33,6 +33,7 @@ extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *data)
 extern void mpt_dassl_init(MPT_SOLVER_STRUCT(dassl) *data)
 {
 	MPT_IVPPAR_INIT(&data->ivp);
+	data->t = 0.0;
 	
 	/* allocate inital space for parameters */
 	data->rwork.iov_base = 0; data->rwork.iov_len  = 0;

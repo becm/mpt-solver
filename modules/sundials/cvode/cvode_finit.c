@@ -43,6 +43,7 @@ extern void sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
 	
 	if (data->mem) {
 		CVodeFree(&data->mem);
+		data->mem = NULL;
 	}
 }
 
@@ -58,6 +59,9 @@ extern void sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
  */
 extern int sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *data)
 {
+	if (!(data->mem = CVodeCreate(CV_ADAMS, CV_NEWTON))) {
+		return CV_MEM_NULL;
+	}
 	MPT_IVPPAR_INIT(&data->ivp);
 	
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
@@ -65,8 +69,10 @@ extern int sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *data)
 	
 	memset(&data->sd, 0, sizeof(data->sd));
 	
-	if (!(data->mem = CVodeCreate(CV_ADAMS, CV_NEWTON))) {
-		return CV_MEM_NULL;
-	}
+	data->t = 0.0;
+	data->hmax = 0.0;
+	
+	data->ufcn = NULL;
+	
 	return 0;
 }
