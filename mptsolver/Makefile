@@ -26,4 +26,4 @@ include ../base/mpt.lib.mk
 #
 # additional dependencies
 libinfo.o : ../base/libinfo.h ../base/version.h
-CLEAN_FILES += libinfo.o
+CLEAR_FILES += libinfo.o

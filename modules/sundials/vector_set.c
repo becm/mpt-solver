@@ -90,8 +90,8 @@ extern int sundials_vector_set(N_Vector *v, long len, MPT_INTERFACE(metatype) *s
 		*v = next;
 		return 0;
 	}
-	*dest++ = val;
-	pos = 0;
+	*dest = val;
+	pos = 1;
 	while (pos < len) {
 		res = src->_vptr->conv(src, MPT_SOLVER_ENUM(SundialsRealtype) | MPT_ENUM(ValueConsume), &val);
 		if (res < 0) {

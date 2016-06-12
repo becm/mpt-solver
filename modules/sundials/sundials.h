@@ -55,7 +55,7 @@ MPT_SOLVER_STRUCT(sundials)
 	inline sundials() : mem(0), y(0), jacobian(0), step(0), mu(-1), ml(-1)
 	{ }
 	inline ~sundials()
-	{ N_VSetArrayPointer(0, y); N_VDestroy(y); }
+	{ N_VDestroy(y); }
 #endif
 	N_Vector y;  /* output container */
 	
