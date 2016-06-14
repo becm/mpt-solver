@@ -17,7 +17,7 @@ LDLIBS = -lmptplot -lmptloader -lmptcore
 #
 # source summary
 SRCS := $(wildcard client_*.c conf_*.c data_*.c solver_*.c output_*.c init_*.c) \
-	timeradd.c steps_ode.c residuals_cdiff.c
+	clientdata.c timeradd.c steps_ode.c residuals_cdiff.c
 #
 # import library creation settings
 DIR_TOP = ${MPT_PREFIX}

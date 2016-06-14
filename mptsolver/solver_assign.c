@@ -8,6 +8,7 @@
 #include <sys/uio.h>
 
 #include "node.h"
+#include "client.h"
 #include "config.h"
 #include "parse.h"
 

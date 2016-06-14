@@ -47,6 +47,7 @@ static char *stripFilename(char *base)
 extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 {
 	MPT_INTERFACE(metatype) *src;
+	MPT_INTERFACE(logger) *log;
 	const char *fname;
 	int ret;
 	
@@ -54,6 +55,11 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	
 	if (!solv) {
 		MPT_ABORT("missing client descriptor");
+	}
+	src = mpt_config_get((MPT_INTERFACE(config) *) solv, 0, 0, 0);
+	log = 0;
+	if (src) {
+		src->_vptr->conv(src, MPT_ENUM(TypeLogger), &log);
 	}
 	src = 0;
 	
@@ -107,7 +113,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		else if ((fname = mpt_solver_read(solv, 0))) {
 			return MPT_event_fail(ev, MPT_ERROR(BadValue), fname);
 		}
-		if (solv->out) mpt_output_log(solv->out, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("reading configuration file completed"));
+		if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("reading configuration file completed"));
 	
 		if (!mpt_config_get((void *) solv, "solconf", 0, 0)) {
 			static const char defName[] = "solver.conf\0";
@@ -124,20 +130,20 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			if (ret < 0) {
 				return MPT_event_fail(ev, ret, MPT_tr("failed to set solver config"));
 			}
-			if (solv->out) mpt_output_log(solv->out, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("reading solver config completed"));
+			if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("reading solver config completed"));
 		}
 	}
 	/* initialize solver */
 	if ((ret = solv->_vptr->init(solv, 0)) < 0) {
 		return MPT_event_fail(ev, ret, MPT_tr("unable to initialize solver data"));
 	}
-	if (solv->out) mpt_output_log(solv->out, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("client initialisation finished"));
+	if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("client initialisation finished"));
 	
 	/* prepare solver for run */
 	if ((ret = solv->_vptr->prep(solv, 0)) < 0) {
 		return MPT_event_fail(ev, ret, MPT_tr("solver preparation failed"));
 	}
-	if (solv->out) mpt_output_log(solv->out, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("client preparation finished"));
+	if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("client preparation finished"));
 	
 	/* configure default event to solver step */
 	ev->id = mpt_hash("step", 4);

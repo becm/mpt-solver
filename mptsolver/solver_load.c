@@ -14,88 +14,72 @@
  * 
  * \param pr   proxa data
  * \param conf solver alias/symbol to mpt_library_bind
- * \param type solver type to expect
  * \param log  logging descriptor
  * 
  * \return untracked solver interface instance
  */
 /* load solver of specific type */
-extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf, int type, MPT_INTERFACE(logger) *log)
+extern int mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf, MPT_INTERFACE(logger) *log)
 {
-	MPT_STRUCT(property) prop;
-	MPT_SOLVER(generic) *sol;
+	MPT_STRUCT(proxy) p = MPT_PROXY_INIT;
+	MPT_INTERFACE(object) *sol;
+	MPT_INTERFACE(metatype) *mt;
+	const char *lpath = 0;
 	int mode;
 	
-	if (!conf) {
-		if (!pr->_ref) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
-			                 MPT_tr("missing solver description"));
-			return 0;
-		}
+	if ((mt = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
+		mt->_vptr->conv(mt, 's', &lpath);
 	}
+	p._types[0] = MPT_ENUM(TypeSolver);
+	if ((mode = mpt_library_bind(&p, conf, lpath, log)) < 0) {
+		return mode;
+	}
+	if (!(mt = p._ref)) {
+		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+		                 MPT_tr("no proxy instance pointer"), conf);
+		return MPT_ERROR(BadValue);
+	}
+	/* set compatible types */
 	else {
-		MPT_INTERFACE(metatype) *mt;
-		const char *lpath = 0;
-		
-		if ((mt = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
-			mt->_vptr->conv(mt, 's', &lpath);
-		}
-		if (mpt_library_bind(pr, MPT_ENUM(TypeSolver), conf, lpath, log) < 0) {
-			return 0;
-		}
-	}
-	/* reference is compatible with solver interface */
-	if (strchr(pr->_types, MPT_ENUM(TypeSolver))) {
-		sol = pr->_ref;
+		static const char fmt[4] = { MPT_ENUM(TypeSolver), MPT_ENUM(TypeObject) };
+		MPT_STRUCT(value) val;
+		val.fmt = fmt;
+		val.ptr = 0;
+		mt->_vptr->assign(mt, &val);
 	}
 	/* reference is no metatype */
-	else if (!strchr(pr->_types, MPT_ENUM(TypeMeta))) {
+	if (!strchr(p._types, MPT_ENUM(TypeMeta))) {
 		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
 		                 MPT_tr("bad proxy type"), conf);
-		return 0;
+		mt->_vptr->unref(mt);
+		return MPT_ERROR(BadType);
 	}
 	/* get solver descriptor from metatype */
-	else {
-		MPT_INTERFACE(metatype) *m = pr->_ref;
-		if (m->_vptr->conv(m, MPT_ENUM(TypeSolver), &sol) <= 0 || !sol) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
-			                 MPT_tr("no solver in metatype"), conf);
-			return 0;
-		}
+	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) <= 0) {
+		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
+		                 MPT_tr("no solver in metatype"), conf);
+		mt->_vptr->unref(mt);
+		return MPT_ERROR(BadType);
 	}
-	conf = mpt_object_typename((void *) sol);
+	if (sol) {
+		MPT_INTERFACE(metatype) *old;
+		MPT_STRUCT(property) prop;
+		prop.name = "";
+		prop.desc = 0;
+		if ((mode = sol->_vptr->property(sol, &prop)) < 0) {
+			mode = MPT_ERROR(BadOperation);
+			mt->_vptr->unref(mt);
+		}
+		if ((old = pr->_ref)) {
+			old->_vptr->unref(old);
+		}
+		*pr = p;
+		
+		return mode;
+	}
+	mt->_vptr->unref(mt);
+	if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
+	                 MPT_tr("bad solver instance pointer"), conf);
 	
-	prop.name = "";
-	prop.desc = 0;
-	if ((mode = sol->_vptr->obj.property((void*) sol, &prop)) < 0) {
-		mode = MPT_ERROR(BadOperation);
-	}
-	/* any supported type is accepted */
-	else if (type < 0) {
-		type = -type;
-		if (!(type & mode)) {
-			mode = MPT_ERROR(BadValue);
-		}
-	}
-	/* all types must be accepted */
-	else if ((type & mode) != type) {
-		mode = MPT_ERROR(BadValue);
-	}
-	
-	if (mode < 0) {
-		if (!conf) conf = "solver";
-		switch (type) {
-		  case MPT_SOLVER_ENUM(ODE):
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s", conf, MPT_tr("unable to handle ODE problem")); break;
-		  case MPT_SOLVER_ENUM(DAE):
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s", conf, MPT_tr("unable to handle DAE problem")); break;
-		  case MPT_SOLVER_ENUM(PDE):
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s", conf, MPT_tr("unable to handle PDE problem")); break;
-		  case MPT_SOLVER_ENUM(CapableNls):
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s", conf, MPT_tr("unable to handle nonlinear problem")); break;
-		  default:;
-		}
-		return 0;
-	}
-	return sol;
+	return MPT_ERROR(BadValue);
 }

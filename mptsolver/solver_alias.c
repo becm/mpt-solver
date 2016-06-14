@@ -6,8 +6,9 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "config.h"
 #include "node.h"
+#include "client.h"
+#include "config.h"
 
 #include "solver.h"
 

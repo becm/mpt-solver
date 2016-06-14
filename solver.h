@@ -418,17 +418,55 @@ MPT_SOLVER_STRUCT(data)
 	inline data() : npar(0), nval(0)
 	{ for (size_t i = 0; i < sizeof(mask)/sizeof(*mask); ++i) mask[i] = 0; }
 #endif
-	int                      npar,     /* leading dimension of parameter data */
-	                         nval;     /* length of value matrix row */
-	uint8_t                  mask[24]; /* masked dimensions (0..191) */
 #ifdef _MPT_ARRAY_H
-	MPT_STRUCT(array)        param,    /* parameter matrix */
-	                         val;      /* input/output (matrix) data */
+	MPT_STRUCT(array)
 #else
-	void *_pad[2];
+	struct { void *base; }
 #endif
-}
-;
+	                  param,    /* parameter matrix */
+	                  val;      /* input/output (matrix) data */
+	int               npar,     /* leading dimension of parameter data */
+	                  nval;     /* length of value matrix row */
+	uint8_t           mask[24]; /* masked dimensions (0..191) */
+};
+
+MPT_SOLVER_STRUCT(clientdata);
+#ifdef _MPT_CONFIG_H
+# ifdef __cplusplus
+#  ifdef _MPT_MESSAGE_H
+MPT_SOLVER_STRUCT(clientdata) : ::mpt::proxy
+{
+	void setSolver(generic *s);
+	{
+		proxy *pr = this;
+		pr->~proxy();
+		new (pr) proxy();
+		_ref = s;
+		_id = 0;
+		_types[0] = s->Type;
+	}
+	Reference<clientdata> &operator=(const Reference<output> &r)
+	{ out = r; _outlog = mpt_object_logger(out.pointer()); }
+	
+	const Reference<output> &out() const
+	{ return _out };
+	
+	Reference<logger> log;
+protected:
+	Reference<output> _out;
+	void *_outlog;
+};
+#  endif /* _MPT_MESSAGE_H */
+# else /* __cplusplus */
+MPT_SOLVER_STRUCT(clientdata)
+{
+	MPT_STRUCT(proxy)      pr;
+	MPT_INTERFACE(logger) *log;
+	MPT_INTERFACE(output) *out;
+	void *_outlog;
+};
+# endif /* __cplusplus */
+#endif /* _MPT_CONFIG_H */
 
 __MPT_EXTDECL_BEGIN
 
@@ -491,7 +529,7 @@ extern int mpt_residuals_cdiff(void *, double , const double *, double *, const 
 /* generate library description form short form */
 extern const char *mpt_solver_alias(const char *);
 /* load solver of specific type */
-extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *, const char *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_solver_load(MPT_STRUCT(proxy) *, const char * , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* set solver parameter */
 extern int  mpt_solver_pset (MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
@@ -521,6 +559,11 @@ extern int mpt_vecpar_set(double **, int , MPT_INTERFACE(metatype) *);
 
 extern int mpt_ivppar_set(MPT_SOLVER_IVP_STRUCT(parameters) *, MPT_INTERFACE(metatype) *);
 extern int mpt_nlspar_set(MPT_SOLVER_NLS_STRUCT(parameters) *, MPT_INTERFACE(metatype) *);
+
+
+/* solver client data assignment */
+extern int mpt_clientdata_assign(MPT_SOLVER_STRUCT(clientdata) *, const MPT_STRUCT(value) *);
+extern void mpt_clientdata_fini(MPT_SOLVER_STRUCT(clientdata) *);
 
 __MPT_EXTDECL_END
 

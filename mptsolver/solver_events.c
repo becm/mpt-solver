@@ -48,8 +48,8 @@ static int solevtRead(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		}
 		src = 0;
 		if (part > 0 && !(src = mpt_meta_message(&msg, mt.arg))) {
-			mpt_output_log(solv->out, __func__, MPT_FCNLOG(Error), "%s",
-			               MPT_tr("failed to create argument stream"));
+			mpt_log(0, __func__, MPT_FCNLOG(Error), "%s",
+			        MPT_tr("failed to create argument stream"));
 			return MPT_ERROR(BadOperation);
 		}
 		err = mpt_solver_read(solv, src);
@@ -92,6 +92,17 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 	
 	if ((err = mpt_client_events(dsp, cl)) < 0) {
 		return err;
+	}
+	if (dsp->_out) {
+		static const char fmt[2] = { MPT_ENUM(TypeOutput) };
+		MPT_STRUCT(value) val;
+		val.fmt = fmt;
+		val.ptr = &dsp->_out;
+		
+		/* assign output to client */
+		if (cl->_vptr->cfg.assign((void *) cl, 0, &val) >= 0) {
+			mpt_dispatch_graphic(dsp);
+		}
 	}
 	/* register solver command handler */
 	for (i = 0; i < MPT_arrsize(cmdsolv); i++) {

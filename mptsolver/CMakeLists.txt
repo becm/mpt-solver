@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 # solver library sources
 file(GLOB sources
   client_*.c conf_*.c data_*.c init_*.c solver_*.c output_*.c
-  steps_ode.c residuals_cdiff.c timeradd.c)
+  steps_ode.c residuals_cdiff.c timeradd.c clientdata.c)
 
 # library creation
 add_library(mptsolver SHARED ${sources} libinfo.c)
