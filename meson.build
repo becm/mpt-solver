@@ -1,5 +1,5 @@
 # mpt-solver/meson.build
-# build definitions for mpt solvers
+# build definitions for mpt solver components
 
 project('mptsolver', 'c',
   default_options : [ 'c_std=c11' ]

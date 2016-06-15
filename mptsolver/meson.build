@@ -7,7 +7,7 @@ solv_src = files(
   'init_ivp.c', 'init_pde.c', 'init_nls.c',
   'steps_ode.c',
   'timeradd.c',
-  'clientdata.c'
+  'clientdata.c',
   'data_finit.c', 'data_grid.c', 'data_param.c', 'data_nls.c',
   'output_nls.c', 'output_pde.c',
   'solver_alias.c', 'solver_assign.c', 'solver_events.c', 'solver_load.c', 'solver_param.c',
