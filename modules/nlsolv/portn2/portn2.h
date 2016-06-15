@@ -152,7 +152,7 @@ class PortN2 : public NLS, portn2
 		if (_fcn.res && (ret = mpt_portn2_ufcn(this, &_fcn)) < 0) {
 			return ret;
 		}
-		if (mpt_portn2_prepare(this) < 0) {
+		if ((ret = mpt_portn2_prepare(this)) < 0) {
 			return ret;
 		}
 		return mpt_portn2_solve(this);

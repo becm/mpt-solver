@@ -129,13 +129,10 @@ extern MPT_SOLVER(IVP) *mpt_bacol_create(void);
 __MPT_EXTDECL_END
 
 #ifdef __cplusplus
-inline bacol::bacol(int type) : backend(type)
+inline bacol::bacol(int type)
 {
 	mpt_bacol_init(this);
-	switch (type) {
-		case 'r': case 'R': *((short *) &backend) = 'r'; break;
-		default:;
-	}
+	*((char *) &backend) = type;
 }
 inline bacol::~bacol()
 { mpt_bacol_fini(this); }
