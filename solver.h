@@ -436,20 +436,23 @@ MPT_SOLVER_STRUCT(clientdata);
 #  ifdef _MPT_MESSAGE_H
 MPT_SOLVER_STRUCT(clientdata) : ::mpt::proxy
 {
-	void setSolver(generic *s);
+	inline clientdata() : _outlog(0)
+	{
+		_types[0] = generic::Type;
+	}
+	void setSolver(generic *s)
 	{
 		proxy *pr = this;
 		pr->~proxy();
-		new (pr) proxy();
-		_ref = s;
-		_id = 0;
+		new (pr) proxy(0);
+		_ref = (proxy::instance *) s;
 		_types[0] = s->Type;
 	}
-	Reference<clientdata> &operator=(const Reference<output> &r)
-	{ out = r; _outlog = mpt_object_logger(out.pointer()); }
+	clientdata &operator=(const Reference<output> &r)
+	{ _out = r; _outlog = mpt_object_logger(_out.pointer()); return *this; }
 	
 	const Reference<output> &out() const
-	{ return _out };
+	{ return _out; };
 	
 	Reference<logger> log;
 protected:

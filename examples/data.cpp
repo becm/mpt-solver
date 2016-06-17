@@ -15,6 +15,6 @@ int main()
 	mtrace();
 	
 	mpt::solver::clientdata cd;
-	mpt_library_bind(&cd, mpt::solver::generic::Type, "sundials_cvode_create@libmpt_sundials.so.1", 0);
+	mpt_library_bind(&cd, "sundials_cvode_create@libmpt_sundials.so.1", 0, mpt::mpt_logger_default());
 	cd.setSolver(0);
 }

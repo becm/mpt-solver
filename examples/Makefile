@@ -19,4 +19,4 @@ check : LDLIBS=-lmptsolver -lmptcore $(solvers:%=-lmpt_%)
 
 data data.o data_static : CPPFLAGS+=-std=c++14
 data : CC=${CXX}
-data : LDLIBS=-lmpt++ -lmptloader
+data : LDLIBS=-lmptloader

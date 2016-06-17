@@ -31,6 +31,7 @@ extern int mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf, MPT_INTERFAC
 		mt->_vptr->conv(mt, 's', &lpath);
 	}
 	p._types[0] = MPT_ENUM(TypeSolver);
+	p._types[1] = MPT_ENUM(TypeObject);
 	if ((mode = mpt_library_bind(&p, conf, lpath, log)) < 0) {
 		return mode;
 	}
@@ -38,14 +39,6 @@ extern int mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf, MPT_INTERFAC
 		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
 		                 MPT_tr("no proxy instance pointer"), conf);
 		return MPT_ERROR(BadValue);
-	}
-	/* set compatible types */
-	else {
-		static const char fmt[4] = { MPT_ENUM(TypeSolver), MPT_ENUM(TypeObject) };
-		MPT_STRUCT(value) val;
-		val.fmt = fmt;
-		val.ptr = 0;
-		mt->_vptr->assign(mt, &val);
 	}
 	/* reference is no metatype */
 	if (!strchr(p._types, MPT_ENUM(TypeMeta))) {
