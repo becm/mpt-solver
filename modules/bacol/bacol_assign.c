@@ -13,7 +13,7 @@ extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *bac, const MPT_STRUCT(valu
 	const struct iovec *vec;
 	double t, *x, *y;
 	size_t l;
-	uint oint;
+	uint32_t oint;
 	int neqs;
 	
 	neqs = bac->ivp.neqs;
@@ -52,7 +52,7 @@ extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *bac, const MPT_STRUCT(valu
 	
 	/* grid setup */
 	if (!*val.fmt) {
-		uint nint;
+		uint32_t nint;
 		/* need matching grid dimensions */
 		if ((nint = bac->nint)
 		    && l != ((bac->nint+1) * sizeof(double))) {
@@ -97,7 +97,7 @@ extern int mpt_bacol_assign(MPT_SOLVER_STRUCT(bacol) *bac, const MPT_STRUCT(valu
 		memcpy(bac->out.x, x, (oint+1) * sizeof(*x));
 	} else {
 		double dx = 1.0 / oint;
-		uint i;
+		uint32_t i;
 		x = bac->x;
 		for (i = 0; i <= oint; ++i) x[i] = i * dx;
 	}

@@ -29,8 +29,6 @@
  */
 extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, MPT_INTERFACE(metatype) *src)
 {
-	int ret;
-	
 	if (!name) {
 		double *dst;
 		int len;
@@ -51,6 +49,7 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, MPT_I
 	}
 	if (!*name) {
 		MPT_SOLVER_NLS_STRUCT(parameters) nls = n2->nls;
+		int ret = 0;
 		if (src && (ret = mpt_nlspar_set(&nls, src)) < 0) {
 			return ret;
 		}

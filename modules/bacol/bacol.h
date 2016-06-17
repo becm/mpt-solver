@@ -50,13 +50,13 @@ public:
 	
 	double initstep;     /* initial stepsize */
 	
-	int    nint;         /* current internal intervals */
-	short  kcol;         /* collocation points per subinterval [1..10] */
-	char  _backend;      /* solver backend */
+	int      nint;       /* current internal intervals */
+	int16_t  kcol;       /* collocation points per subinterval [1..10] */
+	char    _backend;    /* solver backend */
 	
 	struct {
 		int8_t        nderiv;
-		uint          nint;
+		uint32_t      nint;
 		double       *x,
 		             *y;    /* output data */
 		struct iovec  wrk;  /* work space for output creation */
