@@ -34,7 +34,7 @@ MPT_SOLVER_STRUCT(bacol)
 {
 #ifdef __cplusplus
 public:
-	bacol(int type = 'd');
+	bacol();
 	~bacol();
 #else
 # define MPT_BACOL_NIMAXDEF 127
@@ -50,9 +50,9 @@ public:
 	
 	double initstep;     /* initial stepsize */
 	
-	int         nint;    /* current internal intervals */
-	short       kcol;    /* collocation points per subinterval [1..10] */
-	const char  backend; /* solver backend */
+	int    nint;         /* current internal intervals */
+	short  kcol;         /* collocation points per subinterval [1..10] */
+	char  _backend;      /* solver backend */
 	
 	struct {
 		int8_t        nderiv;
@@ -106,6 +106,9 @@ extern int mpt_bacol_values(MPT_SOLVER_STRUCT(bacol) *, double *, int , double *
 extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *);
 extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *);
 
+/* set backend for solver instance */
+extern int mpt_bacol_backend(MPT_SOLVER_STRUCT(bacol) *, const char *);
+
 /* get/set bacol parameter */
 extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *, MPT_STRUCT(property) *);
 extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *, const char *, MPT_INTERFACE(metatype) *);
@@ -129,19 +132,18 @@ extern MPT_SOLVER(IVP) *mpt_bacol_create(void);
 __MPT_EXTDECL_END
 
 #ifdef __cplusplus
-inline bacol::bacol(int type)
-{
-	mpt_bacol_init(this);
-	*((char *) &backend) = type;
-}
+inline bacol::bacol()
+{ mpt_bacol_init(this); }
 inline bacol::~bacol()
 { mpt_bacol_fini(this); }
 
 class Bacol : public IVP, bacol
 {
 public:
-	Bacol(const char *t = 0) : bacol(t ? *t : 'd')
-	{ }
+	Bacol(const char *t = 0)
+	{
+		mpt_bacol_backend(this, t);
+	}
 	virtual ~Bacol()
 	{ }
 	void unref()

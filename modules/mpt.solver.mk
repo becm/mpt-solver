@@ -48,7 +48,7 @@ libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
 #
 # solver module configuration
 .PHONY : module_config
-shared : module_config
+shared install : module_config
 module_config : ${CONFIG}; $(call install_files,${DIR_TOP}/etc/mpt.conf.d,${CONFIG})
 CLEAR_FILES += $(CONFIG:%=${DIR_TOP}/etc/mpt.conf.d/%) libinfo.o
 #

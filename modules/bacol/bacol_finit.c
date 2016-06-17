@@ -35,7 +35,7 @@ extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *bac)
 	
 	bac->mflag.noinit = -1;
 	
-	switch (bac->backend) {
+	switch (bac->_backend) {
 #ifdef MPT_BACOL_RADAU
 	  case 'r': case 'R':
 		free(bac->bd.cpar.iov_base);
@@ -79,7 +79,7 @@ extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *bac)
 	bac->ipar.iov_base = 0; bac->ipar.iov_len = 0;
 	
 	
-	*((short *) &bac->backend) = 'd';
+	bac->_backend = 'd';
 	
 	memset(&bac->bd, 0, sizeof(bac->bd));
 }

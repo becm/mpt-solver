@@ -33,7 +33,7 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 		return MPT_ERROR(BadOperation);
 	}
 	
-	switch (bac->backend) {
+	switch (bac->_backend) {
 #ifdef MPT_BACOL_RADAU
 	    case 'r': case 'R':
 	lip = 100 + 3 * npde * (nimx * (2 * kcol + 1) + 4);

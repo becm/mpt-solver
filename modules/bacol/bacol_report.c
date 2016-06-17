@@ -15,7 +15,7 @@ extern int mpt_bacol_report(MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_TYPE(Pr
 	const char *backend;
 	int32_t kcol = bac->kcol;
 	
-	switch (bac->backend) {
+	switch (bac->_backend) {
 	    case 'r': case 'R': backend = "radau"; break;
 	    case 'd': case 'D': backend = "dassl"; break;
 	    default: backend = "(unknown)";

@@ -23,7 +23,7 @@ CPPFLAGS += -I ${DIR_BASE}/mptcore
 #
 # general library rules
 .PHONY : static clear_static
-install : static
+install :
 clear : clear_static
 
 clear_static :

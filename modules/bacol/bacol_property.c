@@ -13,30 +13,20 @@
 
 static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(metatype) *src)
 {
-	char *val = "d";
+	char *val = 0;
 	int len = 0;
 	
-	if (src && (len = src->_vptr->conv(src, 'k', &val)) < 0) return len;
-	switch (*val) {
-#ifdef MPT_BACOL_DASSL
-	  case 'd': case 'D': if (tolower(data->backend) == tolower(*val)) return 0;
-	    *((short *) &data->backend) = 'd';
-	    if (data->bd.cpar.iov_base) free(data->bd.cpar.iov_base);
-	    break;
-#endif
-#ifdef MPT_BACOL_RADAU
-	  case 'r': case 'R': if (tolower(data->backend) == tolower(*val)) return 0;
-	    *((short *) &data->backend) = 'r';
-	    data->bd.cpar.iov_base = 0; data->bd.cpar.iov_len = 0;
-	    break;
-#endif
-	  default: return MPT_ERROR(BadValue);
+	if (src && (len = src->_vptr->conv(src, 'k', &val)) < 0) {
+		return len;
 	}
-	return 0;
+	if (mpt_bacol_backend(data, val) < 0) {
+		return MPT_ERROR(BadValue);
+	}
+	return len;
 }
 
 /*!
- * \ingroup mptSundialsIda
+ * \ingroup mptBacol
  * \brief set BACOL property
  * 
  * Change property of BACOL solver
@@ -112,7 +102,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	if (!strcasecmp(name, "kcol")) {
 		int32_t kcol = 2;
 	
-		if (!src && (len = src->_vptr->conv(src, 'i', &kcol)) < 0) return len;
+		if (src && (len = src->_vptr->conv(src, 'i', &kcol)) < 0) return len;
 		else if (kcol < 2 || kcol > 10) return MPT_ERROR(BadValue);
 		bac->kcol = kcol;
 		return len ? 1 : 0;
@@ -151,7 +141,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	}
 #ifdef MPT_BACOL_DASSL
 	/* dassl parameter */
-	if (bac->backend == 'd' || bac->backend == 'D') {
+	if (bac->_backend == 'd' || bac->_backend == 'D') {
 	if (!strcasecmp(name, "tstop")) {
 		if (src && (len = src->_vptr->conv(src, 'd', &bac->bd.tstop)) < 0) return len;
 		bac->mflag.tstop = len ? 1 : 0;
@@ -271,7 +261,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 		prop->name = "backend"; prop->desc = "solver step backend";
 		prop->val.fmt = 0; prop->val.ptr = 0;
 		if (!bac) return id;
-		switch (bac->backend) {
+		switch (bac->_backend) {
 #ifdef MPT_BACOL_DASSL
 		  case 'd': case 'D': prop->val.ptr = "dassl"; break;
 #endif
@@ -284,7 +274,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	}
 #ifdef MPT_BACOL_DASSL
 	/* dassl parameter */
-	if (!bac || bac->backend == 'd' || bac->backend == 'D') {
+	if (!bac || bac->_backend == 'd' || bac->_backend == 'D') {
 	if (name ? !strcasecmp(name, "tstop") : pos == ++id) {
 		prop->name = "tstop"; prop->desc = "max. time allowed";
 		prop->val.fmt = "d"; prop->val.ptr = &bac->mflag.bdir;
