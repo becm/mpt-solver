@@ -3,5 +3,8 @@ config
 check
 data
 
+# exclude static targets
+*_static
+
 # exclude output files
 *.out

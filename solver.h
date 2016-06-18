@@ -434,7 +434,7 @@ MPT_SOLVER_STRUCT(clientdata);
 #ifdef _MPT_CONFIG_H
 # ifdef __cplusplus
 #  ifdef _MPT_MESSAGE_H
-MPT_SOLVER_STRUCT(clientdata) : ::mpt::proxy
+MPT_SOLVER_STRUCT(clientdata) : public proxy
 {
 	inline clientdata() : _outlog(0)
 	{
