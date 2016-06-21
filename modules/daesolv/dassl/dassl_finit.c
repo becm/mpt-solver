@@ -35,13 +35,9 @@ extern void mpt_dassl_init(MPT_SOLVER_STRUCT(dassl) *data)
 	MPT_IVPPAR_INIT(&data->ivp);
 	data->t = 0.0;
 	
-	/* allocate inital space for parameters */
+	/* delay work vector initialization */
 	data->rwork.iov_base = 0; data->rwork.iov_len  = 0;
 	data->iwork.iov_base = 0; data->iwork.iov_len  = 0;
-	
-	/* initialize work data */
-	memset(data->rwork.iov_base, 0, data->rwork.iov_len);
-	memset(data->iwork.iov_base, 0, data->iwork.iov_len);
 	
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);

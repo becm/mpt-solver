@@ -55,7 +55,7 @@ static void *meFcn(MPT_SOLVER(IVP) *sol, int type)
 	switch (type) {
 	  case MPT_SOLVER_ENUM(ODE): break;
 	  case MPT_SOLVER_ENUM(DAE): return me->ivp.pint ? 0 : &fcn->dae;
-	  case MPT_SOLVER_ENUM(PDE): if (me->ivp.pint) return 0; fcn->dae.mas = 0; fcn->dae.jac = 0;
+	  case MPT_SOLVER_ENUM(PDE): if (!me->ivp.pint) return 0; fcn->dae.mas = 0; fcn->dae.jac = 0;
 	  case MPT_SOLVER_ENUM(IVP): return fcn;
 	  default: return 0;
 	}

@@ -13,7 +13,7 @@
 static int setInt(MPT_SOLVER_STRUCT(mebdfi) *me, size_t pos, int val)
 {
 	int *d;
-	if (!(d = mpt_vecpar_alloc(&me->iwork, 8, sizeof(int)))) {
+	if (!(d = mpt_vecpar_alloc(&me->iwork, pos+1, sizeof(int)))) {
 		return MPT_ERROR(BadOperation);
 	}
 	d[pos] = val;

@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 
 #include <sys/uio.h>
@@ -29,6 +30,9 @@ extern void *mpt_vecpar_alloc(struct iovec *vec, size_t need, size_t esize)
 	if (!(ptr = vec->iov_base) || vec->iov_len < need) {
 		if (!(ptr = realloc(ptr, need))) {
 			return 0;
+		}
+		if (need > vec->iov_len) {
+			memset(((uint8_t *) ptr) + vec->iov_len, 0, need - vec->iov_len);
 		}
 		vec->iov_base = ptr;
 		vec->iov_len  = need;
