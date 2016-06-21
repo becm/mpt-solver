@@ -102,6 +102,7 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 		/* assign output to client */
 		if (cl->_vptr->cfg.assign((void *) cl, 0, &val) >= 0) {
 			mpt_dispatch_graphic(dsp);
+			mpt_reply_reserve(&dsp->_ctx, 0);
 		}
 	}
 	/* register solver command handler */
