@@ -79,7 +79,7 @@ extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *bac)
 	bac->ipar.iov_base = 0; bac->ipar.iov_len = 0;
 	
 	
-	bac->_backend = 'd';
+	bac->_backend = 0;
 	
 	memset(&bac->bd, 0, sizeof(bac->bd));
 }

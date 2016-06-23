@@ -32,6 +32,10 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	if (mpt_vecpar_cktol(&bac->atol, bac->ivp.neqs, odim, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
+	/* choose default backend */
+	if (!bac->_backend && mpt_bacol_backend(bac, 0) < 0) {
+		return MPT_ERROR(BadType);
+	}
 	
 	switch (bac->_backend) {
 #ifdef MPT_BACOL_RADAU
@@ -61,7 +65,9 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	lcp = 0;
 	    break;
 #endif
-	    default: errno = EBADR; return MPT_ERROR(BadArgument);
+	    default:
+	errno = EBADR;
+	return MPT_ERROR(BadArgument);
 	}
 	
 	if (!(tmp = realloc(bac->x, (nimx + 1) * sizeof(*bac->x)))) {
