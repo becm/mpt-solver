@@ -108,13 +108,13 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	}
 	if (!val) {
 		mpt_clientdata_assign(&ivp->cd, val);
-		return mpt_solver_assign(conf, porg, val, ivp->cd.log);
+		ret = mpt_solver_assign(conf, porg, val, ivp->cd.log);
 	}
-	if (porg) {
-		return mpt_solver_assign(conf, porg, val, ivp->cd.log);
+	else if (porg) {
+		ret = mpt_solver_assign(conf, porg, val, ivp->cd.log);
 	}
-	if ((ret = mpt_clientdata_assign(&ivp->cd, val)) < 0) {
-		return ret;
+	else {
+		ret = mpt_clientdata_assign(&ivp->cd, val);
 	}
 	ivp->sol = mpt_proxy_cast(&ivp->cd.pr, MPT_ENUM(TypeSolver));
 	
@@ -153,7 +153,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	
 	(void) args;
 	
-	log = ivp->cd.log ? ivp->cd.log : ivp->cd._outlog;
+	log = ivp->cd.log;
 	
 	if (!(conf = configIVP(ivp->cfg))) {
 		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s",
@@ -332,7 +332,7 @@ static int prepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	struct _clientPdeOut ctx;
 	int ret;
 	
-	log = ivp->cd.log ? ivp->cd.log : ivp->cd._outlog;
+	log = ivp->cd.log;
 	
 	if (!(sol = ivp->sol)) {
 		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
@@ -385,7 +385,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	double end;
 	int ret;
 	
-	log = ivp->cd.log ? ivp->cd.log : ivp->cd._outlog;
+	log = ivp->cd.log;
 	
 	if (!(sol = ivp->sol) || !(ctx.dat = ivp->sd)) {
 		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
@@ -558,7 +558,7 @@ static void clearIVP(MPT_INTERFACE(client) *cl)
 	}
 	/* close history output */
 	if ((out = ivp->cd.out) && mpt_conf_history(out, 0) < 0) {
-		MPT_INTERFACE(logger) *log = ivp->cd.log ? ivp->cd.log : ivp->cd._outlog;
+		MPT_INTERFACE(logger) *log = ivp->cd.log;
 		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
 		                 MPT_tr("unable to close history output"));
 	}

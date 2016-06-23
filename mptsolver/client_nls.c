@@ -105,13 +105,13 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	}
 	if (!val) {
 		mpt_clientdata_assign(&nls->cd, val);
-		return mpt_solver_assign(conf, porg, val, nls->cd.log);
+		ret = mpt_solver_assign(conf, porg, val, nls->cd.log);
 	}
-	if (porg) {
-		return mpt_solver_assign(conf, porg, val, nls->cd.log);
+	else if (porg) {
+		ret = mpt_solver_assign(conf, porg, val, nls->cd.log);
 	}
-	if ((ret = mpt_clientdata_assign(&nls->cd, val)) < 0) {
-		return ret;
+	else {
+		ret = mpt_clientdata_assign(&nls->cd, val);
 	}
 	nls->sol = mpt_proxy_cast(&nls->cd.pr, MPT_ENUM(TypeSolver));
 	
@@ -148,7 +148,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	
 	(void) args;
 	
-	log = nls->cd.log ? nls->cd.log : nls->cd._outlog;
+	log = nls->cd.log;
 	
 	if (!(conf = configNLS(nls->cfg))) {
 		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
@@ -242,7 +242,7 @@ static int prepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	
 	(void) args;
 	
-	log = nls->cd.log ? nls->cd.log : nls->cd._outlog;
+	log = nls->cd.log;
 	
 	if (!(conf = configNLS(nls->cfg))) {
 		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
@@ -326,7 +326,7 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	
 	(void) args;
 	
-	log = nls->cd.log ? nls->cd.log : nls->cd._outlog;
+	log = nls->cd.log;
 	
 	if (!(sol = (void *) nls->sol) || !(dat = nls->sd)) {
 		return -1;
@@ -405,7 +405,7 @@ static void clearNLS(MPT_INTERFACE(client) *cl)
 	}
 	/* close history output */
 	if (nls->cd.out && mpt_conf_history(nls->cd.out, 0) < 0) {
-		MPT_INTERFACE(logger) *log = nls->cd.log ? nls->cd.log : nls->cd._outlog;
+		MPT_INTERFACE(logger) *log = nls->cd.log;
 		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
 		                 MPT_tr("unable to close history output"));
 	}
