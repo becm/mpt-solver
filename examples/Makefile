@@ -2,7 +2,7 @@
 #
 DIRS  = ode dae pde nls bacol
 PROGS = config
-TESTS = check data
+TESTS = check proxy
 OBJS  = $(PROGS:%=%.o) $(TESTS:%=%.o)
 
 include solver.example.mk
@@ -17,7 +17,5 @@ check check.o : CPPFLAGS+=-std=c++14
 check : CC=${CXX}
 check : LDLIBS=-lmptsolver -lmptcore $(solvers:%=-lmpt_%)
 
-data data.o data_static : CPPFLAGS+=-std=c++14
-data data_static : CC=${CXX}
-data :  LDLIBS=-lmptloader
-data_static : LDLIBS=-lmpt -ldl
+proxy :  LDLIBS=-lmptsolver
+proxy_static : LDLIBS=-lmptsolver -lmpt -ldl

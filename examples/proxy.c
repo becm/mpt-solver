@@ -12,9 +12,12 @@
 
 int main()
 {
+	struct mpt_proxy pr = MPT_PROXY_INIT;
+	
 	mtrace();
 	
-	mpt::solver::clientdata cd;
-	mpt_library_bind(&cd, "sundials_cvode_create@libmpt_sundials.so.1", 0, 0);
-	cd.setSolver(0);
+	if (mpt_solver_load(&pr, "sundials_cvode_create@libmpt_sundials.so.1") < 0) {
+		return 1;
+	}
+	return 0;
 }

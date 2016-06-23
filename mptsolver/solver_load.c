@@ -12,50 +12,41 @@
  * Load (or convert) solver via proxy element.
  * Track references via proxy data.
  * 
- * \param pr   proxa data
+ * \param pr   proxy data
  * \param conf solver alias/symbol to mpt_library_bind
- * \param log  logging descriptor
  * 
  * \return untracked solver interface instance
  */
 /* load solver of specific type */
-extern int mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf, MPT_INTERFACE(logger) *log)
+extern int mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf)
 {
-	MPT_STRUCT(proxy) p = MPT_PROXY_INIT;
 	MPT_INTERFACE(object) *sol;
 	MPT_INTERFACE(metatype) *mt;
 	const char *lpath = 0;
+	uintptr_t h;
 	int mode;
 	
-	if ((mt = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
+	if (!conf) {
+		if (pr->log) mpt_log(pr->log, __func__, MPT_FCNLOG(Error), "%s",
+		                     MPT_tr("no solver description"));
+		return MPT_ERROR(BadArgument);
+	}
+	if (pr->hash
+	    && pr->hash == (h = mpt_hash(conf, strlen(conf)))) {
+		mt = pr->_mt;
+	}
+	else if ((mt = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
 		mt->_vptr->conv(mt, 's', &lpath);
 	}
-	p._types[0] = MPT_ENUM(TypeSolver);
-	p._types[1] = MPT_ENUM(TypeObject);
-	if ((mode = mpt_library_bind(&p, conf, lpath, log)) < 0) {
-		return mode;
+	if (!(mt = mpt_library_bind(MPT_ENUM(TypeSolver), conf, lpath, pr->log))) {
+		return 0;
 	}
-	if (!(mt = p._ref)) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
-		                 MPT_tr("no proxy instance pointer"), conf);
+	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0) {
+		if (pr->log) mpt_log(pr->log, __func__, MPT_FCNLOG(Error), "%s: %s",
+		                     MPT_tr("no solver in proxy instance"), conf);
 		return MPT_ERROR(BadValue);
 	}
-	/* reference is no metatype */
-	if (!strchr(p._types, MPT_ENUM(TypeMeta))) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
-		                 MPT_tr("bad proxy type"), conf);
-		mt->_vptr->unref(mt);
-		return MPT_ERROR(BadType);
-	}
-	/* get solver descriptor from metatype */
-	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) <= 0) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
-		                 MPT_tr("no solver in metatype"), conf);
-		mt->_vptr->unref(mt);
-		return MPT_ERROR(BadType);
-	}
 	if (sol) {
-		MPT_INTERFACE(metatype) *old;
 		MPT_STRUCT(property) prop;
 		prop.name = "";
 		prop.desc = 0;
@@ -63,16 +54,24 @@ extern int mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf, MPT_INTERFAC
 			mode = MPT_ERROR(BadOperation);
 			mt->_vptr->unref(mt);
 		}
-		if ((old = pr->_ref)) {
-			old->_vptr->unref(old);
+		if (pr->_mt == mt) {
+			return mode;
 		}
-		*pr = p;
+		if (pr->_mt) {
+			pr->_mt->_vptr->unref(pr->_mt);
+		}
+		pr->_mt = mt;
+		pr->hash = mpt_hash(conf, strlen(conf));
 		
 		return mode;
 	}
 	mt->_vptr->unref(mt);
-	if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
-	                 MPT_tr("bad solver instance pointer"), conf);
+	if (pr->_mt == mt) {
+		pr->_mt = 0;
+		pr->hash = 0;
+	}
+	if (pr->log) mpt_log(pr->log, __func__, MPT_FCNLOG(Error), "%s: %s",
+	                     MPT_tr("bad solver instance pointer"), conf);
 	
 	return MPT_ERROR(BadValue);
 }
