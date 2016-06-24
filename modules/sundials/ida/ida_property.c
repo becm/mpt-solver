@@ -10,6 +10,8 @@
 
 #include "version.h"
 
+#include "meta.h"
+
 #include "sundials.h"
 
 static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(metatype) *src)

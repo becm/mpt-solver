@@ -2,6 +2,8 @@
  * set Sundials jacobian parameters
  */
 
+#include "meta.h"
+
 #include "sundials.h"
 
 extern int sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, int neqs, MPT_INTERFACE(metatype) *src)

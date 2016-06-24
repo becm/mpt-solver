@@ -10,6 +10,8 @@
 
 #include "node.h"
 
+#include "object.h"
+
 #include "client.h"
 
 struct outputProc {

@@ -6,7 +6,7 @@
 #ifndef _MPT_SOLVER_H
 #define _MPT_SOLVER_H  @INTERFACE_VERSION@
 
-#include "core.h"
+#include "object.h"
 
 #ifdef __cplusplus
 # include <stdlib.h>
@@ -21,6 +21,7 @@ __MPT_NAMESPACE_BEGIN
 
 MPT_INTERFACE(client);
 MPT_INTERFACE(output);
+MPT_INTERFACE(metatype);
 
 MPT_STRUCT(dispatch);
 MPT_STRUCT(message);

@@ -12,8 +12,10 @@
 #include "array.h"
 #include "message.h"
 #include "event.h"
+#include "output.h"
 
 #include "client.h"
+#include "meta.h"
 
 #include "solver.h"
 
@@ -101,7 +103,7 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 		
 		/* assign output to client */
 		if (cl->_vptr->cfg.assign((void *) cl, 0, &val) >= 0) {
-			mpt_dispatch_graphic(dsp);
+			mpt_dispatch_control(dsp, "graphic");
 			mpt_reply_reserve(&dsp->_ctx, 0);
 		}
 	}

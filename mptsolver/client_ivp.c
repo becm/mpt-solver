@@ -14,7 +14,7 @@
 #include "node.h"
 #include "message.h"
 #include "array.h"
-#include "parse.h"
+#include "meta.h"
 
 #include "values.h"
 #include "output.h"
@@ -109,10 +109,10 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	}
 	if (!val) {
 		mpt_proxy_assign(&ivp->pr, val);
-		ret = mpt_solver_assign(conf, porg, val, ivp->pr.log);
+		ret = mpt_solver_assign(conf, porg, val, ivp->pr.logger);
 	}
 	else if (porg) {
-		ret = mpt_solver_assign(conf, porg, val, ivp->pr.log);
+		ret = mpt_solver_assign(conf, porg, val, ivp->pr.logger);
 	}
 	else {
 		ret = mpt_proxy_assign(&ivp->pr, val);
@@ -156,7 +156,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	
 	(void) args;
 	
-	log = ivp->pr.log;
+	log = ivp->pr.logger;
 	
 	if (!(conf = configIVP(ivp->cfg))) {
 		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s",
@@ -219,7 +219,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 		return MPT_ERROR(BadOperation);
 	}
 	
-	mpt_conf_graphic(ivp->pr.out, conf);
+	mpt_conf_graphic(ivp->pr.output, conf);
 	
 	/* clear existing solver data */
 	if ((dat = ivp->sd)) {
@@ -340,7 +340,7 @@ static int prepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	struct _clientPdeOut ctx;
 	int ret;
 	
-	log = ivp->pr.log;
+	log = ivp->pr.logger;
 	
 	if (!(sol = ivp->sol)) {
 		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
@@ -350,7 +350,7 @@ static int prepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	if ((conf = configIVP(ivp->cfg))) {
 		conf = conf->children;
 	}
-	if ((ret = mpt_conf_history(ivp->pr.out, conf)) < 0) {
+	if ((ret = mpt_conf_history(ivp->pr.output, conf)) < 0) {
 		return ret;
 	}
 	mpt_solver_param((void *) sol, conf, arg, log);
@@ -369,12 +369,12 @@ static int prepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		mpt_solver_info((void *) sol, log);
 		mpt_log(log, 0, MPT_ENUM(LogMessage), "");
 	}
-	if (!ivp->pdim || !(ctx.out = ivp->pr.out)) {
+	if (!ivp->pdim || !(ctx.out = ivp->pr.output)) {
 		mpt_solver_status((void *) sol, log, 0, 0);
 	}
 	else {
 		ctx.dat = ivp->sd;
-		ctx.state = MPT_ENUM(OutputStateInit);
+		ctx.state = MPT_ENUM(DataStateInit);
 		mpt_solver_status((void *) sol, log, outPDE, &ctx);
 	}
 	return ret;
@@ -393,7 +393,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	double end;
 	int ret;
 	
-	log = ivp->pr.log;
+	log = ivp->pr.logger;
 	
 	if (!(sol = ivp->sol) || !(ctx.dat = ivp->sd)) {
 		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
@@ -419,25 +419,25 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
 		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
 		
-		ctx.state = MPT_ENUM(OutputStateStep);
+		ctx.state = MPT_ENUM(DataStateStep);
 		if (!ret) {
-			ctx.state |= MPT_ENUM(OutputStateFini);
+			ctx.state |= MPT_ENUM(DataStateFini);
 		}
 		else if (ret < 0) {
-			ctx.state |= MPT_ENUM(OutputStateFail);
+			ctx.state |= MPT_ENUM(DataStateFail);
 		}
 		
 		ld  = ctx.dat->nval;
 		val = mpt_data_grid(ctx.dat);
 		len = ctx.dat->val._buf->used / sizeof(*val) / ld;
 		
-		mpt_output_history(ivp->pr.out, len, val, 1, 0, ld - 1);
+		mpt_output_history(ivp->pr.output, len, val, 1, 0, ld - 1);
 		
 		for (i = 0; i < ld; i++) {
 			if (mpt_bitmap_get(ctx.dat->mask, sizeof(ctx.dat->mask), i) > 0) {
 				continue;
 			}
-			mpt_output_data(ivp->pr.out, ctx.state, i, len, val+i, ld);
+			mpt_output_data(ivp->pr.output, ctx.state, i, len, val+i, ld);
 		}
 		if (!ret && log) {
 			mpt_solver_statistics((void *) sol, log, &ivp->ru_usr, &ivp->ru_sys);
@@ -488,14 +488,14 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	}
 	
 	while (1) {
-		ctx.state = MPT_ENUM(OutputStateStep);
+		ctx.state = MPT_ENUM(DataStateStep);
 		ret = 1;
 		
 		getrusage(RUSAGE_SELF, &pre);
 		
 		ivp->t = end;
 		if ((ret = sol->_vptr->step(sol, &ivp->t)) < 0) {
-			ctx.state |= MPT_ENUM(OutputStateFail);
+			ctx.state |= MPT_ENUM(DataStateFail);
 			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s (t = %g)",
 			                 MPT_tr("solver step failed"), end);
 			break;
@@ -520,7 +520,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			}
 			if (!curr) {
 				ret = 0;
-				ctx.state |= MPT_ENUM(OutputStateFini);
+				ctx.state |= MPT_ENUM(DataStateFini);
 				break;
 			}
 			if ((curr = src->_vptr->conv(src, 'd', &end)) < 0) {
@@ -531,7 +531,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			}
 			if (!curr) {
 				ret = 0;
-				ctx.state |= MPT_ENUM(OutputStateFini);
+				ctx.state |= MPT_ENUM(DataStateFini);
 				break;
 			}
 			if (end > ivp->t) {
@@ -540,7 +540,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			if (log) mpt_log(log, _func, MPT_FCNLOG(Info), "%s (%g < %g)",
 			                 MPT_tr("skip time value argument"), end, ivp->t);
 		}
-		if ((ctx.out = ivp->pr.out)) {
+		if ((ctx.out = ivp->pr.output)) {
 			mpt_solver_status((void *) sol, log, outPDE, &ctx);
 		}
 		if (!ret && log) {
@@ -565,8 +565,8 @@ static void clearIVP(MPT_INTERFACE(client) *cl)
 		mpt_node_clear(conf);
 	}
 	/* close history output */
-	if ((out = ivp->pr.out) && mpt_conf_history(out, 0) < 0) {
-		MPT_INTERFACE(logger) *log = ivp->pr.log;
+	if ((out = ivp->pr.output) && mpt_conf_history(out, 0) < 0) {
+		MPT_INTERFACE(logger) *log = ivp->pr.logger;
 		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
 		                 MPT_tr("unable to close history output"));
 	}

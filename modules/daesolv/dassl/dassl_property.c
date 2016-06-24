@@ -8,6 +8,8 @@
 
 #include "version.h"
 
+#include "meta.h"
+
 #include "dassl.h"
 
 static int setInt(MPT_SOLVER_STRUCT(dassl) *da, size_t pos, int val)

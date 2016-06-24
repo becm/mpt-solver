@@ -7,7 +7,8 @@
 #include <ctype.h>
 
 #include "node.h"
-#include "client.h"
+#include "meta.h"
+
 #include "config.h"
 
 #include "solver.h"

@@ -16,6 +16,8 @@
 #include "config.h"
 #include "client.h"
 
+#include "meta.h"
+
 #include "solver.h"
 
 static char *stripFilename(char *base)

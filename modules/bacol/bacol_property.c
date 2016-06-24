@@ -9,6 +9,8 @@
 
 #include "version.h"
 
+#include "meta.h"
+
 #include "bacol.h"
 
 static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(metatype) *src)

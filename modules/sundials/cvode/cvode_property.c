@@ -10,6 +10,8 @@
 
 #include "version.h"
 
+#include "meta.h"
+
 #include "sundials.h"
 
 static const char bdfText[] = "BDF", adamsText[] = "Adams";

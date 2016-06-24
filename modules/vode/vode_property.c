@@ -7,6 +7,8 @@
 
 #include "version.h"
 
+#include "meta.h"
+
 #include "vode.h"
 
 static int setInt(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, int val)

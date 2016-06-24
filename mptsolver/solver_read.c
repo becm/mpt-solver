@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "client.h"
+#include "meta.h"
 
 #include "solver.h"
 

@@ -8,6 +8,8 @@
 
 #include "version.h"
 
+#include "meta.h"
+
 #include "radau.h"
 
 static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, MPT_INTERFACE(metatype) *src)

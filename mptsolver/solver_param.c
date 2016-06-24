@@ -6,10 +6,9 @@
 #include <ctype.h>
 
 #include "node.h"
+#include "meta.h"
 
 #include "solver.h"
-
-#include "client.h"
 
 /*!
  * \ingroup mptClient

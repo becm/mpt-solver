@@ -11,6 +11,8 @@
 
 #include "array.h"
 
+#include "meta.h"
+
 #include "sundials.h"
 
 extern int sundials_vector_set(N_Vector *v, long len, MPT_INTERFACE(metatype) *src)

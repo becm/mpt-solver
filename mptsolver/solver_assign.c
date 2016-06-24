@@ -12,6 +12,8 @@
 #include "config.h"
 #include "parse.h"
 
+#include "meta.h"
+
 #include "solver.h"
 
 static int assignSolverConfig(MPT_STRUCT(node) *conf, const MPT_STRUCT(value) *val, MPT_INTERFACE(logger) *log)

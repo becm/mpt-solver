@@ -11,6 +11,8 @@
 
 #include "version.h"
 
+#include "meta.h"
+
 #include "minpack.h"
 
 static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, MPT_INTERFACE(metatype) *src)

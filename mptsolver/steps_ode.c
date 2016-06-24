@@ -4,6 +4,8 @@
 #include <sys/uio.h>
 
 #include "array.h"
+#include "meta.h"
+
 #include "values.h"
 
 #include "solver.h"

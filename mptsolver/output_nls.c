@@ -41,7 +41,7 @@ extern int mpt_output_nls(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 		nr  = 1;
 	}
 	/* output parameters */
-	if (par && (state & (MPT_ENUM(OutputStateInit) | MPT_ENUM(OutputStateStep) | MPT_ENUM(OutputStateFini)))) {
+	if (par && (state & (MPT_ENUM(DataStateInit) | MPT_ENUM(DataStateStep) | MPT_ENUM(DataStateFini)))) {
 		struct {
 			MPT_STRUCT(msgtype) mt;
 			MPT_STRUCT(msgbind) bnd;
@@ -61,7 +61,7 @@ extern int mpt_output_nls(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 		return 1;
 	}
 	/* output residuals */
-	if (state & MPT_ENUM(OutputStateStep)) {
+	if (state & MPT_ENUM(DataStateStep)) {
 		if (!dat || !mpt_bitmap_get(dat->mask, sizeof(dat->mask), 0)) {
 			mpt_output_data(out, state, 0, nr, res, 1);
 		}
@@ -74,7 +74,7 @@ extern int mpt_output_nls(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 		np /= nr;
 		par = np ? ((double *) (dat->val._buf + 1)) : 0;
 	}
-	if (state & MPT_ENUM(OutputStateInit)) {
+	if (state & MPT_ENUM(DataStateInit)) {
 		int i;
 		for (i = 0; i < np; ++i) {
 			if (!dat || !mpt_bitmap_get(dat->mask, sizeof(dat->mask), i+1)) {
@@ -82,7 +82,7 @@ extern int mpt_output_nls(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 			}
 		}
 	}
-	if (state & MPT_ENUM(OutputStateFini)) {
+	if (state & MPT_ENUM(DataStateFini)) {
 		mpt_output_history(out, nr, res, 1, par, np);
 	}
 	return np ? 3 : 2;

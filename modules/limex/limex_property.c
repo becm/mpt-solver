@@ -9,6 +9,8 @@
 
 #include "version.h"
 
+#include "meta.h"
+
 #include "limex.h"
 
 static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, MPT_INTERFACE(metatype) *src)

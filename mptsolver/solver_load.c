@@ -3,6 +3,8 @@
 
 #include "client.h"
 
+#include "meta.h"
+
 #include "solver.h"
 
 /*!
@@ -27,8 +29,8 @@ extern int mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf)
 	int mode;
 	
 	if (!conf) {
-		if (pr->log) mpt_log(pr->log, __func__, MPT_FCNLOG(Error), "%s",
-		                     MPT_tr("no solver description"));
+		if (pr->logger) mpt_log(pr->logger, __func__, MPT_FCNLOG(Error), "%s",
+		                        MPT_tr("no solver description"));
 		return MPT_ERROR(BadArgument);
 	}
 	if (pr->hash
@@ -38,12 +40,12 @@ extern int mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf)
 	else if ((mt = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
 		mt->_vptr->conv(mt, 's', &lpath);
 	}
-	if (!(mt = mpt_library_bind(MPT_ENUM(TypeSolver), conf, lpath, pr->log))) {
+	if (!(mt = mpt_library_bind(MPT_ENUM(TypeSolver), conf, lpath, pr->logger))) {
 		return 0;
 	}
 	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0) {
-		if (pr->log) mpt_log(pr->log, __func__, MPT_FCNLOG(Error), "%s: %s",
-		                     MPT_tr("no solver in proxy instance"), conf);
+		if (pr->logger) mpt_log(pr->logger, __func__, MPT_FCNLOG(Error), "%s: %s",
+		                        MPT_tr("no solver in proxy instance"), conf);
 		return MPT_ERROR(BadValue);
 	}
 	if (sol) {
@@ -70,8 +72,8 @@ extern int mpt_solver_load(MPT_STRUCT(proxy) *pr, const char *conf)
 		pr->_mt = 0;
 		pr->hash = 0;
 	}
-	if (pr->log) mpt_log(pr->log, __func__, MPT_FCNLOG(Error), "%s: %s",
-	                     MPT_tr("bad solver instance pointer"), conf);
+	if (pr->logger) mpt_log(pr->logger, __func__, MPT_FCNLOG(Error), "%s: %s",
+	                        MPT_tr("bad solver instance pointer"), conf);
 	
 	return MPT_ERROR(BadValue);
 }

@@ -8,6 +8,8 @@
 
 #include "version.h"
 
+#include "meta.h"
+
 #include "mebdfi.h"
 
 static int setInt(MPT_SOLVER_STRUCT(mebdfi) *me, size_t pos, int val)
