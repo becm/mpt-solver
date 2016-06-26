@@ -42,7 +42,7 @@ static int procProp(void *ptr, const MPT_INTERFACE(property) *pr)
 	/* unknown property */
 	if (ret == MPT_ERROR(BadArgument)) {
 		o->err |= 1;
-		if ((o->mask & MPT_ENUM(TraverseUnknown)) || !o->log) {
+		if (!(o->mask & MPT_ENUM(TraverseUnknown)) || !o->log) {
 			return 1;
 		}
 		(void) mpt_log(o->log, fcn, MPT_FCNLOG(Error), "%s: %s: %s",

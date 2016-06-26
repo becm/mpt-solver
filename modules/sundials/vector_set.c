@@ -41,22 +41,6 @@ extern int sundials_vector_set(N_Vector *v, long len, MPT_INTERFACE(metatype) *s
 		memset(N_VGetArrayPointer(next), 0, size);
 		return 0;
 	}
-	if ((res = src->_vptr->conv(src, MPT_value_toArray(MPT_SOLVER_ENUM(SundialsRealtype)) | MPT_ENUM(ValueConsume), &arr)) > 0) {
-		MPT_STRUCT(buffer) *buf;
-		if (!arr || !(buf = arr->_buf) || buf->used != size) {
-			return MPT_ERROR(BadArgument);
-		}
-		if (!(next = sundials_nvector_new(len))) {
-			return MPT_ERROR(BadOperation);
-		}
-		if (*v) {
-			N_VDestroy(*v);
-		}
-		*v = next;
-		dest = memcpy(N_VGetArrayPointer(next), buf+1, size);
-		
-		return 1;
-	}
 	if ((res = src->_vptr->conv(src, MPT_value_toVector(MPT_SOLVER_ENUM(SundialsRealtype)) | MPT_ENUM(ValueConsume), &vec)) > 0) {
 		if (vec.iov_len != size) {
 			return MPT_ERROR(BadArgument);
@@ -76,7 +60,23 @@ extern int sundials_vector_set(N_Vector *v, long len, MPT_INTERFACE(metatype) *s
 		}
 		return 1;
 	}
-	if ((res = src->_vptr->conv(src, MPT_SOLVER_ENUM(SundialsRealtype) | MPT_ENUM(ValueConsume), &val)) < 0) {
+	if (res && (res = src->_vptr->conv(src, MPT_value_toArray(MPT_SOLVER_ENUM(SundialsRealtype)) | MPT_ENUM(ValueConsume), &arr)) > 0) {
+		MPT_STRUCT(buffer) *buf;
+		if (!arr || !(buf = arr->_buf) || buf->used != size) {
+			return MPT_ERROR(BadArgument);
+		}
+		if (!(next = sundials_nvector_new(len))) {
+			return MPT_ERROR(BadOperation);
+		}
+		if (*v) {
+			N_VDestroy(*v);
+		}
+		*v = next;
+		dest = memcpy(N_VGetArrayPointer(next), buf+1, size);
+		
+		return 1;
+	}
+	if (res && (res = src->_vptr->conv(src, MPT_SOLVER_ENUM(SundialsRealtype) | MPT_ENUM(ValueConsume), &val)) < 0) {
 		return MPT_ERROR(BadType);
 	}
 	if (!(next = sundials_nvector_new(len))) {

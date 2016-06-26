@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <sys/uio.h>
 
+#include "meta.h"
+
 #include "solver.h"
 
 extern int mpt_vecpar_set(double **ptr, int max, MPT_INTERFACE(metatype) *src)

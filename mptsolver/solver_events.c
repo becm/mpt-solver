@@ -21,47 +21,97 @@
 
 static int solevtRead(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 {
-	const char *err;
-	
 	if (!ev) return 0;
 	
 	if (!ev->msg) {
-		if ((err = mpt_solver_read(solv, 0))) {
+		if (mpt_config_set((void *) solv, 0, 0, 0, 0) < 0) {
 			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("no default configuration"));
 		}
 	}
 	else {
-		MPT_STRUCT(message) msg = *ev->msg;
-		MPT_STRUCT(msgtype) mt;
 		MPT_INTERFACE(metatype) *src;
-		ssize_t part;
+		const char *cmd, *cfg, *sol;
+		int ret;
 		
-		if ((part = mpt_message_read(&msg, sizeof(mt), &mt)) < (ssize_t) sizeof(mt)) {
-			if (part) return MPT_event_fail(ev, MPT_ERROR(MissingData), MPT_tr("missing message type"));
-			return MPT_event_fail(ev, MPT_ERROR(MissingData), MPT_tr("missing message header"));
+		if (!(src = mpt_event_command(ev))) {
+			ev->id = 0;
+			return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 		}
-		if (mt.cmd != MPT_ENUM(MessageCommand)) {
-			return MPT_event_fail(ev, MPT_ERROR(BadType), MPT_tr("bad message format"));
+		cmd = cfg = sol = 0;
+		/* consume command, client and solver config */
+		if ((ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cmd)) < 0
+		    || ret
+		    || (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cfg)) < 0
+		    || ret
+		    || (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &sol)) < 0) {
+			src->_vptr->unref(src);
+			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("bad argument content"));
 		}
-		/* consume command part  */
-		if ((part = mpt_message_argv(&msg, mt.arg)) >= 0) {
-			mpt_message_read(&msg, part+1, 0);
-			part = mpt_message_argv(&msg, mt.arg);
+		if (ret && src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cmd)) {
+			src->_vptr->unref(src);
+			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("bad argument count"));
 		}
-		src = 0;
-		if (part > 0 && !(src = mpt_meta_message(&msg, mt.arg))) {
-			mpt_log(0, __func__, MPT_FCNLOG(Error), "%s",
-			        MPT_tr("failed to create argument stream"));
-			return MPT_ERROR(BadOperation);
+		if (cfg && mpt_config_set((void *) solv, 0, cfg, 0, 0) < 0) {
+			src->_vptr->unref(src);
+			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("failed to read config"));
 		}
-		err = mpt_solver_read(solv, src);
-		if (src) src->_vptr->unref(src);
-		
-		if (err) {
-			return MPT_event_fail(ev, MPT_ERROR(BadValue), err);
+		if (sol && mpt_config_set((void *) solv, "solver", cfg, 0, 0) < 0) {
+			src->_vptr->unref(src);
+			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("failed to set client config"));
 		}
+		src->_vptr->unref(src);
 	}
 	return MPT_event_good(ev, MPT_tr("reading configuration files completed"));
+}
+
+static int solevtClear(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
+{
+	MPT_STRUCT(path) p = MPT_PATH_INIT;
+	
+	if (!ev) return 0;
+	if (!ev->msg) {
+		/* clear single pass data */
+		cl->_vptr->cfg.remove((void *) cl, 0);
+		cl->_vptr->cfg.remove((void *) cl, &p);
+	}
+	else {
+		MPT_STRUCT(path) p = MPT_PATH_INIT;
+		MPT_INTERFACE(metatype) *src;
+		const char *arg;
+		int ret;
+		
+		if (!(src = mpt_event_command(ev))) {
+			ev->id = 0;
+			return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
+		}
+		if ((ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &arg)) <= 0
+		    || (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &arg)) < 0) {
+			src->_vptr->unref(src);
+			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("bad argument content"));
+		}
+		/* clear single pass data */
+		if (!ret) {
+			cl->_vptr->cfg.remove((void *) cl, 0);
+			cl->_vptr->cfg.remove((void *) cl, &p);
+		}
+		while (ret & MPT_ENUM(ValueConsume)) {
+			if ((ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &arg)) < 0) {
+				src->_vptr->unref(src);
+				return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("bad argument content"));
+			}
+			if (!ret) {
+				break;
+			}
+			if (!arg) {
+				continue;
+			}
+			mpt_path_set(&p, arg, -1);
+			
+			cl->_vptr->cfg.remove((void *) cl, &p);
+		}
+		src->_vptr->unref(src);
+	}
+	return MPT_event_stop(ev, MPT_tr("solver cleared"));
 }
 
 static const struct
@@ -70,8 +120,9 @@ static const struct
 	int (*ctl)(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
 }
 cmdsolv[] = {
-	{"read",    solevtRead      },
-	{"start",   mpt_solver_start}
+	{"read",    solevtRead },
+	{"start",   mpt_solver_start },
+	{"clear",   solevtClear }
 };
 
 /*!

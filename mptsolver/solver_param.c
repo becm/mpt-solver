@@ -30,19 +30,20 @@ extern void mpt_solver_param(MPT_INTERFACE(object) *obj, const MPT_STRUCT(node) 
 	MPT_STRUCT(property) pr;
 	
 	if ((conf = mpt_node_next(base, "solconf")) && (conf = conf->children)) {
-		mpt_solver_pset(obj, conf, maskGeneric, out);
+		mpt_solver_pset(obj, conf, ~maskGeneric, out);
 		
 		pr.name = "";
 		pr.desc = 0;
 		
-		if (obj->_vptr->property(obj, &pr) >= 0 && pr.name) {
-			if ((conf = mpt_node_next(conf, pr.name)) && (conf = conf->children)) {
-				mpt_solver_pset(obj, conf, maskSpecific, out);
-			}
+		if (obj->_vptr->property(obj, &pr) >= 0
+		    && pr.name
+		    && (conf = mpt_node_next(conf, pr.name))
+		    && (conf = conf->children)) {
+			mpt_solver_pset(obj, conf, ~maskSpecific, out);
 		}
 	}
 	if ((conf = mpt_node_next(base, "solver")) && (conf = conf->children)) {
-		mpt_solver_pset(obj, conf, maskGeneric, out);
+		mpt_solver_pset(obj, conf, ~maskGeneric, out);
 	}
 	if (!arg) {
 		return;

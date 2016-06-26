@@ -76,15 +76,16 @@ namespace solver {
 
 enum MPT_SOLVER_ENUM(Flags)
 {
-	MPT_SOLVER_ENUM(CapableIvp) = 0x100,
-	MPT_SOLVER_ENUM(ODE)        = 0x101,
-	MPT_SOLVER_ENUM(DAE)        = 0x102,
-	MPT_SOLVER_ENUM(PDE)        = 0x104,
-	MPT_SOLVER_ENUM(IVP)        = 0x107,
 	
-	MPT_SOLVER_ENUM(CapableNls) = 0x200,
-	MPT_SOLVER_ENUM(NlsVector)  = 0x201,
-	MPT_SOLVER_ENUM(NlsOverDet) = 0x202,
+	MPT_SOLVER_ENUM(CapableNls) = 0x0f,
+	MPT_SOLVER_ENUM(NlsVector)  = 0x01,
+	MPT_SOLVER_ENUM(NlsOverDet) = 0x02,
+	
+	MPT_SOLVER_ENUM(CapableIvp) = 0xf0,
+	MPT_SOLVER_ENUM(ODE)        = 0x10,
+	MPT_SOLVER_ENUM(DAE)        = 0x20,
+	MPT_SOLVER_ENUM(PDE)        = 0x40,
+	MPT_SOLVER_ENUM(IVP)        = 0x70,
 	
 	MPT_SOLVER_ENUM(Header)     = 0x1,
 	MPT_SOLVER_ENUM(Status)     = 0x2,
@@ -457,9 +458,7 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *, MPT_INTERFACE(client) *);
 extern int mpt_solver_start(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
 
 /* read files to configuration */
-extern const char *mpt_solver_read(MPT_INTERFACE(client) *, MPT_INTERFACE(metatype) *);
-
-extern int mpt_solver_assign(MPT_STRUCT(node) *, const MPT_STRUCT(path) *, const MPT_STRUCT(value) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_solver_read(MPT_STRUCT(node) *, MPT_STRUCT(metatype) *, MPT_INTERFACE(logger) *);
 
 /* initialize solver memory */
 extern void mpt_data_init(MPT_SOLVER_STRUCT(data) *);
@@ -492,7 +491,7 @@ extern int mpt_residuals_cdiff(void *, double , const double *, double *, const 
 /* generate library description form short form */
 extern const char *mpt_solver_alias(const char *);
 /* load solver of specific type */
-extern int mpt_solver_load(MPT_STRUCT(proxy) *, const char *);
+extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *, int , const char *);
 
 /* set solver parameter */
 extern int  mpt_solver_pset (MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));

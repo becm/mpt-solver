@@ -4,6 +4,8 @@
 
 #include <stdlib.h>
 
+#include "meta.h"
+
 #include "solver.h"
 
 extern int mpt_ivppar_set(MPT_SOLVER_IVP_STRUCT(parameters) *ivp, MPT_INTERFACE(metatype) *src)
