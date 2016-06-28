@@ -10,6 +10,31 @@
 
 #include "solver.h"
 
+static int setVecparDefault(double **ptr, int max)
+{
+	double *dst, *old = *ptr;
+	int pos;
+	
+	if (max < 0) {
+		if (old) {
+			free(old);
+			*ptr = 0;
+		}
+		return 0;
+	}
+	if (!max) {
+		return 0;
+	}
+	if (!(dst = realloc(old, max * sizeof(*old)))) {
+		return MPT_ERROR(BadOperation);
+	}
+	for (pos = 0; pos < max; ++pos) {
+		dst[pos] = 0.0;
+	}
+	*ptr = dst;
+	
+	return 0;
+}
 extern int mpt_vecpar_set(double **ptr, int max, MPT_INTERFACE(metatype) *src)
 {
 	struct iovec tmp;
@@ -18,27 +43,12 @@ extern int mpt_vecpar_set(double **ptr, int max, MPT_INTERFACE(metatype) *src)
 	int len, pos, curr;
 	
 	if (!src) {
-		if (max < 0 && old) {
-			free(old);
-			*ptr = 0;
-		}
-		return 0;
+		return setVecparDefault(ptr, max);
 	}
 	if ((curr = src->_vptr->conv(src, MPT_value_toVector('d') | MPT_ENUM(ValueConsume), &tmp)) >= 0) {
 		/* empty data */
 		if (!curr) {
-			if (!old) {
-				return 0;
-			}
-			if (max < 0) {
-				free(old);
-				*ptr = 0;
-				return 0;
-			}
-			for (pos = 0; pos < max; ++pos) {
-				old[pos] = 0;
-			}
-			return 0;
+			return setVecparDefault(ptr, max);
 		}
 		len = tmp.iov_len/sizeof(double);
 		
@@ -75,15 +85,7 @@ extern int mpt_vecpar_set(double **ptr, int max, MPT_INTERFACE(metatype) *src)
 	}
 	/* valid but empty data */
 	if (!curr) {
-		if (!old) {
-			return 0;
-		}
-		if (max < 0) {
-			free(old);
-			*ptr = 0;
-			return 0;
-		}
-		return 0;
+		return setVecparDefault(ptr, max);
 	}
 	/* single value only */
 	if (max == 1 || (curr = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &v2)) <= 0) {
