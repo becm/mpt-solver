@@ -21,6 +21,22 @@ static void cdiff_step(int npde, const double *left, const double *curr, const d
 	}
 }
 
+/*!
+ * \ingroup mptSolver
+ * \brief central differences
+ * 
+ * Calculate central differences for PDE state.
+ * 
+ * \param      ctx    problem context (passed to user function)
+ * \param      t     current time step
+ * \param[in]  y     current PDE state [in
+ * \param[out] f     current PDE state
+ * \param      ivp   PDE count and grid intervals
+ * \param      grid  PDE grid data
+ * \param      rfcn  grid point residual function
+ * 
+ * \return argument or user function error
+ */
 extern int mpt_residuals_cdiff(void *ctx, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const double *grid, MPT_SOLVER_IVP(Rside) rfcn)
 {
 	const double *left;

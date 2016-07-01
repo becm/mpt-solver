@@ -1,6 +1,19 @@
 
 #include "solver.h"
 
+/*!
+ * \ingroup mptSolver
+ * \brief initialize PDE solver
+ * 
+ * Set parameter for PDE solver form arguments.
+ * 
+ * \param sol   solver descriptor
+ * \param neqs  number of PD equotations
+ * \param len   number of grid points
+ * \param log   log/error output descriptor
+ * 
+ * \return pointer to nonlinear user funtions
+ */
 extern MPT_SOLVER_STRUCT(pdefcn) *mpt_init_pde(MPT_SOLVER(IVP) *sol, int neqs, int len, MPT_INTERFACE(logger) *log)
 {
 	int32_t ivp[2];

@@ -14,8 +14,8 @@
 #include "solver.h"
 
 /*!
- * \ingroup mptClient
- * \brief real solver creator
+ * \ingroup mptSolver
+ * \brief resolve solver symbol
  * 
  * Resolve short name to dynamic symbol load string.
  * 

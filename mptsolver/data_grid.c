@@ -16,7 +16,6 @@
  * Get grid address from client data.
  * 
  * \param dat  client data descriptor
- * \param neqs data needed for this number of equotations
  * 
  * \return start of grid
  */

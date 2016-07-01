@@ -129,7 +129,9 @@ cmdsolv[] = {
  * \ingroup mptSolver
  * \brief register client events
  * 
- * Set event handlers in dispatch descriptor.
+ * Set event handlers for solver client in dispatch descriptor.
+ * Try to register dispatch output as solver client output
+ * and dispatch graphic commands to output descriptor.
  * 
  * \param dsp dispatch descriptor
  * \param cl  client descriptor

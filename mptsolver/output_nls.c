@@ -12,6 +12,19 @@
 
 #include "solver.h"
 
+/*!
+ * \ingroup mptSolver
+ * \brief NLS data output
+ * 
+ * Push data state message to output.
+ * 
+ * \param out    nonlinear solver descriptor
+ * \param state  state of nonlinear solver data 
+ * \param val    nonlinear solver parameters (and residuals)
+ * \param dat    solver data for residial dimension mask
+ * 
+ * \return message push result
+ */
 extern int mpt_output_nls(MPT_INTERFACE(output) *out, int state, const MPT_STRUCT(value) *val, const MPT_SOLVER_STRUCT(data) *dat)
 {
 	const char *fmt;

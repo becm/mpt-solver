@@ -14,6 +14,19 @@
 
 #include "solver.h"
 
+/*!
+ * \ingroup mptSolver
+ * \brief NLS data output
+ * 
+ * Push data state message to output.
+ * 
+ * \param out    nonlinear solver descriptor
+ * \param state  state of PDE solver data
+ * \param val    current PDE values
+ * \param dat    solver data for grid and dimension mask
+ * 
+ * \return message push result
+ */
 extern int mpt_output_pde(MPT_INTERFACE(output) *out, int state, const MPT_STRUCT(value) *val, const MPT_SOLVER_STRUCT(data) *dat)
 {
 	const struct iovec *vec;
