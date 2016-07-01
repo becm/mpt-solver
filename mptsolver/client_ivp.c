@@ -376,7 +376,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	if ((ivp->pdim = dat->nval)) {
 		int err;
 		if ((err = mpt_object_set((void *) ivp->sol, 0, "d", ivp->t)) < 0) {
-			if (log) mpt_log(log, 0, MPT_FCNLOG(Error), "%s: %s", MPT_tr("solver"), MPT_tr("failed to initial time"));
+			if (log) mpt_log(log, 0, MPT_FCNLOG(Error), "%s: %s", MPT_tr("solver"), MPT_tr("failed to set initial time"));
 			return err;
 		}
 	}

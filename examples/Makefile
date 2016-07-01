@@ -1,8 +1,8 @@
 # Makefile: MPT solver examples
 #
 DIRS  = ode dae pde nls bacol
-PROGS = config
 TESTS = check proxy
+PROGS = config ${TESTS}
 OBJS  = $(PROGS:%=%.o) $(TESTS:%=%.o)
 
 include solver.example.mk
