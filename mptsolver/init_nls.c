@@ -11,8 +11,9 @@
  * 
  * Set parameter for NLS solver form data.
  * 
- * \param sol  solver descriptor
- * \param dat  solver data
+ * \param sol  nonlinear solver descriptor
+ * \param dat  solver data 
+ * \param log  log/error output descriptor
  * 
  * \return pointer to nonlinear user funtions
  */
@@ -54,16 +55,15 @@ extern MPT_SOLVER_NLS_STRUCT(functions) *mpt_init_nls(MPT_SOLVER(NLS) *sol, cons
 	pr.val.fmt = dim[1] ? "ii" : "i";
 	pr.val.ptr = dim;
 	if ((ret = mpt_object_pset((void *) sol, "", &pr.val, 0)) < 0) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s (%d, %d)",
+		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s (npar = %d, nres = %d)",
 		                 MPT_tr("failed to set problem dimensions"), dim[0], dim[1]);
 		return 0;
 	}
 	pr.val.fmt = fmt;
 	pr.val.ptr = &vec;
-	if (dim[1] &&
-	    (ret = mpt_object_pset((void *) sol, 0, &pr.val, 0)) < 0) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s (%d < %d)",
-		                 MPT_tr("bad number of residuals for parameters"), dim[0], dim[1]);
+	if ((ret = mpt_object_pset((void *) sol, 0, &pr.val, 0)) < 0) {
+		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s (%d)",
+		                 MPT_tr("failed to set initial parameters"), dim[0]);
 		return 0;
 	}
 	return fcns;
