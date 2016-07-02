@@ -14,7 +14,7 @@ LDLIBS = -lblas
 LINK   = ${FC}
 #
 # sources and math objects
-SRCS = $(wildcard bacol_*.c)
+SRCS = $(wildcard bacol_*.c) bacolout.c
 MATH = bacol.o bacolrr.o
 #
 # headers to export

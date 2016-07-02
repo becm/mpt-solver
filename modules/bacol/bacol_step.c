@@ -9,7 +9,7 @@
 
 extern int mpt_bacol_step(MPT_SOLVER_STRUCT(bacol) *bac, double tend)
 {
-	double *rtol, *atol;
+	double *rtol, *atol, *y;
 	int idid, kcol, lip, lrp;
 #ifdef MPT_BACOL_RADAU
 	int lcp;
@@ -33,26 +33,31 @@ extern int mpt_bacol_step(MPT_SOLVER_STRUCT(bacol) *bac, double tend)
 		atol = &bac->atol.d.val;
 	}
 	kcol = bac->kcol;
+	y = bac->xy + bac->nintmx + 1;
 	
 	lrp = bac->rpar.iov_len / sizeof(double);
 	lip = bac->ipar.iov_len / sizeof(int);
 	
+	/* invalidate output data */
+	if (bac->_out) {
+		bac->_out->nint = 0;
+	}
 	/* fortran routine call */
 	switch (bac->_backend) {
 #ifdef MPT_BACOL_RADAU
 	    case 'r': case 'R':
 	lcp = bac->bd.cpar.iov_len / sizeof(double) / 2;
 	bacolr_(&bac->t, &tend, atol, rtol, &bac->ivp.neqs, &kcol,
-		&bac->ivp.pint, &bac->nint, bac->x, (int *) &bac->mflag,
+		&bac->nintmx, &bac->nint, bac->xy, (int *) &bac->mflag,
 		bac->rpar.iov_base, &lrp, bac->ipar.iov_base, &lip,
-		bac->bd.cpar.iov_base, &lcp, bac->y, &idid);
+		bac->bd.cpar.iov_base, &lcp, y, &idid);
 	    break;
 #endif
 #ifdef MPT_BACOL_DASSL
 	    case 'd': case 'D':
 	bacol_(&bac->t, &tend, atol, rtol, &bac->ivp.neqs, &kcol,
-		&bac->ivp.pint, &bac->nint, bac->x, (int *) &bac->mflag,
-		bac->rpar.iov_base, &lrp, bac->ipar.iov_base, &lip, bac->y, &idid);
+		&bac->nintmx, &bac->nint, bac->xy, (int *) &bac->mflag,
+		bac->rpar.iov_base, &lrp, bac->ipar.iov_base, &lip, y, &idid);
 	    break;
 #endif
 	    default: errno = EBADR;

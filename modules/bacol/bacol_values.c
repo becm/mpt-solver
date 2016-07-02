@@ -7,78 +7,64 @@
 
 #include "bacol.h"
 
-extern int mpt_bacol_values(MPT_SOLVER_STRUCT(bacol) *bac, double *xout, int deriv, double *yout)
+extern void uinit_(const double *, double *, const int *);
+
+extern double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacolout) *out, const MPT_SOLVER_STRUCT(bacol) *bac)
 {
-	int wlen, kcol, oint;
+	double *x, *y;
+	int wlen, kcol, nint, npts, neqs, deriv;
 	
-	if (bac->ivp.neqs < 1
-	    || (oint = bac->out.nint) < 1
-	    || !bac->mflag.noinit) {
-		return MPT_ERROR(BadArgument);
+	if (!out) {
+		return 0;
 	}
-	/* conflict with existing derivation size */
-	if (bac->out.nderiv >= 0) {
-		if (deriv != bac->out.nderiv) {
-			return MPT_ERROR(BadArgument);
-		}
+	if (out->nint) {
+		x = out->xy.iov_base;
+		return x + out->nint + 1;
 	}
-	/* use internal grid output */
-	if (!xout) {
-		if (!(xout = realloc(bac->out.x, (oint+1) * sizeof(*xout)))) {
-			return MPT_ERROR(BadOperation);
-		}
-		if (!bac->out.x) {
-			double dx = 1.0 / oint;
-			int i;
-			for (i = 0; i <= oint; ++i) xout[i] = i * dx;
-		}
-		bac->out.x = xout;
+	if (!bac || bac->mflag.noinit < 0 || (nint = bac->ivp.pint) < 0) {
+		return 0;
 	}
-	/* use internal state output */
-	if (!yout) {
-		size_t l;
-		int nder;
-		l = bac->ivp.neqs * (oint+1) * sizeof(*yout);
-		
-		nder = deriv < 0 ? -deriv : deriv;
-		
-		l *= nder + 1;
-		bac->out.nderiv = nder;
-		
-		if (!(yout = realloc(bac->out.y, l))) {
-			return MPT_ERROR(BadOperation);
+	if (!nint) {
+		if (!out->update) {
+			return 0;
 		}
-		if (!bac->out.y && deriv < 0) {
-			memset(yout, 0, l);
-		}
-		bac->out.y = yout;
-	}
-	/* adapt grid points to integrator intervals */
-	if (bac->grid) {
-		int len;
-		if ((len = bac->grid(bac, oint+1, xout)) < 0) {
-			return len;
-		}
-		if (len < 2) {
-			return MPT_ERROR(BadValue);
-		}
-		return oint = len - 1;
+		nint = bac->nint * bac->kcol;
 	}
 	kcol = bac->kcol;
+	neqs = bac->ivp.neqs;
+	deriv = out->deriv;
 	
 	/* check output work data availability */
 	wlen = (kcol * MPT_BACOL_NCONTI) * (1 + deriv);
 	wlen += kcol * (bac->nint + 1) + 2 * MPT_BACOL_NCONTI;
 	
-	if (!mpt_vecpar_alloc(&bac->out.wrk, wlen, sizeof(double))) {
-		return MPT_ERROR(BadOperation);
+	if (!mpt_vecpar_alloc(&out->wrk, wlen, sizeof(double))) {
+		return 0;
 	}
-	/* generate y-values for grid */
-	if (deriv >= 0) {
-		values_(&kcol, xout, &bac->nint, bac->x, &bac->ivp.neqs, &oint,
-		        &deriv, yout, bac->y, bac->out.wrk.iov_base);
+	npts = nint + 1;
+	if (!(x = mpt_vecpar_alloc(&out->xy, npts + npts * (deriv + 1) * neqs, sizeof(double)))) {
+		return 0;
 	}
-	return oint + 1;
+	if (out->update && (nint = out->update(bac->nint, bac->xy, nint, x)) < 0) {
+		return 0;
+	}
+	npts = nint + 1;
+	y = x + npts;
+	
+	if (bac->mflag.noinit) {
+		/* generate y-values for grid */
+		values_(&kcol, x, &bac->nint, bac->xy, &neqs, &npts,
+		        &deriv, y, bac->xy + bac->nintmx + 1, out->wrk.iov_base);
+	} else {
+		int pos;
+		
+		for (pos = 0; pos < npts; ++pos) {
+			uinit_(x+pos, y+pos*neqs, &neqs);
+		}
+	}
+	out->nint = nint;
+	out->neqs = neqs;
+	return y;
 }
 
 

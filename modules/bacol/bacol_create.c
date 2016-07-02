@@ -50,7 +50,7 @@ static void *bacFcn()
 static double *bacState(MPT_SOLVER(IVP) *sol)
 {
 	MPT_SOLVER_STRUCT(bacol) *bac = (void *) (sol+1);
-	return bac->out.y;
+	return mpt_bacol_values(bac->_out, bac);
 }
 static const MPT_INTERFACE_VPTR(solver_ivp) _vptr_bacol = {
 	{ { bacFini, bacAddref, bacGet, bacSet }, bacReport },

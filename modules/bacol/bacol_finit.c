@@ -1,5 +1,5 @@
 /*!
- * initialize BACOL solver instance
+ * initialize BACOL solver data
  */
 
 #include <stdlib.h>
@@ -11,24 +11,27 @@
 
 extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *bac)
 {
-	free(bac->x); bac->x = 0;
-	free(bac->y); bac->y = 0;
-	
-	
-	free(bac->ipar.iov_base);
-	bac->ipar.iov_base = 0;
+	if (bac->xy) {
+		free(bac->xy);
+		bac->xy = 0;
+	}
+	if (bac->ipar.iov_base) {
+		free(bac->ipar.iov_base);
+		bac->ipar.iov_base = 0;
+	}
 	bac->ipar.iov_len  = 0;
 	
-	free(bac->rpar.iov_base);
-	bac->rpar.iov_base = 0;
+	if (bac->rpar.iov_base) {
+		free(bac->rpar.iov_base);
+		bac->rpar.iov_base = 0;
+	}
 	bac->rpar.iov_len  = 0;
 	
-	free(bac->out.wrk.iov_base);
-	bac->out.wrk.iov_base = 0;
-	bac->out.wrk.iov_len  = 0;
-	
-	free(bac->out.x); bac->out.x = 0;
-	free(bac->out.y); bac->out.y = 0;
+	if (bac->_out) {
+		mpt_bacolout_fini(bac->_out);
+		free(bac->_out);
+		bac->_out = 0;
+	}
 	
 	mpt_vecpar_cktol(&bac->rtol, 0, 0, __MPT_IVP_RTOL);
 	mpt_vecpar_cktol(&bac->atol, 0, 0, __MPT_IVP_ATOL);
@@ -50,36 +53,28 @@ extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *bac)
 extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *bac)
 {
 	bac->ivp.neqs = 1;
-	bac->ivp.pint = 127;
+	bac->ivp.pint = -1;
 	
 	MPT_VECPAR_INIT(&bac->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&bac->atol, __MPT_IVP_ATOL);
 	
-	bac->kcol   = 2;
-	bac->nint   = 10;
+	bac->_out = 0;
+	bac->initstep = NAN;
 	
-	bac->out.nderiv = -1;
-	bac->out.nint = 0;
-	bac->out.x = 0;
-	bac->out.y = 0;
-	bac->out.wrk.iov_base = 0;
-	bac->out.wrk.iov_len  = 0;
+	bac->nint     = 10;
+	bac->nintmx   = MPT_BACOL_NIMAXDEF;
+	bac->kcol     = 2;
+	bac->_backend = 0;
 	
 	(void) memset(&bac->mflag, 0, sizeof(bac->mflag));
 	bac->mflag.noinit = -1;
 	
-	bac->initstep = NAN;
 	
 	bac->t = 0.0;
-	bac->x = 0;
-	bac->y = 0;
-	bac->grid = 0;
+	bac->xy = 0;
 	
 	bac->rpar.iov_base = 0; bac->rpar.iov_len = 0;
 	bac->ipar.iov_base = 0; bac->ipar.iov_len = 0;
-	
-	
-	bac->_backend = 0;
 	
 	memset(&bac->bd, 0, sizeof(bac->bd));
 }

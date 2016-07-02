@@ -16,7 +16,7 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	/* set helper variables */
 	npde   = bac->ivp.neqs;
 	kcol   = bac->kcol;
-	nimx   = bac->ivp.pint;
+	nimx   = bac->nintmx;
 	maxvec = npde * (nimx * kcol + MPT_BACOL_NCONTI);
 	
 	if (npde < 1 || bac->nint < 1 || bac->nint > nimx) {
@@ -70,20 +70,15 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	return MPT_ERROR(BadArgument);
 	}
 	
-	if (!(tmp = realloc(bac->x, (nimx + 1) * sizeof(*bac->x)))) {
+	if (!(tmp = realloc(bac->xy, (nimx + 1 + maxvec) * sizeof(*bac->xy)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!bac->x) {
+	if (!bac->xy) {
 		int i, nint = bac->nint;
 		double dx = 1.0 / nint;
 		for (i = 0; i <= nint; ++i) tmp[i] = i *dx;
 	}
-	bac->x = tmp;
-	
-	if (!(tmp = realloc(bac->y, maxvec * sizeof(*bac->y)))) {
-		return MPT_ERROR(BadOperation);
-	}
-	bac->y = tmp;
+	bac->xy = tmp;
 	
 	if (!mpt_vecpar_alloc(&bac->ipar, lip, sizeof(int))) {
 		return MPT_ERROR(BadOperation);
@@ -97,6 +92,12 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	((double *) bac->rpar.iov_base)[0] = bac->bd.tstop;
 	((double *) bac->rpar.iov_base)[1] = bac->initstep;
 	
+	if (bac->ivp.pint >= 0 && !bac->_out) {
+		if (!(bac->_out = malloc(sizeof(*bac->_out)))) {
+			return MPT_ERROR(BadOperation);
+		}
+		mpt_bacolout_init(bac->_out);
+	}
 	bac->mflag.noinit = 0;
 	
 	return 0;

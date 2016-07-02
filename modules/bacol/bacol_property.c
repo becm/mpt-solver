@@ -45,15 +45,23 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	int len = 0;
 	
 	if (!name) {
-		MPT_STRUCT(value) val;
+		double t = bac->t;
 		
-		if (!src) {
-			return mpt_bacol_prepare(bac);
+		if (src && (len = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
+			if (len < 0) {
+				return len;
+			}
+			src = 0;
 		}
-		if ((len = src->_vptr->conv(src, MPT_ENUM(TypeValue), &val)) < 0) {
-			return len;
+		if (src && (len = mpt_vecpar_set(&bac->xy, bac->nint + 1, src)) <= 0) {
+			if (len < 0) {
+				return len;
+			}
+			mpt_bacol_grid_init(0, 0, bac->nint, bac->xy);
 		}
-		return mpt_bacol_assign(bac, &val);
+		bac->mflag.noinit = -2;
+		bac->t = t;
+		return src ? len + 1 : 0;
 	}
 	if (!*name) {
 		MPT_SOLVER_IVP_STRUCT(parameters) ivp = bac->ivp;
@@ -63,9 +71,9 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 				return len;
 			}
 			if (len < 2) {
-				ivp.pint = MPT_BACOL_NIMAXDEF;
+				ivp.pint = -1;
 			}
-			else if (!ivp.pint) {
+			else if (ivp.pint < 0) {
 				return MPT_ERROR(BadValue);
 			}
 		}
@@ -83,9 +91,6 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	if (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) {
 		int32_t oint = 10;
 		
-		if (bac->out.x || bac->out.y) {
-			return MPT_ERROR(BadOperation);
-		}
 		if (src && (len = src->_vptr->conv(src, 'i', &oint)) < 0) return len;
 		if (tolower(*name) != 'i') {
 			--oint;
@@ -93,11 +98,11 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 		if (oint < 1) {
 			return MPT_ERROR(BadValue);
 		}
-		bac->out.nint = oint;
+		bac->ivp.pint = oint;
 		return len ? 1 : 0;
 	}
-	/* no interaction after setup */
-	if (bac->x || bac->y || bac->rpar.iov_base || bac->ipar.iov_base) {
+	/* no interaction after prepare */
+	if (bac->mflag.noinit >= 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	/* bacol parameters */
@@ -112,8 +117,12 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	if (!strcasecmp(name, "nint")) {
 		int32_t nint = 10;
 		
+		/* initial grid value size fixed after init */
+		if (bac->xy) {
+			return MPT_ERROR(BadOperation);
+		}
 		if (src && (len = src->_vptr->conv(src, 'i', &nint)) < 0) return len;
-		if (nint < 2 || nint > bac->ivp.pint) return MPT_ERROR(BadValue);
+		if (nint < 2 || nint > bac->nintmx) return MPT_ERROR(BadValue);
 		bac->nint = nint;
 		return len ? 1 : 0;
 	}
@@ -122,7 +131,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 		
 		if (src && (len = src->_vptr->conv(src, 'i', &nintmx)) < 0) return len;
 		if (nintmx < bac->nint) return MPT_ERROR(BadValue);
-		bac->ivp.pint = nintmx;
+		bac->nintmx = nintmx;
 		return len ? 1 : 0;
 	}
 	if (!strncasecmp(name, "dirichlet", 3)) {
@@ -235,15 +244,15 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	}
 	if (name ? (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) : pos == ++id) {
 		prop->name = "iout"; prop->desc = "number of internal intervals";
-		prop->val.fmt = "i"; prop->val.ptr = &bac->out.nint;
+		prop->val.fmt = "i"; prop->val.ptr = &bac->ivp.pint;
 		if (!bac) return id;
-		return bac->out.nint ? 1 : 0;
+		return bac->ivp.pint ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "nintmx") : pos == ++id) {
 		prop->name = "nintmx"; prop->desc = "maximum internal intervals";
-		prop->val.fmt = "i"; prop->val.ptr = &bac->ivp.pint;
+		prop->val.fmt = "i"; prop->val.ptr = &bac->nintmx;
 		if (!bac) return id;
-		return bac->ivp.pint == MPT_BACOL_NIMAXDEF ? 0 : 1;
+		return bac->nintmx == MPT_BACOL_NIMAXDEF ? 0 : 1;
 	}
 	if (name ? !strcasecmp(name, "dirichlet") : pos == ++id) {
 		prop->name = "dirichlet"; prop->desc = "boundaries of dirichlet type";

@@ -238,7 +238,7 @@ extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTE
 	int ret, npde = 4;
 	
 	(void) sd;
-	if ((ret = mpt_object_set((void *) sol, "", "i", npde)) < 0) {
+	if ((ret = mpt_object_set((void *) sol, "", "ii", npde, 0)) < 0) {
 		mpt_log(log, __func__, MPT_FCNLOG(Error), "%s", "unable to set PDE count");
 		return ret;
 	}
