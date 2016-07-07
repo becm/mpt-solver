@@ -58,34 +58,36 @@ int main()
 {
 	mtrace();
 	
-#ifndef _STATIC
 	Vode v;     pde(v); info(v);
-#endif
+	
 	Dassl d;    pde(d); info(d);
 	Mebdfi m;   pde(m); info(m);
 	Radau r;    pde(r); info(r);
 	
 	Limex l;    pde(l); info(l);
-
+	
 	CVode cv;   pde(cv); info(cv);
 	IDA ida;    pde(ida); info(ida);
 	
 	MinPack mp; info(mp);
 	PortN2 n2;  info(n2);
 	
-#if __cplusplus >= 201103L
 	dvecpar vd(7.6);
 	std::cout << vd.value().fmt << ": ";
+#if __cplusplus >= 201103L
 	for (auto &a : vd) {
 	  std::cout << a << ' ';
 	}
+#endif
 	std::cout << std::endl;
 	
 	vd.resize(8);
 	std::cout << vd.value().fmt << ": ";
+#if __cplusplus >= 201103L
 	for (auto &a : vd) {
 	  std::cout << a << ' ';
 	}
+#endif
 	std::cout << std::endl;
 	
 	vecpar<short> vi;
@@ -96,10 +98,12 @@ int main()
 	
 	vi[3] = 9;
 	std::cout << "vi = ";
+#if __cplusplus >= 201103L
 	for (auto &a : vi) {
 	  std::cout << a << ' ';
 	}
-	std::cout << std::endl;
 #endif
+	std::cout << std::endl;
+	
 	return 0;
 }

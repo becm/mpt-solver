@@ -191,7 +191,7 @@ public:
 	}
 	inline const double *grid() const
 	{
-		return mpt_bacol_values(_out, this) ? (double *) _out->xy.iov_base : 0;
+		return mpt_bacol_values(_out, this) ? static_cast<double *>(_out->xy.iov_base) : 0;
 	}
 	inline const double *values() const
 	{
@@ -201,7 +201,7 @@ public:
 	inline int updateOutput()
 	{
 		if (!_out) _out = new bacolout;
-		return mpt_bacol_values(_out, this) ? _out->nint+1 : BadOperation;
+		return mpt_bacol_values(_out, this) ? _out->nint+1 : static_cast<int>(BadOperation);
 	}
 };
 #endif

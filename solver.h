@@ -322,10 +322,10 @@ struct vecpar
 	{ if (base) resize(0); }
 	
 	inline iterator begin() const
-	{ return base ? base : (T *) &d.val; }
+	{ return base ? base : const_cast<T *>(&d.val); }
 	
 	 inline iterator end() const
-	{ return base ? base + d.len/sizeof(*base) : (T *) ((&d.val) + 1); }
+	{ return base ? base + d.len/sizeof(*base) : const_cast<T *>(&d.val) + 1; }
 	
 	inline Slice<const T> data() const
 	{
@@ -347,7 +347,7 @@ struct vecpar
 		
 		/* free/extend memory */
 		if (!elem) { free(t); t = 0; }
-		else if (!(t = (T*) realloc(t, elem*sizeof(*base)))) return false;
+		else if (!(t = static_cast<T*>(realloc(t, elem*sizeof(*base))))) return false;
 		
 		/* initialize new elements */
 		for (T &val = base ? t[l-1] : d.val; l < elem; ++l) t[l] = val;
@@ -387,8 +387,13 @@ protected:
 	} d;
 };
 
+# if __cplusplus >= 201103L
+using dvecpar = vecpar<double>;
+using ivecpar = vecpar<int>;
+# else
 typedef vecpar<double> dvecpar;
 typedef vecpar<int> ivecpar;
+# endif
 #else
 # define MPT_VECPAR_INIT(p,v)  ((p)->base = 0, (p)->d.val = (v))
 typedef struct
