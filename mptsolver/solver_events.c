@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <inttypes.h>
 
@@ -141,6 +142,7 @@ cmdsolv[] = {
  */
 extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *cl)
 {
+	MPT_INTERFACE(output) *out;
 	uintptr_t id;
 	size_t i;
 	int err;
@@ -148,16 +150,26 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 	if ((err = mpt_client_events(dsp, cl)) < 0) {
 		return err;
 	}
-	if (dsp->_out) {
+	if ((out = dsp->_err.arg)) {
 		static const char fmt[2] = { MPT_ENUM(TypeOutput) };
 		MPT_STRUCT(value) val;
 		val.fmt = fmt;
-		val.ptr = &dsp->_out;
+		val.ptr = &out;
 		
 		/* assign output to client */
-		if (cl->_vptr->cfg.assign((void *) cl, 0, &val) >= 0) {
-			mpt_dispatch_control(dsp, "graphic");
-			mpt_reply_reserve(&dsp->_ctx, 0);
+		if (cl->_vptr->cfg.assign((void *) cl, 0, &val) >= 0
+		    && out->_vptr->obj.addref((void *) out)) {
+			if (mpt_dispatch_control(dsp, "graphic", out) < 0) {
+				out->_vptr->obj.unref((void *) out);
+			}
+			i = sizeof(*dsp->_ctx) + sizeof(id);
+			if (!dsp->_ctx && (dsp->_ctx = malloc(i))) {
+				MPT_STRUCT(reply_context) *ctx = dsp->_ctx;
+				ctx->ptr = dsp;
+				ctx->len = 0;
+				ctx->_max = sizeof(ctx->_val) + sizeof(id);
+				ctx->used = 0;
+			}
 		}
 	}
 	/* register solver command handler */
@@ -169,11 +181,11 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 		if ((cmd = mpt_command_get(&dsp->_cmd, id))) {
 			cmd->cmd = (int (*)()) cmdsolv[i].ctl;
 			cmd->arg = cl;
-			mpt_output_log(dsp->_out, __func__, MPT_FCNLOG(Info), "%s: %"PRIxPTR" (%s)\n",
+			mpt_output_log(out, __func__, MPT_FCNLOG(Info), "%s: %"PRIxPTR" (%s)\n",
 				       MPT_tr("replaced handler id"), id, cmdsolv[i].name);
 		}
 		else if (mpt_dispatch_set(dsp, id, (int (*)()) cmdsolv[i].ctl, cl) < 0) {
-			mpt_output_log(dsp->_out, __func__, MPT_FCNLOG(Warning), "%s: %"PRIxPTR" (%s)\n",
+			mpt_output_log(out, __func__, MPT_FCNLOG(Warning), "%s: %"PRIxPTR" (%s)\n",
 				       MPT_tr("error registering handler id"), id, cmdsolv[i].name);
 		}
 	}

@@ -126,7 +126,8 @@ static MPT_INTERFACE(metatype) *queryNLS(const MPT_INTERFACE(config) *gen, const
 }
 static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, const MPT_STRUCT(value) *val)
 {
-	static const char _func[] = "mpt::client::assign/NLS";
+	static const char _func[] = "mpt::client<NLS>::assign";
+	
 	struct _outNLSdata ctx;
 	struct NLS *nls = (void *) gen;
 	MPT_STRUCT(node) *conf;
@@ -199,6 +200,8 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 }
 static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 {
+	static const char _func[] = "mpt::client<NLS>::remove";
+	
 	struct NLS *nls = (void *) gen;
 	MPT_STRUCT(node) *conf;
 	MPT_STRUCT(path) p;
@@ -210,7 +213,7 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 		/* close history output */
 		if ((out = nls->pr.output) && mpt_conf_history(out, 0) < 0) {
 			MPT_INTERFACE(logger) *log = nls->pr.logger;
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
 			                 MPT_tr("unable to close history output"));
 		}
 		if (nls->sd) {
@@ -246,6 +249,7 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 {
 	static const char _func[] = "mpt::client<NLS>::init";
+	
 	struct NLS *nls = (void *) cl;
 	MPT_INTERFACE(logger) *log;
 	MPT_SOLVER_STRUCT(data) *dat;
@@ -402,6 +406,7 @@ static MPT_INTERFACE_VPTR(client) ctlNLS = {
  * Create client for solving Nonlinear Systems.
  * 
  * \param uinit user initialization function
+ * \param base  global config path (dot delimited)
  * 
  * \return NLS client
  */
@@ -409,11 +414,12 @@ extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER(NLS) *, MPT
 {
 	struct NLS *nls;
 	
+	if (!uinit) {
+		return 0;
+	}
 	if (!(nls = malloc(sizeof(*nls)))) {
 		return 0;
 	}
-	
-	
 	/* query config base */
 	if (!configNLS(base)
 	    || (base && !(nls->cfg = strdup(base)))) {

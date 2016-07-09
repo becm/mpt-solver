@@ -177,7 +177,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			ctx.state = MPT_ENUM(DataStateInit);
 			mpt_solver_status((void *) sol, log, outPDE, &ctx);
 		}
-		if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("IVP client preparation finished"));
+		if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("IVP client preparation finished"));
 		
 		return 0;
 	}
@@ -185,7 +185,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		MPT_INTERFACE(logger) *log = ivp->pr.logger;
 		ret = mpt_node_parse(conf, val, log);
 		if (ret >= 0) {
-			if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s: %s",
+			if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s",
 			                 MPT_tr("loaded IVP client config file"));
 		}
 		return ret;
@@ -201,6 +201,8 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 }
 static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 {
+	static const char _func[] = "mpt::client<IVP>::remove";
+	
 	struct IVP *ivp = (void *) gen;
 	MPT_STRUCT(node) *conf;
 	MPT_STRUCT(path) p;
@@ -212,7 +214,7 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 		/* close history output */
 		if ((out = ivp->pr.output) && mpt_conf_history(out, 0) < 0) {
 			MPT_INTERFACE(logger) *log = ivp->pr.logger;
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
 			                 MPT_tr("unable to close history output"));
 		}
 		if (ivp->sd) {
@@ -324,7 +326,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	/* get PDE grid data */
 	if ((curr = mpt_node_next(conf->children, "grid"))) {
 		if ((ret = mpt_conf_grid(&dat->val, curr)) < 0) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Warning), "%s: %s",
+			if (log) mpt_log(log, _func, MPT_FCNLOG(Warning), "%s: %s",
 			                 "grid", MPT_tr("invalid parameter format"));
 		}
 		dat->nval = ret;
@@ -333,14 +335,14 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	else {
 		/* save initial time value */
 		if (!mpt_array_append(&dat->val, sizeof(ivp->t), &ivp->t)) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
 			                 MPT_tr("unable to save initial time in history"));
 			return MPT_ERROR(BadOperation);
 		}
 		/* add profile values */
 		if ((curr = mpt_node_next(conf->children, "profile"))
 		    && (ret = mpt_conf_param(&dat->val, curr, 1)) < 0) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
 			                 MPT_tr("failed to reserve initial data"));
 			return ret;
 		}
@@ -405,7 +407,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	if (ret < 0) {
 		return ret;
 	}
-	if (log) mpt_log(log, __func__, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("IVP client preparation finished"));
+	if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("IVP client preparation finished"));
 	
 	return ret;
 }
