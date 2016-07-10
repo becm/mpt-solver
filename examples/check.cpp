@@ -73,22 +73,10 @@ int main()
 	PortN2 n2;  info(n2);
 	
 	dvecpar vd(7.6);
-	std::cout << vd.value().fmt << ": ";
-#if __cplusplus >= 201103L
-	for (auto &a : vd) {
-	  std::cout << a << ' ';
-	}
-#endif
-	std::cout << std::endl;
+	std::cout << vd.value().fmt << ": " << vd.data() << std::endl;
 	
 	vd.resize(8);
-	std::cout << vd.value().fmt << ": ";
-#if __cplusplus >= 201103L
-	for (auto &a : vd) {
-	  std::cout << a << ' ';
-	}
-#endif
-	std::cout << std::endl;
+	std::cout << vd.value().fmt << ": " << vd.data() << std::endl;
 	
 	vecpar<short> vi;
 	vi[0] = 4;
@@ -97,13 +85,7 @@ int main()
 	std::cout << "vi[5] = " << vi[5] << std::endl;
 	
 	vi[3] = 9;
-	std::cout << "vi = ";
-#if __cplusplus >= 201103L
-	for (auto &a : vi) {
-	  std::cout << a << ' ';
-	}
-#endif
-	std::cout << std::endl;
+	std::cout << "vi = " << vi.data() << std::endl;
 	
 	return 0;
 }
