@@ -19,7 +19,7 @@
 
 #include <mpt/solver.h>
 
-static int write_fd(void *out, const char *s, size_t len)
+static ssize_t write_fd(void *out, const char *s, size_t len)
 {
 	return fwrite(s, len, 1, out);
 }

@@ -20,7 +20,7 @@ struct wrap_fmt {
 	void *par;
 };
 
-static int appendString(void *to, const char *data, size_t len)
+static ssize_t appendString(void *to, const char *data, size_t len)
 {
 	struct iovec *io = to;
 	char *base = io->iov_base;
