@@ -86,28 +86,31 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 	}
 	if (sol) {
 		MPT_STRUCT(property) prop;
+		MPT_INTERFACE(metatype) *pre;
+		
 		prop.name = "";
 		prop.desc = 0;
+		
 		if ((mode = sol->_vptr->obj.property((void *) sol, &prop)) < 0) {
 			mode = MPT_ERROR(BadOperation);
-			mt->_vptr->unref(mt);
+			mt->_vptr->ref.unref((void *) mt);
 			return 0;
 		}
 		if (match && !(mode & match)) {
 			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s (0x%x <> 0x%x): %s",
 			                 MPT_tr("incompatible solver type"), mode, match, conf);
-			mt->_vptr->unref(mt);
+			mt->_vptr->ref.unref((void *) mt);
 			return 0;
 		}
-		if (pr->_mt) {
-			pr->_mt->_vptr->unref(pr->_mt);
+		if ((pre = pr->_mt)) {
+			pre->_vptr->ref.unref((void *) pre);
 		}
 		pr->_mt = mt;
 		pr->hash = mpt_hash(conf, strlen(conf));
 		
 		return sol;
 	}
-	mt->_vptr->unref(mt);
+	mt->_vptr->ref.unref((void *) mt);
 	if (pr->_mt == mt) {
 		pr->_mt = 0;
 		pr->hash = 0;

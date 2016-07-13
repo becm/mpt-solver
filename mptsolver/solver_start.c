@@ -65,11 +65,11 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 		}
 		if (mpt_config_args((void *) solv, src) < 0) {
-			src->_vptr->unref(src);
+			src->_vptr->ref.unref((void *) src);
 			return MPT_event_fail(ev, MPT_ERROR(BadValue), "failed to set client config");
 		}
 		ret = solv->_vptr->init(solv, src);
-		src->_vptr->unref(src);
+		src->_vptr->ref.unref((void *) src);
 		if (ret < 0) {
 			return MPT_event_fail(ev, MPT_ERROR(BadValue), "failed to initialize client");
 		}

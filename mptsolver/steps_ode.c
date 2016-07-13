@@ -60,6 +60,7 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  * Execute generic DAE/ODE solver steps.
  * 
  * \param sol  IVP solver descriptor
+ * \param src  time step source
  * \param md   client data
  * \param out  logging descriptor
  * 
@@ -82,11 +83,15 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(metatype) *src, MPT
 	if ((neqs = md->nval) < 1 || !(data = mpt_data_grid(md))) {
 		return MPT_ERROR(BadArgument);
 	}
+	curr = *data;
 	/* try to complete full run */
 	do {
-		curr = end;
+	
+		if (out) mpt_log(out, __func__, MPT_FCNLOG(Debug2), "%s (t = %g > %g)",
+		                 MPT_tr("attempt solver step"), curr, end);
 		
 		/* call ODE/DAE solver with current/target time and in/out-data */
+		curr = end;
 		err = sol->_vptr->step(sol, &curr);
 		
 		/* retry current end time */

@@ -69,7 +69,7 @@ static MPT_STRUCT(node) *configIVP(const char *base)
 	return mpt_config_node(base ? &p : 0);
 }
 /* destruktor */
-static void deleteIVP(MPT_INTERFACE(config) *gen)
+static void deleteIVP(MPT_INTERFACE(unrefable) *gen)
 {
 	struct IVP *ivp = (void *) gen;
 	MPT_INTERFACE(metatype) *m;
@@ -77,7 +77,7 @@ static void deleteIVP(MPT_INTERFACE(config) *gen)
 	mpt_proxy_fini(&ivp->pr);
 	
 	if ((m = ivp->steps)) {
-		m->_vptr->unref(m);
+		m->_vptr->ref.unref((void *) m);
 	}
 	if (ivp->sd) {
 		mpt_data_fini(ivp->sd);
@@ -221,7 +221,7 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 			mpt_data_clear(ivp->sd);
 		}
 		if ((mt = ivp->pr._mt)) {
-			mt->_vptr->unref(mt);
+			mt->_vptr->ref.unref((void *) mt);
 			ivp->pr._mt = 0;
 			ivp->pr.hash = 0;
 			
@@ -291,6 +291,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 		m = ivp->steps;
 	}
 	else {
+		MPT_INTERFACE(metatype) *old;
 		val = mpt_node_data(curr, 0);
 		
 		if (!val || !(m = mpt_iterator_create(val))) {
@@ -298,8 +299,8 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 			                 MPT_tr("failed to query"), MPT_tr("client configuration"));
 			return MPT_ERROR(BadValue);
 		}
-		if (ivp->steps) {
-			ivp->steps->_vptr->unref(ivp->steps);
+		if ((old = ivp->steps)) {
+			old->_vptr->ref.unref((void *) old);
 		}
 		ivp->steps = m;
 	}
@@ -525,11 +526,14 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		
 		getrusage(RUSAGE_SELF, &pre);
 		
+		if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s (t = %g > %g)",
+		                 MPT_tr("attempt solver step"), ivp->t, end);
+		
 		ivp->t = end;
 		if ((ret = sol->_vptr->step(sol, &ivp->t)) < 0) {
 			ctx.state |= MPT_ENUM(DataStateFail);
 			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s (t = %g)",
-			                 MPT_tr("solver step failed"), end);
+			                 MPT_tr("solver step failed"), ivp->t);
 			break;
 		}
 		getrusage(RUSAGE_SELF, &post);
@@ -586,7 +590,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 }
 
 static const MPT_INTERFACE_VPTR(client) clientIVP = {
-	{ deleteIVP, queryIVP, assignIVP, removeIVP },
+	{ { deleteIVP }, queryIVP, assignIVP, removeIVP },
 	initIVP, stepIVP
 };
 

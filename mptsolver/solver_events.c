@@ -45,22 +45,23 @@ static int solevtRead(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		    || (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cfg)) < 0
 		    || ret
 		    || (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &sol)) < 0) {
-			src->_vptr->unref(src);
-			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("bad argument content"));
+			mpt_event_reply(ev, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument type"), ret);
 		}
-		if (ret && src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cmd)) {
-			src->_vptr->unref(src);
-			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("bad argument count"));
+		else if (ret && (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cmd))) {
+			mpt_event_reply(ev, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument count"), ret);
+			ret = -1;
 		}
-		if (cfg && mpt_config_set((void *) solv, 0, cfg, 0, 0) < 0) {
-			src->_vptr->unref(src);
-			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("failed to read config"));
+		else if (cfg && (ret = mpt_config_set((void *) solv, 0, cfg, 0, 0)) < 0) {
+			mpt_event_reply(ev, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read client config"), cfg);
 		}
-		if (sol && mpt_config_set((void *) solv, "solver", cfg, 0, 0) < 0) {
-			src->_vptr->unref(src);
-			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("failed to set client config"));
+		else if (sol && (ret = mpt_config_set((void *) solv, "solver", cfg, 0, 0)) < 0) {
+			mpt_event_reply(ev, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read solver config"), cfg);
 		}
-		src->_vptr->unref(src);
+		src->_vptr->ref.unref((void *) src);
+		if (ret < 0) {
+			ev->id = 0;
+			return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
+		}
 	}
 	return MPT_event_good(ev, MPT_tr("reading configuration files completed"));
 }
@@ -87,7 +88,7 @@ static int solevtClear(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 		}
 		if ((ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &arg)) <= 0
 		    || (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &arg)) < 0) {
-			src->_vptr->unref(src);
+			src->_vptr->ref.unref((void *) src);
 			return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("bad argument content"));
 		}
 		/* clear single pass data */
@@ -97,7 +98,7 @@ static int solevtClear(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 		}
 		while (ret & MPT_ENUM(ValueConsume)) {
 			if ((ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &arg)) < 0) {
-				src->_vptr->unref(src);
+				src->_vptr->ref.unref((void *) src);
 				return MPT_event_fail(ev, MPT_ERROR(BadValue), MPT_tr("bad argument content"));
 			}
 			if (!ret) {
@@ -110,7 +111,7 @@ static int solevtClear(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 			
 			cl->_vptr->cfg.remove((void *) cl, &p);
 		}
-		src->_vptr->unref(src);
+		src->_vptr->ref.unref((void *) src);
 	}
 	return MPT_event_stop(ev, MPT_tr("solver cleared"));
 }
@@ -160,15 +161,7 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 		if (cl->_vptr->cfg.assign((void *) cl, 0, &val) >= 0
 		    && out->_vptr->obj.addref((void *) out)) {
 			if (mpt_dispatch_control(dsp, "graphic", out) < 0) {
-				out->_vptr->obj.unref((void *) out);
-			}
-			i = sizeof(*dsp->_ctx) + sizeof(id);
-			if (!dsp->_ctx && (dsp->_ctx = malloc(i))) {
-				MPT_STRUCT(reply_context) *ctx = dsp->_ctx;
-				ctx->ptr = dsp;
-				ctx->len = 0;
-				ctx->_max = sizeof(ctx->_val) + sizeof(id);
-				ctx->used = 0;
+				out->_vptr->obj.ref.unref((void *) out);
 			}
 		}
 	}
@@ -178,7 +171,7 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 		
 		id = mpt_hash(cmdsolv[i].name, strlen(cmdsolv[i].name));
 		
-		if ((cmd = mpt_command_get(&dsp->_cmd, id))) {
+		if ((cmd = mpt_command_get(&dsp->_d, id))) {
 			cmd->cmd = (int (*)()) cmdsolv[i].ctl;
 			cmd->arg = cl;
 			mpt_output_log(out, __func__, MPT_FCNLOG(Info), "%s: %"PRIxPTR" (%s)\n",
@@ -189,6 +182,5 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 				       MPT_tr("error registering handler id"), id, cmdsolv[i].name);
 		}
 	}
-	
 	return 0;
 }

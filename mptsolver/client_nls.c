@@ -83,7 +83,7 @@ static MPT_STRUCT(node) *configNLS(const char *base)
 	}
 }
 
-static void deleteNLS(MPT_INTERFACE(config) *gen)
+static void deleteNLS(MPT_INTERFACE(unrefable) *gen)
 {
 	struct NLS *nls = (void *) gen;
 	
@@ -220,7 +220,7 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 			mpt_data_clear(nls->sd);
 		}
 		if ((mt = nls->pr._mt)) {
-			mt->_vptr->unref(mt);
+			mt->_vptr->ref.unref((void *) mt);
 			nls->pr._mt = 0;
 			nls->pr.hash = 0;
 			
@@ -395,7 +395,7 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 }
 
 static MPT_INTERFACE_VPTR(client) ctlNLS = {
-	{ deleteNLS, queryNLS, assignNLS, removeNLS },
+	{ { deleteNLS }, queryNLS, assignNLS, removeNLS },
 	initNLS, stepNLS
 };
 
