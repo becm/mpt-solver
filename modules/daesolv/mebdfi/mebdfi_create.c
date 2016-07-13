@@ -9,7 +9,7 @@
 
 #include "mebdfi.h"
 
-static void meFini(MPT_INTERFACE(object) *gen)
+static void meFini(MPT_INTERFACE(unrefable) *gen)
 {
 	mpt_mebdfi_fini((MPT_SOLVER_STRUCT(mebdfi *)) (gen+1));
 	free(gen);
@@ -72,7 +72,7 @@ static double *meState(MPT_SOLVER(IVP) *sol)
 }
 
 static const MPT_INTERFACE_VPTR(solver_ivp) mebdfiCtl = {
-	{ { meFini, meAddref, meGet, meSet }, meReport },
+	{ { { meFini }, meAddref, meGet, meSet }, meReport },
 	meStep,
 	meFcn,
 	meState

@@ -10,7 +10,7 @@
 #include "cvode/cvode_impl.h"
 #include "sundials.h"
 
-static void cVodeUnref(MPT_INTERFACE(object) *gen)
+static void cVodeUnref(MPT_INTERFACE(unrefable) *gen)
 {
 	sundials_cvode_fini((MPT_SOLVER_STRUCT(cvode) *) (gen+1));
 	free(gen);
@@ -65,7 +65,7 @@ static double *cVodeState(MPT_SOLVER(IVP) *sol)
 	return 0;
 }
 static const MPT_INTERFACE_VPTR(solver_ivp) cVodeCtl = {
-	{ { cVodeUnref, cVodeRef, cVodeGet, cVodeSet }, cVodeReport },
+	{ { { cVodeUnref }, cVodeRef, cVodeGet, cVodeSet }, cVodeReport },
 	cVodeStep,
 	cVodeFcn,
 	cVodeState

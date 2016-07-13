@@ -68,7 +68,7 @@ int main(void)
 		if ((s = h.create())) {
 			if ((n = mpt_object_typename((void *) s))) puts(n);
 			s->_vptr->report(s, -1, wrap_fw, stdout);
-			s->_vptr->obj.unref((void *) s);
+			s->_vptr->obj.ref.unref((void *) s);
 		} else {
 			perror("failed getting solver descriptor");
 		}

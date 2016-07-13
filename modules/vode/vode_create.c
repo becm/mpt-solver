@@ -8,7 +8,7 @@
 
 #include "vode.h"
 
-static void vdFini(MPT_INTERFACE(object) *gen)
+static void vdFini(MPT_INTERFACE(unrefable) *gen)
 {
 	mpt_vode_fini((MPT_SOLVER_STRUCT(vode) *) (gen+1));
 	free(gen);
@@ -68,7 +68,7 @@ static double *vdInitState(MPT_SOLVER(IVP) *sol)
 	return vd->y;
 }
 static const MPT_INTERFACE_VPTR(solver_ivp) vodeCtl = {
-	{ { vdFini, vdAddref, vdGet, vdSet }, vdReport },
+	{ { { vdFini }, vdAddref, vdGet, vdSet }, vdReport },
 	vdStep,
 	vdFcn,
 	vdInitState

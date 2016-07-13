@@ -9,7 +9,7 @@
 
 #include "radau.h"
 
-static void rdFini(MPT_INTERFACE(object) *gen)
+static void rdFini(MPT_INTERFACE(unrefable) *gen)
 {
 	mpt_radau_fini((MPT_SOLVER_STRUCT(radau) *) (gen+1));
 	free(gen);
@@ -69,7 +69,7 @@ static double *rdState(MPT_SOLVER(IVP) *sol)
 }
 
 static const MPT_INTERFACE_VPTR(solver_ivp) radauCtl = {
-	{ { rdFini, rdAddref, rdGet, rdSet }, rdReport },
+	{ { { rdFini }, rdAddref, rdGet, rdSet }, rdReport },
 	rdStep,
 	rdFcn,
 	rdState

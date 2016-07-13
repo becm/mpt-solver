@@ -10,7 +10,7 @@
 
 #include "sundials.h"
 
-static void idaUnref(MPT_INTERFACE(object) *gen)
+static void idaUnref(MPT_INTERFACE(unrefable) *gen)
 {
 	  sundials_ida_fini((MPT_SOLVER_STRUCT(ida) *) (gen+1));
 	  free(gen);
@@ -67,7 +67,7 @@ static double *idaState(MPT_SOLVER(IVP) *sol)
 }
 
 static const MPT_INTERFACE_VPTR(solver_ivp) idaCtl = {
-	{ { idaUnref, idaRef, idaGet, idaSet }, idaReport },
+	{ { { idaUnref }, idaRef, idaGet, idaSet }, idaReport },
 	idaStep,
 	idaFcn,
 	idaState

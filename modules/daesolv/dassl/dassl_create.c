@@ -9,7 +9,7 @@
 
 #include "dassl.h"
 
-static void ddFini(MPT_INTERFACE(object) *gen)
+static void ddFini(MPT_INTERFACE(unrefable) *gen)
 {
 	mpt_dassl_fini((MPT_SOLVER_STRUCT(dassl *)) (gen+1));
 	free(gen);
@@ -71,7 +71,7 @@ static double *ddState(MPT_SOLVER(IVP) *sol)
 	return da->y;
 }
 static const MPT_INTERFACE_VPTR(solver_ivp) dasslCtl = {
-	{ { ddFini, ddAddref, ddGet, ddSet }, ddReport },
+	{ { { ddFini }, ddAddref, ddGet, ddSet }, ddReport },
 	dasslStep,
 	ddFcn,
 	ddState

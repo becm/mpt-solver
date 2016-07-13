@@ -24,7 +24,7 @@ extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global()
 	return &lxGlob;
 }
 
-static void lxFini(MPT_INTERFACE(object) *gen)
+static void lxFini(MPT_INTERFACE(unrefable) *gen)
 {
 	(void) gen;
 	mpt_limex_fini(&lxGlob);
@@ -88,7 +88,7 @@ static double *lxState(MPT_SOLVER(IVP) *sol)
 }
 
 static const MPT_INTERFACE_VPTR(solver_ivp) limexCtl = {
-	{ { lxFini, lxAddref, lxGet, lxSet }, lxReport },
+	{ { { lxFini }, lxAddref, lxGet, lxSet }, lxReport },
 	lxStep,
 	lxFcn,
 	lxState

@@ -7,7 +7,7 @@
 
 #include "minpack.h"
 
-static void mpUnref(MPT_INTERFACE(object) *obj)
+static void mpUnref(MPT_INTERFACE(unrefable) *obj)
 {
 	mpt_minpack_fini((MPT_SOLVER_STRUCT(minpack) *) (obj+1));
 	free(obj);
@@ -57,7 +57,7 @@ static MPT_SOLVER_NLS_STRUCT(functions) *mpFcn(MPT_SOLVER(NLS) *sol)
 	return (void *) (mp+1);
 }
 static const MPT_INTERFACE_VPTR(solver_nls) mpCtl = {
-	{ { mpUnref, mpRef, mpGet, mpSet }, mpReport },
+	{ { { mpUnref }, mpRef, mpGet, mpSet }, mpReport },
 	mpSolve,
 	mpFcn
 };

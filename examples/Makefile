@@ -7,12 +7,12 @@ STATIC =
 OBJS  = $(PROGS:%=%.o) $(TESTS:%=%.o)
 
 include solver.example.mk
-CLEAR_FILES += ${TESTS}
 
 config : config.o
 config : LDLIBS=-lmptsolver -lmptloader -lmptcore
 
 solvers = nlsolv sundials vode limex daesolv
+aliases = ida limex bacol
 
 check.o : CPPFLAGS+=-std=c++11
 check : CC=${CXX}

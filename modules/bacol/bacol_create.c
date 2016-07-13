@@ -11,7 +11,7 @@
 
 extern void uinit_(const double *, double *, const int *);
 
-static void bacFini(MPT_INTERFACE(object) *gen)
+static void bacFini(MPT_INTERFACE(unrefable) *gen)
 {
 	mpt_bacol_fini((MPT_SOLVER_STRUCT(bacol) *) (gen+1));
 	free(gen);
@@ -53,7 +53,7 @@ static double *bacState(MPT_SOLVER(IVP) *sol)
 	return mpt_bacol_values(bac->_out, bac);
 }
 static const MPT_INTERFACE_VPTR(solver_ivp) _vptr_bacol = {
-	{ { bacFini, bacAddref, bacGet, bacSet }, bacReport },
+	{ { { bacFini }, bacAddref, bacGet, bacSet }, bacReport },
 	bacStep,
 	bacFcn,
 	bacState

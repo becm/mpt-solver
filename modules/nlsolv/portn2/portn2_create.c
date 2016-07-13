@@ -14,7 +14,7 @@ struct _mpt_portn2_data {
 	MPT_SOLVER_NLS_STRUCT(functions) uf;
 };
 
-static void n2Unref(MPT_INTERFACE(object) *gen)
+static void n2Unref(MPT_INTERFACE(unrefable) *gen)
 {
 	struct _mpt_portn2_data *d = (void *) gen;
 	mpt_portn2_fini(&d->n2);
@@ -58,7 +58,7 @@ static MPT_SOLVER_NLS_STRUCT(functions) *n2Fcn(MPT_SOLVER(NLS) *sol)
 	return &d->uf;
 }
 static const MPT_INTERFACE_VPTR(solver_nls) n2Ctl = {
-	{ { n2Unref, n2Ref, n2Get, n2Set }, n2Report },
+	{ { { n2Unref }, n2Ref, n2Get, n2Set }, n2Report },
 	n2Solve,
 	n2Fcn
 };
