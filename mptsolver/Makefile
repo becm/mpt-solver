@@ -26,5 +26,5 @@ DIR_BASE = ../base/
 include ${DIR_BASE}mpt.lib.mk
 #
 # additional dependencies
-libinfo.o : ../base/libinfo.h ../base/version.h
+libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
 CLEAR_FILES += libinfo.o

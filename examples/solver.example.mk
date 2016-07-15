@@ -4,7 +4,8 @@ TESTS ?= ${PROGS}
 #
 # include general example rules
 DIR_TOP = ${MPT_PREFIX}
-include $(dir $(lastword $(MAKEFILE_LIST)))../base/mpt.example.mk
+DIR_BASE ?= $(dir $(lastword $(MAKEFILE_LIST)))../base
+include ${DIR_BASE}/mpt.example.mk
 CLEAR_FILES += $(TESTS:%=%.out)
 CLEAN_FILES += ${CLEAR_FILES}
 #
