@@ -51,13 +51,12 @@ extern int mpt_output_pde(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 		hdr.bnd.type = MPT_ENUM(ByteOrderNative) | MPT_ENUM(ValuesFloat) | sizeof(t);
 		
 		/* push parameter data */
-		if ((ret = out->_vptr->push(out, sizeof(hdr), &hdr)) < 0) {
-			return ret;
-		}
-		if ((ret = out->_vptr->push(out, sizeof(*t), t)) < 0
-		    || out->_vptr->push(out, 0, 0) < 0) {
-			out->_vptr->push(out, 1, 0);
-			return ret;
+		if ((ret = out->_vptr->push(out, sizeof(hdr), &hdr)) >= 0) {
+			if ((ret = out->_vptr->push(out, sizeof(*t), t)) < 0
+			    || out->_vptr->push(out, 0, 0) < 0) {
+				out->_vptr->push(out, 1, 0);
+				return ret;
+			}
 		}
 		vec = (void *) (t+1);
 		++fmt;
