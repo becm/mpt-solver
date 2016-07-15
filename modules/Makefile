@@ -6,7 +6,8 @@ LIB = mpt_solvers
 # include global configuration
 DIR_TOP = ${MPT_PREFIX}
 DIR_INC = ${MPT_PREFIX}/include/mpt
-include ../base/mpt.config.mk
+DIR_BASE ?= ../base/
+include ${DIR_BASE}mpt.config.mk
 #
 SOLIVP = vode daesolv limex bacol
 SOLVER = ${SOLIVP} nlsolv nlblas sundials

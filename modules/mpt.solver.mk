@@ -7,12 +7,13 @@ DIR_MATH ?= ${DIR_TOP}/math
 HEADER ?= ${LIB}.h
 #
 # current directory
-DIR_SOLVER := $(dir $(lastword $(MAKEFILE_LIST)))
+DIR_SOLVER_MODULES := $(dir $(lastword $(MAKEFILE_LIST)))
+DIR_BASE ?= ${DIR_SOLVER_MODULES}../base/
 #
-# add core to global include
-INC += ${DIR_SOLVER}.. ${DIR_BASE} ${DIR_BASE}mptcore
+# add directories to global include
+INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
 #
-# vecpar and shared objects
+# vecpar and other shared operations
 src_gen = vecpar_alloc.c vecpar_value.c
 src_ivp = ivppar_set.c vecpar_cktol.c vecpar_settol.c
 src_nls = nlspar_set.c
@@ -33,17 +34,17 @@ MATH_OBJS ?= $(MATH:%=${DIR_MATH}/%)
 MATH_OBJS_STATIC ?= ${MATH_OBJS}
 MATH_OBJS_SHARED ?= ${MATH_OBJS}
 # object collections
-default_objects = ${OBJS} $(src_solver:%.c=${DIR_SOLVER}%.o)
+default_objects = ${OBJS} $(src_solver:%.c=${DIR_SOLVER_MODULES}%.o)
 STATIC_OBJS ?= ${default_objects} ${MATH_OBJS_STATIC}
 SHLIB_OBJS ?= libinfo.o ${default_objects} ${MATH_OBJS_SHARED}
 #
 # import library creation
-include ${DIR_SOLVER}../base/mpt.lib.mk
+include ${DIR_BASE}/mpt.lib.mk
 # compiler flags for FORTRAN math objects
 FFLAGS ?= -fpic -O5 -Wall -fstack-protector
 #
 # additional object dependancies
-${OBJS} : ${DIR_SOLVER}../solver.h
+${OBJS} : ${DIR_SOLVER_MODULES}../solver.h
 libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
 #
 # solver module configuration
