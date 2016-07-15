@@ -22,20 +22,20 @@ extern void mpt_solver_statistics(MPT_SOLVER(generic) *gen, MPT_INTERFACE(logger
 	int unit = 0;
 	
 	/* solver report output */
-	mpt_log(out, 0, MPT_ENUM(LogMessage), " ");
-	mpt_log(out, 0, MPT_ENUM(LogMessage), "%s", MPT_tr("solver report"));
+	mpt_log(out, 0, MPT_LOG(Message), " ");
+	mpt_log(out, 0, MPT_LOG(Message), "%s", MPT_tr("solver report"));
 	
 	mpt_solver_report(gen, out);
 	
 	/* output time spent during solver call */
-	mpt_log(out, 0, MPT_ENUM(LogMessage), " ");
+	mpt_log(out, 0, MPT_LOG(Message), " ");
 	
 	if (usr) {
 		double t = usr->tv_usec;
 		t = usr->tv_sec + t/1000000;
 		if (t < 0.1) { ++unit; t *= 1000; }
 		if (t < 0.1) { ++unit; t *= 1000; }
-		mpt_log(out, 0, MPT_ENUM(LogMessage), "%-20s%18.4f [%s]", MPT_tr("user time:"), t, units[unit]);
+		mpt_log(out, 0, MPT_LOG(Message), "%-20s%18.4f [%s]", MPT_tr("user time:"), t, units[unit]);
 	}
 	if (sys) {
 		double t = sys->tv_usec;
@@ -47,6 +47,6 @@ extern void mpt_solver_statistics(MPT_SOLVER(generic) *gen, MPT_INTERFACE(logger
 			if (t < 0.1) { ++unit; t *= 1000; }
 			if (t < 0.1) { ++unit; t *= 1000; }
 		}
-		mpt_log(out, 0, MPT_ENUM(LogMessage), "%-20s%18.4f [%s]", MPT_tr("system time:"), t, units[unit]);
+		mpt_log(out, 0, MPT_LOG(Message), "%-20s%18.4f [%s]", MPT_tr("system time:"), t, units[unit]);
 	}
 }

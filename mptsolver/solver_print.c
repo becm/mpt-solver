@@ -61,7 +61,7 @@ static int wrap_logger(void *file, const char *fmt, ... )
 	if (!fmt || !log) return 0;
 	
 	va_start(va, fmt);
-	ret = log->_vptr->log(log, 0, MPT_ENUM(LogMessage), fmt, va);
+	ret = log->_vptr->log(log, 0, MPT_LOG(Message), fmt, va);
 	va_end(va);
 	
 	return ret;

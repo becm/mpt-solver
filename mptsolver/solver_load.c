@@ -33,37 +33,37 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 	
 	if (!conf) {
 		if (!(mt = pr->_mt)) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+			if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 			                 MPT_tr("no existing solver"));
 			return 0;
 		}
 		if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
+			if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
 			                 MPT_tr("no solver in proxy instance"), conf);
 			return 0;
 		}
 		name = mpt_object_typename((void *) sol);
 		mode = sol->_vptr->obj.property((void *) sol, 0);
 		if (mode < 0) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
+			if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
 			                 MPT_tr("no valid solver"), name ? name : "");
 			return 0;
 		}
 		if (match && !(mode & match)) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: 0x%02x",
+			if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s: 0x%02x",
 			                 MPT_tr("solver no IVP type"), mode);
 			return 0;
 		}
 		return sol;
 	}
 	if (!*conf) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("no solver description"));
 		return 0;
 	}
 	if (!strchr(conf, '@')) {
 		if (!(name = mpt_solver_alias(conf))) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
+			if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
 			                 MPT_tr("bad solver description"), conf);
 			return 0;
 		}
@@ -80,7 +80,7 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 		return 0;
 	}
 	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
 		                 MPT_tr("no solver in proxy instance"), conf);
 		return 0;
 	}
@@ -97,7 +97,7 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 			return 0;
 		}
 		if (match && !(mode & match)) {
-			if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s (0x%x <> 0x%x): %s",
+			if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (0x%x <> 0x%x): %s",
 			                 MPT_tr("incompatible solver type"), mode, match, conf);
 			mt->_vptr->ref.unref((void *) mt);
 			return 0;
@@ -115,7 +115,7 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 		pr->_mt = 0;
 		pr->hash = 0;
 	}
-	if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s: %s",
+	if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
 	                 MPT_tr("bad solver instance pointer"), conf);
 	
 	return 0;

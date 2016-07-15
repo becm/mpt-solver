@@ -239,7 +239,7 @@ extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTE
 	
 	(void) sd;
 	if ((ret = mpt_object_set((void *) sol, "", "ii", npde, 0)) < 0) {
-		mpt_log(log, __func__, MPT_FCNLOG(Error), "%s", "unable to set PDE count");
+		mpt_log(log, __func__, MPT_LOG(Error), "%s", "unable to set PDE count");
 		return ret;
 	}
 	/* no profile operation */

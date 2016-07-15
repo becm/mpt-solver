@@ -153,12 +153,12 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		}
 		log = nls->pr.logger;
 		if (!(dat = nls->sd)) {
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
 			                 MPT_tr("missing data descriptor"));
 			return MPT_ERROR(BadOperation);
 		}
 		if (!(sol = nls->sol)) {
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
 			                 MPT_tr("missing solver descriptor"));
 			return MPT_ERROR(BadOperation);
 		}
@@ -170,7 +170,7 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		/* set solver parameters from argument */
 		if (log) {
 			mpt_solver_info((void *) sol, log);
-			mpt_log(log, 0, MPT_ENUM(LogMessage), "");
+			mpt_log(log, 0, MPT_LOG(Message), "");
 		}
 		ctx.out = nls->pr.output;
 		ctx.dat = dat;
@@ -193,7 +193,7 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	    || !(mt = conf->_meta)
 	    || (ret = mt->_vptr->assign(mt, val)) < 0) {
 		MPT_INTERFACE(logger) *log = nls->pr.logger;
-		if (log) mpt_log(log, _func, MPT_FCNLOG(Critical), "%s", MPT_tr("unable to assign client element"));
+		if (log) mpt_log(log, _func, MPT_LOG(Critical), "%s", MPT_tr("unable to assign client element"));
 		return MPT_ERROR(BadOperation);
 	}
 	return ret;
@@ -213,7 +213,7 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 		/* close history output */
 		if ((out = nls->pr.output) && mpt_conf_history(out, 0) < 0) {
 			MPT_INTERFACE(logger) *log = nls->pr.logger;
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
 			                 MPT_tr("unable to close history output"));
 		}
 		if (nls->sd) {
@@ -262,7 +262,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	log = nls->pr.logger;
 	
 	if (!(conf = configNLS(nls->cfg))) {
-		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
+		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to get NLS client config"));
 		return MPT_ERROR(BadOperation);
 	}
@@ -272,7 +272,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	    && (val = mpt_node_data(sol, 0))) {
 		FILE *fd;
 		if (!(fd = fopen(val, "r"))) {
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s: %s",
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s: %s: %s",
 			                 MPT_tr("failed to open"), MPT_tr("solver config"), val);
 			return MPT_ERROR(BadOperation);
 		}
@@ -284,7 +284,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	}
 	if (!(dat = nls->sd)) {
 		if (!(dat = malloc(sizeof(*dat)))) {
-			mpt_log(log, _func, MPT_FCNLOG(Critical), "%s", MPT_tr("no memory for data"));
+			mpt_log(log, _func, MPT_LOG(Critical), "%s", MPT_tr("no memory for data"));
 			return MPT_ERROR(BadOperation);
 		}
 		mpt_data_init(dat);
@@ -296,7 +296,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	}
 	/* assign nls data */
 	if ((ret = mpt_conf_nls(dat, conf->children, log)) < 0) {
-		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
+		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
 		                 MPT_tr("solver preparation failed"));
 		return ret;
 	}
@@ -312,7 +312,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	}
 	val = mpt_object_typename((void *) nls->sol);
 	if (val && log) {
-		mpt_log(log, 0, MPT_FCNLOG(Message), "%s: %s", MPT_tr("solver"), val);
+		mpt_log(log, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
 	if ((ret = nls->uinit(nls->sol, nls->sd, log)) < 0) {
 		return ret;
@@ -380,12 +380,12 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 				const char *name = mpt_node_ident(names);
 				names = names->next;
 				if (name) {
-					mpt_log(log, 0, MPT_FCNLOG(Message), "%s %2d: %16g (%s)",
+					mpt_log(log, 0, MPT_LOG(Message), "%s %2d: %16g (%s)",
 					        desc, i+1, par[i], name);
 					continue;
 				}
 			}
-			mpt_log(log, 0, MPT_FCNLOG(Message), "%s %2d: %16g",
+			mpt_log(log, 0, MPT_LOG(Message), "%s %2d: %16g",
 			        desc, i+1, par[i]);
 		}
 	}

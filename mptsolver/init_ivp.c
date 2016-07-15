@@ -18,7 +18,7 @@ extern int mpt_init_ivp(MPT_SOLVER(IVP) *sol, double t, int len, const double *p
 	int ret;
 	
 	if ((neqs = len) < 0) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to save problem parameter to solver"));
 		return MPT_ERROR(BadArgument);
 	}
@@ -26,7 +26,7 @@ extern int mpt_init_ivp(MPT_SOLVER(IVP) *sol, double t, int len, const double *p
 	val.fmt = "i";
 	val.ptr = &neqs;
 	if ((ret = mpt_object_pset((void *) sol, "", &val, 0)) <= 0) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to save problem parameter to solver"));
 		return ret;
 	}
@@ -39,7 +39,7 @@ extern int mpt_init_ivp(MPT_SOLVER(IVP) *sol, double t, int len, const double *p
 	val.ptr = &tmp;
 	
 	if ((ret = mpt_object_pset((void *) sol, 0, &val, 0)) < 0) {
-		if (log) mpt_log(log, __func__, MPT_FCNLOG(Error), "%s",
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("failed to set initial values"));
 	}
 	return ret;
@@ -54,7 +54,7 @@ static void *initIvpData(MPT_SOLVER(IVP) *sol, const MPT_STRUCT(array) *val, MPT
 	
 	if (!(buf = val->_buf)
 	    || !(ret = buf->used / sizeof(double))) {
-		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
+		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
 		                 MPT_tr("missing initial data"));
 		return 0;
 	}
@@ -64,7 +64,7 @@ static void *initIvpData(MPT_SOLVER(IVP) *sol, const MPT_STRUCT(array) *val, MPT
 	}
 	/* get user funtions according to type */
 	if (!(fcn = sol->_vptr->functions(sol, type))) {
-		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s",
+		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to get user functions"));
 	}
 	return fcn;

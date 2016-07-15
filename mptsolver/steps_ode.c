@@ -87,7 +87,7 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(metatype) *src, MPT
 	/* try to complete full run */
 	do {
 	
-		if (out) mpt_log(out, __func__, MPT_FCNLOG(Debug2), "%s (t = %g > %g)",
+		if (out) mpt_log(out, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
 		                 MPT_tr("attempt solver step"), curr, end);
 		
 		/* call ODE/DAE solver with current/target time and in/out-data */

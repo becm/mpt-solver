@@ -26,7 +26,7 @@ static int parseNode(MPT_STRUCT(node) *conf, const char *fname, MPT_INTERFACE(me
 	/* use fallback name */
 	if (!args) {
 		if (fname || !*fname) {
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("no default name"));
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("no default name"));
 			return MPT_ERROR(BadValue);
 		}
 	}
@@ -36,25 +36,25 @@ static int parseNode(MPT_STRUCT(node) *conf, const char *fname, MPT_INTERFACE(me
 		
 		if (!val.fmt) {
 			if (!(fname = val.ptr)) {
-				if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("no solver config filename"));
+				if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("no solver config filename"));
 				return MPT_ERROR(BadValue);
 			}
 		}
 		else if (val.fmt[0] == MPT_ENUM(TypeFile)) {
 			if (!ptr || !(fd = ptr[0])) {
-				if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("bad file argument"));
+				if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("bad file argument"));
 				return MPT_ERROR(BadValue);
 			}
 			fname = 0;
 		}
 		else if (val.fmt[0] == 's') {
 			if (!ptr || !(fname = ptr[0])) {
-				if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("bad filename argument"));
+				if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("bad filename argument"));
 				return MPT_ERROR(BadValue);
 			}
 		}
 		else {
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("bad file type argument"));
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("bad file type argument"));
 			return MPT_ERROR(BadValue);
 		}
 		if (val.fmt[1] == 's') {
@@ -67,48 +67,48 @@ static int parseNode(MPT_STRUCT(node) *conf, const char *fname, MPT_INTERFACE(me
 				}
 			}
 			else if (val.fmt[2]) {
-				if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("bad file limit argument"));
+				if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("bad file limit argument"));
 				return MPT_ERROR(BadType);
 			}
 		}
 		else if (val.fmt[1]) {
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("bad file format argument"));
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("bad file format argument"));
 			return MPT_ERROR(BadType);
 		}
 	}
 	else if (!ret) {
 		if (!fname) {
 			if ((fname = mpt_node_ident(conf))) {
-				if (log) mpt_log(log, _func, MPT_FCNLOG(Debug), "%s: %s", fname, MPT_tr("no default filename"));
+				if (log) mpt_log(log, _func, MPT_LOG(Debug), "%s: %s", fname, MPT_tr("no default filename"));
 			} else {
-				if (log) mpt_log(log, _func, MPT_FCNLOG(Debug), "%s", MPT_tr("no default filename"));
+				if (log) mpt_log(log, _func, MPT_LOG(Debug), "%s", MPT_tr("no default filename"));
 			}
 			return MPT_ERROR(BadValue);
 		}
 	}
 	else if ((ret = args->_vptr->conv(args, MPT_ENUM(ValueConsume) | MPT_ENUM(TypeFile), &fd)) > 0) {
 		if (!fd) {
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("bad client config file descriptor"));
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("bad client config file descriptor"));
 			return MPT_ERROR(BadValue);
 		}
 		fname = 0;
 	}
 	else if ((ret = args->_vptr->conv(args, MPT_ENUM(ValueConsume) | MPT_ENUM(TypeFile), &fname)) > 0) {
 		if (!fname || !*fname) {
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s", MPT_tr("bad client config file name"));
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("bad client config file name"));
 			return MPT_ERROR(BadValue);
 		}
 	}
 	
 	if (fname && !(fd = fopen(fname, "r"))) {
-		if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s", MPT_tr("error opening solver config"), fname);
+		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s: %s", MPT_tr("error opening solver config"), fname);
 		return MPT_ERROR(BadValue);
 	}
 	ret = mpt_node_read(conf, fd, format, limit, log);
 	
 	if (fname) {
 		if (ret < 0) {
-			if (log) mpt_log(log, _func, MPT_FCNLOG(Error), "%s: %s", MPT_tr("error parsing solver config"), fname);
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s: %s", MPT_tr("error parsing solver config"), fname);
 		}
 		fclose(fd);
 	}
@@ -130,7 +130,7 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(metatype) *args, M
 	if ((sol = cfg.children)
 	    && !(sol = mpt_node_next(sol, "solconf"))) {
 		if (!(sol = mpt_node_new(8, 0))) {
-			if (log) mpt_log(log, __func__, MPT_ENUM(LogCritical), "%s", MPT_tr("failed to create solver config node"));
+			if (log) mpt_log(log, __func__, MPT_LOG(Critical), "%s", MPT_tr("failed to create solver config node"));
 			mpt_node_clear(&cfg);
 			return MPT_ERROR(BadOperation);
 		}
@@ -145,7 +145,7 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(metatype) *args, M
 		++ret;
 	}
 	if (args && (err = args->_vptr->conv(args, 0, &fmt))) {
-		if (log) mpt_log(log, __func__, MPT_ENUM(LogCritical), "%s", MPT_tr("too many arguments"));
+		if (log) mpt_log(log, __func__, MPT_LOG(Critical), "%s", MPT_tr("too many arguments"));
 		mpt_node_clear(&cfg);
 		return MPT_ERROR(BadArgument);
 	}

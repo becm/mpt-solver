@@ -64,7 +64,7 @@ extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTE
 	
 	/* require minimal parameter count */
 	if ((npar = sd->npar) < 2) {
-		mpt_log(out, __func__, MPT_FCNLOG(Error), "%s (npar=%d)",
+		mpt_log(out, __func__, MPT_LOG(Error), "%s (npar=%d)",
 		        "missing parameters", npar);
 		return MPT_ERROR(BadValue);
 	}

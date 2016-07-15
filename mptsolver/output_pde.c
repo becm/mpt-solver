@@ -43,16 +43,22 @@ extern int mpt_output_pde(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 			MPT_STRUCT(msgbind) bnd;
 		} hdr;
 		const double *t = val->ptr;
+		int ret;
+		
 		hdr.mt.cmd   = MPT_ENUM(MessageValRaw);
 		hdr.mt.arg   = 0;
 		hdr.bnd.dim  = state & 0xff; /* special data state as dimension info */
 		hdr.bnd.type = MPT_ENUM(ByteOrderNative) | MPT_ENUM(ValuesFloat) | sizeof(t);
 		
 		/* push parameter data */
-		out->_vptr->push(out, sizeof(hdr), &hdr);
-		out->_vptr->push(out, sizeof(*t), t);
-		out->_vptr->push(out, 0, 0);
-		
+		if ((ret = out->_vptr->push(out, sizeof(hdr), &hdr)) < 0) {
+			return ret;
+		}
+		if ((ret = out->_vptr->push(out, sizeof(*t), t)) < 0
+		    || out->_vptr->push(out, 0, 0) < 0) {
+			out->_vptr->push(out, 1, 0);
+			return ret;
+		}
 		vec = (void *) (t+1);
 		++fmt;
 	}

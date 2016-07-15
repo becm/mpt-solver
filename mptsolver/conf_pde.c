@@ -31,7 +31,7 @@ extern int mpt_conf_pde(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *con
 	if (!md->npar) {
 		static const char pname[] = "param";
 		if ((len = mpt_conf_param(&md->param, mpt_node_next(conf, pname), 0)) < 0) {
-			if (out) mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s: %s",
+			if (out) mpt_log(out, __func__, MPT_LOG(Warning), "%s: %s",
 			                 pname, MPT_tr("invalid parameter format"));
 		} else {
 			md->npar = len;
@@ -40,14 +40,14 @@ extern int mpt_conf_pde(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *con
 	/* grid setup */
 	if (!md->nval) {
 		if ((len = mpt_conf_grid(&md->val, mpt_node_next(conf, "grid"))) < 0) {
-			if (out) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+			if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s",
 			                 MPT_tr("unable to get grid data"));
 			return MPT_ERROR(BadValue);
 		}
 		md->nval = len;
 		
 		if (--len < 1) {
-			if (out) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %d",
+			if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s: %d",
 			                 MPT_tr("bad grid interval count"), len);
 			return MPT_ERROR(BadValue);
 		}

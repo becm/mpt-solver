@@ -32,7 +32,7 @@ extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *md, double t, const MPT_STRUCT(
 	if (!md->npar) {
 		static const char pname[] = "param";
 		if ((len = mpt_conf_param(&md->param, mpt_node_next(conf, pname), 0)) < 0) {
-			if (out) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s: %s",
+			if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s: %s",
 			                 pname, MPT_tr("invalid parameter format"));
 			return MPT_ERROR(BadValue);
 		} else {
@@ -45,7 +45,7 @@ extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *md, double t, const MPT_STRUCT(
 	/* save initial time value */
 	if ((buf = md->val._buf)) buf->used = 0;
 	if (!mpt_array_append(&md->val, sizeof(t), &t)) {
-		if (out) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+		if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to save initial time in history"));
 		return MPT_ERROR(BadOperation);
 	}
@@ -54,7 +54,7 @@ extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *md, double t, const MPT_STRUCT(
 	}
 	/* read profile values */
 	else if ((len = mpt_conf_param(&md->val, prof, 1)) < 0) {
-		if (out) mpt_log(out, __func__, MPT_FCNLOG(Error), "%s",
+		if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("failed to reserve initial data"));
 		return len;
 	}

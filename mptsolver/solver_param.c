@@ -56,12 +56,12 @@ extern void mpt_solver_param(MPT_INTERFACE(object) *obj, const MPT_STRUCT(node) 
 		}
 		if (len > 0) {
 			if (!*pr.name) {
-				mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s",
+				mpt_log(out, __func__, MPT_LOG(Warning), "%s",
 				        MPT_tr("no property name"));
 				continue;
 			}
 			if (mpt_object_pset(obj, pr.name, &pr.val, 0) < 0) {
-				mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s: <%s>",
+				mpt_log(out, __func__, MPT_LOG(Warning), "%s: <%s>",
 				        MPT_tr("unable to set property"), pr.name);
 			}
 			continue;
@@ -73,7 +73,7 @@ extern void mpt_solver_param(MPT_INTERFACE(object) *obj, const MPT_STRUCT(node) 
 		if ((len = mpt_object_pset(obj, 0, &pr.val, 0)) >= 0) {
 			break;
 		}
-		mpt_log(out, __func__, MPT_FCNLOG(Warning), "%s: <%s>",
+		mpt_log(out, __func__, MPT_LOG(Warning), "%s: <%s>",
 		        MPT_tr("bad assignment argument"), pr.name);
 		break;
 	}
