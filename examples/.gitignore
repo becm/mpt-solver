@@ -1,7 +1,8 @@
 # exclude solver example binaries
 config
-check
 proxy
+solvers
+vecpar
 
 # exclude static targets
 *_static

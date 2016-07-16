@@ -16,6 +16,7 @@
 #include <mpt/convert.h>
 #include <mpt/client.h>
 #include <mpt/parse.h>
+#include <mpt/meta.h>
 
 #include <mpt/solver.h>
 
@@ -41,38 +42,29 @@ int main(void)
 {
 	const char txt[] = "load: ";
 	char buf[128];
-	MPT_STRUCT(libhandle) h = { 0, 0 };
-	const char *err;
+	MPT_STRUCT(proxy) p = MPT_PROXY_INIT;
 	
 	mtrace();
 	
 	mpt_config_load(getenv("MPT_PREFIX"), 0, 0);
+	p.logger = mpt_log_default();
 	
 	fputs(txt, stdout);
 	while (fgets(buf, sizeof(buf), stdin)) {
 		MPT_SOLVER(generic) *s;
-		const char *n;
 		size_t len;
 		if (!(len = strlen(buf))) break;
 		buf[len-1] = '\0';
 		
-		if (!(n = mpt_solver_alias(buf))) {
-			n = buf;
-		}
-		if ((err = mpt_library_assign(&h, n, getenv("MPT_PREFIX_LIB")))) {
-			fputs(err, stderr);
-			fputc('\n', stderr);
-			fputs(txt, stdout);
-			continue;
-		}
-		if ((s = h.create())) {
-			if ((n = mpt_object_typename((void *) s))) puts(n);
+		if ((s = mpt_solver_load(&p, 0, buf))) {
+			const char *n;
+			if ((n = mpt_object_typename((void *) s))) {
+				puts(n);
+			}
 			s->_vptr->report(s, -1, wrap_fw, stdout);
-			s->_vptr->obj.ref.unref((void *) s);
-		} else {
-			perror("failed getting solver descriptor");
+			p._mt->_vptr->ref.unref((void *) p._mt);
+			p._mt = 0;
 		}
-		mpt_library_close(&h);
 		fputs(txt, stdout);
 	}
 	
