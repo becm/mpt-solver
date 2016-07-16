@@ -1,6 +1,6 @@
 # exclude solver example binaries
 config
-proxy
+loadsol
 solvers
 vecpar
 

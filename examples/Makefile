@@ -1,9 +1,9 @@
 # Makefile: MPT solver examples
 #
 DIRS = ode dae pde nls bacol
-TESTS = proxy solvers vecpar
+TESTS = loadsol solvers vecpar
 PROGS = config ${TESTS}
-STATIC = proxy
+STATIC = loadsol
 OBJS = $(PROGS:%=%.o) $(TESTS:%=%.o)
 
 include solver.example.mk
@@ -22,5 +22,5 @@ solvers : CC=${CXX}
 solvers : LDLIBS=-lmptsolver -lmpt++ -lmptcore $(solvers:%=-lmpt_%)
 solvers.o : CPPFLAGS+=-std=c++11 $(solvers:%=-Dwith_%)
 
-proxy :  LDLIBS=-lmptsolver -lmptcore
-proxy_static : LDLIBS=-lmptsolver -lmpt -ldl
+loadsol :  LDLIBS=-lmptloader -lmptcore
+loadsol_static : LDLIBS=-lmpt -ldl

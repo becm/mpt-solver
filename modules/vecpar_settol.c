@@ -6,7 +6,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "solver.h"
+#include "../solver.h"
 
 extern int mpt_vecpar_settol(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFACE(metatype) *src, double def)
 {

@@ -8,7 +8,7 @@
 
 #include "meta.h"
 
-#include "solver.h"
+#include "../solver.h"
 
 static int setVecparDefault(double **ptr, int max)
 {

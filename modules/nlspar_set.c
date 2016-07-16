@@ -6,7 +6,7 @@
 
 #include "meta.h"
 
-#include "solver.h"
+#include "../solver.h"
 
 extern int mpt_nlspar_set(MPT_SOLVER_NLS_STRUCT(parameters) *nls, MPT_INTERFACE(metatype) *src)
 {
