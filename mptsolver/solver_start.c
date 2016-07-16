@@ -11,9 +11,7 @@
 #include <unistd.h>
 
 #include "node.h"
-#include "message.h"
 #include "event.h"
-#include "config.h"
 #include "client.h"
 
 #include "meta.h"
@@ -53,25 +51,10 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	
 	if (!ev) return 0;
 	
-	if (!solv) {
-		MPT_ABORT("missing client descriptor");
-	}
-	
 	/* running in remote-input mode */
 	if (ev->msg) {
-		MPT_INTERFACE(metatype) *src;
-		if (!(src = mpt_event_command(ev))) {
-			ev->id = 0;
-			return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
-		}
-		if (mpt_config_args((void *) solv, src) < 0) {
-			src->_vptr->ref.unref((void *) src);
-			return MPT_event_fail(ev, MPT_ERROR(BadValue), "failed to set client config");
-		}
-		ret = solv->_vptr->init(solv, src);
-		src->_vptr->ref.unref((void *) src);
-		if (ret < 0) {
-			return MPT_event_fail(ev, MPT_ERROR(BadValue), "failed to initialize client");
+		if ((ret = mpt_solver_config((void *) solv, ev))) {
+			return ret;
 		}
 	}
 	/* problem config filename from configuration/terminal */
@@ -137,12 +120,11 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			}
 			free(rname);
 		}
-		/* initialize solver */
-		ret = solv->_vptr->init(solv, 0);
-		
-		if (ret < 0) {
-			return MPT_event_fail(ev, ret, MPT_tr("unable to initialize solver client"));
-		}
+	}
+	/* initialize solver */
+	ret = solv->_vptr->init(solv, 0);
+	if (ret < 0) {
+		return MPT_event_fail(ev, MPT_ERROR(BadValue), "failed to initialize client");
 	}
 	/* prepare solver for run */
 	if ((ret = solv->_vptr->cfg.assign((void *) solv, 0, 0)) < 0) {

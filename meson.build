@@ -32,7 +32,9 @@ load = cc.find_library('mptloader', required : false, dirs : mpt_lib)
 with_core = not core.found()
 if with_core
   subdir('base/mptcore')
+  solv_inc_static = [ 'base/mptcore' ]
 else
+  solv_inc_static = [ mpt_inc ]
   core = [ core, declare_dependency(include_directories : include_directories(mpt_inc)) ]
 endif
 
@@ -52,6 +54,7 @@ if with_plot
     subdir(d)
     plot_src += src
   endforeach
+  solv_inc_static += 'base/mptplot'
   plot = [ core, declare_dependency(include_directories : include_directories('base/mptplot')) ]
 else
   # need target include path addition
@@ -71,6 +74,8 @@ install_headers('solver.h', subdir : 'mpt')
 
 # solver library creation
 solv_inc = include_directories('.', 'base')
+solv_inc_static = [ solv_inc, include_directories(solv_inc_static) ]
+
 subdir('mptsolver')
 
 # solver modules creation

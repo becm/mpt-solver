@@ -19,6 +19,7 @@ struct timeval;
 
 __MPT_NAMESPACE_BEGIN
 
+MPT_INTERFACE(config);
 MPT_INTERFACE(client);
 MPT_INTERFACE(output);
 MPT_INTERFACE(metatype);
@@ -459,6 +460,8 @@ extern MPT_SOLVER_NLS_STRUCT(functions) *mpt_init_nls(MPT_SOLVER(NLS) *, const M
 /* register events on notifier */
 extern int mpt_solver_events(MPT_STRUCT(dispatch) *, MPT_INTERFACE(client) *);
 
+/* set solver (user data and solver parameter) config files */
+extern int mpt_solver_config(MPT_INTERFACE(config) *, MPT_STRUCT(event) *);
 /* read files, initialize and prepare solver, set default handler */
 extern int mpt_solver_start(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
 

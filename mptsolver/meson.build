@@ -7,40 +7,46 @@ solv_src = files(
   'init_ivp.c', 'init_pde.c', 'init_nls.c',
   'data_finit.c', 'data_grid.c', 'data_param.c', 'data_nls.c',
   'output_nls.c', 'output_pde.c',
-  'solver_alias.c', 'solver_events.c', 'solver_load.c', 'solver_param.c',
-  'solver_print.c', 'solver_pset.c', 'solver_read.c',
+  'solver_alias.c', 'solver_config.c', 'solver_events.c', 'solver_load.c',
+  'solver_param.c', 'solver_print.c', 'solver_pset.c',
+  'solver_read.c',
   'solver_start.c', 'solver_statistics.c',
   'residuals_cdiff.c',
   'steps_ode.c',
   'timeradd.c'
 )
-solv_req = 'mptloader'
 
 # add plot elements
-if with_plot
-  solv_src += plot_src
-else
-  solv_req += ' mptplot'
+if not with_plot
+  plot_src = []
 endif
-solv_req += ' mptcore'
 
 if with_shared
-  solv_lib = shared_library('mptsolver', solv_src, 'libinfo.c',
+  solv_lib = shared_library('mptsolver', solv_src + plot_src, 'libinfo.c',
     include_directories : solv_inc,
     install_rpath : '$ORIGIN',
     dependencies : [ plot, load, core ],
     version : '1.0.0', soversion : '1',
     install : true)
-
-  pkg.generate(
-    description : 'mpt solver library',
-    libraries : solv_lib,
-    requires_private : solv_req,
-    version : '1.0.0',
-    name : 'mptsolver')
-
-  solv = declare_dependency(
-    link_with : solv_lib,
-    include_directories : solv_inc
-  )
 endif
+
+if with_static
+  solv_lib_static = static_library('mptsolver', solv_src,
+    include_directories : solv_inc_static,
+    install : true)
+  if not with_shared
+    solv_lib = solv_lib_static
+  endif
+endif
+
+pkg.generate(
+  description : 'mpt solver library',
+  libraries : solv_lib,
+  requires_private : 'mpt',
+  version : '1.0.0',
+  name : 'mptsolver')
+
+solv = declare_dependency(
+  link_with : solv_lib,
+  include_directories : solv_inc
+)
