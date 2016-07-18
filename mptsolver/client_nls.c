@@ -47,18 +47,15 @@ struct _outNLSdata
 static int outNLS(void *ptr, const MPT_STRUCT(value) *val)
 {
 	const struct _outNLSdata *ctx = ptr;
-	int ret = 0;
+	int ret;
 	
-	if (ctx->out) {
-		ret = mpt_output_nls(ctx->out, ctx->state, val, ctx->dat);
-	}
+	/* copy parameters form solver output */
 	if ((ret = mpt_data_nls(ctx->dat, val)) < 0) {
 		return ret;
 	}
-	/* residual data was taken from solver data */
-	if (ret > 1) {
-		ctx->dat->val._buf->used = ctx->dat->nval * sizeof(double);
-		ctx->dat->nval = 0;
+	/* output of user data and residuals */
+	if (ctx->out) {
+		return mpt_output_nls(ctx->out, ctx->state, val, ctx->dat);
 	}
 	return ret;
 }
