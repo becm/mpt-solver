@@ -362,7 +362,6 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	mpt_solver_status((void *) sol, log, outNLS, &ctx);
 	
 	if ((names = configNLS(nls->cfg))
-	    && (names = names->children)
 	    && (names = mpt_node_find(names, "param", 1))) {
 		names = names->children;
 	}
