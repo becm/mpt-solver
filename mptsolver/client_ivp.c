@@ -190,7 +190,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		}
 		return ret;
 	}
-	if (!(conf = mpt_node_assign(&conf, porg))
+	if (!(conf = mpt_node_assign(&conf->children, porg))
 	    || !(mt = conf->_meta)
 	    || (ret = mt->_vptr->assign(mt, val)) < 0) {
 		MPT_INTERFACE(logger) *log = ivp->pr.logger;
