@@ -109,13 +109,13 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_I
 	}
 	if (!strcasecmp(name, "maxord")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
 		if (IDASetMaxOrd(ida_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "maxnumsteps") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "mxstep")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
 		if (IDASetMaxNumSteps(ida_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
@@ -154,7 +154,7 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_I
  */
 extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(property) *prop)
 {
-	static const char longfmt[] = { MPT_ENUM(TypeLong), 0 };
+	static const char longfmt[] = { 'l', 0 };
 	static const char realfmt[] = { MPT_SOLVER_ENUM(SundialsRealtype), 0 };
 	static const char dblfmt[] = { 'd', 0 };
 	const char *name;

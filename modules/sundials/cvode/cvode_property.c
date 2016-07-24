@@ -98,19 +98,19 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MP
 	}
 	if (!strcasecmp(name, "maxord")) {
 		long val = cv_mem->cv_qmax;
-		if (src && (ret = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
 		else if (CVodeSetMaxOrd(cv_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
 		if (CVodeSetMaxNumSteps(cv_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hnilwarns")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, MPT_ENUM(TypeLong), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
 		if (CVodeSetMaxHnilWarns(cv_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
@@ -149,7 +149,7 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MP
  */
 extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(property) *prop)
 {
-	static const char longfmt[] = { MPT_ENUM(TypeLong), 0 };
+	static const char longfmt[] = { 'l', 0 };
 	static const char realfmt[] = { MPT_SOLVER_ENUM(SundialsRealtype), 0 };
 	static const char dblfmt[] = { 'd', 0 };
 	const char *name;

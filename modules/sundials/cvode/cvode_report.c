@@ -24,7 +24,7 @@
  */
 extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
-	static const char longfmt[] = { MPT_ENUM(TypeLong), 0 };
+	static const char longfmt[] = { 'l', 0 };
 	MPT_STRUCT(property) pr;
 	long int lval;
 	double dval;
