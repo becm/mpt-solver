@@ -51,12 +51,15 @@ static void info(generic &s)
 	mpt_solver_report(&s, 0);
 	println(0);
 }
-static void pde(generic &s)
+static void pde(class IVP &s)
 {
 	// PDE equotations and intervals
 	mpt_object_set(&s, "", "ii", 3, 10);
 	// PDE time and start values
 	mpt_object_set(&s, 0, "dddd", 0.5, 1.1, 1.2, 1.3);
+	
+	pdefcn *fcn = s;
+	fcn->rside = 0;
 }
 
 int main()

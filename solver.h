@@ -241,11 +241,11 @@ MPT_SOLVER_IVP_STRUCT(functions)
 
 #ifdef __cplusplus
 inline IVP::operator struct odefcn *()
-{ return (struct odefcn *) functions(odefcn::Type); }
+{ return reinterpret_cast<odefcn *>(functions(odefcn::Type)); }
 inline IVP::operator struct daefcn *()
-{ return (struct daefcn *) functions(daefcn::Type); }
+{ return reinterpret_cast<daefcn *>(functions(daefcn::Type)); }
 inline IVP::operator struct pdefcn *()
-{ return (struct pdefcn *) functions(pdefcn::Type); }
+{ return reinterpret_cast<pdefcn *>(functions(pdefcn::Type)); }
 
 /*! extension for NonLinear Systems */
 class NLS : public generic

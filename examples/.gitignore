@@ -1,5 +1,5 @@
 # exclude solver example binaries
-config
+libassign
 loadsol
 solvers
 vecpar
