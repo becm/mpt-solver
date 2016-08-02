@@ -2,7 +2,7 @@
  * add usage time difference
  */
 
-#define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #include <sys/time.h>
 #include <sys/resource.h>
 
