@@ -4,7 +4,7 @@ SOL ?= both
 #
 # additional build flags
 # DEFINES += SUNDIALS_WITH_LAPACK=1
-DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-2.6.2/build
+DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-2.7.0/build
 sundials_elements = cvode ida kinsol nvec_ser
 INC = . ${MPT_PREFIX}/include ${DIR_SUNDIALS}/include/
 #
