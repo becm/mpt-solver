@@ -256,10 +256,13 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 		prop->val.ptr = v = ((int *) me->iwork.iov_base);
 		return v[2] ? 1 : 0;
 	}
-	if (name ? !strncasecmp(name, "yp", 2) : pos == ++id) {
-		prop->name = "yp"; prop->desc = "max. internal steps per call";
+	/* state properties */
+	if (!name || !me) {
+		return MPT_ERROR(BadArgument);
+	}
+	if (!strncasecmp(name, "yp", 2)) {
+		prop->name = "yp"; prop->desc = "current deviation vector";
 		prop->val.fmt = "d"; prop->val.ptr = 0;
-		if (!me) return id;
 		if (!(prop->val.ptr = me->y)) return 0;
 		return me->ivp.neqs * (me->ivp.pint + 1);
 	}

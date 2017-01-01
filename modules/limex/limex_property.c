@@ -73,7 +73,7 @@ extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, MPT_INT
 {
 	int ret = 0;
 	
-	/* initial vlaues */
+	/* initial values */
 	if (!name) {
 		double t = lx->t;
 		size_t required;
@@ -182,14 +182,7 @@ extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, MPT_INT
 		return ret ? 1 : 0;
 	}
 	if (!strncasecmp(name, "yprime", 2) || !strcasecmp(name, "ys")) {
-		if (!src) {
-			if (lx->ys) {
-				free(lx->ys);
-				lx->ys = 0;
-			}
-			return 0;
-		}
-		return mpt_vecpar_set(&lx->ys, (lx->ivp.pint + 1) * lx->ivp.neqs, src);
+		return mpt_vecpar_set(&lx->ys, src ? (lx->ivp.pint + 1) * lx->ivp.neqs : -1, src);
 	}
 	return MPT_ERROR(BadArgument);
 }
@@ -309,16 +302,18 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 		if (!lx) return id;
 		return lx->ropt[0] ? 1 : 0;
 	}
-	if (name ? (!strncasecmp(name, "yprime", 2) || !strcasecmp(name, "ys")) : pos == id++) {
-		prop->name = "yprime"; prop->desc = "deviation at initial/current point";
-		prop->val.fmt = "d"; prop->val.ptr = lx->ys;
-		if (!lx) return id;
-		return lx->ivp.neqs * (lx->ivp.pint + 1);
+	/* state properties */
+	if (!name || !lx) {
+		return MPT_ERROR(BadArgument);
 	}
-	if (lx && name && !strcasecmp(name, "ipos")) {
+	if (!strcasecmp(name, "ipos")) {
 		prop->name = "ipos"; prop->desc = "maximum internal step size";
 		prop->val.fmt = "i"; prop->val.ptr = lx->ipos;
-		if (!lx) return id;
+		return lx->ivp.neqs * (lx->ivp.pint + 1);
+	}
+	if (!strncasecmp(name, "yprime", 2) || !strcasecmp(name, "ys")) {
+		prop->name = "yprime"; prop->desc = "current deviation vector";
+		prop->val.fmt = "d"; prop->val.ptr = lx->ys;
 		return lx->ivp.neqs * (lx->ivp.pint + 1);
 	}
 	return MPT_ERROR(BadArgument);

@@ -237,11 +237,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, MPT_INT
 		return ret ? 1 : 0;
 	}
 	if (!strncasecmp(name, "yprime", 2)) {
-		if (!src) {
-			ret = -1;
-		} else {
-			ret = da->ivp.neqs * (da->ivp.pint + 1);
-		}
+		ret = src ? da->ivp.neqs * (da->ivp.pint + 1) : -1;
 		if ((ret = mpt_vecpar_set(&da->yp, ret, src)) < 0) {
 			return ret;
 		}
@@ -302,7 +298,7 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
-	if (!strncasecmp(name, "jac", 3)) {
+	if (name ? !strncasecmp(name, "jac", 3) : pos == ++id) {
 		size_t len = da ? da->iwork.iov_len / sizeof(int) : 0;
 		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
 		prop->val.fmt = "ii"; prop->val.ptr = 0;
@@ -338,9 +334,9 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		return da->info[7] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "info9") || !strcasecmp(name, "maxord")) : pos == ++id) {
-		size_t len = da ? da->iwork.iov_len / sizeof(double) : 0;
+		size_t len = da ? da->iwork.iov_len / sizeof(int) : 0;
 		prop->name = "maxord"; prop->desc = "maximum order";
-		prop->val.fmt = "i"; prop->val.ptr = len > 8 ? ((double *) da->rwork.iov_base) + 8 : 0;
+		prop->val.fmt = "i"; prop->val.ptr = len > 2 ? ((int *) da->iwork.iov_base) + 2 : 0;
 		if (!da) return id;
 		return da->info[8] ? 1 : 0;
 	}
@@ -350,9 +346,13 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		if (!da) return id;
 		return da->info[9] ? 1 : 0;
 	}
-	if (name ? !strncasecmp(name, "yp", 2) : pos == ++id) {
-		prop->name = "yprime"; prop->desc = "deviation at current time";
-		prop->val.fmt = "d"; prop->val.ptr = da ? da->yp : 0;
+	/* state properties */
+	if (!name || !da) {
+		return MPT_ERROR(BadArgument);
+	}
+	if (!strncasecmp(name, "yp", 2)) {
+		prop->name = "yprime"; prop->desc = "current deviation vector";
+		prop->val.fmt = "d"; prop->val.ptr = da->yp;
 		return da->info[10] ? da->ivp.neqs * (da->ivp.pint + 1) : 0;
 	}
 	return MPT_ERROR(BadArgument);
