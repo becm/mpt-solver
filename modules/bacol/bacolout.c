@@ -16,17 +16,8 @@ extern void mpt_bacolout_init(MPT_SOLVER_STRUCT(bacolout) *out)
 
 extern void mpt_bacolout_fini(MPT_SOLVER_STRUCT(bacolout) *out)
 {
-	if (out->xy.iov_base) {
-		free(out->xy.iov_base);
-		out->xy.iov_base = 0;
-	}
-	out->xy.iov_len = 0;
-	
-	if (out->wrk.iov_base) {
-		free(out->wrk.iov_base);
-		out->wrk.iov_base = 0;
-	}
-	out->wrk.iov_len = 0;
+	mpt_vecpar_alloc(&out->_xy, 0, 0);
+	mpt_vecpar_alloc(&out->_wrk, 0, 0);
 	
 	out->nint = 0;
 	out->deriv = 0;

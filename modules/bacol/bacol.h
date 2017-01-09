@@ -37,15 +37,27 @@ MPT_SOLVER_STRUCT(bacolout)
 public:
 	bacolout();
 	~bacolout();
+	
+	inline const double *x() const
+	{ return (double *) _xy.iov_base; }
+	inline const double *y() const
+	{ return ((double *) _xy.iov_base) + nint + 1; }
+	
+	inline int intervals() const
+	{ return nint; }
+	inline int equotations() const
+	{ return neqs; }
+protected:
 #endif
 	/* adapt grid data */
 	int (*update)(int , const double *, int , double *);
 	
-	struct iovec xy, wrk;  /* buffer and work space for output creation */
+	struct iovec _xy,   /* output values */
+	             _wrk;  /* work space */
 	
-	uint32_t     nint;     /* interval count */
-	uint16_t     neqs;     /* equotation count */
-	uint8_t      deriv;    /* derivation count */
+	uint32_t  nint;     /* interval count */
+	uint16_t  neqs;     /* equotation count */
+	uint8_t   deriv;    /* derivation count */
 };
 
 MPT_SOLVER_STRUCT(bacol)
@@ -84,11 +96,11 @@ public:
 	int16_t  kcol;       /* collocation points per subinterval [1..10] */
 	char    _backend;    /* solver backend */
 	
-	struct iovec rpar,          /* floating point state data */
-	             ipar;          /* integer state data */
+	struct iovec rpar,   /* floating point state data */
+	             ipar;   /* integer state data */
 	union {
-		struct iovec cpar;  /* radau complex parameter */
-		double tstop;       /* dassl tstop value */
+	struct iovec cpar;   /* radau complex parameter */
+	double tstop;        /* dassl tstop value */
 	} bd;
 };
 

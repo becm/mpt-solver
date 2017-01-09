@@ -18,7 +18,7 @@ extern double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacolout) *out, const MPT_SOLV
 		return 0;
 	}
 	if (out->nint) {
-		x = out->xy.iov_base;
+		x = out->_xy.iov_base;
 		return x + out->nint + 1;
 	}
 	if (!bac || bac->mflag.noinit < 0 || (nint = bac->ivp.pint) < 0) {
@@ -38,11 +38,11 @@ extern double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacolout) *out, const MPT_SOLV
 	wlen = (kcol * MPT_BACOL_NCONTI) * (1 + deriv);
 	wlen += kcol * (bac->nint + 1) + 2 * MPT_BACOL_NCONTI;
 	
-	if (!mpt_vecpar_alloc(&out->wrk, wlen, sizeof(double))) {
+	if (!mpt_vecpar_alloc(&out->_wrk, wlen, sizeof(double))) {
 		return 0;
 	}
 	npts = nint + 1;
-	if (!(x = mpt_vecpar_alloc(&out->xy, npts + npts * (deriv + 1) * neqs, sizeof(double)))) {
+	if (!(x = mpt_vecpar_alloc(&out->_xy, npts + npts * (deriv + 1) * neqs, sizeof(double)))) {
 		return 0;
 	}
 	if (out->update && (nint = out->update(bac->nint, bac->xy, nint, x)) < 0) {
@@ -54,7 +54,7 @@ extern double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacolout) *out, const MPT_SOLV
 	if (bac->mflag.noinit) {
 		/* generate y-values for grid */
 		values_(&kcol, x, &bac->nint, bac->xy, &neqs, &npts,
-		        &deriv, y, bac->xy + bac->nintmx + 1, out->wrk.iov_base);
+		        &deriv, y, bac->xy + bac->nintmx + 1, out->_wrk.iov_base);
 	} else {
 		int pos;
 		
