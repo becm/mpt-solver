@@ -74,8 +74,8 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 				cname = fname;
 			}
 			if (access(cname, R_OK) < 0) {
-				mpt_event_reply(ev, MPT_ERROR(BadValue), "%s: %s",
-				                MPT_tr("file not readable"), cname);
+				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
+				                  MPT_tr("file not readable"), cname);
 				free(rname);
 				ev->id = 0;
 				return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
@@ -88,8 +88,8 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			}
 		}
 		else if (mpt_config_set((void *) solv, 0, 0, 0, 0) < 0) {
-			mpt_event_reply(ev, MPT_ERROR(BadValue), "%s: %s",
-			                MPT_tr("file not readable"), fname);
+			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
+			                  MPT_tr("file not readable"), fname);
 			return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 		}
 		cfg = mpt_config_get((void *) solv, "solconf", 0, 0);
@@ -101,8 +101,8 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 				cname = defName;
 			}
 			if (access(cname, R_OK) < 0) {
-				mpt_event_reply(ev, MPT_ERROR(BadValue), "%s: %s",
-				                MPT_tr("file not readable"), cname);
+				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
+				                  MPT_tr("file not readable"), cname);
 				if (rname ) {
 					free(rname);
 				}
@@ -110,7 +110,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 				return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 			}
 			if ((ret = mpt_config_set((void *) solv, "solconf", cname, 0, 0)) < 0) {
-				mpt_event_reply(ev, MPT_ERROR(BadValue), "%s: %s",
+				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
 				                MPT_tr("failed to set solver config filename"), cname);
 				if (rname ) {
 					free(rname);

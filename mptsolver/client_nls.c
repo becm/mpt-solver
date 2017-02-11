@@ -114,7 +114,7 @@ static MPT_INTERFACE(metatype) *queryNLS(const MPT_INTERFACE(config) *gen, const
 		return 0;
 	}
 	p = *porg;
-	p.flags &= ~MPT_ENUM(PathHasArray);
+	p.flags &= ~MPT_PATHFLAG(HasArray);
 	
 	if (!(conf = mpt_node_query(conf, &p, -1))) {
 		return 0;
@@ -234,7 +234,7 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 		return 1;
 	}
 	p = *porg;
-	p.flags &= ~MPT_ENUM(PathHasArray);
+	p.flags &= ~MPT_PATHFLAG(HasArray);
 
 	if (!(conf = mpt_node_query(conf->children, &p, -1))) {
 		return MPT_ERROR(BadArgument);
@@ -425,6 +425,8 @@ extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER(NLS) *, MPT
 	nls->cl._vptr = &ctlNLS;
 	(void) memset(&nls->pr, 0, sizeof(nls->pr));
 	nls->sd = 0;
+	
+	nls->pr.output = mpt_output_local(0);
 	
 	nls->sol = 0;
 	nls->uinit = uinit;

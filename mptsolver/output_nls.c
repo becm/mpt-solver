@@ -63,7 +63,7 @@ extern int mpt_output_nls(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 		hdr.mt.cmd   = MPT_ENUM(MessageValRaw);
 		hdr.mt.arg   = 0; /* indicate special data */
 		hdr.bnd.dim  = state & 0xff; /* repurpose dimension as special data state */
-		hdr.bnd.type = MPT_ENUM(ByteOrderNative) | MPT_ENUM(ValuesFloat) | sizeof(*par);
+		hdr.bnd.type = MPT_message_value(Float, *par);
 		
 		/* push parameter data */
 		out->_vptr->push(out, sizeof(hdr), &hdr);

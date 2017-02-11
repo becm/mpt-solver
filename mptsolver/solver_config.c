@@ -51,17 +51,17 @@ extern int mpt_solver_config(MPT_INTERFACE(config) *solv, MPT_STRUCT(event) *ev)
 		if ((ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cmd)) < 0
 		    || (ret && (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cfg)) < 0)
 		    || (ret && (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &sol)) < 0)) {
-			mpt_event_reply(ev, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument type"), ret);
+			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument type"), ret);
 		}
 		else if (ret && (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cmd))) {
-			mpt_event_reply(ev, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument count"), ret);
+			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument count"), ret);
 			ret = -1;
 		}
 		else if ((ret = mpt_config_set((void *) solv, 0, cfg, 0, 0)) < 0) {
-			mpt_event_reply(ev, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read client config"), cfg);
+			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read client config"), cfg);
 		}
 		else if (sol && (ret = mpt_config_set((void *) solv, "solver", cfg, 0, 0)) < 0) {
-			mpt_event_reply(ev, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read solver config"), cfg);
+			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read solver config"), cfg);
 		}
 		src->_vptr->ref.unref((void *) src);
 		if (ret < 0) {

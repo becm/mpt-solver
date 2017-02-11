@@ -81,7 +81,8 @@ cmdsolv[] = {
  */
 extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *cl)
 {
-	MPT_INTERFACE(output) *out;
+	MPT_INTERFACE(logger) *log = 0;
+	MPT_INTERFACE(metatype) *mt;
 	uintptr_t id;
 	size_t i;
 	int err;
@@ -89,19 +90,8 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 	if ((err = mpt_client_events(dsp, cl)) < 0) {
 		return err;
 	}
-	if ((out = dsp->_err.arg)) {
-		static const char fmt[2] = { MPT_ENUM(TypeOutput) };
-		MPT_STRUCT(value) val;
-		val.fmt = fmt;
-		val.ptr = &out;
-		
-		/* assign output to client */
-		if (cl->_vptr->cfg.assign((void *) cl, 0, &val) >= 0
-		    && out->_vptr->obj.addref((void *) out)) {
-			if (mpt_dispatch_control(dsp, "graphic", out) < 0) {
-				out->_vptr->obj.ref.unref((void *) out);
-			}
-		}
+	if ((mt = cl->_vptr->cfg.query((void *) cl, 0))) {
+		mt->_vptr->conv(mt, MPT_ENUM(TypeLogger), &log);
 	}
 	/* register solver command handler */
 	for (i = 0; i < MPT_arrsize(cmdsolv); i++) {
@@ -112,12 +102,12 @@ extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *c
 		if ((cmd = mpt_command_get(&dsp->_d, id))) {
 			cmd->cmd = (int (*)()) cmdsolv[i].ctl;
 			cmd->arg = cl;
-			mpt_output_log(out, __func__, MPT_LOG(Info), "%s: %"PRIxPTR" (%s)\n",
-				       MPT_tr("replaced handler id"), id, cmdsolv[i].name);
+			mpt_log(log, __func__, MPT_LOG(Info), "%s: %"PRIxPTR" (%s)\n",
+			        MPT_tr("replaced handler id"), id, cmdsolv[i].name);
 		}
 		else if (mpt_dispatch_set(dsp, id, (int (*)()) cmdsolv[i].ctl, cl) < 0) {
-			mpt_output_log(out, __func__, MPT_LOG(Warning), "%s: %"PRIxPTR" (%s)\n",
-				       MPT_tr("error registering handler id"), id, cmdsolv[i].name);
+			mpt_log(log, __func__, MPT_LOG(Warning), "%s: %"PRIxPTR" (%s)\n",
+			        MPT_tr("error registering handler id"), id, cmdsolv[i].name);
 		}
 	}
 	return 0;

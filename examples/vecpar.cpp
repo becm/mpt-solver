@@ -12,7 +12,6 @@
 # define mtrace()
 #endif
 
-using namespace mpt;
 using namespace mpt::solver;
 
 int main()

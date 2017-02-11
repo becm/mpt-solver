@@ -48,7 +48,7 @@ extern int mpt_output_pde(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 		hdr.mt.cmd   = MPT_ENUM(MessageValRaw);
 		hdr.mt.arg   = 0;
 		hdr.bnd.dim  = state & 0xff; /* special data state as dimension info */
-		hdr.bnd.type = MPT_ENUM(ByteOrderNative) | MPT_ENUM(ValuesFloat) | sizeof(t);
+		hdr.bnd.type = MPT_message_value(Float, t);
 		
 		/* push parameter data */
 		if ((ret = out->_vptr->push(out, sizeof(hdr), &hdr)) >= 0) {

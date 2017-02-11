@@ -107,7 +107,7 @@ static MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen, const
 		return 0;
 	}
 	p = *porg;
-	p.flags &= ~MPT_ENUM(PathHasArray);
+	p.flags &= ~MPT_PATHFLAG(HasArray);
 	
 	if (!(conf = mpt_node_query(conf, &p, -1))) {
 		return 0;
@@ -238,7 +238,7 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 		return 1;
 	}
 	p = *porg;
-	p.flags &= ~MPT_ENUM(PathHasArray);
+	p.flags &= ~MPT_PATHFLAG(HasArray);
 	
 	if (!(conf = mpt_node_query(conf->children, &p, -1))) {
 		return MPT_ERROR(BadArgument);
@@ -470,7 +470,8 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			if (mpt_bitmap_get(ctx.dat->mask, sizeof(ctx.dat->mask), i) > 0) {
 				continue;
 			}
-			mpt_output_data(ivp->pr.output, ctx.state, i, len, val+i, ld);
+			/* TODO: graphic target
+			 * mpt_output_data(ivp->pr.output, ctx.state, i, len, val+i, ld); */
 		}
 		if (!ret && log) {
 			mpt_solver_statistics((void *) sol, log, &ivp->ru_usr, &ivp->ru_sys);
@@ -625,6 +626,8 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(int (*uinit)(MPT_SOLVER(IVP) *, MPT
 	memset(&ivp->pr, 0, sizeof(ivp->pr));
 	ivp->sd = 0;
 	ivp->steps = 0;
+	
+	ivp->pr.output = mpt_output_local(0);
 	
 	ivp->sol = 0;
 	ivp->uinit = uinit;
