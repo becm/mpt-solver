@@ -14,9 +14,6 @@ extern double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacolout) *out, const MPT_SOLV
 	double *x, *y;
 	int wlen, kcol, nint, npts, neqs, deriv;
 	
-	if (!out) {
-		return 0;
-	}
 	if (out->nint) {
 		x = out->_xy.iov_base;
 		return x + out->nint + 1;

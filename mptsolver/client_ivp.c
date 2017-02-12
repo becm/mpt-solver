@@ -470,8 +470,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			if (mpt_bitmap_get(ctx.dat->mask, sizeof(ctx.dat->mask), i) > 0) {
 				continue;
 			}
-			/* TODO: graphic target
-			 * mpt_output_data(ivp->pr.output, ctx.state, i, len, val+i, ld); */
+			mpt_output_data(ivp->pr.output, ctx.state, i, len, val+i, ld);
 		}
 		if (!ret && log) {
 			mpt_solver_statistics((void *) sol, log, &ivp->ru_usr, &ivp->ru_sys);

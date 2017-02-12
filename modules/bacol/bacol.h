@@ -41,7 +41,7 @@ public:
 	inline const double *x() const
 	{ return (double *) _xy.iov_base; }
 	inline const double *y() const
-	{ return ((double *) _xy.iov_base) + nint + 1; }
+	{ return deriv ? 0 : ((double *) _xy.iov_base) + nint + 1; }
 	
 	inline int intervals() const
 	{ return nint; }
@@ -203,17 +203,16 @@ public:
 	}
 	inline const double *grid() const
 	{
-		return mpt_bacol_values(_out, this) ? static_cast<double *>(_out->xy.iov_base) : 0;
+		return _out ? _out->x() : 0;
 	}
 	inline const double *values() const
 	{
-		const double *v = mpt_bacol_values(_out, this);
-		return v && !_out->deriv ? v : 0;
+		return _out ? _out->y() : 0;
 	}
 	inline int updateOutput()
 	{
 		if (!_out) _out = new bacolout;
-		return mpt_bacol_values(_out, this) ? _out->nint+1 : static_cast<int>(BadOperation);
+		return mpt_bacol_values(_out, this) ? _out->intervals()+1 : BadOperation;
 	}
 };
 #endif
