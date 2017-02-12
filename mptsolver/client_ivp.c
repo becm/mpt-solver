@@ -177,7 +177,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			ctx.state = MPT_ENUM(DataStateInit);
 			mpt_solver_status((void *) sol, log, outPDE, &ctx);
 		}
-		if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("IVP client preparation finished"));
+		if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s", MPT_tr("IVP client preparation finished"));
 		
 		return 0;
 	}
@@ -185,7 +185,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		MPT_INTERFACE(logger) *log = ivp->pr.logger;
 		ret = mpt_node_parse(conf, val, log);
 		if (ret >= 0) {
-			if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s",
+			if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s",
 			                 MPT_tr("loaded IVP client config file"));
 		}
 		return ret;
@@ -283,7 +283,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 		if (ret < 0) {
 			return ret;
 		}
-		if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s: %s",
+		if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
 		                 MPT_tr("loaded solver config file"), val);
 	}
 	/* create time step source */
@@ -408,7 +408,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	if (ret < 0) {
 		return ret;
 	}
-	if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s", MPT_tr("IVP client preparation finished"));
+	if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s", MPT_tr("IVP client preparation finished"));
 	
 	return ret;
 }
@@ -527,7 +527,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		
 		getrusage(RUSAGE_SELF, &pre);
 		
-		if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s (t = %g > %g)",
+		if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s (t = %g > %g)",
 		                 MPT_tr("attempt solver step"), ivp->t, end);
 		
 		ivp->t = end;

@@ -90,6 +90,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		else if (mpt_config_set((void *) solv, 0, 0, 0, 0) < 0) {
 			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
 			                  MPT_tr("file not readable"), fname);
+			ev->id = 0;
 			return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 		}
 		cfg = mpt_config_get((void *) solv, "solconf", 0, 0);

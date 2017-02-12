@@ -181,7 +181,7 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		MPT_INTERFACE(logger) *log = nls->pr.logger;
 		ret = mpt_node_parse(conf, val, log);
 		if (ret >= 0) {
-			if (log) mpt_log(log, _func, MPT_CLIENT_LOGLEVEL, "%s: %s",
+			if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
 			                 MPT_tr("loaded NLS client config file"));
 		}
 		return ret;
