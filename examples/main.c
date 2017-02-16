@@ -4,8 +4,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <mpt/client.h>
-#include <mpt/array.h>
 #include <mpt/event.h>
 #include <mpt/notify.h>
 
@@ -21,13 +19,14 @@
 
 extern int main(int argc, char *argv[])
 {
-	struct mpt_notify *n;
+	struct mpt_notify no = MPT_NOTIFY_INIT;
+	struct mpt_dispatch disp = MPT_DISPATCH_INIT;
 	struct mpt_client *c;
 	
 	mtrace();
 	
 	/* create event handling */
-	if (!(n = mpt_init(argc, argv))) {
+	if (mpt_init(&no, argc, argv) < 0) {
 		perror("mpt_init failed");
 		return 1;
 	}
@@ -35,15 +34,15 @@ extern int main(int argc, char *argv[])
 	c = CREATE_CLIENT("mpt.client");
 	
 	/* setup dispatcher for solver client */
-	if (mpt_solver_events(n->_disp.arg, c) < 0) {
+	if (mpt_solver_events(&disp, c) < 0) {
 		perror("event setup failed");
 		return 2;
 	}
 	/* start event loop */
-	mpt_loop(n);
+	mpt_notify_setdispatch(&no, &disp);
+	mpt_loop(&no);
 	
-	mpt_notify_fini(n);
-	free(n);
+	mpt_notify_fini(&no);
 	
 	return 0;
 }
