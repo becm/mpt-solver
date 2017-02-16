@@ -29,6 +29,8 @@ struct NLS {
 	
 	MPT_STRUCT(proxy) pr;
 	
+	MPT_STRUCT(solver_output) out;
+	
 	MPT_SOLVER_STRUCT(data) *sd;
 	char*cfg;
 	
@@ -39,7 +41,7 @@ struct NLS {
 };
 struct _outNLSdata
 {
-	MPT_INTERFACE(output) *out;
+	MPT_STRUCT(solver_output) *out;
 	MPT_SOLVER_STRUCT(data) *dat;
 	int state;
 };
@@ -102,7 +104,7 @@ static MPT_INTERFACE(metatype) *queryNLS(const MPT_INTERFACE(config) *gen, const
 	MPT_STRUCT(path) p;
 	
 	if (!porg) {
-		return nls->pr._mt;
+		return nls->pr._ref;
 	}
 	if (!(conf = configNLS(nls->cfg))) {
 		return 0;
@@ -128,69 +130,80 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	struct _outNLSdata ctx;
 	struct NLS *nls = (void *) gen;
 	MPT_STRUCT(node) *conf;
-	MPT_SOLVER_STRUCT(data) *dat;
 	MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(logger) *info;
 	int ret;
+	
+	info = nls->out._info;
 	
 	if (!(conf = configNLS(nls->cfg))) {
 		return MPT_ERROR(BadOperation);
 	}
 	if (!porg) {
-		MPT_INTERFACE(logger) *log;
+		MPT_SOLVER_STRUCT(data) *dat;
 		MPT_SOLVER(NLS) *sol;
 		
-		mt = nls->pr._mt;
-		/* no prepare on output/solver assign */
-		if ((ret = mpt_proxy_assign(&nls->pr, val)) < 0 || val) {
-			if ((mt != nls->pr._mt)
-			    && !(nls->sol = (void *) mpt_solver_load(&nls->pr, MPT_SOLVER_ENUM(CapableNls), 0))) {
+		if (val) {
+			MPT_SOLVER(generic) *sol;
+			if (val->fmt) {
 				return MPT_ERROR(BadValue);
 			}
+			if (!val->ptr) {
+				if ((mt = nls->pr._ref)) {
+					mt->_vptr->ref.unref((void *) mt);
+				}
+				nls->pr._ref = 0;
+			}
+			ret = MPT_SOLVER_ENUM(CapableIvp);
+			if (!(sol = mpt_solver_load(&nls->pr, ret, val->ptr, info))) {
+				return MPT_ERROR(BadValue);
+			}
+			nls->sol = (void *) sol;
 			return ret;
 		}
-		log = nls->pr.logger;
 		if (!(dat = nls->sd)) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("missing data descriptor"));
+			if (info) mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                  MPT_tr("missing data descriptor"));
 			return MPT_ERROR(BadOperation);
 		}
 		if (!(sol = nls->sol)) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("missing solver descriptor"));
+			if (info) mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                  MPT_tr("missing solver descriptor"));
 			return MPT_ERROR(BadOperation);
 		}
-		mpt_solver_param((void *) sol, conf->children, 0, log);
+		mpt_solver_param((void *) sol, conf->children, 0, info);
 		
-		if ((ret = mpt_conf_history(nls->pr.output, conf->children)) < 0) {
+		if ((ret = mpt_conf_history(nls->out._data, conf->children)) < 0) {
 			return ret;
 		}
 		/* set solver parameters from argument */
-		if (log) {
-			mpt_solver_info((void *) sol, log);
-			mpt_log(log, 0, MPT_LOG(Message), "");
+		if (info) {
+			mpt_solver_info((void *) sol, info);
+			mpt_log(info, 0, MPT_LOG(Message), "");
 		}
-		ctx.out = nls->pr.output;
+		ctx.out = &nls->out;
 		ctx.dat = dat;
 		ctx.state = MPT_ENUM(DataStateInit);
 		
-		mpt_solver_status((void *) sol, log, outNLS, &ctx);
+		mpt_solver_status((void *) sol, info, outNLS, &ctx);
 		
 		return 0;
 	}
 	if (!porg->len) {
-		MPT_INTERFACE(logger) *log = nls->pr.logger;
-		ret = mpt_node_parse(conf, val, log);
-		if (ret >= 0) {
-			if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
-			                 MPT_tr("loaded NLS client config file"));
+		ret = mpt_node_parse(conf, val, info);
+		if (info && ret >= 0) {
+			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
+			        MPT_tr("loaded NLS client config file"));
 		}
 		return ret;
 	}
 	if (!(conf = mpt_node_assign(&conf->children, porg))
 	    || !(mt = conf->_meta)
 	    || (ret = mt->_vptr->assign(mt, val)) < 0) {
-		MPT_INTERFACE(logger) *log = nls->pr.logger;
-		if (log) mpt_log(log, _func, MPT_LOG(Critical), "%s", MPT_tr("unable to assign client element"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Critical), "%s",
+			        MPT_tr("unable to assign client element"));
+		}
 		return MPT_ERROR(BadOperation);
 	}
 	return ret;
@@ -208,18 +221,20 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 		MPT_INTERFACE(output) *out;
 		
 		/* close history output */
-		if ((out = nls->pr.output) && mpt_conf_history(out, 0) < 0) {
-			MPT_INTERFACE(logger) *log = nls->pr.logger;
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("unable to close history output"));
+		if ((out = nls->out._data) && mpt_conf_history(out, 0) < 0) {
+			MPT_INTERFACE(logger) *info = nls->out._info;
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("unable to close history output"));
+			}
 		}
 		if (nls->sd) {
 			mpt_data_clear(nls->sd);
 		}
-		if ((mt = nls->pr._mt)) {
+		if ((mt = nls->pr._ref)) {
 			mt->_vptr->ref.unref((void *) mt);
-			nls->pr._mt = 0;
-			nls->pr.hash = 0;
+			nls->pr._ref = 0;
+			nls->pr._hash = 0;
 			
 			nls->sol = 0;
 			return 1;
@@ -248,7 +263,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	static const char _func[] = "mpt::client<NLS>::init";
 	
 	struct NLS *nls = (void *) cl;
-	MPT_INTERFACE(logger) *log;
+	MPT_INTERFACE(logger) *info;
 	MPT_SOLVER_STRUCT(data) *dat;
 	MPT_STRUCT(node) *conf, *sol;
 	const char *val;
@@ -256,11 +271,13 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	
 	(void) args;
 	
-	log = nls->pr.logger;
+	info = nls->out._info;
 	
 	if (!(conf = configNLS(nls->cfg))) {
-		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-		                 MPT_tr("unable to get NLS client config"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+		                MPT_tr("unable to get NLS client config"));
+		}
 		return MPT_ERROR(BadOperation);
 	}
 	/* reevaluate solver config file */
@@ -269,11 +286,13 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	    && (val = mpt_node_data(sol, 0))) {
 		FILE *fd;
 		if (!(fd = fopen(val, "r"))) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s: %s: %s",
-			                 MPT_tr("failed to open"), MPT_tr("solver config"), val);
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s: %s: %s",
+			                MPT_tr("failed to open"), MPT_tr("solver config"), val);
+			}
 			return MPT_ERROR(BadOperation);
 		}
-		ret = mpt_node_read(sol, fd, "[ ] = !#", "ns", log);
+		ret = mpt_node_read(sol, fd, "[ ] = !#", "ns", info);
 		fclose(fd);
 		if (ret < 0) {
 			return ret;
@@ -281,7 +300,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	}
 	if (!(dat = nls->sd)) {
 		if (!(dat = malloc(sizeof(*dat)))) {
-			mpt_log(log, _func, MPT_LOG(Critical), "%s", MPT_tr("no memory for data"));
+			mpt_log(info, _func, MPT_LOG(Critical), "%s", MPT_tr("no memory for data"));
 			return MPT_ERROR(BadOperation);
 		}
 		mpt_data_init(dat);
@@ -292,26 +311,29 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 		mpt_data_clear(dat);
 	}
 	/* assign nls data */
-	if ((ret = mpt_conf_nls(dat, conf->children, log)) < 0) {
-		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-		                 MPT_tr("solver preparation failed"));
+	if ((ret = mpt_conf_nls(dat, conf->children, info)) < 0) {
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+		                MPT_tr("solver preparation failed"));
+		}
 		return ret;
 	}
 	/* rebind graphic associations */
-	mpt_conf_graphic(nls->pr.output, conf->children);
-	
+	if (nls->out._graphic) {
+		mpt_conf_graphic(nls->out._graphic, conf->children);
+	}
 	sol = mpt_node_find(conf, "solver", 1);
 	val = sol ? mpt_node_data(sol, 0) : 0;
-	nls->sol = (void *) mpt_solver_load(&nls->pr, MPT_SOLVER_ENUM(CapableNls), val);
 	
-	if (!nls->sol) {
+	if (!nls->sol
+	    && !(nls->sol = (void *) mpt_solver_load(&nls->pr, MPT_SOLVER_ENUM(CapableNls), val, info))) {
 		return MPT_ERROR(BadValue);
 	}
 	val = mpt_object_typename((void *) nls->sol);
-	if (val && log) {
-		mpt_log(log, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
+	if (val && info) {
+		mpt_log(info, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
-	if ((ret = nls->uinit(nls->sol, nls->sd, log)) < 0) {
+	if ((ret = nls->uinit(nls->sol, nls->sd, info)) < 0) {
 		return ret;
 	}
 	return 0;
@@ -320,7 +342,7 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 {
 	struct NLS *nls = (void *) cl;
 	MPT_SOLVER_STRUCT(data) *dat;
-	MPT_INTERFACE(logger) *log;
+	MPT_INTERFACE(logger) *info;
 	MPT_SOLVER(NLS) *sol;
 	MPT_STRUCT(node) *names;
 	struct _outNLSdata ctx;
@@ -330,7 +352,7 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	
 	(void) args;
 	
-	log = nls->pr.logger;
+	info = nls->out._info;
 	
 	if (!(sol = (void *) nls->sol) || !(dat = nls->sd)) {
 		return -1;
@@ -344,22 +366,26 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	mpt_timeradd_sys(&nls->ru_sys, &pre, &post);
 	mpt_timeradd_usr(&nls->ru_usr, &pre, &post);
 	
-	ctx.out = nls->pr.output;
+	if (!info) {
+		return res;
+	}
+	ctx.out = &nls->out;
 	ctx.dat = dat;
 	
+	/* select output state */
 	if (res < 0) {
 		ctx.state = MPT_ENUM(DataStateFail);
-		mpt_solver_status((void *) sol, log, outNLS, &ctx);
-		return res;
-	}
-	if (res) {
+	} else if (res) {
 		ctx.state = MPT_ENUM(DataStateStep);
-		mpt_solver_status((void *) sol, log, outNLS, &ctx);
+	} else {
+		ctx.state = MPT_ENUM(DataStateFini) | MPT_ENUM(DataStateStep);
+	}
+	mpt_solver_status((void *) sol, info, outNLS, &ctx);
+	
+	/* no current state */
+	if (!res) {
 		return res;
 	}
-	ctx.state = MPT_ENUM(DataStateFini) | MPT_ENUM(DataStateStep);
-	
-	mpt_solver_status((void *) sol, log, outNLS, &ctx);
 	
 	if ((names = configNLS(nls->cfg))
 	    && (names = mpt_node_find(names, "param", 1))) {
@@ -376,16 +402,16 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 				const char *name = mpt_node_ident(names);
 				names = names->next;
 				if (name) {
-					mpt_log(log, 0, MPT_LOG(Message), "%s %2d: %16g (%s)",
+					mpt_log(info, 0, MPT_LOG(Message), "%s %2d: %16g (%s)",
 					        desc, i+1, par[i], name);
 					continue;
 				}
 			}
-			mpt_log(log, 0, MPT_LOG(Message), "%s %2d: %16g",
+			mpt_log(info, 0, MPT_LOG(Message), "%s %2d: %16g",
 			        desc, i+1, par[i]);
 		}
 	}
-	mpt_solver_statistics((void *) sol, log, &nls->ru_usr, &nls->ru_sys);
+	mpt_solver_statistics((void *) sol, info, &nls->ru_usr, &nls->ru_sys);
 	
 	return res;
 }
@@ -408,6 +434,7 @@ static MPT_INTERFACE_VPTR(client) ctlNLS = {
  */
 extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER(NLS) *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *), const char *base)
 {
+	MPT_INTERFACE(output) *data;
 	struct NLS *nls;
 	
 	if (!uinit) {
@@ -426,7 +453,16 @@ extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER(NLS) *, MPT
 	(void) memset(&nls->pr, 0, sizeof(nls->pr));
 	nls->sd = 0;
 	
-	nls->pr.output = mpt_output_local(0);
+	data = mpt_output_local();
+	nls->out._data = data;
+	nls->out._graphic = 0;
+	nls->out._info = 0;
+	
+	if (data
+	    && data->_vptr->obj.addref((void *) data)
+	    && !(nls->out._info = mpt_output_logger(data))) {
+		data->_vptr->obj.ref.unref((void *) data);
+	}
 	
 	nls->sol = 0;
 	nls->uinit = uinit;

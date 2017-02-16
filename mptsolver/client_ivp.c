@@ -29,6 +29,8 @@ struct IVP {
 	
 	MPT_STRUCT(proxy) pr;
 	
+	MPT_STRUCT(solver_output) out;
+	
 	MPT_INTERFACE(metatype) *steps;
 	MPT_SOLVER_STRUCT(data) *sd;
 	char *cfg;
@@ -44,7 +46,7 @@ struct IVP {
 /* output for PDE solvers */
 struct _clientPdeOut
 {
-	MPT_INTERFACE(output) *out;
+	MPT_STRUCT(solver_output) *out;
 	MPT_SOLVER_STRUCT(data) *dat;
 	int state;
 };
@@ -98,7 +100,7 @@ static MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen, const
 		return 0;
 	}
 	if (!porg) {
-		return ivp->pr._mt;
+		return ivp->pr._ref;
 	}
 	if (!porg->len) {
 		return conf->_meta;
@@ -119,82 +121,96 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	static const char _func[] = "mpt::client<IVP>::assign";
 	struct IVP *ivp = (void *) gen;
 	MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(logger) *info;
 	MPT_STRUCT(node) *conf;
 	int ret;
 	
 	if (!(conf = configIVP(ivp->cfg))) {
 		return MPT_ERROR(BadOperation);
 	}
+	info = ivp->out._info;
+	
 	if (!porg) {
 		MPT_SOLVER_STRUCT(data) *dat;
-		MPT_INTERFACE(logger) *log;
 		MPT_SOLVER(IVP) *sol;
 		
-		mt = ivp->pr._mt;
-		/* no prepare on output/solver assign */
-		if ((ret = mpt_proxy_assign(&ivp->pr, val)) < 0 || val) {
-			if ((mt != ivp->pr._mt)
-			    && !(ivp->sol = (void *) mpt_solver_load(&ivp->pr, MPT_SOLVER_ENUM(CapableIvp), 0))) {
+		if (val) {
+			MPT_SOLVER(generic) *sol;
+			if (val->fmt || !val->ptr) {
 				return MPT_ERROR(BadValue);
 			}
+			ret = MPT_SOLVER_ENUM(CapableIvp);
+			if (!(sol = mpt_solver_load(&ivp->pr, ret, val->ptr, info))) {
+				return MPT_ERROR(BadValue);
+			}
+			ivp->sol = (void *) sol;
 			return ret;
 		}
-		log = ivp->pr.logger;
 		if (!(dat = ivp->sd)) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("missing data descriptor"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("missing data descriptor"));
+			}
 			return MPT_ERROR(BadOperation);
 		}
 		if (!(sol = ivp->sol)) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("missing solver descriptor"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("missing solver descriptor"));
+			}
 			return MPT_ERROR(BadOperation);
 		}
 		/* setup history */
-		if ((ret = mpt_conf_history(ivp->pr.output, conf->children)) < 0) {
+		if (ivp->out._data
+		    && (ret = mpt_conf_history(ivp->out._data, conf->children)) < 0) {
 			return ret;
 		}
 		/* set solver parameters */
-		mpt_solver_param((void *) sol, conf->children, 0, log);
+		mpt_solver_param((void *) sol, conf->children, 0, info);
 		
 		/* prepare solver */
 		if ((ret = sol->_vptr->step(sol, 0)) < 0) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("solver backend prepare failed"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("solver backend prepare failed"));
+			}
 			return ret;
 		}
-		if (log) {
-			mpt_solver_info((void *) sol, log);
-			mpt_log(log, 0, MPT_LOG(Message), "");
+		if (info) {
+			mpt_solver_info((void *) sol, info);
+			mpt_log(info, 0, MPT_LOG(Message), "");
 		}
-		if (!ivp->pdim || !ivp->pr.output) {
-			mpt_solver_status((void *) sol, log, 0, 0);
+		if (!ivp->pdim) {
+			mpt_solver_status((void *) sol, info, 0, 0);
 		}
 		else {
 			struct _clientPdeOut ctx;
-			ctx.out = ivp->pr.output;
+			ctx.out = &ivp->out;
 			ctx.dat = ivp->sd;
 			ctx.state = MPT_ENUM(DataStateInit);
-			mpt_solver_status((void *) sol, log, outPDE, &ctx);
+			mpt_solver_status((void *) sol, info, outPDE, &ctx);
 		}
-		if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s", MPT_tr("IVP client preparation finished"));
-		
+		if (info) {
+			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
+			        MPT_tr("IVP client preparation finished"));
+		}
 		return 0;
 	}
 	if (!porg->len) {
-		MPT_INTERFACE(logger) *log = ivp->pr.logger;
-		ret = mpt_node_parse(conf, val, log);
-		if (ret >= 0) {
-			if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s",
-			                 MPT_tr("loaded IVP client config file"));
+		ret = mpt_node_parse(conf, val, info);
+		if (info && ret >= 0) {
+			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
+			        MPT_tr("loaded IVP client config file"));
 		}
 		return ret;
 	}
 	if (!(conf = mpt_node_assign(&conf->children, porg))
 	    || !(mt = conf->_meta)
 	    || (ret = mt->_vptr->assign(mt, val)) < 0) {
-		MPT_INTERFACE(logger) *log = ivp->pr.logger;
-		if (log) mpt_log(log, _func, MPT_LOG(Critical), "%s", MPT_tr("unable to assign client element"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Critical), "%s",
+			        MPT_tr("unable to assign client element"));
+		}
 		return MPT_ERROR(BadOperation);
 	}
 	return ret;
@@ -212,18 +228,21 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 		MPT_INTERFACE(output) *out;
 		
 		/* close history output */
-		if ((out = ivp->pr.output) && mpt_conf_history(out, 0) < 0) {
-			MPT_INTERFACE(logger) *log = ivp->pr.logger;
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("unable to close history output"));
+		if ((out = ivp->out._data)
+		    && mpt_conf_history(out, 0) < 0) {
+			MPT_INTERFACE(logger) *info = ivp->out._info;
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("unable to close history output"));
+			}
 		}
 		if (ivp->sd) {
 			mpt_data_clear(ivp->sd);
 		}
-		if ((mt = ivp->pr._mt)) {
+		if ((mt = ivp->pr._ref)) {
 			mt->_vptr->ref.unref((void *) mt);
-			ivp->pr._mt = 0;
-			ivp->pr.hash = 0;
+			ivp->pr._ref = 0;
+			ivp->pr._hash = 0;
 			
 			ivp->sol = 0;
 			return 1;
@@ -255,17 +274,19 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	MPT_STRUCT(node) *conf, *curr;
 	MPT_SOLVER_STRUCT(data) *dat;
 	MPT_INTERFACE(metatype) *m;
-	MPT_INTERFACE(logger) *log;
+	MPT_INTERFACE(logger) *info;
 	const char *val;
 	int ret;
 	
 	(void) args;
 	
-	log = ivp->pr.logger;
+	info = ivp->out._info;
 	
 	if (!(conf = configIVP(ivp->cfg))) {
-		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s: %s",
-		                 MPT_tr("failed to query"), MPT_tr("client configuration"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+		                MPT_tr("failed to query"), MPT_tr("client configuration"));
+		}
 		return MPT_ERROR(BadOperation);
 	}
 	/* reevaluate solver config file */
@@ -274,17 +295,21 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	    && (val = mpt_node_data(curr, 0))) {
 		FILE *fd;
 		if (!(fd = fopen(val, "r"))) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s: %s: %s",
-			                 MPT_tr("failed to open"), MPT_tr("solver config"), val);
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s: %s: %s",
+			                MPT_tr("failed to open"), MPT_tr("solver config"), val);
+			}
 			return MPT_ERROR(BadOperation);
 		}
-		ret = mpt_node_read(curr, fd, "[ ] = !#", "ns", log);
+		ret = mpt_node_read(curr, fd, "[ ] = !#", "ns", info);
 		fclose(fd);
 		if (ret < 0) {
 			return ret;
 		}
-		if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
-		                 MPT_tr("loaded solver config file"), val);
+		if (info) {
+			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
+		                MPT_tr("loaded solver config file"), val);
+		}
 	}
 	/* create time step source */
 	if (!(curr = mpt_node_find(conf, "times", 1))) {
@@ -295,8 +320,10 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 		val = mpt_node_data(curr, 0);
 		
 		if (!val || !(m = mpt_iterator_create(val))) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s: %s",
-			                 MPT_tr("failed to query"), MPT_tr("client configuration"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+			                MPT_tr("failed to query"), MPT_tr("client configuration"));
+			}
 			return MPT_ERROR(BadValue);
 		}
 		if ((old = ivp->steps)) {
@@ -306,8 +333,10 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	}
 	ivp->t = 0;
 	if (m && (ret = m->_vptr->conv(m, 'd' | MPT_ENUM(ValueConsume), &ivp->t)) <= 0) {
-		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s: %s",
-		                 MPT_tr("failed to query"), MPT_tr("initial time value"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+		                MPT_tr("failed to query"), MPT_tr("initial time value"));
+		}
 		return MPT_ERROR(BadValue);
 	}
 	/* clear existing solver data */
@@ -320,15 +349,18 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 		ivp->sd = dat;
 	}
 	else {
-		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s: %s",
-		                 MPT_tr("failed to create"), MPT_tr("solver data"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+		                MPT_tr("failed to create"), MPT_tr("solver data"));
+		}
 		return MPT_ERROR(BadOperation);
 	}
 	/* get PDE grid data */
 	if ((curr = mpt_node_next(conf->children, "grid"))) {
-		if ((ret = mpt_conf_grid(&dat->val, curr)) < 0) {
-			if (log) mpt_log(log, _func, MPT_LOG(Warning), "%s: %s",
-			                 "grid", MPT_tr("invalid parameter format"));
+		if ((ret = mpt_conf_grid(&dat->val, curr)) < 0
+		    && info) {
+			mpt_log(info, _func, MPT_LOG(Warning), "%s: %s",
+			        "grid", MPT_tr("invalid parameter format"));
 		}
 		dat->nval = ret;
 	}
@@ -336,15 +368,19 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	else {
 		/* save initial time value */
 		if (!mpt_array_append(&dat->val, sizeof(ivp->t), &ivp->t)) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("unable to save initial time in history"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("unable to save initial time in history"));
+			}
 			return MPT_ERROR(BadOperation);
 		}
 		/* add profile values */
 		if ((curr = mpt_node_next(conf->children, "profile"))
 		    && (ret = mpt_conf_param(&dat->val, curr, 1)) < 0) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("failed to reserve initial data"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("failed to reserve initial data"));
+			}
 			return ret;
 		}
 	}
@@ -352,34 +388,40 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	if ((curr = conf->children)
 	    && (curr = mpt_node_next(curr, "param"))) {
 		if ((ret = mpt_conf_param(&dat->param, curr, 0)) < 0) {
-			if (log) mpt_log(log, _func, MPT_LOG(Warning), "%s: %s",
-			                 "param", MPT_tr("invalid parameter format"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Warning), "%s: %s",
+			                "param", MPT_tr("invalid parameter format"));
+			}
 		}
 		dat->npar = ret;
 	}
-	mpt_conf_graphic(ivp->pr.output, conf);
-	
+	if (ivp->out._graphic) {
+		mpt_conf_graphic(ivp->out._graphic, conf);
+	}
 	/* load new solver or evaluate existing */
 	curr = mpt_node_find(conf, "solver", 1);
 	val = curr ? mpt_node_data(curr, 0) : 0;
-	ivp->sol = (void *) mpt_solver_load(&ivp->pr, MPT_SOLVER_ENUM(CapableIvp), val);
+	ivp->sol = (void *) mpt_solver_load(&ivp->pr, MPT_SOLVER_ENUM(CapableIvp), val, info);
 	
 	if (!ivp->sol) {
 		return MPT_ERROR(BadValue);
 	}
 	val = mpt_object_typename((void *) ivp->sol);
-	if (val && log) {
-		mpt_log(log, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
+	if (val && info) {
+		mpt_log(info, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
 	
-	if ((ret = ivp->uinit(ivp->sol, dat, log)) < 0) {
+	if ((ret = ivp->uinit(ivp->sol, dat, info)) < 0) {
 		return ret;
 	}
 	/* setup PDE time data */
 	if ((ivp->pdim = dat->nval)) {
 		int err;
 		if ((err = mpt_object_set((void *) ivp->sol, 0, "d", ivp->t)) < 0) {
-			if (log) mpt_log(log, 0, MPT_LOG(Error), "%s: %s", MPT_tr("solver"), MPT_tr("failed to set initial time"));
+			if (info) {
+				mpt_log(info, 0, MPT_LOG(Error), "%s: %s",
+				        MPT_tr("solver"), MPT_tr("failed to set initial time"));
+			}
 			return err;
 		}
 	}
@@ -394,22 +436,26 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 		double *pdata;
 		
 		if (!(pdata = ivp->sol->_vptr->initstate(ivp->sol))) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("failed to get initial state"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("failed to get initial state"));
+			}
 			return MPT_ERROR(BadOperation);
 		}
 		pcfg = mpt_node_next(conf->children, "profile");
 		grid = mpt_data_grid(dat);
 		
-		if ((ret = mpt_conf_profiles(dat->nval, pdata, ret, pcfg, grid, log)) < 0) {
+		if ((ret = mpt_conf_profiles(dat->nval, pdata, ret, pcfg, grid, info)) < 0) {
 			return ret;
 		}
 	}
 	if (ret < 0) {
 		return ret;
 	}
-	if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s", MPT_tr("IVP client preparation finished"));
-	
+	if (info) {
+		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
+		        MPT_tr("IVP client preparation finished"));
+	}
 	return ret;
 }
 /* step operation on solver */
@@ -419,23 +465,27 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 	
 	struct IVP *ivp = (void *) cl;
 	MPT_INTERFACE(metatype) *src;
-	MPT_INTERFACE(logger) *log;
+	MPT_INTERFACE(logger) *info;
 	MPT_SOLVER(IVP) *sol;
 	struct _clientPdeOut ctx;
 	struct rusage pre, post;
 	double end;
 	int ret;
 	
-	log = ivp->pr.logger;
+	info = ivp->out._info;
 	
 	if (!(sol = ivp->sol) || !(ctx.dat = ivp->sd)) {
-		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-		                 MPT_tr("client not prepared for step operation"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+		                MPT_tr("client not prepared for step operation"));
+		}
 		return MPT_ERROR(BadOperation);
 	}
 	if (!(src = arg) && !(src = ivp->steps)) {
-		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-		                 MPT_tr("no time step source"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+		                MPT_tr("no time step source"));
+		}
 		return MPT_ERROR(BadArgument);
 	}
 	/* execute ODE steps */
@@ -446,7 +496,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		/* current time data */
 		getrusage(RUSAGE_SELF, &pre);
 		/* execute possible steps */
-		ret = mpt_steps_ode(ivp->sol, src, ivp->sd, log);
+		ret = mpt_steps_ode(ivp->sol, src, ivp->sd, info);
 		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
 		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
@@ -464,58 +514,76 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		val = mpt_data_grid(ctx.dat);
 		len = ctx.dat->val._buf->used / sizeof(*val) / ld;
 		
-		mpt_output_history(ivp->pr.output, len, val, 1, 0, ld - 1);
-		
-		for (i = 0; i < ld; i++) {
-			if (mpt_bitmap_get(ctx.dat->mask, sizeof(ctx.dat->mask), i) > 0) {
-				continue;
-			}
-			mpt_output_data(ivp->pr.output, ctx.state, i, len, val+i, ld);
+		if (ivp->out._data) {
+			mpt_output_history(ivp->out._data, len, val, 1, 0, ld - 1);
 		}
-		if (!ret && log) {
-			mpt_solver_statistics((void *) sol, log, &ivp->ru_usr, &ivp->ru_sys);
+		if (ivp->out._graphic) {
+			for (i = 0; i < ld; i++) {
+				if (mpt_bitmap_get(ctx.dat->mask, sizeof(ctx.dat->mask), i) > 0) {
+					continue;
+				}
+				mpt_output_data(ivp->out._graphic, ctx.state, i, len, val+i, ld);
+			}
+		}
+		if (!ret && info) {
+			mpt_solver_statistics((void *) sol, info, &ivp->ru_usr, &ivp->ru_sys);
 		}
 		return ret;
 	}
 	/* get current target from time source */
 	if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) {
-		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-		                 MPT_tr("bad value on time argument"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+		                MPT_tr("bad value on time argument"));
+		}
 		return ret;
 	}
 	if (!ret) {
-		if (log) mpt_log(log, _func, MPT_LOG(Warning), "%s",
-		                 MPT_tr("no further values in time source"));
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Warning), "%s",
+		                MPT_tr("no further values in time source"));
+		}
 		return 0;
 	}
 	/* time soure date too low */
 	while (end <= ivp->t) {
-		if (log) mpt_log(log, _func, MPT_LOG(Info), "%s (%g <= %g)",
-		                 MPT_tr("skip time value argument"), end, ivp->t);
-		
+		if (info) {
+			mpt_log(info, _func, MPT_LOG(Info), "%s (%g <= %g)",
+		                MPT_tr("skip time value argument"), end, ivp->t);
+		}
 		if ((ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &end)) < 0) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("bad value on time argument"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("bad value on time argument"));
+			}
 			return ret;
 		}
 		if (!ret) {
-			if (log) mpt_log(log, _func, MPT_LOG(Info), "%s",
-			                 MPT_tr("no further data in time argument"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Info), "%s",
+			                MPT_tr("no further data in time argument"));
+			}
 			return 0;
 		}
 		if (!(ret & MPT_ENUM(ValueConsume))) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("time source is not signaling advancement"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("time source is not signaling advancement"));
+			}
 			return MPT_ERROR(BadOperation);
 		}
 		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) {
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-			                 MPT_tr("bad value on time argument"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+			                MPT_tr("bad value on time argument"));
+			}
 			return ret;
 		}
 		if (!ret) {
-			if (log) mpt_log(log, _func, MPT_LOG(Info), "%s",
-			                 MPT_tr("no further data in time argument"));
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Info), "%s",
+			                MPT_tr("no further data in time argument"));
+			}
 			return 0;
 		}
 	}
@@ -526,14 +594,17 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		
 		getrusage(RUSAGE_SELF, &pre);
 		
-		if (log) mpt_log(log, _func, MPT_CLIENT_LOG_STATUS, "%s (t = %g > %g)",
-		                 MPT_tr("attempt solver step"), ivp->t, end);
-		
+		if (info) {
+			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s (t = %g > %g)",
+		                MPT_tr("attempt solver step"), ivp->t, end);
+		}
 		ivp->t = end;
 		if ((ret = sol->_vptr->step(sol, &ivp->t)) < 0) {
 			ctx.state |= MPT_ENUM(DataStateFail);
-			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s (t = %g)",
-			                 MPT_tr("solver step failed"), ivp->t);
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s (t = %g)",
+			                MPT_tr("solver step failed"), ivp->t);
+			}
 			break;
 		}
 		getrusage(RUSAGE_SELF, &post);
@@ -541,7 +612,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
 		
 		if (ivp->t < end) {
-			mpt_solver_status((void *) sol, log, outPDE, &ctx);
+			mpt_solver_status((void *) sol, info, outPDE, &ctx);
 			continue;
 		}
 		
@@ -549,8 +620,10 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 		while (1) {
 			int curr;
 			if ((curr = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &end)) < 0) {
-				if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-				                 MPT_tr("bad argument on time source"));
+				if (info) {
+					mpt_log(info, _func, MPT_LOG(Error), "%s",
+				                MPT_tr("bad argument on time source"));
+				}
 				ret = curr;
 				break;
 			}
@@ -560,8 +633,10 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 				break;
 			}
 			if ((curr = src->_vptr->conv(src, 'd', &end)) < 0) {
-				if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-				                 MPT_tr("bad argument on time source"));
+				if (info) {
+					mpt_log(info, _func, MPT_LOG(Error), "%s",
+				                MPT_tr("bad argument on time source"));
+				}
 				ret = curr;
 				break;
 			}
@@ -573,14 +648,15 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *arg)
 			if (end > ivp->t) {
 				break;
 			}
-			if (log) mpt_log(log, _func, MPT_LOG(Info), "%s (%g < %g)",
-			                 MPT_tr("skip time value argument"), end, ivp->t);
+			if (info) {
+				mpt_log(info, _func, MPT_LOG(Info), "%s (%g < %g)",
+			                MPT_tr("skip time value argument"), end, ivp->t);
+			}
 		}
-		if ((ctx.out = ivp->pr.output)) {
-			mpt_solver_status((void *) sol, log, outPDE, &ctx);
-		}
-		if (!ret && log) {
-			mpt_solver_statistics((void *) sol, log, &ivp->ru_usr, &ivp->ru_sys);
+		mpt_solver_status((void *) sol, info, outPDE, &ctx);
+		
+		if (!ret && info) {
+			mpt_solver_statistics((void *) sol, info, &ivp->ru_usr, &ivp->ru_sys);
 		}
 		if (!arg || ret < 1) {
 			break;
@@ -607,6 +683,7 @@ static const MPT_INTERFACE_VPTR(client) clientIVP = {
  */
 extern MPT_INTERFACE(client) *mpt_client_ivp(int (*uinit)(MPT_SOLVER(IVP) *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *), const char *base)
 {
+	MPT_INTERFACE(output) *data;
 	struct IVP *ivp;
 	
 	if (!uinit) {
@@ -626,7 +703,16 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(int (*uinit)(MPT_SOLVER(IVP) *, MPT
 	ivp->sd = 0;
 	ivp->steps = 0;
 	
-	ivp->pr.output = mpt_output_local(0);
+	data = mpt_output_local();
+	ivp->out._data = data;
+	ivp->out._graphic = 0;
+	ivp->out._info = 0;
+	
+	if (data
+	    && data->_vptr->obj.addref((void *) data)
+	    && !(ivp->out._info = mpt_output_logger(data))) {
+		data->_vptr->obj.ref.unref((void *) data);
+	}
 	
 	ivp->sol = 0;
 	ivp->uinit = uinit;

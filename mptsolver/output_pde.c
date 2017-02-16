@@ -14,6 +14,26 @@
 
 #include "solver.h"
 
+static void outputTime(MPT_STRUCT(output) *out, int state, double t)
+{
+	struct {
+		MPT_STRUCT(msgtype) mt;
+		MPT_STRUCT(msgbind) bnd;
+	} hdr;
+	
+	hdr.mt.cmd   = MPT_ENUM(MessageValRaw);
+	hdr.mt.arg   = 0; /* indicate special data */
+	hdr.bnd.dim  = state & 0xff; /* repurpose dimension as special data state */
+	hdr.bnd.type = MPT_message_value(Float, t);
+	
+	/* push parameter data */
+	if (out->_vptr->push(out, sizeof(hdr), &hdr) < 0) {
+		return;
+	}
+	out->_vptr->push(out, sizeof(t), &t);
+	out->_vptr->push(out, 0, 0);
+}
+
 /*!
  * \ingroup mptSolver
  * \brief NLS data output
@@ -27,8 +47,9 @@
  * 
  * \return message push result
  */
-extern int mpt_output_pde(MPT_INTERFACE(output) *out, int state, const MPT_STRUCT(value) *val, const MPT_SOLVER_STRUCT(data) *dat)
+extern int mpt_output_pde(MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_SOLVER_STRUCT(data) *dat)
 {
+	MPT_INTERFACE(output) *raw, *grf;
 	const struct iovec *vec;
 	const char *fmt;
 	const double *grid, *y;
@@ -37,26 +58,19 @@ extern int mpt_output_pde(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 	if (!val || !(fmt = val->fmt) || !(vec = val->ptr)) {
 		return MPT_ERROR(BadArgument);
 	}
+	if (!(raw = out->_data)
+	    && !(grf = out->_graphic)) {
+		return 0;
+	}
 	if (*fmt == 'd') {
-		struct {
-			MPT_STRUCT(msgtype) mt;
-			MPT_STRUCT(msgbind) bnd;
-		} hdr;
 		const double *t = val->ptr;
-		int ret;
 		
-		hdr.mt.cmd   = MPT_ENUM(MessageValRaw);
-		hdr.mt.arg   = 0;
-		hdr.bnd.dim  = state & 0xff; /* special data state as dimension info */
-		hdr.bnd.type = MPT_message_value(Float, t);
-		
-		/* push parameter data */
-		if ((ret = out->_vptr->push(out, sizeof(hdr), &hdr)) >= 0) {
-			if ((ret = out->_vptr->push(out, sizeof(*t), t)) < 0
-			    || out->_vptr->push(out, 0, 0) < 0) {
-				out->_vptr->push(out, 1, 0);
-				return ret;
-			}
+		/* push time data */
+		if (raw) {
+			outputTime(raw, state, *t);
+		}
+		if (grf && (grf != raw)) {
+			outputTime(grf, state, *t);
 		}
 		vec = (void *) (t+1);
 		++fmt;
@@ -95,16 +109,22 @@ extern int mpt_output_pde(MPT_INTERFACE(output) *out, int state, const MPT_STRUC
 	}
 	
 	if (grid) {
-		mpt_output_history(out, glen, grid, 1, y, ld);
-		if (!dat || mpt_bitmap_get(dat->mask, sizeof(dat->mask), 0) <= 0) {
-			mpt_output_data(out, state, 0, glen, grid, 1);
+		if (raw) {
+			mpt_output_history(raw, glen, grid, 1, y, ld);
 		}
+		if (grf
+		    && (!dat || mpt_bitmap_get(dat->mask, sizeof(dat->mask), 0) <= 0)) {
+			mpt_output_data(grf, state, 0, glen, grid, 1);
+		}
+	}
+	if (!grf) {
+		return ld;
 	}
 	for (i = 1; i <= ld; i++) {
 		if (dat && mpt_bitmap_get(dat->mask, sizeof(dat->mask), i) > 0) {
 			continue;
 		}
-		mpt_output_data(out, state, i, glen, y++, ld);
+		mpt_output_data(grf, state, i, glen, y++, ld);
 	}
 	return ld;
 }

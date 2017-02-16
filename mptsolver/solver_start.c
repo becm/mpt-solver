@@ -61,7 +61,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	else {
 		MPT_INTERFACE(metatype) *cfg;
 		const char *fname, *cname;
-		char *rname, buf[1024];
+		char *rname, buf[128];
 		
 		cfg = mpt_config_get((void *) solv, 0, 0, 0);
 		fname = cfg ? mpt_meta_data(cfg, 0) : 0;

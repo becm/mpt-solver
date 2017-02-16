@@ -31,6 +31,20 @@ MPT_STRUCT(event);
 MPT_STRUCT(proxy);
 MPT_STRUCT(path);
 
+MPT_STRUCT(solver_output)
+{
+#ifdef __cplusplus
+	Reference<output> data;
+	Reference<output> graphic;
+	Reference<logger> info;
+#else
+# define MPT_SOLVER_OUTPUT_INIT { 0, 0, 0 }
+	MPT_INTERFACE(output) *_data;
+	MPT_INTERFACE(output) *_graphic;
+	MPT_INTERFACE(logger) *_info;
+#endif
+};
+
 #ifndef __cplusplus
 # ifndef __MPT_IVP_RTOL
 #  define __MPT_IVP_RTOL  1e-4
@@ -421,22 +435,22 @@ MPT_SOLVER(IVP)
 #endif
 
 MPT_SOLVER_STRUCT(data)
+#ifdef _MPT_ARRAY_H
 {
-#ifdef __cplusplus
+# ifdef __cplusplus
 	inline data() : npar(0), nval(0)
 	{ for (size_t i = 0; i < sizeof(mask)/sizeof(*mask); ++i) mask[i] = 0; }
+# endif
+	_MPT_ARRAY_TYPE(double) param;  /* parameter matrix */
+	_MPT_ARRAY_TYPE(double) val;    /* input/output (matrix) data */
+	
+	int npar;  /* leading dimension of parameter data */
+	int nval;  /* length of value matrix row */
+	
+	uint8_t mask[24];  /* masked dimensions (0..191) */
+}
 #endif
-#ifdef _MPT_ARRAY_H
-	MPT_STRUCT(array)
-#else
-	struct { void *base; }
-#endif
-	                  param,    /* parameter matrix */
-	                  val;      /* input/output (matrix) data */
-	int               npar,     /* leading dimension of parameter data */
-	                  nval;     /* length of value matrix row */
-	uint8_t           mask[24]; /* masked dimensions (0..191) */
-};
+;
 
 __MPT_EXTDECL_BEGIN
 
@@ -499,7 +513,7 @@ extern int mpt_residuals_cdiff(void *, double , const double *, double *, const 
 /* generate library description form short form */
 extern const char *mpt_solver_alias(const char *);
 /* load solver of specific type */
-extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *, int , const char *);
+extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *, int , const char *, MPT_INTERFACE(logger) *);
 
 /* set solver parameter */
 extern int  mpt_solver_pset (MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
@@ -514,8 +528,8 @@ extern void mpt_solver_statistics(MPT_SOLVER(generic) *, MPT_INTERFACE(logger) *
 
 
 /* output for NLS solvers */
-extern int mpt_output_nls(MPT_INTERFACE(output) *, int , const MPT_STRUCT(value) *, const MPT_SOLVER_STRUCT(data) *);
-extern int mpt_output_pde(MPT_INTERFACE(output) *, int , const MPT_STRUCT(value) *, const MPT_SOLVER_STRUCT(data) *);
+extern int mpt_output_nls(MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_SOLVER_STRUCT(data) *);
+extern int mpt_output_pde(MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_SOLVER_STRUCT(data) *);
 
 
 /* solver module data management */
