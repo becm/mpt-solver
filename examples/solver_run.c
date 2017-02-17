@@ -3,13 +3,13 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
+
 #include <mpt/event.h>
+#include <mpt/client.h>
+
 #include <mpt/notify.h>
 
-#ifndef CREATE_CLIENT
-# error: client creator undefined
-#endif
+#include <mpt/solver.h>
 
 #ifdef __GLIBC__
 # include <mcheck.h>
@@ -17,12 +17,10 @@
 # define mtrace()
 #endif
 
-extern int main(int argc, char *argv[])
+static struct mpt_notify no = MPT_NOTIFY_INIT;
+
+extern int client_init(int argc, char *argv[])
 {
-	struct mpt_notify no = MPT_NOTIFY_INIT;
-	struct mpt_dispatch disp = MPT_DISPATCH_INIT;
-	struct mpt_client *c;
-	
 	mtrace();
 	
 	/* create event handling */
@@ -30,8 +28,12 @@ extern int main(int argc, char *argv[])
 		perror("mpt_init failed");
 		return 1;
 	}
-	/* setup problem type client */
-	c = CREATE_CLIENT("mpt.client");
+	return 0;
+}
+
+extern int solver_run(struct mpt_client *c)
+{
+	struct mpt_dispatch disp = MPT_DISPATCH_INIT;
 	
 	/* setup dispatcher for solver client */
 	if (mpt_solver_events(&disp, c) < 0) {

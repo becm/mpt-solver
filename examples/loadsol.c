@@ -43,11 +43,11 @@ int main(void)
 	const char txt[] = "load: ";
 	char buf[128];
 	MPT_STRUCT(proxy) p = MPT_PROXY_INIT;
-	
+	MPT_INTERFACE(logger) *log;
 	mtrace();
 	
 	mpt_config_load(getenv("MPT_PREFIX"), 0, 0);
-	p.logger = mpt_log_default();
+	log = mpt_log_default();
 	
 	fputs(txt, stdout);
 	while (fgets(buf, sizeof(buf), stdin)) {
@@ -56,16 +56,18 @@ int main(void)
 		if (!(len = strlen(buf))) break;
 		buf[len-1] = '\0';
 		
-		if ((s = mpt_solver_load(&p, 0, buf))) {
+		if ((s = mpt_solver_load(&p, 0, buf, log))) {
 			const char *n;
 			if ((n = mpt_object_typename((void *) s))) {
 				puts(n);
 			}
 			s->_vptr->report(s, -1, wrap_fw, stdout);
-			p._mt->_vptr->ref.unref((void *) p._mt);
-			p._mt = 0;
 		}
 		fputs(txt, stdout);
+	}
+	if (p._ref) {
+		p._ref->_vptr->ref.unref((void *) p._ref);
+		p._ref = 0;
 	}
 	
 	return 0;

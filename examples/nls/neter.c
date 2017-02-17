@@ -2,12 +2,9 @@
  * overdetemined NLEQ example with solver interface
  */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 
-#include <mpt/array.h>
-#include <mpt/solver.h>
+#include "solver_nls.h"
 
 /*  model for p1 * exp(p2 * x) by Neter (1983) */
 static double model(double x, const double *p)

@@ -1,7 +1,6 @@
 /*!
- *  create main routine for DAE problems
+ *  define IVP user init parameters
  */
 #include <mpt/solver.h>
+#include "solver_run.h"
 extern int user_init(MPT_SOLVER(IVP) *, MPT_SOLVER_STRUCT(data) *, MPT_INTERFACE(logger) *);
-#define CREATE_CLIENT(x) mpt_client_ivp(user_init, (x))
-#include "../main.c"

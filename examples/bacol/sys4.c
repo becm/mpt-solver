@@ -2,7 +2,7 @@
  * sys4.c: BACOL user functions for PDE system
  */
 
-#include <mpt/solver.h>
+#include "solver_ivp.h"
 
 void derivf_(
 	double *t, double *x,
