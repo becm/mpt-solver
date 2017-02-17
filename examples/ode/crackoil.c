@@ -2,8 +2,7 @@
  * ODE example: Crackoil
  */
 
-#include <mpt/array.h>
-#include <mpt/solver.h>
+#include "solver_ivp.h"
 
 static double theta[3] = { 11.948, 7.993, 2.024 };
 

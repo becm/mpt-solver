@@ -6,7 +6,7 @@ OBJS  = main.o $(PROGS:%=%.o)
 # general targets and definitions
 include ../solver.example.mk
 
-${PROGS} ${STATIC} : main.o
+${PROGS} ${STATIC} : ../main_ivp.o ../solver_run.o
 
 cakzo : cakzo.o
 cakzo cakzo_static : LDLIBS+=-lm

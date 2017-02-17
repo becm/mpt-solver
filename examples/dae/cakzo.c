@@ -5,8 +5,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include <mpt/array.h>
-#include <mpt/solver.h>
+#include "solver_ivp.h"
 
 static double
 k1   = 18.7,

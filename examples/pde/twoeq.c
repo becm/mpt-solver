@@ -1,12 +1,14 @@
+/*!
+ * PDE example with two equotations
+ */
+
 #include <math.h>
 
-#include <mpt/array.h>
-#include <mpt/message.h>
-
-#include <mpt/solver.h>
+#include "solver_ivp.h"
 
 static double *param;
 
+/*  non-boundery positions */
 static int rfcn(void *udata, double t, const double *u, double *f, double x, double *d, double *v)
 {
 	double g, fg;
@@ -56,7 +58,7 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 	return 0;
 }
 
-/* set user functions for PDE step */
+/* setup solver for PDE run */
 extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_SOLVER_STRUCT(pdefcn) *usr;

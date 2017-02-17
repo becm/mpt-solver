@@ -1,6 +1,8 @@
-#include <math.h>
+/*!
+ * medical AKZO problem
+ */
 
-#include <mpt/solver.h>
+#include "solver_ivp.h"
 
 static double *param;
 static const int N_PDE = 2;
@@ -60,7 +62,7 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 	return 0;
 }
 
-/* set user functions for PDE step */
+/* setup solver for PDE run */
 extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_SOLVER_STRUCT(pdefcn) *usr;

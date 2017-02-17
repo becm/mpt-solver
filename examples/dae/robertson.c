@@ -2,8 +2,7 @@
  * DAE example: Robertson Problem
  */
 
-#include <mpt/array.h>
-#include <mpt/solver.h>
+#include "solver_ivp.h"
 
 static double *param;
 
