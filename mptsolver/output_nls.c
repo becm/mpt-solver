@@ -56,7 +56,8 @@ extern int mpt_output_nls(MPT_STRUCT(solver_output) *out, int state, const MPT_S
 	if (!val) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (!(fmt = val->fmt) || fmt[0] != MPT_value_toVector('d')) {
+	if (!(fmt = val->fmt)
+	    || fmt[0] != MPT_value_toVector('d')) {
 		return MPT_ERROR(BadType);
 	}
 	if (!(vec = val->ptr)) {
@@ -81,7 +82,8 @@ extern int mpt_output_nls(MPT_STRUCT(solver_output) *out, int state, const MPT_S
 		nr  = 1;
 	}
 	/* output parameters */
-	if (par && (state & (MPT_ENUM(DataStateInit) | MPT_ENUM(DataStateStep) | MPT_ENUM(DataStateFini)))) {
+	if (par &&
+	    (state & (MPT_ENUM(DataStateInit) | MPT_ENUM(DataStateStep) | MPT_ENUM(DataStateFini)))) {
 		if (raw) {
 			outputParam(raw, state, par, np);
 		}
@@ -93,16 +95,19 @@ extern int mpt_output_nls(MPT_STRUCT(solver_output) *out, int state, const MPT_S
 		return 1;
 	}
 	/* output residuals */
-	if (state & MPT_ENUM(DataStateStep)) {
+	if (grf
+	    && state & MPT_ENUM(DataStateStep)) {
 		if (!mpt_bitmap_get(dat->mask, sizeof(dat->mask), 0)) {
 			mpt_output_data(grf, state, 0, nr, res, 1);
 		}
 	}
-	if (state & MPT_ENUM(DataStateFini)) {
+	if (raw
+	    && state & MPT_ENUM(DataStateFini)) {
 		mpt_output_history(raw, nr, res, 1, 0, 0);
 	}
 	/* output user data */
-	if ((state & MPT_ENUM(DataStateInit))
+	if (grf
+	    && (state & MPT_ENUM(DataStateInit))
 	    && dat
 	    && dat->val._buf
 	    && (np = dat->val._buf->used / sizeof(double))) {

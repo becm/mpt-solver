@@ -156,7 +156,7 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 				}
 				nls->pr._ref = 0;
 			}
-			ret = MPT_SOLVER_ENUM(CapableIvp);
+			ret = MPT_SOLVER_ENUM(CapableNls);
 			if (!(sol = mpt_solver_load(&nls->pr, ret, val->ptr, info))) {
 				return MPT_ERROR(BadValue);
 			}
