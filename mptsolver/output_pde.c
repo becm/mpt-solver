@@ -58,8 +58,10 @@ extern int mpt_output_pde(MPT_STRUCT(solver_output) *out, int state, const MPT_S
 	if (!val || !(fmt = val->fmt) || !(vec = val->ptr)) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (!(raw = out->_data)
-	    && !(grf = out->_graphic)) {
+	raw = out->_data;
+	grf = out->_graphic;
+	
+	if (!raw && !out) {
 		return 0;
 	}
 	if (*fmt == 'd') {

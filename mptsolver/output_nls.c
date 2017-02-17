@@ -62,8 +62,10 @@ extern int mpt_output_nls(MPT_STRUCT(solver_output) *out, int state, const MPT_S
 	if (!(vec = val->ptr)) {
 		return MPT_ERROR(BadValue);
 	}
-	if (!(raw = out->_data)
-	    && !(grf = out->_graphic)) {
+	raw = out->_data;
+	grf = out->_graphic;
+	
+	if (!raw && !out) {
 		return 0;
 	}
 	par = vec->iov_base;

@@ -78,10 +78,13 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 		}
 		conf = name;
 	}
+	/* identical to current creator */
+	h = mpt_hash(conf, strlen(conf));
 	if (pr->_hash
-	    && pr->_hash == (h = mpt_hash(conf, strlen(conf)))) {
+	    && pr->_hash == h) {
 		mt = pr->_ref;
 	}
+	/* change library symbol */
 	else {
 		const char *lpath = 0;
 		if ((mt = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
@@ -119,15 +122,18 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 			return 0;
 		}
 		pre = pr->_ref;
+		
+		/* replace proxy target */
 		if (mt != pre) {
 			if (pre) {
 				pre->_vptr->ref.unref((void *) pre);
 			}
-			pr->_hash = mpt_hash(conf, strlen(conf));
 			pr->_ref = mt;
+			pr->_hash = h;
 		}
 		return sol;
 	}
+	/* created instance not compatible */
 	if (mt != pr->_ref) {
 		mt->_vptr->ref.unref((void *) mt);
 	}
