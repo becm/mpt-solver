@@ -80,8 +80,8 @@ MPT_STRUCT(solver_output);
 # define MPT_SOLVER_STRUCT(i) struct mpt_solver_##i
 # define MPT_SOLVER_TYPE(i)   MptSolver##i
 # define MPT_SOLVER_ENUM(i)   MPT_SOLVER_##i
-# define __MPT_SOLVER_BEGIN
-# define __MPT_SOLVER_END
+# define __MPT_SOLVER_BEGIN   __MPT_NAMESPACE_BEGIN
+# define __MPT_SOLVER_END     __MPT_NAMESPACE_END
 # define MPT_SOLVER(i)        struct mpt_solver_##i
 
 # define MPT_SOLVER_NLS_STRUCT(i)   struct mpt_solver_nls_##i
@@ -95,8 +95,8 @@ MPT_STRUCT(solver_output);
 # define MPT_SOLVER_STRUCT(i) struct i
 # define MPT_SOLVER_TYPE(i)   i
 # define MPT_SOLVER_ENUM(i)   i
-# define __MPT_SOLVER_BEGIN   namespace mpt { namespace solver {
-# define __MPT_SOLVER_END     } }
+# define __MPT_SOLVER_BEGIN   __MPT_NAMESPACE_BEGIN namespace solver {
+# define __MPT_SOLVER_END     } __MPT_NAMESPACE_END
 # define MPT_SOLVER(i)        class i
 
 # define MPT_SOLVER_NLS_STRUCT(i)   struct NLS::i
