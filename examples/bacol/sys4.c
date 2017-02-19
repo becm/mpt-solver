@@ -233,7 +233,7 @@ void f_(
 }
 
 /* map functions to bacol parameters */
-extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *log)
+extern int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
 {
 	int ret, npde = 4;
 	

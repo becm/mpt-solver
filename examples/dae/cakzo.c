@@ -66,7 +66,7 @@ static int bm_akzo(void *udata, double t, const double *y, double *b, int *idrow
 	return n;
 }
 
-int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
+int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_SOLVER_STRUCT(daefcn) *usr;
 	double *param;
@@ -77,7 +77,7 @@ int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(l
 	usr->fcn = rs_akzo;
 	usr->mas = bm_akzo;
 	
-	param = mpt_data_param(sd);
+	param = mpt_solver_data_param(sd);
 	
 	switch (sd->npar) {
 	  default:;

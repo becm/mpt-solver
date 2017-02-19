@@ -21,10 +21,12 @@ static void outputTime(MPT_STRUCT(output) *out, int state, double t)
 		MPT_STRUCT(msgbind) bnd;
 	} hdr;
 	
-	hdr.mt.cmd   = MPT_ENUM(MessageValRaw);
-	hdr.mt.arg   = 0; /* indicate special data */
-	hdr.bnd.dim  = state & 0xff; /* repurpose dimension as special data state */
-	hdr.bnd.type = MPT_message_value(Float, t);
+	hdr.mt.cmd = MPT_ENUM(MessageValRaw);
+	hdr.mt.arg = (int8_t) MPT_message_value(Float, t);
+	
+	/* indicate special data */
+	hdr.bnd.dim = state;
+	hdr.bnd.state = 0;
 	
 	/* push parameter data */
 	if (out->_vptr->push(out, sizeof(hdr), &hdr) < 0) {
@@ -33,27 +35,28 @@ static void outputTime(MPT_STRUCT(output) *out, int state, double t)
 	out->_vptr->push(out, sizeof(t), &t);
 	out->_vptr->push(out, 0, 0);
 }
-
 /*!
  * \ingroup mptSolver
  * \brief NLS data output
  * 
  * Push data state message to output.
  * 
- * \param out    nonlinear solver descriptor
+ * \param out    solver output data
  * \param state  state of PDE solver data
  * \param val    current PDE values
- * \param dat    solver data for grid and dimension mask
+ * \param dat    solver data for grid
  * 
  * \return message push result
  */
-extern int mpt_output_pde(MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_SOLVER_STRUCT(data) *dat)
+extern int mpt_solver_output_pde(MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_STRUCT(solver_data) *dat)
 {
 	MPT_INTERFACE(output) *raw, *grf;
+	const MPT_STRUCT(buffer) *buf;
 	const struct iovec *vec;
 	const char *fmt;
-	const double *grid, *y;
-	size_t i, glen, ylen, ld;
+	const uint8_t *pass;
+	const double *grid, *y, *t;
+	size_t i, glen, ylen, passlen, ld;
 	
 	if (!val || !(fmt = val->fmt) || !(vec = val->ptr)) {
 		return MPT_ERROR(BadArgument);
@@ -64,13 +67,11 @@ extern int mpt_output_pde(MPT_STRUCT(solver_output) *out, int state, const MPT_S
 	if (!raw && !out) {
 		return 0;
 	}
+	t = 0;
 	if (*fmt == 'd') {
-		const double *t = val->ptr;
+		t = val->ptr;
 		
 		/* push time data */
-		if (raw) {
-			outputTime(raw, state, *t);
-		}
 		if (grf && (grf != raw)) {
 			outputTime(grf, state, *t);
 		}
@@ -109,24 +110,35 @@ extern int mpt_output_pde(MPT_STRUCT(solver_output) *out, int state, const MPT_S
 		grid = 0;
 		ld = 0;
 	}
+	if ((buf = out->_pass._buf)) {
+		pass = (void *) (buf + 1);
+		passlen = buf->used;
+	} else {
+		passlen = 0;
+		pass = 0;
+	}
 	
 	if (grid) {
 		if (raw) {
-			mpt_output_history(raw, glen, grid, 1, y, ld);
+			mpt_output_ivp_header(raw, glen, ld+1, t);
+			mpt_output_history(raw, grid, glen, y, ld);
 		}
 		if (grf
-		    && (!dat || mpt_bitmap_get(dat->mask, sizeof(dat->mask), 0) <= 0)) {
-			mpt_output_data(grf, state, 0, glen, grid, 1);
+		    && (!passlen || mpt_bitmap_get(pass, passlen, 0) > 0)) {
+			mpt_output_solver_data(grf, state, 0, glen, grid, 1);
 		}
+	}
+	else if (raw) {
+		outputTime(raw, state, *t);
 	}
 	if (!grf) {
 		return ld;
 	}
 	for (i = 1; i <= ld; i++) {
-		if (dat && mpt_bitmap_get(dat->mask, sizeof(dat->mask), i) > 0) {
-			continue;
+		if (!passlen || mpt_bitmap_get(pass, passlen, i) > 0) {
+			mpt_output_solver_data(grf, state, i, glen, y, ld);
 		}
-		mpt_output_data(grf, state, i, glen, y++, ld);
+		++y;
 	}
 	return ld;
 }

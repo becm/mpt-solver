@@ -18,7 +18,7 @@ static int rh_side(void *udata, double t, const double *y, double *f)
 	return 0;
 }
 
-extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
+extern int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_SOLVER_STRUCT(odefcn) *usr;
 	double *param;
@@ -29,7 +29,7 @@ extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTE
 	}
 	usr->fcn = rh_side;
 	
-	param = mpt_data_param(sd);
+	param = mpt_solver_data_param(sd);
 	
 	n = sd->npar < 3 ? sd->npar : 3;
 	

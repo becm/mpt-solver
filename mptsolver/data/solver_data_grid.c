@@ -19,7 +19,7 @@
  * 
  * \return start of grid
  */
-extern double *mpt_data_grid(MPT_SOLVER_STRUCT(data) *dat)
+extern double *mpt_solver_data_grid(MPT_STRUCT(solver_data) *dat)
 {
 	MPT_STRUCT(buffer) *buf;
 	size_t pos, need;

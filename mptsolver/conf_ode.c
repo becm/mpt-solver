@@ -23,7 +23,7 @@
  * 
  * \return equotation count
  */
-extern int mpt_conf_ode(MPT_SOLVER_STRUCT(data) *md, double t, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
+extern int mpt_conf_ode(MPT_STRUCT(solver_data) *md, double t, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
 {
 	MPT_STRUCT(buffer) *buf;
 	MPT_STRUCT(node) *prof;

@@ -63,7 +63,7 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 }
 
 /* setup solver for PDE run */
-extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
+extern int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_SOLVER_STRUCT(pdefcn) *usr;
 	
@@ -72,7 +72,7 @@ extern int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTE
 	}
 	usr->fcn = rs_pde;
 	
-	param = mpt_data_param(sd);
+	param = mpt_solver_data_param(sd);
 	
 	return N_PDE;
 }

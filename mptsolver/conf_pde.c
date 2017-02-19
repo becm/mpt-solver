@@ -23,7 +23,7 @@
  * 
  * \return PDE count
  */
-extern int mpt_conf_pde(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
+extern int mpt_conf_pde(MPT_STRUCT(solver_data) *md, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
 {
 	int len;
 	

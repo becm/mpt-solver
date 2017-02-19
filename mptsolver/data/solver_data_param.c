@@ -19,7 +19,7 @@
  * 
  * \return start of parameters
  */
-extern double *mpt_data_param(MPT_SOLVER_STRUCT(data) *md)
+extern double *mpt_solver_data_param(MPT_STRUCT(solver_data) *md)
 {
 	MPT_STRUCT(buffer) *buf;
 	int len;

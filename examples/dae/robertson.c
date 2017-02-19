@@ -55,7 +55,7 @@ int jac_eval(void *udata, double t, const double *y, double *jac, int ljac)
 	return 0;
 }
 
-int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *out)
+int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_SOLVER_STRUCT(daefcn) *usr;
 	
@@ -66,7 +66,7 @@ int user_init(MPT_SOLVER(IVP) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(l
 	usr->jac = jac_eval;
 	usr->mas = bmat_bcf;
 	
-	param = mpt_data_param(sd);
+	param = mpt_solver_data_param(sd);
 	
 	if (sd->npar < 3) return -1;
 	

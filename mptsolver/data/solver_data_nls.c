@@ -10,7 +10,7 @@
 
 #include "solver.h"
 
-extern int mpt_data_nls(MPT_SOLVER_STRUCT(data) *dat, const MPT_STRUCT(value) *val)
+extern int mpt_solver_data_nls(MPT_STRUCT(solver_data) *dat, const MPT_STRUCT(value) *val)
 {
 	const char *fmt;
 	const struct iovec *vec;
@@ -33,7 +33,7 @@ extern int mpt_data_nls(MPT_SOLVER_STRUCT(data) *dat, const MPT_STRUCT(value) *v
 		return 0;
 	}
 	/* copy output so state data */
-	if ((dst = mpt_data_param(dat))) {
+	if ((dst = mpt_solver_data_param(dat))) {
 		int len;
 		if ((len = dat->npar) > np) {
 			len = np;

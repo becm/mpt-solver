@@ -26,7 +26,7 @@
  * 
  * \return parameter cont
  */
-extern int mpt_conf_nls(MPT_SOLVER_STRUCT(data) *md, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
+extern int mpt_conf_nls(MPT_STRUCT(solver_data) *md, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
 {
 	MPT_STRUCT(node) *node;
 	const char *data;

@@ -44,12 +44,12 @@ static int deriv(void *udata, const double *x, double *jac, const int *lj, const
 	return 0;
 }
 
-int user_init(MPT_SOLVER(NLS) *sol, MPT_SOLVER_STRUCT(data) *sd, MPT_INTERFACE(logger) *log)
+int user_init(MPT_SOLVER(NLS) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
 {
 	MPT_SOLVER_NLS_STRUCT(functions) *usr;
 	double *u;
 	
-	u = mpt_data_grid(sd);
+	u = mpt_solver_data_grid(sd);
 	
 	if (!(usr = mpt_init_nls(sol, sd, log))) {
 		return MPT_ERROR(BadType);
