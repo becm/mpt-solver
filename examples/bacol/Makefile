@@ -1,7 +1,7 @@
 # Makefile: MPT bacol examples
 #
 PROGS = sys4
-OBJS  = main.o $(PROGS:%=%.o)
+OBJS  = sys4_fcn.o $(PROGS:%=%.o)
 
 # no static option
 STATIC =
@@ -11,7 +11,7 @@ include ../solver.example.mk
 
 ${PROGS} : ../main_ivp.o ../solver_run.o
 
-sys4 : sys4.o
+sys4 : sys4.o sys4_fcn.o
 sys4 : LDLIBS+=-lmptcore
 sys4 : LDFLAGS+=-Wl,--export-dynamic
 test_sys4 : ARGS=sys4.conf
