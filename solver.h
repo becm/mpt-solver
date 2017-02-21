@@ -60,7 +60,7 @@ protected:
 	MPT_INTERFACE(output) *_graphic;
 	MPT_INTERFACE(logger) *_info;
 #endif
-	MPT_STRUCT(array) _pass;  /* flags process data dimensions */
+	_MPT_ARRAY_TYPE(uint8_t) _pass;  /*  process flags for data dimensions */
 };
 #else
 MPT_STRUCT(solver_data);
@@ -460,8 +460,8 @@ __MPT_EXTDECL_BEGIN
 
 
 /* create interface to solver */
-extern MPT_INTERFACE(client) *mpt_client_ivp(int (*)(MPT_SOLVER(IVP) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *__MPT_DEFPAR(0));
-extern MPT_INTERFACE(client) *mpt_client_nls(int (*)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *__MPT_DEFPAR(0));
+extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *, int (*)(MPT_SOLVER(IVP) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *__MPT_DEFPAR(0));
+extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *, int (*)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *__MPT_DEFPAR(0));
 
 
 /* initialize IVP solver states */
@@ -531,9 +531,9 @@ extern void mpt_solver_statistics(MPT_SOLVER(generic) *, MPT_INTERFACE(logger) *
 
 
 /* output for solvers */
-extern int mpt_solver_output_nls(MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
-extern int mpt_solver_output_pde(MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
-extern int mpt_solver_output_ode(MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(solver_data) *);
+extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
+extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
+extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(solver_data) *);
 extern int mpt_output_solver_data(MPT_INTERFACE(output) *, int , int , int , const double *, int);
 extern int mpt_output_ivp_header(MPT_INTERFACE(output) *, int , int , const double *);
 extern int mpt_output_history(MPT_INTERFACE(output) *, const double *, int , const double *, int);

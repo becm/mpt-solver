@@ -20,21 +20,21 @@
  * 
  * \return message push result
  */
-extern int mpt_solver_output_ode(MPT_STRUCT(solver_output) *so, int state, const MPT_STRUCT(solver_data) *dat)
+extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *so, int state, const MPT_STRUCT(solver_data) *sd)
 {
 	MPT_STRUCT(buffer) *buf;
 	MPT_STRUCT(output) *out;
 	const double *val;
 	int ld, len;
 	
-	if (!dat
-	    || !(buf = dat->val._buf)) {
+	if (!sd
+	    || !(buf = sd->val._buf)) {
 		return 0;
 	}
 	if (!(len = buf->used / sizeof(*val))) {
 		return 0;
 	}
-	if (!(ld = dat->nval)
+	if (!(ld = sd->nval)
 	    || !(len /= ld)) {
 		return MPT_ERROR(MissingData);
 	}
@@ -47,7 +47,7 @@ extern int mpt_solver_output_ode(MPT_STRUCT(solver_output) *so, int state, const
 	if ((out = so->_graphic)) {
 		const uint8_t *pass;
 		size_t passlen;
-		int i, dat = 0;
+		int i, nout = 0;
 		
 		if ((buf = so->_pass._buf)) {
 			pass = (void *) (buf + 1);
@@ -57,13 +57,13 @@ extern int mpt_solver_output_ode(MPT_STRUCT(solver_output) *so, int state, const
 			passlen = 0;
 		}
 		for (i = 0; i < ld; i++) {
-			if (len && mpt_bitmap_get(pass, passlen, i) <= 0) {
+			if (pass && ((size_t) i >= passlen || !(pass[i] & state))) {
 				continue;
 			}
 			mpt_output_solver_data(out, state, i, len, val+i, ld);
-			++dat;
+			++nout;
 		}
-		return dat;
+		return nout;
 	}
 	return 0;
 }

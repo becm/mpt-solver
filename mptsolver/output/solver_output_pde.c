@@ -48,9 +48,9 @@ static void outputTime(MPT_STRUCT(output) *out, int state, double t)
  * 
  * \return message push result
  */
-extern int mpt_solver_output_pde(MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_STRUCT(solver_data) *dat)
+extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_STRUCT(solver_data) *sd)
 {
-	MPT_INTERFACE(output) *raw, *grf;
+	MPT_INTERFACE(output) *dat, *grf;
 	const MPT_STRUCT(buffer) *buf;
 	const struct iovec *vec;
 	const char *fmt;
@@ -61,10 +61,10 @@ extern int mpt_solver_output_pde(MPT_STRUCT(solver_output) *out, int state, cons
 	if (!val || !(fmt = val->fmt) || !(vec = val->ptr)) {
 		return MPT_ERROR(BadArgument);
 	}
-	raw = out->_data;
+	dat = out->_data;
 	grf = out->_graphic;
 	
-	if (!raw && !out) {
+	if (!dat && !out) {
 		return 0;
 	}
 	t = 0;
@@ -72,7 +72,7 @@ extern int mpt_solver_output_pde(MPT_STRUCT(solver_output) *out, int state, cons
 		t = val->ptr;
 		
 		/* push time data */
-		if (grf && (grf != raw)) {
+		if (grf && (grf != dat)) {
 			outputTime(grf, state, *t);
 		}
 		vec = (void *) (t+1);
@@ -100,11 +100,11 @@ extern int mpt_solver_output_pde(MPT_STRUCT(solver_output) *out, int state, cons
 			return MPT_ERROR(BadValue);
 		}
 	}
-	else if (dat && (glen = dat->nval) > 0) {
+	else if (sd && (glen = sd->nval) > 0) {
 		if (!ylen || !(ld = ylen / glen)) {
 			return MPT_ERROR(BadValue);
 		}
-		grid = (const double *) (dat->val._buf + 1);
+		grid = (const double *) (sd->val._buf + 1);
 	}
 	else {
 		grid = 0;
@@ -112,30 +112,30 @@ extern int mpt_solver_output_pde(MPT_STRUCT(solver_output) *out, int state, cons
 	}
 	if ((buf = out->_pass._buf)) {
 		pass = (void *) (buf + 1);
-		passlen = buf->used;
+		passlen = buf->used / sizeof(uint8_t);
 	} else {
 		passlen = 0;
 		pass = 0;
 	}
 	
 	if (grid) {
-		if (raw) {
-			mpt_output_ivp_header(raw, glen, ld+1, t);
-			mpt_output_history(raw, grid, glen, y, ld);
+		if (dat) {
+			mpt_output_ivp_header(dat, glen, ld+1, t);
+			mpt_output_history(dat, grid, glen, y, ld);
 		}
 		if (grf
-		    && (!passlen || mpt_bitmap_get(pass, passlen, 0) > 0)) {
+		    && (!pass || (passlen && (pass[0] & state)))) {
 			mpt_output_solver_data(grf, state, 0, glen, grid, 1);
 		}
 	}
-	else if (raw) {
-		outputTime(raw, state, *t);
+	else if (dat) {
+		outputTime(dat, state, *t);
 	}
 	if (!grf) {
 		return ld;
 	}
 	for (i = 1; i <= ld; i++) {
-		if (!passlen || mpt_bitmap_get(pass, passlen, i) > 0) {
+		if (!pass || (i < passlen && pass[i] & state)) {
 			mpt_output_solver_data(grf, state, i, glen, y, ld);
 		}
 		++y;

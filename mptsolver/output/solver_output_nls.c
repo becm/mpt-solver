@@ -61,9 +61,9 @@ static void outputValues(MPT_STRUCT(output) *out, int state, int dim, int len, c
  * 
  * \return message push result
  */
-extern int mpt_solver_output_nls(MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_STRUCT(solver_data) *dat)
+extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_STRUCT(solver_data) *sd)
 {
-	MPT_INTERFACE(output) *raw, *grf;
+	MPT_INTERFACE(output) *dat, *grf;
 	const MPT_STRUCT(buffer) *buf;
 	const uint8_t *pass;
 	const char *fmt;
@@ -82,10 +82,10 @@ extern int mpt_solver_output_nls(MPT_STRUCT(solver_output) *out, int state, cons
 	if (!(vec = val->ptr)) {
 		return MPT_ERROR(BadValue);
 	}
-	raw = out->_data;
+	dat = out->_data;
 	grf = out->_graphic;
 	
-	if (!raw && !out) {
+	if (!dat && !out) {
 		return 0;
 	}
 	par = vec->iov_base;
@@ -103,8 +103,8 @@ extern int mpt_solver_output_nls(MPT_STRUCT(solver_output) *out, int state, cons
 	/* output parameters */
 	if (par &&
 	    (state & (MPT_ENUM(DataStateInit) | MPT_ENUM(DataStateStep) | MPT_ENUM(DataStateFini)))) {
-		if (raw) {
-			outputParam(raw, par, np);
+		if (dat) {
+			outputParam(dat, par, np);
 		}
 		if (grf) {
 			/* pass state via dimension */
@@ -116,7 +116,7 @@ extern int mpt_solver_output_nls(MPT_STRUCT(solver_output) *out, int state, cons
 	}
 	if ((buf = out->_pass._buf)) {
 		pass = (void *) (buf + 1);
-		passlen = buf->used;
+		passlen = buf->used / sizeof(uint8_t);
 	} else {
 		pass = 0;
 		passlen = 0;
@@ -124,23 +124,23 @@ extern int mpt_solver_output_nls(MPT_STRUCT(solver_output) *out, int state, cons
 	/* output residuals */
 	if (grf
 	    && state & MPT_ENUM(DataStateStep)) {
-		if (!passlen || mpt_bitmap_get(pass, passlen, 0) > 0) {
+		if (!pass || (passlen && (pass[0] & state))) {
 			outputValues(grf, 0, state, nr, res, 1);
 		}
 	}
-	if (raw
+	if (dat
 	    && state & MPT_ENUM(DataStateFini)) {
-		mpt_output_history(raw, res, nr, 0, 0);
+		mpt_output_history(dat, res, nr, 0, 0);
 	}
 	/* output user data */
 	if (grf
 	    && (state & MPT_ENUM(DataStateInit))
-	    && dat
-	    && dat->val._buf
-	    && (np = dat->val._buf->used / sizeof(double))) {
-		const double *val = (double *) (dat->val._buf + 1);
+	    && sd
+	    && (buf = sd->val._buf)
+	    && (np = buf->used / sizeof(double))) {
+		const double *val = (double *) (sd->val._buf + 1);
 		int i, nv;
-		if ((nv = dat->nval) < 0) {
+		if ((nv = sd->nval) < 0) {
 			np = 0;
 		}
 		else if (nv) {
@@ -149,7 +149,7 @@ extern int mpt_solver_output_nls(MPT_STRUCT(solver_output) *out, int state, cons
 			nv = 1;
 		}
 		for (i = 0; i < np; ++i) {
-			if (!passlen || mpt_bitmap_get(pass, passlen, i+1) > 0) {
+			if (!pass || ((size_t) i < passlen && pass[i] & state)) {
 				outputValues(grf, state, i+1, np, val+i, nv);
 			}
 		}

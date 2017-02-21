@@ -429,11 +429,12 @@ static MPT_INTERFACE_VPTR(client) ctlNLS = {
  * 
  * \return NLS client
  */
-extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *base)
+extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *base)
 {
+	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	struct NLS *nls;
 	
-	if (!uinit) {
+	if (!uinit || !out) {
 		return 0;
 	}
 	if (!(nls = malloc(sizeof(*nls)))) {
@@ -449,10 +450,8 @@ extern MPT_INTERFACE(client) *mpt_client_nls(int (*uinit)(MPT_SOLVER(NLS) *, MPT
 	(void) memset(&nls->pr, 0, sizeof(nls->pr));
 	nls->sd = 0;
 	
-	nls->out._data = mpt_output_local();
-	nls->out._graphic = 0;
-	nls->out._info = 0;
-	nls->out._pass._buf = 0;
+	nls->out = def;
+	nls->out._data = out;
 	
 	nls->sol = 0;
 	nls->uinit = uinit;

@@ -604,11 +604,12 @@ static const MPT_INTERFACE_VPTR(client) clientIVP = {
  * 
  * \return IVP client
  */
-extern MPT_INTERFACE(client) *mpt_client_ivp(int (*uinit)(MPT_SOLVER(IVP) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *base)
+extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(IVP) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *base)
 {
+	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	struct IVP *ivp;
 	
-	if (!uinit) {
+	if (!uinit || !out) {
 		return 0;
 	}
 	if (!(ivp = malloc(sizeof(*ivp)))) {
@@ -625,10 +626,8 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(int (*uinit)(MPT_SOLVER(IVP) *, MPT
 	ivp->sd = 0;
 	ivp->steps = 0;
 	
-	ivp->out._data = mpt_output_local();
-	ivp->out._graphic = 0;
-	ivp->out._info = 0;
-	ivp->out._pass._buf = 0;
+	ivp->out = def;
+	ivp->out._data = out;
 	
 	ivp->sol = 0;
 	ivp->uinit = uinit;
