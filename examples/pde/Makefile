@@ -8,6 +8,9 @@ include ../solver.example.mk
 
 ${PROGS} ${STATIC} : ../main_ivp.o ../solver_run.o
 
+../solver_run.o : ../solver_run.h
+*.o : ../solver_ivp.h
+
 flame : flame.o
 flame flame_static : LDLIBS+=-lm
 test_flame : ARGS=flame.conf

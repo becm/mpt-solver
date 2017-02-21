@@ -4,12 +4,18 @@
 
 #include <stdio.h>
 
-#include <mpt/event.h>
-#include <mpt/client.h>
+#ifndef MPT_INCLUDE
+# define MPT_INCLUDE(h) <mpt/h>
+#endif
 
-#include <mpt/notify.h>
+#include MPT_INCLUDE(event.h)
+#include MPT_INCLUDE(client.h)
 
-#include <mpt/solver.h>
+#include MPT_INCLUDE(notify.h)
+
+#include MPT_INCLUDE(solver.h)
+
+#include "solver_run.h"
 
 #ifdef __GLIBC__
 # include <mcheck.h>
@@ -19,7 +25,7 @@
 
 static struct mpt_notify no = MPT_NOTIFY_INIT;
 
-extern int client_init(int argc, char *argv[])
+extern int client_init(int argc, char * const argv[])
 {
 	mtrace();
 	

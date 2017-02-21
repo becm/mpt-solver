@@ -18,5 +18,5 @@ solvers : CC=${CXX}
 solvers : LDLIBS=-lmptsolver -lmpt++ -lmptcore $(solvers:%=-lmpt_%)
 solvers.o : CPPFLAGS+=-std=c++11 $(solvers:%=-Dwith_%)
 
-loadsol :  LDLIBS=-lmptsolver -lmptio -lmptloader -lmptcore
+loadsol :  LDLIBS=-lmptsolver -lmptloader -lmptcore
 loadsol.o :

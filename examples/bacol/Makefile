@@ -11,6 +11,9 @@ include ../solver.example.mk
 
 ${PROGS} : ../main_ivp.o ../solver_run.o
 
+../solver_run.o : ../solver_run.h
+*.o : ../solver_ivp.h
+
 sys4 : sys4.o sys4_fcn.o
 sys4 : LDLIBS+=-lmptcore
 sys4 : LDFLAGS+=-Wl,--export-dynamic
