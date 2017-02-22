@@ -13,12 +13,16 @@
 # define mtrace()
 #endif
 
-#include <mpt/convert.h>
-#include <mpt/client.h>
-#include <mpt/parse.h>
-#include <mpt/meta.h>
+#ifndef MPT_INCLUDE
+# define MPT_INCLUDE(h) <mpt/h>
+#endif
 
-#include <mpt/solver.h>
+#include MPT_INCLUDE(convert.h)
+#include MPT_INCLUDE(client.h)
+#include MPT_INCLUDE(parse.h)
+#include MPT_INCLUDE(meta.h)
+
+#include MPT_INCLUDE(solver.h)
 
 static ssize_t write_fd(void *out, const char *s, size_t len)
 {

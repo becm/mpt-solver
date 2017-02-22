@@ -18,23 +18,18 @@ foreach d : [ 'conf', 'data', 'output' ]
   solv_src += src
 endforeach
 
-# add plot elements
-if not with_plot
-  plot_src = []
-endif
-
 if with_shared
-  solv_lib = shared_library('mptsolver', solv_src + plot_src, 'libinfo.c',
-    include_directories : solv_inc,
+  solv_lib = shared_library('mptsolver', solv_src + base_src, 'libinfo.c',
+    include_directories : base_inc + [ solv_inc ],
     install_rpath : '$ORIGIN',
-    dependencies : [ plot, load, core ],
+    dependencies : base_dep,
     version : '1.0.0', soversion : '1',
     install : true)
 endif
 
 if with_static
   solv_lib_static = static_library('mptsolver', solv_src,
-    include_directories : solv_inc_static,
+    include_directories : base_inc + [ solv_inc ],
     install : true)
   if not with_shared
     solv_lib = solv_lib_static

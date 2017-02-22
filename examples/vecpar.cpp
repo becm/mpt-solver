@@ -4,7 +4,11 @@
 
 #include <iostream>
 
-#include <mpt/solver.h>
+#ifndef MPT_INCLUDE
+# define MPT_INCLUDE(h) <mpt/h>
+#endif
+
+#include MPT_INCLUDE(solver.h)
 
 #ifdef __GLIBC__
 # include <mcheck.h>

@@ -30,6 +30,7 @@ MPT_STRUCT(array);
 MPT_STRUCT(event);
 MPT_STRUCT(proxy);
 MPT_STRUCT(path);
+MPT_STRUCT(node);
 
 #ifdef _MPT_ARRAY_H
 MPT_STRUCT(solver_data)
@@ -409,10 +410,10 @@ struct vecpar
 	struct value value() const
 	{
 		if (base) {
-			static const char fmt[2] = { vectorIdentifier<T>(), 0 };
+			static const char fmt[2] = { static_cast<char>(vectorIdentifier<T>()), 0 };
 			return ::mpt::value(fmt, this);
 		} else {
-			static const char fmt[2] = { typeIdentifier<T>(), 0 };
+			static const char fmt[2] = { static_cast<char>(typeIdentifier<T>()), 0 };
 			return ::mpt::value(fmt, &d.val);
 		}
 	}

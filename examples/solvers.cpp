@@ -2,27 +2,31 @@
  * check solver interfaces
  */
 
+#ifndef MPT_INCLUDE
+# define MPT_INCLUDE(h) <mpt/h>
+#endif
+
 #ifdef with_vode
-# include <mpt/solver/vode.h>
+# include MPT_INCLUDE(solver/vode.h)
 #endif
 
 #ifdef with_daesolv
-# include <mpt/solver/dassl.h>
-# include <mpt/solver/mebdfi.h>
-# include <mpt/solver/radau.h>
+# include MPT_INCLUDE(solver/dassl.h)
+# include MPT_INCLUDE(solver/mebdfi.h)
+# include MPT_INCLUDE(solver/radau.h)
 #endif
 
 #ifdef with_limex
-# include <mpt/solver/limex.h>
+# include MPT_INCLUDE(solver/limex.h)
 #endif
 
 #ifdef with_sundials
-# include <mpt/solver/sundials.h>
+# include MPT_INCLUDE(solver/sundials.h)
 #endif
 
 #ifdef with_nlsolv
-# include <mpt/solver/minpack.h>
-# include <mpt/solver/portn2.h>
+# include MPT_INCLUDE(solver/minpack.h)
+# include MPT_INCLUDE(solver/portn2.h)
 #endif
 
 #ifdef __GLIBC__
