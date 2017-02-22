@@ -92,7 +92,7 @@ extern int mpt_conf_nls(MPT_STRUCT(solver_data) *md, const MPT_STRUCT(node) *con
 			                 MPT_tr("unable to reserve residual data"));
 			return MPT_ERROR(BadOperation);
 		}
-		if (mpt_conf_file(fd, len, nd, val) < 0) {
+		if (mpt_values_file(fd, len, nd, val) < 0) {
 			if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s",
 			                 MPT_tr("error while reading user data"));
 			return MPT_ERROR(MissingData);

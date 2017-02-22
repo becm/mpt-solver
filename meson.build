@@ -49,11 +49,8 @@ endif
 # query required plot sources
 with_plot = not plot.found()
 if with_plot
-  plot_src = []
-  foreach d : [ 'base/mptplot/output', 'base/mptplot/values' ]
-    subdir(d)
-    plot_src += src
-  endforeach
+  subdir('base/mptplot/values')
+  plot_src = src
   solv_inc_static += 'base/mptplot'
   plot = [ core, declare_dependency(include_directories : include_directories('base/mptplot')) ]
 else

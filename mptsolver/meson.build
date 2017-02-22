@@ -1,15 +1,8 @@
 # mpt-solver/mptsolver/meson.build
 # build definition for mpt solver library
 
-subdir('output')
-solv_src = [src]
-
-subdir('data')
-solv_src += src
-
-solv_src += files(
+solv_src = files(
   'client_ivp.c', 'client_nls.c',
-  'conf_nls.c', 'conf_ode.c', 'conf_pde.c',
   'init_ivp.c', 'init_pde.c', 'init_nls.c',
   'residuals_cdiff.c',
   'solver_alias.c', 'solver_config.c',
@@ -20,7 +13,10 @@ solv_src += files(
   'steps_ode.c',
   'timeradd.c'
 )
-
+foreach d : [ 'conf', 'data', 'output' ]
+  subdir(d)
+  solv_src += src
+endforeach
 
 # add plot elements
 if not with_plot

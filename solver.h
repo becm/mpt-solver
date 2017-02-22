@@ -503,6 +503,21 @@ extern int mpt_conf_nls(MPT_STRUCT(solver_data) *, const MPT_STRUCT(node) *, MPT
 extern int mpt_conf_pde(MPT_STRUCT(solver_data) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern int mpt_conf_ode(MPT_STRUCT(solver_data) *, double , const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
+/* configure graphic output and bindings */
+extern int mpt_conf_graphic(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *);
+/* configure history output and format */
+extern int mpt_conf_history(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *);
+
+/* create profile data */
+extern int mpt_conf_profiles(int , double *, int , const MPT_STRUCT(node) *, const double *, MPT_INTERFACE(logger) *);
+extern int mpt_conf_profile (int , double *, int , const MPT_STRUCT(node) *, const double *);
+
+/* append user data */
+extern int mpt_conf_param(MPT_STRUCT(array) *, const MPT_STRUCT(node) *, int);
+/* set grid data */
+extern int mpt_conf_grid(MPT_STRUCT(array) *, const MPT_STRUCT(node) *);
+
+
 /* get/initialize solver data parameters */
 extern double *mpt_solver_data_grid (MPT_STRUCT(solver_data) *);
 extern double *mpt_solver_data_param(MPT_STRUCT(solver_data) *);

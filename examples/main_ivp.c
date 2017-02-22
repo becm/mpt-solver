@@ -3,6 +3,7 @@
  */
 
 #include "solver_ivp.h"
+#include "solver_run.h"
 
 #include MPT_INCLUDE(output.h)
 
