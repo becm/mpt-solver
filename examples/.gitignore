@@ -1,4 +1,5 @@
 # exclude solver example binaries
+client
 libassign
 loadsol
 solvers

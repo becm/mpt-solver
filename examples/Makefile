@@ -14,6 +14,10 @@ aliases = ida limex bacol
 vecpar : CC=${CXX}
 vecpar.o : CPPFLAGS+=-std=c++11
 
+client : CC=${CXX}
+client : client.o solver_run.o
+client : LDLIBS=-lmptsolver -lmpt++ -lmptio
+
 solvers : CC=${CXX}
 solvers : LDLIBS=-lmptsolver -lmpt++ -lmptcore $(solvers:%=-lmpt_%)
 solvers.o : CPPFLAGS+=-std=c++11 $(solvers:%=-Dwith_%)

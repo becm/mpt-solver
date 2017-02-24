@@ -3,12 +3,19 @@
 
 test_defines = [ '-DMPT_INCLUDE(x)=#x' ]
 
-if get_option('with_cxx')
-  add_languages('cpp')
-  
+if with_cxx
   test('vector parameter output',
     executable('vecpar', 'vecpar.cpp',
+      include_directories : solv_inc,
       cpp_args: test_defines,
-      include_directories : base_inc + [ solv_inc ],
       dependencies: solv))
+
+  if is_variable('mod_sundials')
+    test('solver status output',
+      executable('solvers', 'solvers.cpp',
+        include_directories : solv_inc,
+        cpp_args: test_defines + [ '-Dwith_sundials' ],
+        dependencies: [ solv, cxx, mod_sundials ]))
+  endif
 endif
+

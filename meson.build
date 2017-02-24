@@ -1,86 +1,121 @@
 # mpt-solver/meson.build
 # build definitions for mpt solver components
 
-project('mptsolver', 'c',
-  default_options : [ 'c_std=c11' ]
-)
+project('mptsolver', 'c', default_options : [
+  'cpp_std=c++11',
+  'c_std=c11'
+])
 
 pkg = import('pkgconfig')
 
 mpt_lib = join_paths([ get_option('prefix'), get_option('libdir') ])
 mpt_inc = join_paths([ get_option('prefix'), get_option('includedir'), 'mpt' ])
 
+# request MPT base elements
+with_io = get_option('with_io')
+with_cxx = get_option('with_cxx')
+with_loader = true
+with_plot = true
+
 # require compiler for target library search
 cc = meson.get_compiler('c')
 
 # base resources
 base_dep = []
-base_inc = []
 base_src = []
 
-# do not build base libraries
+# setup for base libraries
 with_shared = false
+with_static = true
 
-# external core library exists
+# require core library as minimal base subset
 core = cc.find_library('mptcore', required : false, dirs : mpt_lib)
 if core.found()
-  base_inc = [ include_directories(mpt_inc) ]
-  base_dep = [ core ]
+  # external core library exists
+  core_inc = include_directories(mpt_inc)
+  core = declare_dependency(dependencies : core,
+    link_args : '-Wl,-rpath,' + mpt_lib,
+    include_directories : core_inc)
 
-  # check 
+  # use existing loader library
   load = cc.find_library('mptloader', required : false, dirs : mpt_lib)
-  if load.found()
-    base_dep += load
-  else
-    subdir('base/mptloader')
-    base_src += load_src
-  endif
-  # query required plot sources
+  with_loader = not load.found()
+  # use existing plot library
   plot = cc.find_library('mptplot', required : false, dirs : mpt_lib)
-  if plot.found()
-    base_dep += plot
-  else
-    subdir('base/mptplot/values')
-    base_src += src
-    base_inc += include_directories('base/mptplot')
+  with_plot = not plot.found()
+  # use existing I/O library or local sources
+  if with_io
+    io = cc.find_library('mptio', required : false, dirs : mpt_lib)
+    with_io = not io.found()
+  endif
+  # use existing C++ base library
+  if with_cxx
+    cxx = cc.find_library('mpt++', required : false, dirs : mpt_lib)
+    with_cxx = not io.found()
   endif
 else
-  subdir('base/mptcore')
+  # create core components locally
+  core_inc = join_paths('base', 'mptcore')
+  subdir(core_inc)
+  core_inc = include_directories(core_inc)
   base_src += core_src
-  base_inc += core_inc
-  subdir('base/mptloader')
-  base_src += load_src
-  base_dep += load_dep
-  subdir('base/mptplot/values')
-  base_src += src
-  base_inc += include_directories('base/mptplot')
+  base_dep += core
 endif
 
+# create value elements locally
+if with_loader
+  subdir(join_paths('base', 'mptloader'))
+  base_src += load_src
+  base_dep += load
+endif
 
-# optional library for client
-with_io = get_option('with_io')
+# create value elements locally
+if with_plot
+  subdir(join_paths('base', 'mptplot', 'values'))
+  plot_src = src
+  base_src += plot_src
+  base_dep += declare_dependency(
+      include_directories : include_directories(join_paths('base', 'mptplot')))
+endif
+
+# create I/O elements locally
 if with_io
-  io = cc.find_library('mptio', required : false, dirs : mpt_lib)
-  if not io.found()
-    subdir('base/mptio')
-    base_src += io_src
-    base_inc += io_inc
-  endif
+  subdir(join_paths('base', 'mptio'))
+  base_src += io_src
+  base_dep += io
 endif
 
 # need to build private sources
 if base_src.length() != 0
   base = static_library('mpt', base_src,
-    include_directories : base_inc,
+    dependencies : base_dep,
     pic : true)
-  base = declare_dependency(link_with : base, include_directories : base_inc)
-  base_dep = [ base ] + base_dep
+  if is_variable('core_src')
+    core = declare_dependency(link_with : base, dependencies : base_dep)
+  endif
+  if is_variable('load_src')
+    load = declare_dependency(link_with : base, dependencies : base_dep)
+  endif
+  if is_variable('plot_src')
+    plot = declare_dependency(link_with : base, dependencies : base_dep)
+  endif
+  if is_variable('io_src')
+    io = declare_dependency(link_with : base, dependencies : base_dep)
+    with_io = true
+  endif
 endif
 
-install_headers('solver.h', subdir : 'mpt')
-
-# solver library creation
-solv_inc = include_directories('.', 'base')
+# use or build C++ code
+if get_option('with_cxx')
+  add_languages('cpp')
+  
+  # need to build C++ components
+  if with_cxx
+    with_cxx = false  # do not install C++ library
+    subdir(join_paths('base', 'mpt++'))
+  endif
+  with_cxx = true  # activate C++ examples
+endif
 
 # get library options for current project
 libs = get_option('libraries')
@@ -94,10 +129,18 @@ else
   with_static = true
   with_shared = true
 endif
+
+# install header as primary project
+if not meson.is_subproject()
+  install_headers('solver.h', subdir : 'mpt')
+endif
+
+# solver library creation
+solv_inc = include_directories('.', 'base')
 subdir('mptsolver')
 
 # solver modules creation
-solv_mod_inc = [ solv_inc, base_inc, include_directories('modules') ]
-subdir('modules/sundials')
+solv_mod_inc = [ solv_inc, include_directories(join_paths('base', 'mptcore'), 'modules') ]
+subdir(join_paths('modules', 'sundials'))
 
 subdir('examples')

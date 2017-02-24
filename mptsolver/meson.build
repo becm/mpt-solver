@@ -19,17 +19,19 @@ foreach d : [ 'conf', 'data', 'output' ]
 endforeach
 
 if with_shared
-  solv_lib = shared_library('mptsolver', solv_src + base_src, 'libinfo.c',
-    include_directories : base_inc + [ solv_inc ],
+  solv_dep = [ io, plot, load, core ]
+  solv_lib = shared_library('mptsolver', solv_src, 'libinfo.c',
+    include_directories : solv_inc,
     install_rpath : '$ORIGIN',
-    dependencies : base_dep,
+    dependencies : solv_dep,
     version : '1.0.0', soversion : '1',
     install : true)
 endif
 
 if with_static
   solv_lib_static = static_library('mptsolver', solv_src,
-    include_directories : base_inc + [ solv_inc ],
+    include_directories : solv_inc,
+    dependencies : solv_dep,
     install : true)
   if not with_shared
     solv_lib = solv_lib_static
@@ -45,5 +47,6 @@ pkg.generate(
 
 solv = declare_dependency(
   link_with : solv_lib,
+  dependencies : solv_dep,
   include_directories : solv_inc
 )
