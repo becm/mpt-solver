@@ -59,6 +59,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	}
 	/* problem config filename from configuration/terminal */
 	else {
+		static const char defExt[] = "conf\0";
 		MPT_INTERFACE(metatype) *cfg;
 		const char *fname, *cname;
 		char *rname, buf[128];
@@ -66,22 +67,38 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		cfg = mpt_config_get((void *) solv, 0, 0, 0);
 		fname = cfg ? mpt_meta_data(cfg, 0) : 0;
 		
+		cname = 0;
+		if ((cfg = mpt_config_get(0, "mpt", 0, 0))
+		    && cfg->_vptr->conv(cfg, 's', &cname) > 0
+		    && cname) {
+			const char *sep = strrchr(cname, '/');
+			if (sep) cname = sep + 1;
+		}
 		if (!fname || access(fname, R_OK) < 0) {
-			static const char defName[] = "client.conf";
-			snprintf(buf, sizeof(buf), "%s [%s]: ", MPT_tr("problem settings"), defName);
+			static const char defName[] = "client\0";
+			const char *conf = cname ? cname : defName;
+			snprintf(buf, sizeof(buf), "%s [%s.%s]: ",
+			         MPT_tr("problem settings"), conf, defExt);
 			
-			if (!(rname = mpt_readline(buf)) || !(cname = stripFilename(rname))) {
-				cname = fname;
+			if (!(rname = mpt_readline(buf)) || !(fname = stripFilename(rname))) {
+				snprintf(buf, sizeof(buf), "%s.%s", conf, defExt);
+				fname = buf;
 			}
-			if (access(cname, R_OK) < 0) {
+			if (access(fname, R_OK) < 0) {
 				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
-				                  MPT_tr("file not readable"), cname);
+				                  MPT_tr("file not readable"), fname);
 				free(rname);
 				ev->id = 0;
 				return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 			}
-			if (mpt_config_set((void *) solv, 0, cname, 0, 0) < 0) {
-				return MPT_event_fail(ev, MPT_ERROR(BadValue), "failed set client config");
+			if (mpt_config_set((void *) solv, 0, fname, 0, 0) < 0) {
+				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
+				                  MPT_tr("failed to set client config"), fname);
+				if (rname ) {
+					free(rname);
+				}
+				ev->id = 0;
+				return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 			}
 			if (rname) {
 				free(rname);
@@ -96,30 +113,35 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		cfg = mpt_config_get((void *) solv, "solconf", 0, 0);
 		
 		if (!cfg) {
-			static const char defName[] = "solver.conf";
-			snprintf(buf, sizeof(buf), "%s [%s]: ", MPT_tr("solver config"), defName);
-			if (!(rname = mpt_readline(buf)) || !(cname = stripFilename(rname))) {
-				cname = defName;
+			static const char defName[] = "solver\0", defPost[] = "sol\0";
+			const char *sol = cname ? cname : defName;
+			snprintf(buf, sizeof(buf), "%s [%s_%s.%s]: ",
+			         MPT_tr("solver config"), sol, defPost, defExt);
+			if (!(rname = mpt_readline(buf)) || !(fname = stripFilename(rname))) {
+				snprintf(buf, sizeof(buf), "%s_%s.%s", sol, defPost, defExt);
+				fname = buf;
 			}
-			if (access(cname, R_OK) < 0) {
+			if (access(fname, R_OK) < 0) {
 				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
-				                  MPT_tr("file not readable"), cname);
+				                  MPT_tr("file not readable"), fname);
 				if (rname ) {
 					free(rname);
 				}
 				ev->id = 0;
 				return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 			}
-			if ((ret = mpt_config_set((void *) solv, "solconf", cname, 0, 0)) < 0) {
+			if ((ret = mpt_config_set((void *) solv, "solconf", fname, 0, 0)) < 0) {
 				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
-				                MPT_tr("failed to set solver config filename"), cname);
+				                  MPT_tr("failed to set solver config filename"), fname);
 				if (rname ) {
 					free(rname);
 				}
 				ev->id = 0;
 				return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 			}
-			free(rname);
+			if (rname ) {
+				free(rname);
+			}
 		}
 	}
 	/* initialize solver */

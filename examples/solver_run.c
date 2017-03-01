@@ -23,28 +23,38 @@
 # define mtrace()
 #endif
 
-static struct mpt_notify no = MPT_NOTIFY_INIT;
+static MPT_STRUCT(notify) no = MPT_NOTIFY_INIT;
+static char * const *cfg = 0;
 
 extern int client_init(int argc, char * const argv[])
 {
+	int pos;
 	mtrace();
 	
-	/* create event handling */
-	if (mpt_init(&no, argc, argv) < 0) {
+	/* environment and connection setup */
+	if ((pos = mpt_init(&no, argc, argv)) < 0) {
 		perror("mpt_init failed");
 		return 1;
+	}
+	/* non-mpt arguments */
+	if (pos < argc) {
+		cfg = argv + pos;
 	}
 	return 0;
 }
 
-extern int solver_run(struct mpt_client *c)
+extern int solver_run(MPT_INTERFACE(client) *c)
 {
-	struct mpt_dispatch disp = MPT_DISPATCH_INIT;
+	MPT_STRUCT(dispatch) disp = MPT_DISPATCH_INIT;
 	
 	/* setup dispatcher for solver client */
 	if (mpt_solver_events(&disp, c) < 0) {
 		perror("event setup failed");
 		return 2;
+	}
+	/* set solver client arguments */
+	if (mpt_solver_args((void *) c, cfg, -1) < 0) {
+		return 3;
 	}
 	/* start event loop */
 	mpt_notify_setdispatch(&no, &disp);
