@@ -22,6 +22,9 @@ extern int mpt_solver_args(MPT_INTERFACE(config) *cfg, char * const args[], int 
 {
 	const char *par;
 	
+	if (!args) {
+		return MPT_ERROR(BadArgument);
+	}
 	if (!argc-- || !(par = *args++)) {
 		return 0;
 	}

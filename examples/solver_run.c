@@ -53,7 +53,7 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		return 2;
 	}
 	/* set solver client arguments */
-	if (mpt_solver_args((void *) c, cfg, -1) < 0) {
+	if (cfg && (mpt_solver_args((void *) c, cfg, -1) < 0)) {
 		return 3;
 	}
 	/* start event loop */
