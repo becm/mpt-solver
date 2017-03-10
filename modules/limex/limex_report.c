@@ -2,10 +2,6 @@
  * get LIMEX status information.
  */
 
-#include <stdio.h>
-#include <ctype.h>
-#include <errno.h>
-
 #include "limex.h"
 
 extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TYPE(PropertyHandler) out, void *usr)

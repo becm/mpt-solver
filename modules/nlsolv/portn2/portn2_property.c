@@ -7,8 +7,6 @@
 #include <strings.h>
 #include <limits.h>
 #include <float.h>
-#include <errno.h>
-#include <ctype.h>
 
 #include "version.h"
 
@@ -85,7 +83,6 @@ extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *data, MPT_STRUCT(prop
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {
-			errno = EINVAL;
 			return MPT_ERROR(BadArgument);
 		}
 	}

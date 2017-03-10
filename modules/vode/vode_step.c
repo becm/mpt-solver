@@ -2,9 +2,6 @@
  * C wrapper to VODE fortran routine.
  */
 
-#include <errno.h>
-#include <string.h>
-
 #include "vode.h"
 
 extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *data, double tend)

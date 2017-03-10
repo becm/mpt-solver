@@ -2,7 +2,6 @@
  * C wrapper to dDASSL fortran routine
  */
 
-#include <errno.h>
 #include <string.h>
 
 #include "dassl.h"

@@ -2,8 +2,6 @@
  * get status information for PORT N2 instance
  */
 
-#include <errno.h>
-
 #include "portn2.h"
 
 extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_TYPE(PropertyHandler) out, void *usr)

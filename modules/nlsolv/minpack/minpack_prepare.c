@@ -2,9 +2,6 @@
  * check/adapt MINPACK memory sizes and parameters
  */
 
-#include <stdlib.h>
-#include <errno.h>
-
 #include "minpack.h"
 
 extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *mpack)

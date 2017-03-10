@@ -2,9 +2,7 @@
  * check/adapt memory sizes and integrator parameters.
  */
 
-#include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include "radau.h"
 

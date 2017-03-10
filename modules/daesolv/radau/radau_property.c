@@ -2,7 +2,6 @@
  * set radau integrator parameter.
  */
 
-#include <errno.h>
 #include <string.h>
 #include <strings.h>
 
@@ -226,6 +225,5 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 		return fcn(data->iwork + (val - 1), 'd', fpar);
 	} */
 	
-	errno = EINVAL;
 	return MPT_ERROR(BadArgument);
 }

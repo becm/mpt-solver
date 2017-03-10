@@ -2,9 +2,6 @@
  * wrapper to radau fortran routine.
  */
 
-#include <errno.h>
-#include <string.h>
-
 #include "radau.h"
 
 extern int mpt_radau_step(MPT_SOLVER_STRUCT(radau) *rd, double tend)

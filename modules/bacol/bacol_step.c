@@ -2,9 +2,6 @@
  * C wrapper to bacol fortran routines
  */
 
-#include <errno.h>
-#include <string.h>
-
 #include "bacol.h"
 
 extern int mpt_bacol_step(MPT_SOLVER_STRUCT(bacol) *bac, double tend)
@@ -60,7 +57,7 @@ extern int mpt_bacol_step(MPT_SOLVER_STRUCT(bacol) *bac, double tend)
 		bac->rpar.iov_base, &lrp, bac->ipar.iov_base, &lip, y, &idid);
 	    break;
 #endif
-	    default: errno = EBADR;
+	    default:
 	    return MPT_ERROR(BadArgument);
 	}
 	bac->mflag.noinit = idid;

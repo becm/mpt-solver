@@ -3,9 +3,6 @@
  */
 
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
 
 #include "radau.h"
 
@@ -86,11 +83,19 @@ extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, const MPT_SOLVER_IVP_STR
 		return MPT_ERROR(BadArgument);
 	}
 	if (ufcn->dae.mas) {
+		double *mas;
 		size_t nz = rd->ivp.neqs * rd->ivp.neqs;
 		
-		if (!rd->dmas && (!nz || !(rd->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double)))))) {
+		if (!nz) {
+			return MPT_ERROR(BadArgument);
+		}
+		if (!(mas = malloc(nz * (2 * sizeof(int) + sizeof(double))))) {
 			return MPT_ERROR(BadOperation);
 		}
+		if (rd->dmas) {
+			free(rd->dmas);
+		}
+		rd->dmas = mas;
 	}
 	rd->fcn = radau_fcn;
 	rd->jac = ufcn->dae.jac ? radau_jac : 0;

@@ -2,9 +2,6 @@
  * initialize/free PORT N2 instance
  */
 
-#include <stdlib.h>
-#include <errno.h>
-
 #include "portn2.h"
 
 extern void mpt_portn2_fini(MPT_SOLVER_STRUCT(portn2) *n2)

@@ -2,11 +2,6 @@
  * initialize/free MINPACK instance
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
-
 #include "minpack.h"
 
 extern void mpt_minpack_fini(MPT_SOLVER_STRUCT(minpack) *mpack)

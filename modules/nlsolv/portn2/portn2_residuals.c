@@ -2,8 +2,6 @@
  * call wrapper to PORT N2 for problem parameter
  */
 
-#include <errno.h>
-
 #include "portn2.h"
 
 extern const double *mpt_portn2_residuals(const MPT_SOLVER_STRUCT(portn2) *n2)

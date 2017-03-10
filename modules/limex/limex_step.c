@@ -2,9 +2,6 @@
  * C wrapper to LIMEX fortran routine
  */
 
-#include <errno.h>
-#include <string.h>
-
 #include "limex.h"
 
 extern int mpt_limex_step(MPT_SOLVER_STRUCT(limex) *lx, double tend)

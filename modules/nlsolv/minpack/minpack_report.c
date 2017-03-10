@@ -2,8 +2,6 @@
  * status information for MINPACK instance
  */
 
-#include <errno.h>
-
 #include "minpack.h"
 
 extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show, MPT_TYPE(PropertyHandler) out, void *usr)
@@ -31,8 +29,7 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	    case MPT_ENUM(MinpackLmDer): solv = lm; jac = "user"; break;
 	    case MPT_ENUM(MinpackLmStr): solv = lm; jac = "columnwise user"; break;
 	    default:
-		errno = EINVAL;
-		return -1;
+		return MPT_ERROR(BadArgument);
 	}
 	pr.name = "method";
 	pr.desc = MPT_tr("minpack solver type");

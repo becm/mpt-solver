@@ -3,9 +3,6 @@
  */
 
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
 
 #include "mebdfi.h"
 
@@ -29,13 +26,7 @@ static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, in
 		
 		nz = me->ivp.neqs * me->ivp.neqs;
 		
-		if (!(mas = me->dmas)) {
-			if (!(mas = malloc(nz * (2 * sizeof(int) + sizeof(double))))) {
-				*flg = MPT_ERROR(BadOperation);
-				return;
-			}
-			me->dmas = mas;
-		}
+		mas = me->dmas;
 		idrow = (int *) (mas + nz);
 		idcol = idrow + nz;
 		
@@ -114,10 +105,19 @@ extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_SOLVER_IVP_S
 		return MPT_ERROR(BadArgument);
 	}
 	if (ufcn->dae.mas) {
+		double *mas;
 		size_t nz = me->ivp.neqs * me->ivp.neqs;
-		if (!me->dmas && (!nz || !(me->dmas = malloc(nz * (2 * sizeof(int) + sizeof(double)))))) {
+		
+		if (!nz) {
+			return MPT_ERROR(BadArgument);
+		}
+		if (!(mas = malloc(nz * (2 * sizeof(int) + sizeof(double))))) {
 			return MPT_ERROR(BadOperation);
 		}
+		if (me->dmas) {
+			free(me->dmas);
+		}
+		me->dmas = mas;
 	}
 	me->fcn = mebdfi_fcn;
 	me->jac = ufcn->dae.jac ? mebdfi_jac : 0;

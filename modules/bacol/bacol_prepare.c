@@ -3,7 +3,6 @@
  */
 
 #include <stdlib.h>
-#include <errno.h>
 
 #include "bacol.h"
 
@@ -66,7 +65,6 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	    break;
 #endif
 	    default:
-	errno = EBADR;
 	return MPT_ERROR(BadArgument);
 	}
 	

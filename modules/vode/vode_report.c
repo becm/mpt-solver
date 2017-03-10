@@ -3,8 +3,6 @@
  * get status information.
  */
 
-#include <errno.h>
-
 #include "vode.h"
 
 extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE(PropertyHandler) out, void *usr)

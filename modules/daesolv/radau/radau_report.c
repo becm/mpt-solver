@@ -2,10 +2,6 @@
  * output extended information for radau.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-
 #include "radau.h"
 
 extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TYPE(PropertyHandler) out, void *usr)
