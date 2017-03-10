@@ -2,8 +2,6 @@
  * execute CVode solver step.
  */
 
-#include <errno.h>
-
 #include <cvode/cvode.h>
 
 #include "sundials.h"
@@ -24,7 +22,6 @@ extern int sundials_cvode_step(MPT_SOLVER_STRUCT(cvode) *cv, double tend)
 	int err;
 	
 	if (!cv->sd.y) {
-		errno = EFAULT;
 		return CV_MEM_NULL;
 	}
 	err = (cv->sd.step & MPT_SOLVER_ENUM(SundialsStepSingle)) ? CV_ONE_STEP : CV_NORMAL;

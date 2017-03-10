@@ -4,7 +4,8 @@
 
 #include <string.h>
 #include <strings.h>
-#include <errno.h>
+
+#include <math.h>
 
 #include <ida/ida_impl.h>
 
@@ -21,8 +22,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(metatype) *src)
 	long pos, len;
 	
 	if ((len = ida->ivp.neqs * (ida->ivp.pint + 1)) < 0) {
-		errno = EOVERFLOW;
-		return -2;
+		return MPT_ERROR(BadArgument);
 	}
 	if (!ida->sd.y && !(ida->sd.y = sundials_nvector_new(len))) {
 		return MPT_ERROR(BadOperation);
@@ -119,6 +119,16 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_I
 		if (IDASetMaxNumSteps(ida_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
+	if (!strcasecmp(name, "tstop")) {
+		double val = 0;
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (ret && val) {
+			if (IDASetStopTime(ida_mem, val) < 0) return MPT_ERROR(BadValue);
+		} else {
+			IDASetStopTime(ida_mem, INFINITY);
+		}
+		return ret ? 1 : 0;
+	}
 	if (!strcasecmp(name, "stepinit") || !strcasecmp(name, "hin") || !strcasecmp(name, "h") || !strcasecmp(name, "h0")) {
 		double val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
@@ -128,7 +138,8 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_I
 	if (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) {
 		double val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
-		else if (IDASetMaxStep(ida_mem, val) < 0) return MPT_ERROR(BadValue);
+		if (IDASetMaxStep(ida_mem, val) < 0) return MPT_ERROR(BadValue);
+		ida->hmax = val;
 		return ret ? 1 : 0;
 	}
 	/* user supplied initial (dy/dt) */
@@ -166,7 +177,6 @@ extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(proper
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {
-			errno = EINVAL;
 			return MPT_ERROR(BadArgument);
 		}
 	}
@@ -207,6 +217,13 @@ extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(proper
 		if (!ida_mem) return id;
 		prop->val.ptr = &ida_mem->ida_maxord;
 		return ida_mem->ida_maxord == MAXORD_DEFAULT ? 0 : 1;
+	}
+	if (name ? !strcasecmp(name, "tstop") : (pos == id++)) {
+		prop->name = "tstop"; prop->desc = "end time limit";
+		prop->val.fmt = realfmt; prop->val.ptr = 0;
+		if (!ida_mem) return id;
+		prop->val.ptr = &ida_mem->ida_tstop;
+		return ida_mem->ida_tstopset ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "maxnumsteps") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "mxstep")) : (pos == id++)) {
 		prop->name = "maxnumsteps"; prop->desc = "maximum steps per call";

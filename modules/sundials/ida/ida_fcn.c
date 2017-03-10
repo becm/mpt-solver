@@ -2,8 +2,6 @@
  * wrapper for IDA right side
  */
 
-#include <errno.h>
-
 #include <ida/ida.h>
 
 #include "sundials.h"
@@ -25,7 +23,6 @@ extern int sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT
 	int ret, nint;
 	
 	if (!ida || !(fcn = ida->ufcn) || !fcn->dae.fcn) {
-		errno = EFAULT;
 		return IDA_MEM_NULL;
 	}
 	df  = N_VGetArrayPointer(f);

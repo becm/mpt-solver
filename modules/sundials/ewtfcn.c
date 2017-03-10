@@ -2,7 +2,6 @@
  * Sundials error weight function.
  */
 
-#include <errno.h>
 #include <math.h>
 
 #include <sundials/sundials_nvector.h>

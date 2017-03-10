@@ -2,8 +2,6 @@
  * wrapper for CVode right side.
  */
 
-#include <errno.h>
-
 #include <cvode/cvode.h>
 
 #include "sundials.h"
@@ -22,7 +20,6 @@ extern int sundials_cvode_fcn(realtype t, N_Vector y, N_Vector f, const MPT_SOLV
 	const MPT_SOLVER_IVP_STRUCT(functions) *fcn;
 	double *fd, *yd;
 	if (!cv || !(fcn = cv->ufcn) || !fcn->dae.fcn) {
-		errno = EFAULT;
 		return CV_MEM_NULL;
 	}
 	yd = N_VGetArrayPointer(y);

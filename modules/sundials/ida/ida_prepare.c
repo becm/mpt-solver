@@ -3,7 +3,6 @@
  */
 
 #include <string.h>
-#include <errno.h>
 
 #include <ida/ida_spgmr.h>
 #include <ida/ida_spbcgs.h>

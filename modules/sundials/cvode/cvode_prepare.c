@@ -3,7 +3,6 @@
  */
 
 #include <string.h>
-#include <errno.h>
 
 #include <cvode/cvode_spgmr.h>
 #include <cvode/cvode_spbcgs.h>

@@ -2,8 +2,6 @@
  * report for CVode solver
  */
 
-#include <errno.h>
-
 #include "sundials.h"
 
 extern int sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(PropertyHandler) out, void *usr)

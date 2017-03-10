@@ -2,8 +2,6 @@
  * wrapper for IDA Jacobian
  */
 
-#include <errno.h>
-
 #include <sundials/sundials_direct.h>
 #include <sundials/sundials_nvector.h>
 

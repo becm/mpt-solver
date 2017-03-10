@@ -2,8 +2,6 @@
  * execute IDA solver integration step
  */
 
-#include <errno.h>
-
 #include <ida/ida.h>
 
 #include "sundials.h"
@@ -24,7 +22,6 @@ extern int sundials_ida_step(MPT_SOLVER_STRUCT(ida) *ida, double tend)
 	int err;
 	
 	if (!ida->sd.y || !ida->yp) {
-		errno = EFAULT;
 		return MPT_ERROR(BadOperation);
 	}
 	err = (ida->sd.step & MPT_SOLVER_ENUM(SundialsStepSingle)) ? IDA_ONE_STEP : IDA_NORMAL;

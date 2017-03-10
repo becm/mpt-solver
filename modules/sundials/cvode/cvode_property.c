@@ -4,7 +4,6 @@
 
 #include <string.h>
 #include <strings.h>
-#include <errno.h>
 
 #include <cvode/cvode_impl.h>
 
@@ -161,7 +160,6 @@ extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(pro
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {
-			errno = EINVAL;
 			return MPT_ERROR(BadArgument);
 		}
 	}
