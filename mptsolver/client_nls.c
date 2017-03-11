@@ -32,7 +32,7 @@ struct NLS {
 	MPT_STRUCT(solver_output) out;
 	
 	MPT_STRUCT(solver_data) *sd;
-	char*cfg;
+	char *cfg;
 	
 	MPT_SOLVER(NLS) *sol;
 	int (*uinit)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
@@ -145,23 +145,25 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		MPT_STRUCT(solver_data) *dat;
 		MPT_SOLVER(NLS) *sol;
 		
+		/* set (new) config base */
 		if (val) {
-			MPT_SOLVER(generic) *sol;
-			if (val->fmt) {
+			char *base;
+			if (val->fmt || !val->ptr) {
 				return MPT_ERROR(BadValue);
 			}
-			if (!val->ptr) {
-				if ((mt = nls->pr._ref)) {
-					mt->_vptr->ref.unref((void *) mt);
-				}
-				nls->pr._ref = 0;
-			}
-			ret = MPT_SOLVER_ENUM(CapableNls);
-			if (!(sol = mpt_solver_load(&nls->pr, ret, val->ptr, info))) {
+			/* query config base */
+			if (!configNLS(val->ptr)) {
 				return MPT_ERROR(BadValue);
 			}
-			nls->sol = (void *) sol;
-			return ret;
+			if (!(base = strdup(val->ptr))) {
+				return MPT_ERROR(BadOperation);
+			}
+			if (nls->cfg) {
+				free(nls->cfg);
+			}
+			nls->cfg = base;
+			
+			return strlen(base);
 		}
 		if (!(dat = nls->sd)) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
@@ -173,12 +175,12 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			        MPT_tr("missing solver descriptor"));
 			return MPT_ERROR(BadOperation);
 		}
+		/* set solver parameters from config */
 		mpt_solver_param((void *) sol, conf->children, 0, info);
 		
 		if ((ret = mpt_conf_history(nls->out._data, conf->children)) < 0) {
 			return ret;
 		}
-		/* set solver parameters from argument */
 		if (info) {
 			mpt_solver_info((void *) sol, info);
 			mpt_log(info, 0, MPT_LOG(Message), "");
@@ -429,7 +431,7 @@ static MPT_INTERFACE_VPTR(client) ctlNLS = {
  * 
  * \return NLS client
  */
-extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *base)
+extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *))
 {
 	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	struct NLS *nls;
@@ -440,15 +442,10 @@ extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *out, int (*u
 	if (!(nls = malloc(sizeof(*nls)))) {
 		return 0;
 	}
-	/* query config base */
-	if (!configNLS(base)
-	    || (base && !(nls->cfg = strdup(base)))) {
-		free(nls);
-		return 0;
-	}
 	nls->cl._vptr = &ctlNLS;
 	(void) memset(&nls->pr, 0, sizeof(nls->pr));
 	nls->sd = 0;
+	nls->cfg = 0;
 	
 	nls->out = def;
 	nls->out._data = out;

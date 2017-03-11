@@ -46,6 +46,11 @@ extern int client_init(int argc, char * const argv[])
 extern int solver_run(MPT_INTERFACE(client) *c)
 {
 	MPT_STRUCT(dispatch) disp = MPT_DISPATCH_INIT;
+	MPT_STRUCT(value) val = MPT_VALUE_INIT;
+	
+	/* set client config root */
+	val.ptr = "mpt.client";
+	c->_vptr->cfg.assign((void *) c, 0, &val);
 	
 	/* setup dispatcher for solver client */
 	if (mpt_solver_events(&disp, c) < 0) {
@@ -53,8 +58,12 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		return 2;
 	}
 	/* set solver client arguments */
-	if (cfg && (mpt_solver_args((void *) c, cfg, -1) < 0)) {
-		return 3;
+	if (cfg) {
+		int take = mpt_solver_args((void *) c, cfg, -1);
+		if (take < 0) {
+			return 3;
+		}
+		cfg += take;
 	}
 	/* start event loop */
 	mpt_notify_setdispatch(&no, &disp);

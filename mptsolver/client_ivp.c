@@ -135,17 +135,25 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		MPT_STRUCT(solver_data) *dat;
 		MPT_SOLVER(IVP) *sol;
 		
+		/* set (new) config base */
 		if (val) {
-			MPT_SOLVER(generic) *sol;
+			char *base;
 			if (val->fmt || !val->ptr) {
 				return MPT_ERROR(BadValue);
 			}
-			ret = MPT_SOLVER_ENUM(CapableIvp);
-			if (!(sol = mpt_solver_load(&ivp->pr, ret, val->ptr, info))) {
+			/* query config base */
+			if (!configIVP(val->ptr)) {
 				return MPT_ERROR(BadValue);
 			}
-			ivp->sol = (void *) sol;
-			return ret;
+			if (!(base = strdup(val->ptr))) {
+				return MPT_ERROR(BadOperation);
+			}
+			if (ivp->cfg) {
+				free(ivp->cfg);
+			}
+			ivp->cfg = base;
+			
+			return strlen(base);
 		}
 		if (!(dat = ivp->sd)) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
@@ -604,7 +612,7 @@ static const MPT_INTERFACE_VPTR(client) clientIVP = {
  * 
  * \return IVP client
  */
-extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(IVP) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *), const char *base)
+extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(IVP) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *))
 {
 	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	struct IVP *ivp;
@@ -615,15 +623,10 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *out, int (*u
 	if (!(ivp = malloc(sizeof(*ivp)))) {
 		return 0;
 	}
-	/* query config base */
-	if (!configIVP(base)
-	    || !(base && (ivp->cfg = strdup(base)))) {
-		free(ivp);
-		return 0;
-	}
 	ivp->cl._vptr = &clientIVP;
 	memset(&ivp->pr, 0, sizeof(ivp->pr));
 	ivp->sd = 0;
+	ivp->cfg = 0;
 	ivp->steps = 0;
 	
 	ivp->out = def;

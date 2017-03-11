@@ -37,7 +37,7 @@ extern int mpt_solver_args(MPT_INTERFACE(config) *cfg, char * const args[], int 
 	if (mpt_config_set(cfg, "solconf", par, 0, 0) < 0) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (argc < 0 && (par = *args++)) {
+	if (argc >= 0 && (par = *args++)) {
 		return MPT_ERROR(BadArgument);
 	}
 	return 2;

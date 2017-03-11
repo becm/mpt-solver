@@ -14,5 +14,5 @@ int main(int argc, char * const argv[])
 		return 1;
 	}
 	out = mpt_output_local();
-	return solver_run(mpt_client_nls(out, user_init, "mpt.client"));
+	return solver_run(mpt_client_nls(out, user_init));
 }
