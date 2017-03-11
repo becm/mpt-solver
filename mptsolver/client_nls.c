@@ -201,14 +201,22 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		}
 		return ret;
 	}
-	if (!(conf = mpt_node_assign(&conf->children, porg))
-	    || !(mt = conf->_meta)
-	    || (ret = mt->_vptr->assign(mt, val)) < 0) {
-		mpt_log(info, _func, MPT_LOG(Critical), "%s",
-		        MPT_tr("unable to assign client element"));
+	if (!(conf = mpt_node_assign(&conf->children, porg))) {
 		return MPT_ERROR(BadOperation);
 	}
-	return ret;
+	mt = conf->_meta;
+	if (!val) {
+		return mt ? mt->_vptr->assign(mt, val) : MPT_ERROR(BadOperation);
+	}
+	if (val->fmt) {
+		if ((ret = mt->_vptr->assign(mt, val)) < 0) {
+			mpt_log(info, _func, MPT_LOG(Critical), "%s",
+			        MPT_tr("unable to assign client element"));
+			return MPT_ERROR(BadOperation);
+		}
+		return ret;
+	}
+	return mpt_node_set(conf, val->ptr);
 }
 static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 {
