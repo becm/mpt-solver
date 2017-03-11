@@ -35,7 +35,7 @@ if not (sundials_dir == '')
     sundials_deps += sundials_cvode
   endif
   
-  sundials_deps += cc.find_library('m')
+  sundials_deps += libm
   
   install_data(sources : 'sundials.conf', install_dir : 'etc/mpt.conf.d')
   

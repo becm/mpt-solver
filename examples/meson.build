@@ -19,3 +19,11 @@ if with_cxx
   endif
 endif
 
+if is_variable('mod_sundials')
+  runtime_ivp = declare_dependency(
+    include_directories : include_directories('.'),
+    sources : files('main_ivp.c', 'solver_run.c'))
+  subdir('dae')
+  subdir('ode')
+  subdir('pde')
+endif

@@ -140,6 +140,7 @@ solv_inc = include_directories('.', 'base')
 subdir('mptsolver')
 
 # solver modules creation
+libm = cc.find_library('m')
 solv_mod_inc = [ solv_inc, include_directories(join_paths('base', 'mptcore'), 'modules') ]
 subdir(join_paths('modules', 'sundials'))
 
