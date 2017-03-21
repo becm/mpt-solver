@@ -33,12 +33,13 @@ extern int client_init(int argc, char * const argv[])
 	
 	/* environment and connection setup */
 	if ((pos = mpt_init(&no, argc, argv)) < 0) {
-		perror("mpt_init failed");
-		return 1;
+		fputs("client init failed\n", stderr);
+		return -1;
 	}
 	/* non-mpt arguments */
 	if (pos < argc) {
 		cfg = argv + pos;
+		return argc - pos;
 	}
 	return 0;
 }
@@ -54,7 +55,7 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 	
 	/* setup dispatcher for solver client */
 	if (mpt_solver_events(&disp, c) < 0) {
-		perror("event setup failed");
+		fputs("event setup failed\n", stderr);
 		return 2;
 	}
 	/* set solver client arguments */

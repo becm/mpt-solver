@@ -19,8 +19,10 @@ if with_cxx
   endif
 endif
 
-if is_variable('mod_sundials')
+if get_option('with_io') and is_variable('mod_sundials')
   runtime_ivp = declare_dependency(
+    dependencies : [ solv, io ],
+    link_args : '-Wl,-rpath,' + join_paths('modules', 'sundials'),
     include_directories : include_directories('.'),
     sources : files('main_ivp.c', 'solver_run.c'))
   subdir('dae')

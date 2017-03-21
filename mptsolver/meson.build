@@ -20,7 +20,7 @@ foreach d : [ 'conf', 'data', 'output' ]
 endforeach
 
 if with_shared
-  solv_dep = [ io, plot, load, core ]
+  solv_dep = [ plot, load, core ]
   solv_lib = shared_library('mptsolver', solv_src, 'libinfo.c',
     include_directories : solv_inc,
     install_rpath : '$ORIGIN',

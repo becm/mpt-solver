@@ -101,7 +101,6 @@ if base_src.length() != 0
   endif
   if is_variable('io_src')
     io = declare_dependency(link_with : base, dependencies : base_dep)
-    with_io = true
   endif
 endif
 

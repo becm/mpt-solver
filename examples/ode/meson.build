@@ -3,7 +3,6 @@
 
 test('crackoil ODE test',
   executable('crackoil', 'crackoil.c',
-    include_directories : solv_inc,
     c_args: test_defines,
-    dependencies: [ runtime_ivp, solv, libm ]),
+    dependencies: [ runtime_ivp ]),
   args: files('crackoil.conf'))
