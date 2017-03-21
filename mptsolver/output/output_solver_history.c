@@ -11,7 +11,7 @@
 #include "solver.h"
 
 /*!
- * \ingroup mptOutput
+ * \ingroup mptSolver
  * \~english
  * \brief send history data
  * 
@@ -19,15 +19,14 @@
  * Pass zero pointer for <b>val</b> for contigous reference and value data
  * 
  * \param out  output descriptor
- * \param len  number of history blocks
  * \param ref  address of reference data
- * \param rlen number of reference elements per block
+ * \param len  number of history blocks
  * \param val  address of value data
  * \param vlen number of value elements per block
  * 
  * \return number of used messages for data
  */
-extern int mpt_output_history(MPT_INTERFACE(output) *out, const double *ref, int len, const double *val, int vlen)
+extern int mpt_output_solver_history(MPT_INTERFACE(output) *out, const double *ref, int len, const double *val, int vlen)
 {
 	MPT_STRUCT(msgtype) hdr;
 	int i, plen;

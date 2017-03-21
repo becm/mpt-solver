@@ -42,7 +42,7 @@ extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *so, int state,
 	
 	if ((out = so->_data)) {
 		mpt_output_ivp_header(out, len, ld, 0);
-		mpt_output_history(out, 0, len, val, ld);
+		mpt_output_solver_history(out, 0, len, val, ld);
 	}
 	if ((out = so->_graphic)) {
 		const uint8_t *pass;

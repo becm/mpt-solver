@@ -22,13 +22,13 @@ extern void mpt_solver_statistics(MPT_SOLVER(generic) *gen, MPT_INTERFACE(logger
 	int unit = 0;
 	
 	/* solver report output */
-	mpt_log(out, 0, MPT_LOG(Message), " ");
+	mpt_log(out, 0, MPT_LOG(Message), "");
 	mpt_log(out, 0, MPT_LOG(Message), "%s", MPT_tr("solver report"));
 	
 	mpt_solver_report(gen, out);
 	
 	/* output time spent during solver call */
-	mpt_log(out, 0, MPT_LOG(Message), " ");
+	mpt_log(out, 0, MPT_LOG(Message), "");
 	
 	if (usr) {
 		double t = usr->tv_usec;

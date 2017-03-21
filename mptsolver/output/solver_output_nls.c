@@ -130,7 +130,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	}
 	if (dat
 	    && state & MPT_ENUM(DataStateFini)) {
-		mpt_output_history(dat, res, nr, 0, 0);
+		mpt_output_solver_history(dat, res, nr, 0, 0);
 	}
 	/* output user data */
 	if (grf

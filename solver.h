@@ -554,7 +554,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *, int , const 
 extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(solver_data) *);
 extern int mpt_output_solver_data(MPT_INTERFACE(output) *, int , int , int , const double *, int);
 extern int mpt_output_ivp_header(MPT_INTERFACE(output) *, int , int , const double *);
-extern int mpt_output_history(MPT_INTERFACE(output) *, const double *, int , const double *, int);
+extern int mpt_output_solver_history(MPT_INTERFACE(output) *, const double *, int , const double *, int);
 
 /* solver module data management */
 extern void *mpt_vecpar_alloc(struct iovec *, size_t len, size_t size);

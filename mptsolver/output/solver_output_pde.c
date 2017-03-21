@@ -121,7 +121,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 	if (grid) {
 		if (dat) {
 			mpt_output_ivp_header(dat, glen, ld+1, t);
-			mpt_output_history(dat, grid, glen, y, ld);
+			mpt_output_solver_history(dat, grid, glen, y, ld);
 		}
 		if (grf
 		    && (!pass || (passlen && (pass[0] & state)))) {
