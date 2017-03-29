@@ -58,17 +58,22 @@ static int outPDE(void *ptr, const MPT_STRUCT(value) *val)
 
 static MPT_STRUCT(node) *configIVP(const char *base)
 {
-	MPT_STRUCT(path) p = MPT_PATH_INIT;
-	MPT_STRUCT(node) *conf;
-	
-	mpt_path_set(&p, base, -1);
-	if ((conf = mpt_config_node(base ? &p : 0))) {
-		return conf;
+	if (!base) {
+		return mpt_config_node(0);
 	}
-	if (mpt_config_set(0, base, "", '.', 0) < 0) {
-		return 0;
+	else {
+		MPT_STRUCT(path) p = MPT_PATH_INIT;
+		MPT_STRUCT(node) *conf;
+		
+		mpt_path_set(&p, base, -1);
+		if ((conf = mpt_config_node(&p))) {
+			return conf;
+		}
+		if (mpt_config_set(0, base, "ivp.conf", '.', 0) < 0) {
+			return 0;
+		}
+		return mpt_config_node(base ? &p : 0);
 	}
-	return mpt_config_node(base ? &p : 0);
 }
 /* destruktor */
 static void deleteIVP(MPT_INTERFACE(unrefable) *gen)

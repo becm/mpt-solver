@@ -48,7 +48,7 @@ static int solevtPrepare(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 		}
 	}
 	if ((err = cl->_vptr->cfg.assign((void *) cl, 0, 0)) < 0) {
-		return MPT_event_fail(ev, err, MPT_tr("failed to prepare slver"));
+		return MPT_event_fail(ev, err, MPT_tr("failed to prepare solver"));
 	}
 	return MPT_event_good(ev, MPT_tr("solver client configured"));
 }

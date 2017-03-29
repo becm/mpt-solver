@@ -57,11 +57,16 @@ extern int mpt_solver_config(MPT_INTERFACE(config) *solv, MPT_STRUCT(event) *ev)
 			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument count"), ret);
 			ret = -1;
 		}
-		else if ((ret = mpt_config_set((void *) solv, 0, cfg, 0, 0)) < 0) {
-			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read client config"), cfg);
+		else if ((ret = mpt_config_set(solv, 0, cfg, 0, 0)) < 0) {
+			const char *err = MPT_tr("failed to read client config");
+			if (cfg) {
+				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s", err, cfg);
+			} else {
+				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s", err);
+			}
 		}
-		else if (sol && (ret = mpt_config_set((void *) solv, "solver", cfg, 0, 0)) < 0) {
-			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read solver config"), cfg);
+		else if (sol && (ret = mpt_config_set(solv, "solver", sol, 0, 0)) < 0) {
+			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read solver config"), sol);
 		}
 		src->_vptr->ref.unref((void *) src);
 		if (ret < 0) {

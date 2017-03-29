@@ -25,11 +25,9 @@ MPT_INTERFACE(output);
 MPT_INTERFACE(metatype);
 
 MPT_STRUCT(dispatch);
-MPT_STRUCT(message);
 MPT_STRUCT(array);
 MPT_STRUCT(event);
 MPT_STRUCT(proxy);
-MPT_STRUCT(path);
 MPT_STRUCT(node);
 
 #ifdef _MPT_ARRAY_H
@@ -385,15 +383,15 @@ struct vecpar
 		
 		/* free/extend memory */
 		if (!elem) { free(t); t = 0; }
-		else if (!(t = static_cast<T*>(realloc(t, elem*sizeof(*base))))) return false;
+		else if (!(t = static_cast<T *>(realloc(t, elem * sizeof(*base))))) return false;
 		
 		/* initialize new elements */
-		for (T &val = base ? t[l-1] : d.val; l < elem; ++l) t[l] = val;
+		for (T &val = base ? t[l - 1] : d.val; l < elem; ++l) t[l] = val;
 		
 		/* save new data */
 		if (elem) {
 			if (!base) d.val.~T(); /* scalar>vector transition */
-			d.len = elem*sizeof(*base);
+			d.len = elem * sizeof(*base);
 		}
 		base = t;
 		
