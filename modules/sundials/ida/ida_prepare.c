@@ -2,8 +2,6 @@
  * prepare IDA solver
  */
 
-#include <string.h>
-
 #include <ida/ida_spgmr.h>
 #include <ida/ida_spbcgs.h>
 #include <ida/ida_sptfqmr.h>
@@ -95,15 +93,16 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	
 	/* prepare initial vector */
 	if (!ida->sd.y) {
-		realtype *y;
 		if (!(ida->sd.y = sundials_nvector_new(neqs))) {
 			return MPT_ERROR(BadOperation);
 		}
-		y = N_VGetArrayPointer(ida->sd.y);
-		memset(y, 0, neqs * sizeof(*y));
+		N_VConst(0, ida->sd.y);
 	}
-	if (!ida->yp && !(ida->yp = N_VClone(ida->sd.y))) {
-		return MPT_ERROR(BadOperation);
+	if (!ida->yp) {
+		if (!(ida->yp = N_VClone(ida->sd.y))) {
+			return MPT_ERROR(BadOperation);
+		}
+		N_VConst(0, ida->yp);
 	}
 	err = IDAInit(ida_mem, sundials_ida_fcn, ida->t, ida->sd.y, ida->yp);
 	
