@@ -389,8 +389,8 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	}
 	mpt_solver_status((void *) sol, info, outNLS, &ctx);
 	
-	/* no current state */
-	if (!res) {
+	/* no final output for state */
+	if (res > 0) {
 		return res;
 	}
 	
