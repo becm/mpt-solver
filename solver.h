@@ -485,7 +485,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
 extern int mpt_solver_args(MPT_INTERFACE(config) *, char * const [], int __MPT_DEFPAR(-1));
 
 /* read files to configuration */
-extern int mpt_solver_read(MPT_STRUCT(node) *, MPT_STRUCT(metatype) *, MPT_INTERFACE(logger) *);
+extern int mpt_solver_read(MPT_STRUCT(node) *, MPT_INTERFACE(metatype) *, MPT_INTERFACE(logger) *);
 
 /* initialize solver memory */
 extern void mpt_solver_data_fini(MPT_STRUCT(solver_data) *);
