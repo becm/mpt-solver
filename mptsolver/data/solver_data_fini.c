@@ -22,10 +22,10 @@ extern void mpt_solver_data_clear(MPT_STRUCT(solver_data) *md)
 	MPT_STRUCT(buffer) *buf;
 	
 	if ((buf = md->param._buf)) {
-		buf->used = 0;
+		buf->_used = 0;
 	}
 	if ((buf = md->val._buf)) {
-		buf->used = 0;
+		buf->_used = 0;
 	}
 	md->npar = 0;
 	md->nval = 0;

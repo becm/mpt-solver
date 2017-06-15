@@ -26,11 +26,13 @@ extern double *mpt_solver_data_param(MPT_STRUCT(solver_data) *md)
 	
 	/* parameters are initialized */
 	if ((len = md->npar) <= 0 || !(buf = md->param._buf)) return 0;
-	if ((len = buf->used/sizeof(double)) < md->npar) {
-		if (!(mpt_array_slice(&md->param, buf->used, md->npar*sizeof(double))))
+	if ((len = buf->_used / sizeof(double)) < md->npar) {
+		if (!(mpt_array_slice(&md->param, buf->_used, md->npar * sizeof(double)))) {
 			return 0;
-		for (; len < md->npar; ++len)
-			((double *) (buf+1))[len] = 0;
+		}
+		for (; len < md->npar; ++len) {
+			((double *) (buf + 1))[len] = 0;
+		}
 	}
-	return (double *) (buf+1);
+	return (double *) (buf + 1);
 }

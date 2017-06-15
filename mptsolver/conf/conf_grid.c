@@ -36,7 +36,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_STRUCT(node) *conf)
 		if (nint < 1) return -2;
 		desc += len;
 	}
-	if (grid->_buf) grid->_buf->used = 0;
+	if (grid->_buf) grid->_buf->_used = 0;
 	
 	if (!mpt_values_generate(grid, ++nint, desc)) {
 		return -1;

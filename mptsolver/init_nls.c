@@ -41,7 +41,7 @@ extern MPT_SOLVER_NLS_STRUCT(functions) *mpt_init_nls(MPT_SOLVER(NLS) *sol, cons
 	vec.iov_len  = dim[0] * sizeof(double);
 	dim[1] = 0;
 	if (!dat->param._buf
-	    || dim[0] > (dim[1] = dat->param._buf->used)) {
+	    || dim[0] > (dim[1] = dat->param._buf->_used)) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (%d < %d)",
 		                 MPT_tr("not enough data for parameter count"), dim[0], dim[1]);
 		return 0;

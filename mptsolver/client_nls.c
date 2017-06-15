@@ -118,7 +118,7 @@ static MPT_INTERFACE(metatype) *queryNLS(const MPT_INTERFACE(config) *gen, const
 	p = *porg;
 	p.flags &= ~MPT_PATHFLAG(HasArray);
 	
-	if (!(conf = mpt_node_query(conf, &p, -1))) {
+	if (!(conf = mpt_node_query(conf, &p, 0))) {
 		return 0;
 	}
 	return conf->_meta;
@@ -127,12 +127,9 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 {
 	static const char _func[] = "mpt::client<NLS>::assign";
 	
-	struct _outNLSdata ctx;
 	struct NLS *nls = (void *) gen;
 	MPT_STRUCT(node) *conf;
-	MPT_INTERFACE(metatype) *mt;
 	MPT_INTERFACE(logger) *info;
-	int ret;
 	
 	if (!(info = nls->out._info)) {
 		info = mpt_log_default();
@@ -142,8 +139,10 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		return MPT_ERROR(BadOperation);
 	}
 	if (!porg) {
+		struct _outNLSdata ctx;
 		MPT_STRUCT(solver_data) *dat;
 		MPT_SOLVER(NLS) *sol;
+		int ret;
 		
 		/* set (new) config base */
 		if (val) {
@@ -194,29 +193,19 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		return 0;
 	}
 	if (!porg->len) {
-		ret = mpt_node_parse(conf, val, info);
+		int ret = mpt_node_parse(conf, val, info);
 		if (ret >= 0) {
 			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
 			        MPT_tr("loaded NLS client config file"));
 		}
 		return ret;
 	}
-	if (!(conf = mpt_node_assign(&conf->children, porg))) {
+	if (!(conf = mpt_node_assign(&conf->children, porg, val))) {
+		mpt_log(info, _func, MPT_LOG(Critical), "%s",
+		        MPT_tr("unable to assign client element"));
 		return MPT_ERROR(BadOperation);
 	}
-	mt = conf->_meta;
-	if (!val) {
-		return mt ? mt->_vptr->assign(mt, val) : MPT_ERROR(BadOperation);
-	}
-	if (val->fmt) {
-		if ((ret = mt->_vptr->assign(mt, val)) < 0) {
-			mpt_log(info, _func, MPT_LOG(Critical), "%s",
-			        MPT_tr("unable to assign client element"));
-			return MPT_ERROR(BadOperation);
-		}
-		return ret;
-	}
-	return mpt_node_set(conf, val->ptr);
+	return 0;
 }
 static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 {
@@ -258,14 +247,14 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	p = *porg;
 	p.flags &= ~MPT_PATHFLAG(HasArray);
 
-	if (!(conf = mpt_node_query(conf->children, &p, -1))) {
+	if (!(conf = mpt_node_query(conf->children, &p, 0))) {
 		return MPT_ERROR(BadArgument);
 	}
 	mpt_node_clear(conf);
 	return 1;
 }
 
-static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
+static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 {
 	static const char _func[] = "mpt::client<NLS>::init";
 	
@@ -343,7 +332,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
 	}
 	return 0;
 }
-static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(metatype) *args)
+static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 {
 	struct NLS *nls = (void *) cl;
 	MPT_STRUCT(solver_data) *dat;

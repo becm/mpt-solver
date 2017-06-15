@@ -29,7 +29,7 @@ extern double *mpt_solver_data_grid(MPT_STRUCT(solver_data) *dat)
 		return 0;
 	}
 	if (!(len = dat->nval)) {
-		if (!(len = buf->used / sizeof(double))) {
+		if (!(len = buf->_used / sizeof(double))) {
 			return 0;
 		}
 		dat->nval = -len;
@@ -39,7 +39,7 @@ extern double *mpt_solver_data_grid(MPT_STRUCT(solver_data) *dat)
 	}
 	need = len * sizeof(double);
 	
-	if (need > (pos = buf->used)) {
+	if (need > (pos = buf->_used)) {
 		double *grid;
 		if (!(grid = mpt_array_append(&dat->val, need-pos, 0))) {
 			return 0;

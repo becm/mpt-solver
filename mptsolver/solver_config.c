@@ -38,7 +38,7 @@ extern int mpt_solver_config(MPT_INTERFACE(config) *solv, MPT_STRUCT(event) *ev)
 		}
 	}
 	else {
-		MPT_INTERFACE(metatype) *src;
+		MPT_INTERFACE(iterator) *src;
 		const char *cmd, *cfg, *sol;
 		int ret;
 		
@@ -48,12 +48,14 @@ extern int mpt_solver_config(MPT_INTERFACE(config) *solv, MPT_STRUCT(event) *ev)
 		}
 		cmd = cfg = sol = 0;
 		/* consume command, client and solver config */
-		if ((ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cmd)) < 0
-		    || (ret && (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cfg)) < 0)
-		    || (ret && (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &sol)) < 0)) {
+		if ((ret = src->_vptr->meta.conv((void *) src, 's', &cmd)) < 0
+		    || ((ret = src->_vptr->advance(src)) > 0
+		        && (ret = src->_vptr->meta.conv((void *) src, 's', &cfg)) < 0)
+		    || ((ret = src->_vptr->advance(src)) > 0
+		        && (ret = src->_vptr->meta.conv((void *) src, 's', &sol)) < 0)) {
 			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument type"), ret);
 		}
-		else if (ret && (ret = src->_vptr->conv(src, 's' | MPT_ENUM(ValueConsume), &cmd))) {
+		else if ((ret = src->_vptr->advance(src)) > 0) {
 			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument count"), ret);
 			ret = -1;
 		}
@@ -68,7 +70,7 @@ extern int mpt_solver_config(MPT_INTERFACE(config) *solv, MPT_STRUCT(event) *ev)
 		else if (sol && (ret = mpt_config_set(solv, "solver", sol, 0, 0)) < 0) {
 			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s", MPT_tr("failed to read solver config"), sol);
 		}
-		src->_vptr->ref.unref((void *) src);
+		src->_vptr->meta.ref.unref((void *) src);
 		if (ret < 0) {
 			ev->id = 0;
 			return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);

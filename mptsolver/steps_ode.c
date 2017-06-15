@@ -66,7 +66,7 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  * 
  * \return step operation result
  */
-extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(metatype) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(iterator) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	double curr, end, *data;
 	int ret;
@@ -74,7 +74,7 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(metatype) *src, MPT
 	if (!sd || !src) {
 		return MPT_ERROR(BadArgument);
 	}
-	if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) {
+	if ((ret = src->_vptr->meta.conv((void *) src, 'd', &end)) < 0) {
 		return MPT_ERROR(MissingData);
 	}
 	if (!ret) {
@@ -113,9 +113,17 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(metatype) *src, MPT
 		}
 		/* get next target value */
 		do {
-			double tmp;
-			if ((ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &tmp)) <= 0
-			    || (ret = src->_vptr->conv(src, 'd', &end)) <= 0) {
+			if ((ret = src->_vptr->advance(src)) < 0) {
+				mpt_log(out, __func__, MPT_LOG(Warning), "%s",
+				        MPT_tr("bad time step advance"));
+				ret = 0;
+			}
+			if (!ret) {
+				return ret;
+			}
+			if ((ret = src->_vptr->meta.conv((void *) src, 'd', &end)) < 0) {
+				mpt_log(out, __func__, MPT_LOG(Warning), "%s",
+				        MPT_tr("bad time step data"));
 				return ret;
 			}
 		} while (end <= curr);

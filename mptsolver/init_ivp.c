@@ -50,16 +50,16 @@ static void *initIvpData(MPT_SOLVER(IVP) *sol, const MPT_STRUCT(array) *val, MPT
 	const MPT_STRUCT(buffer) *buf;
 	const double *ptr;
 	void *fcn;
-	int ret;
+	long len;
 	
 	if (!(buf = val->_buf)
-	    || !(ret = buf->used / sizeof(double))) {
+	    || !(len = buf->_used / sizeof(double))) {
 		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
 		                 MPT_tr("missing initial data"));
 		return 0;
 	}
 	ptr = (double *) (buf + 1);
-	if (mpt_init_ivp(sol, *ptr, ret - 1, ptr+1, log) < 0) {
+	if (mpt_init_ivp(sol, *ptr, len - 1, ptr + 1, log) < 0) {
 		return 0;
 	}
 	/* get user funtions according to type */

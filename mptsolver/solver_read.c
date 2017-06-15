@@ -16,7 +16,7 @@
 
 #include "solver.h"
 
-static int parseNode(MPT_STRUCT(node) *conf, const char *fname, MPT_INTERFACE(metatype) *args, const char *format, const char *limit, MPT_INTERFACE(logger) *log)
+static int parseNode(MPT_STRUCT(node) *conf, const char *fname, const MPT_INTERFACE(metatype) *args, const char *format, const char *limit, MPT_INTERFACE(logger) *log)
 {
 	static const char _func[] = "mpt_solver_read";
 	MPT_STRUCT(value) val;
@@ -30,7 +30,7 @@ static int parseNode(MPT_STRUCT(node) *conf, const char *fname, MPT_INTERFACE(me
 			return MPT_ERROR(BadValue);
 		}
 	}
-	else if ((ret = args->_vptr->conv(args, MPT_ENUM(ValueConsume) | MPT_ENUM(TypeValue), &val)) > 0) {
+	else if ((ret = args->_vptr->conv(args, MPT_ENUM(TypeValue), &val)) > 0) {
 		const char *tmp;
 		void * const *ptr = val.ptr;
 		
@@ -86,14 +86,14 @@ static int parseNode(MPT_STRUCT(node) *conf, const char *fname, MPT_INTERFACE(me
 			return MPT_ERROR(BadValue);
 		}
 	}
-	else if ((ret = args->_vptr->conv(args, MPT_ENUM(ValueConsume) | MPT_ENUM(TypeFile), &fd)) > 0) {
+	else if ((ret = args->_vptr->conv(args, MPT_ENUM(TypeFile), &fd)) > 0) {
 		if (!fd) {
 			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("bad client config file descriptor"));
 			return MPT_ERROR(BadValue);
 		}
 		fname = 0;
 	}
-	else if ((ret = args->_vptr->conv(args, MPT_ENUM(ValueConsume) | MPT_ENUM(TypeFile), &fname)) > 0) {
+	else if ((ret = args->_vptr->conv(args, 's', &fname)) > 0) {
 		if (!fname || !*fname) {
 			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s", MPT_tr("bad client config file name"));
 			return MPT_ERROR(BadValue);
@@ -115,14 +115,13 @@ static int parseNode(MPT_STRUCT(node) *conf, const char *fname, MPT_INTERFACE(me
 	return ret;
 }
 
-extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(metatype) *args, MPT_INTERFACE(logger) *log)
+extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, MPT_INTERFACE(logger) *log)
 {
 	MPT_STRUCT(node) *sol, cfg = MPT_NODE_INIT;
-	const char *fmt;
 	int ret, err;
 	
 	/* parse top level config */
-	if ((err = parseNode(&cfg, mpt_node_data(conf, 0), args, "{*} = !#", "ns", log)) < 0) {
+	if ((err = parseNode(&cfg, mpt_node_data(conf, 0), (void *) args, "{*} = !#", "ns", log)) < 0) {
 		return err;
 	}
 	ret = err ? 1 : 0;
@@ -136,15 +135,20 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(metatype) *args, M
 		}
 		mpt_gnode_insert(&cfg, 0, sol);
 	}
+	/* require successful advance */
+	if (args && args->_vptr->advance(args) < 0) {
+		args = 0;
+	}
 	/* parse solver config file */
-	if ((err = parseNode(sol, mpt_node_data(sol, 0), args, "[ ] = !#", "ns", log)) < 0) {
+	if ((err = parseNode(sol, mpt_node_data(sol, 0), (void *) args, "[ ] = !#", "ns", log)) < 0) {
 		mpt_node_clear(&cfg);
 		return err;
 	}
 	if (err) {
 		++ret;
 	}
-	if (args && (err = args->_vptr->conv(args, 0, &fmt))) {
+	/* check further arguments */
+	if (args && args->_vptr->advance(args) > 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Critical), "%s", MPT_tr("too many arguments"));
 		mpt_node_clear(&cfg);
 		return MPT_ERROR(BadArgument);
@@ -153,7 +157,7 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(metatype) *args, M
 	mpt_node_clear(conf);
 	conf->children = sol = cfg.children;
 	while (sol) {
-		sol->parent = cfg.children;
+		sol->parent = conf;
 		sol = sol->next;
 	}
 	return ret;

@@ -23,6 +23,7 @@ MPT_INTERFACE(config);
 MPT_INTERFACE(client);
 MPT_INTERFACE(output);
 MPT_INTERFACE(metatype);
+MPT_INTERFACE(iterator);
 
 MPT_STRUCT(dispatch);
 MPT_STRUCT(array);
@@ -34,7 +35,7 @@ MPT_STRUCT(node);
 MPT_STRUCT(solver_data)
 {
 #ifdef __cplusplus
-	inline data() : npar(0), nval(0)
+	inline solver_data() : npar(0), nval(0)
 	{ }
 #else
 # define MPT_SOLVER_DATA_INIT { MPT_ARRAY_INIT, MPT_ARRAY_INIT,  0, 0 }
@@ -485,7 +486,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
 extern int mpt_solver_args(MPT_INTERFACE(config) *, char * const [], int __MPT_DEFPAR(-1));
 
 /* read files to configuration */
-extern int mpt_solver_read(MPT_STRUCT(node) *, MPT_INTERFACE(metatype) *, MPT_INTERFACE(logger) *);
+extern int mpt_solver_read(MPT_STRUCT(node) *, MPT_INTERFACE(iterator) *, MPT_INTERFACE(logger) *);
 
 /* initialize solver memory */
 extern void mpt_solver_data_fini(MPT_STRUCT(solver_data) *);
@@ -524,7 +525,7 @@ extern double *mpt_solver_data_grid (MPT_STRUCT(solver_data) *);
 extern double *mpt_solver_data_param(MPT_STRUCT(solver_data) *);
 
 /* execute specific IVP solver step */
-extern int mpt_steps_ode(MPT_SOLVER(IVP) *, MPT_INTERFACE(metatype) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_steps_ode(MPT_SOLVER(IVP) *, MPT_INTERFACE(iterator) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* inner node residuals with central differences */
 extern int mpt_residuals_cdiff(void *, double , const double *, double *, const MPT_SOLVER_IVP_STRUCT(parameters) *, const double *, MPT_SOLVER_IVP(Rside));

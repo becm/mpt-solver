@@ -116,7 +116,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	}
 	if ((buf = out->_pass._buf)) {
 		pass = (void *) (buf + 1);
-		passlen = buf->used / sizeof(uint8_t);
+		passlen = buf->_used / sizeof(uint8_t);
 	} else {
 		pass = 0;
 		passlen = 0;
@@ -137,7 +137,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	    && (state & MPT_ENUM(DataStateInit))
 	    && sd
 	    && (buf = sd->val._buf)
-	    && (np = buf->used / sizeof(double))) {
+	    && (np = buf->_used / sizeof(double))) {
 		const double *val = (double *) (sd->val._buf + 1);
 		int i, nv;
 		if ((nv = sd->nval) < 0) {

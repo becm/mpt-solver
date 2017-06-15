@@ -31,7 +31,7 @@ extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *so, int state,
 	    || !(buf = sd->val._buf)) {
 		return 0;
 	}
-	if (!(len = buf->used / sizeof(*val))) {
+	if (!(len = buf->_used / sizeof(*val))) {
 		return 0;
 	}
 	if (!(ld = sd->nval)
@@ -51,7 +51,7 @@ extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *so, int state,
 		
 		if ((buf = so->_pass._buf)) {
 			pass = (void *) (buf + 1);
-			passlen = buf->used;
+			passlen = buf->_used / sizeof(*pass);
 		} else {
 			pass = 0;
 			passlen = 0;

@@ -25,9 +25,9 @@ public:
 	int remove(const mpt::path *) __MPT_OVERRIDE
 	{ return 0; }
 	
-	int step(mpt::metatype *) __MPT_OVERRIDE
+	int step(mpt::iterator *) __MPT_OVERRIDE
 	{ return 0; }
-	int init(mpt::metatype *) __MPT_OVERRIDE
+	int init(mpt::iterator *) __MPT_OVERRIDE
 	{ return 0; }
 };
 

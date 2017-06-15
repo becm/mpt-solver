@@ -43,7 +43,7 @@ extern int mpt_conf_ode(MPT_STRUCT(solver_data) *md, double t, const MPT_STRUCT(
 		return 0;
 	}
 	/* save initial time value */
-	if ((buf = md->val._buf)) buf->used = 0;
+	if ((buf = md->val._buf)) buf->_used = 0;
 	if (!mpt_array_append(&md->val, sizeof(t), &t)) {
 		if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to save initial time in history"));

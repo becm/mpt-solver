@@ -75,7 +75,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 		if (grf && (grf != dat)) {
 			outputTime(grf, state, *t);
 		}
-		vec = (void *) (t+1);
+		vec = (void *) (t + 1);
 		++fmt;
 	}
 	if (*fmt != MPT_value_toVector('d')) {
@@ -112,7 +112,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 	}
 	if ((buf = out->_pass._buf)) {
 		pass = (void *) (buf + 1);
-		passlen = buf->used / sizeof(uint8_t);
+		passlen = buf->_used / sizeof(*pass);
 	} else {
 		passlen = 0;
 		pass = 0;
