@@ -81,7 +81,10 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			snprintf(buf, sizeof(buf), "%s [%s.%s]: ",
 			         MPT_tr("problem settings"), conf, defExt);
 			
-			if (!(rname = mpt_readline(buf)) || !(fname = stripFilename(rname))) {
+			if (!(rname = mpt_readline(buf))) {
+				return MPT_event_fail(ev, MPT_ERROR(BadValue), "user interrupt");
+			}
+			if (!(fname = stripFilename(rname))) {
 				snprintf(buf, sizeof(buf), "%s.%s", conf, defExt);
 				fname = buf;
 			}
@@ -113,7 +116,10 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			const char *sol = cname ? cname : defName;
 			snprintf(buf, sizeof(buf), "%s [%s_%s.%s]: ",
 			         MPT_tr("solver config"), sol, defPost, defExt);
-			if (!(rname = mpt_readline(buf)) || !(fname = stripFilename(rname))) {
+			if (!(rname = mpt_readline(buf))) {
+				return MPT_event_fail(ev, MPT_ERROR(BadValue), "user interrupt");
+			}
+			if (!(fname = stripFilename(rname))) {
 				snprintf(buf, sizeof(buf), "%s_%s.%s", sol, defPost, defExt);
 				fname = buf;
 			}
