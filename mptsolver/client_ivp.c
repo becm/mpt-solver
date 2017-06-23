@@ -366,10 +366,16 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		ivp->steps = it;
 	}
 	ivp->t = 0;
-	if (it && (ret = it->_vptr->get(it, 'd', &ivp->t)) <= 0) {
-		mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
-		        MPT_tr("failed to query"), MPT_tr("initial time value"));
-		return ret;
+	if (it) {
+		if ((ret = it->_vptr->get(it, 'd', &ivp->t)) <= 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("failed to query"), MPT_tr("initial time value"));
+			return ret;
+		}
+		if (ret && (ret = it->_vptr->advance(it)) < 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("unable to advance iterator"), MPT_tr("time steps"));
+		}
 	}
 	/* clear/create solver data */
 	if ((dat = ivp->sd)) {

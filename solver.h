@@ -67,6 +67,17 @@ MPT_STRUCT(solver_data);
 MPT_STRUCT(solver_output);
 #endif /* _MPT_ARRAY_H */
 
+MPT_STRUCT(solver_value)
+{
+#ifdef __cplusplus
+	inline solver_value : _it(0)
+	{ }
+protected:
+#endif
+	MPT_INTERFACE(iterator) *_it;
+	MPT_STRUCT(value) _val;
+};
+
 #ifndef __cplusplus
 # ifndef __MPT_IVP_RTOL
 #  define __MPT_IVP_RTOL  1e-4
@@ -561,24 +572,32 @@ extern int mpt_output_solver_data(MPT_INTERFACE(output) *, int , int , int , con
 extern int mpt_output_ivp_header(MPT_INTERFACE(output) *, int , int , const double *);
 extern int mpt_output_solver_history(MPT_INTERFACE(output) *, const double *, int , const double *, int);
 
-/* solver module data management */
-extern void *mpt_vecpar_alloc(struct iovec *, size_t len, size_t size);
 
-extern int mpt_vecpar_settol(MPT_SOLVER_TYPE(dvecpar) *, MPT_INTERFACE(metatype) *, double def);
-extern int mpt_vecpar_cktol(MPT_SOLVER_TYPE(dvecpar) *, int len, int repeat, double def);
 
-extern int mpt_vecpar_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);
-extern int mpt_vecpar_set(double **, int , MPT_INTERFACE(metatype) *);
+/* solver module tolerance handling */
+extern int mpt_solver_settol(MPT_SOLVER_TYPE(dvecpar) *, const MPT_INTERFACE(metatype) *, double);
+extern int mpt_solver_cktol(MPT_SOLVER_TYPE(dvecpar) *, int , int , double);
 
-extern int mpt_ivppar_set(MPT_SOLVER_IVP_STRUCT(parameters) *, MPT_INTERFACE(metatype) *);
-extern int mpt_nlspar_set(MPT_SOLVER_NLS_STRUCT(parameters) *, MPT_INTERFACE(metatype) *);
+/* solver module memory management */
+extern void *mpt_solver_valloc(struct iovec *, size_t len, size_t size);
+extern int mpt_solver_vecpar_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);
+extern int mpt_solver_vecpar_set(double **, int , int , const MPT_INTERFACE(metatype) *);
 
+/* solver module parameter query */
+extern int mpt_solver_ivpset(MPT_SOLVER_IVP_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
+extern int mpt_solver_nlsset(MPT_SOLVER_NLS_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
+
+
+/* get value and advance source */
+extern int mpt_solver_value_set(MPT_STRUCT(solver_value) *, const MPT_INTERFACE(metatype) *);
+extern int mpt_solver_next_double(MPT_STRUCT(solver_value) *, double *);
+extern int mpt_solver_next_uint(MPT_STRUCT(solver_value) *, uint32_t *);
+extern int mpt_solver_next_int(MPT_STRUCT(solver_value) *, int32_t *);
+extern int mpt_solver_next_key(MPT_STRUCT(solver_value) *, uintptr_t *);
 
 __MPT_EXTDECL_END
 
 #ifdef __cplusplus
-
-
 } /* namespace solver */
 #endif
 

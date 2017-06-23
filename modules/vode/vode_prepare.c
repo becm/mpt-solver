@@ -16,11 +16,11 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data)
 	lrw  = data->ivp.pint + 1;
 	
 	mf = (data->atol.base && neqs > 1) ? lrw : 0;
-	if (mpt_vecpar_cktol(&data->atol, neqs, mf, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_cktol(&data->atol, neqs, mf, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	mf = (data->rtol.base && neqs > 1) ? lrw : 0;
-	if (mpt_vecpar_cktol(&data->rtol, neqs, mf, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_cktol(&data->rtol, neqs, mf, __MPT_IVP_RTOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	neqs *= lrw;  /* total dimension for solver */
@@ -69,10 +69,10 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data)
 	
 	lrw += 22;
 	
-	if (!(iwk = mpt_vecpar_alloc(&data->iwork, liw, sizeof(int)))) {
+	if (!(iwk = mpt_solver_valloc(&data->iwork, liw, sizeof(int)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_vecpar_alloc(&data->rwork, lrw, sizeof(double))) {
+	if (!mpt_solver_valloc(&data->rwork, lrw, sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
 	data->istate = 1;

@@ -20,7 +20,7 @@ static int vdGet(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
 {
 	return mpt_vode_get((MPT_SOLVER_STRUCT(vode) *) (gen+1), pr);
 }
-static int vdSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metatype) *src)
+static int vdSet(MPT_INTERFACE(object) *gen, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
 	return mpt_vode_set((MPT_SOLVER_STRUCT(vode) *) (gen+1), pr, src);
 }

@@ -7,7 +7,7 @@
 
 #include "../solver.h"
 
-extern int mpt_vecpar_cktol(MPT_SOLVER_TYPE(dvecpar) *tol, int neqs, int post, double def)
+extern int mpt_solver_cktol(MPT_SOLVER_TYPE(dvecpar) *tol, int neqs, int post, double def)
 {
 	double *tmp, val;
 	int  i, len;

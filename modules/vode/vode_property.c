@@ -19,7 +19,7 @@ static int setInt(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, int val)
 		if (!val) {
 			return 0;
 		}
-		if (!(iwk = mpt_vecpar_alloc(&vd->iwork, pos + 1, sizeof(int)))) {
+		if (!(iwk = mpt_solver_valloc(&vd->iwork, pos + 1, sizeof(int)))) {
 			return MPT_ERROR(BadOperation);
 		}
 	}
@@ -34,31 +34,34 @@ static int setReal(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, double val)
 		if (!val) {
 			return 0;
 		}
-		if (!(rwk = mpt_vecpar_alloc(&vd->rwork, pos + 1, sizeof(double)))) {
+		if (!(rwk = mpt_solver_valloc(&vd->rwork, pos + 1, sizeof(double)))) {
 			return MPT_ERROR(BadOperation);
 		}
 	}
 	rwk[pos] = val;
 	return 1;
 }
-static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(metatype) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
 {
-	char *key;
-	int32_t mu, ml;
-	int ret, len;
+	MPT_SOLVER_STRUCT(value) val;
+	uintptr_t key;
+	int32_t ml, mu;
+	int ret;
 	
 	if (!src) {
 		vd->miter = 0;
 		return 0;
 	}
-	if ((ret = src->_vptr->conv(src, 'k' | MPT_ENUM(ValueConsume), &key)) < 0) {
+	if ((ret = mpt_solver_value_set(&val, src)) < 0) {
 		return ret;
 	}
-	if (!ret || !key) {
-		vd->miter = 0;
-		return 0;
+	if ((ret = mpt_solver_next_key(&val, &key)) < 0) {
+		return ret;
 	}
-	switch (key[0]) {
+	if (ret) {
+		ret = 1;
+	}
+	switch (key) {
 		case 'n': case 'N': vd->miter = 0; return ret;
 		case 'F': vd->miter = 1; return ret;
 		case 'f': vd->miter = 2; return ret;
@@ -67,38 +70,74 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(metatype) *src
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	len = 1;
-	if ((ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &ml)) > 0) {
-		++len;
-		if ((ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &mu)) > 0) {
-			++len;
-		} else {
-			mu = ml;
-		}
-	} else {
-		ml = mu = vd->ivp.neqs;
+	if ((ret = mpt_solver_next_int(&val, &ml)) < 0) {
+		return ret;
 	}
-	
+	else if (!ret) {
+		ml = mu = vd->ivp.neqs;
+		ret = 1;
+	}
+	else if ((ret = mpt_solver_next_int(&val, &mu)) < 0) {
+		return ret;
+	}
+	else if (!ret) {
+		mu = ml;
+		ret = 2;
+	}
+	else {
+		ret = 3;
+	}
+	if (ml < 0 || mu < 0) {
+		return MPT_ERROR(BadValue);
+	}
 	if (setInt(vd, 0, ml) < 0
 	    || setInt(vd, 1, mu) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	vd->miter = (key[0] == 'B') ? 4 : 5;
+	vd->miter = (key == 'B') ? 4 : 5;
 	
-	return len;
+	return ret;
 }
-static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(metatype) *src)
+static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
 {
-	double val;
-	char *key;
+	MPT_INTERFACE(iterator) *it = 0;
+	MPT_STRUCT(value) val = MPT_VALUE_INIT;
+	const char *key;
+	double tcrit;
 	int ret;
 	
 	if (!src) {
 		vd->itask = 1;
 		return 0;
 	}
-	if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
-		return ret;
+	if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0) {
+		const char * const *ptr;
+		key = 0;
+		if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeValue), &val)) < 0 || !val.fmt) {
+			if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+				return ret;
+			}
+			ret = 1;
+		}
+		else if ((ret = *val.fmt)) {
+			if (ret != 's') {
+				return MPT_ERROR(BadType);
+			}
+			if (!(ptr = val.ptr)) {
+				return MPT_ERROR(BadValue);
+			}
+			val.ptr = ptr + 1;
+			++val.fmt;
+			key = *ptr;
+			ret = 1;
+		}
+	}
+	else if (it) {
+		if ((ret = it->_vptr->get(it, 'k', &key)) < 0
+		 || (ret = it->_vptr->advance(it)) < 0) {
+			return ret;
+		}
+		ret = 1;
 	}
 	if (!ret || !key) {
 		vd->itask = 1;
@@ -114,22 +153,35 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(metatype) *src
 		case 'i': case '1': vd->itask = 1; return ret;
 		/* opteration till tstop */
 		case 'I': case 'S': case '4': case '5':
-			if ((ret = src->_vptr->conv(src, 'd', &val)) > 0) {
-				if (setReal(vd, 0, val) < 0) {
-					return MPT_ERROR(BadOperation);
-				}
-				ret = 2;
-				break;
-			}
-			ret = 1;
+			break;
 		default:
 			return MPT_ERROR(BadValue);
 	}
+	if (it) {
+		if ((ret = it->_vptr->get(it, 'd', &tcrit)) < 0) {
+			return ret;
+		}
+		if (!ret) {
+			return MPT_ERROR(BadOperation);
+		}
+		if ((ret = it->_vptr->advance(it)) < 0) {
+			return ret;
+		}
+	}
+	else if (val.fmt && val.fmt[0] == 'd' && val.ptr) {
+		tcrit = *((double *) val.ptr);
+	}
+	else {
+		return MPT_ERROR(MissingData);
+	}
+	if (setReal(vd, 0, tcrit) < 0) {
+		return MPT_ERROR(BadOperation);
+	}
 	vd->itask = (key[0] == 'S' || key[0] == '5') ? 5 : 4;
 	
-	return ret;
+	return 2;
 }
-static int setMethod(MPT_SOLVER_STRUCT(vode) *data, MPT_INTERFACE(metatype) *src)
+static int setMethod(MPT_SOLVER_STRUCT(vode) *data, const MPT_INTERFACE(metatype) *src)
 {
 	char *key;
 	int ret;
@@ -154,32 +206,42 @@ static int setMethod(MPT_SOLVER_STRUCT(vode) *data, MPT_INTERFACE(metatype) *src
 	}
 }
 
-extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTERFACE(metatype) *src)
+extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT_INTERFACE(metatype) *src)
 {
 	int ret = 0;
 	
 	if (!name) {
 		double t = vd->t;
 		size_t required;
+		int ry;
 		
-		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
-			if (ret < 0) {
+		if (src) {
+			MPT_INTERFACE(iterator) *it;
+			if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it) >= 0)) {
+				if (ret && it) {
+					if ((ret = it->_vptr->get(it, 'd', &t)) < 0
+					 || (ret = it->_vptr->advance(it)) < 0) {
+						return ret;
+					}
+					ret = 1;
+				}
+			}
+			else if ((ret = src->_vptr->conv(src, 'd', &t) <= 0)) {
 				return ret;
 			}
-			src = 0;
 		}
-		required = vd->ivp.neqs * (vd->ivp.pint + 1);
-		if ((ret = mpt_vecpar_set(&vd->y, required, src)) < 0) {
-			return ret;
+		required = vd->ivp.pint ? vd->ivp.pint + 1 : 0;
+		if ((ry = mpt_solver_vecpar_set(&vd->y, vd->ivp.neqs, required, src)) < 0) {
+			return ry;
 		}
 		vd->t = t;
 		
-		return src ? ++ret : 0;
+		return ry + ret;
 	}
 	else if (!*name) {
 		MPT_SOLVER_IVP_STRUCT(parameters) ivp = vd->ivp;
 		ret = 0;
-		if (src && (ret =  mpt_ivppar_set(&ivp, src)) < 0) {
+		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
 			return ret;
 		}
 		mpt_vode_fini(vd);
@@ -189,10 +251,10 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTER
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&vd->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_settol(&vd->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&vd->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_settol(&vd->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return setJacobian(vd, src);
@@ -208,38 +270,38 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTER
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
 		if (setInt(vd, 4, val) < 0) return MPT_ERROR(BadOperation);
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "mxstep") || !strcasecmp(name, "iwork6")) {
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
 		if (setInt(vd, 5, val) < 0) return MPT_ERROR(BadOperation);
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "mxhnil") || !strcasecmp(name, "iwork7")) {
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
 		if (setInt(vd, 6, val) < 0) return MPT_ERROR(BadOperation);
-		return ret ? 1 : 0;
+		return 0;
 	}
 	/* real array parameter */
 	if (!strcasecmp(name, "h0") || !strcasecmp(name, "rwork5")) {
 		double val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
 		if (setReal(vd, 4, val) < 0) return MPT_ERROR(BadOperation);
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "hmax") || !strcasecmp(name, "rwork6")) {
 		double val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
 		if (setReal(vd, 5, val) < 0) return MPT_ERROR(BadOperation);
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "hmin") || !strcasecmp(name, "rwork7")) {
 		double val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
 		if (setReal(vd, 6, val) < 0) return MPT_ERROR(BadOperation);
-		return ret ? 1 : 0;
+		return 0;
 	}
 	return MPT_ERROR(BadArgument);
 }
@@ -271,13 +333,13 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : (pos == ++id)) {
 		if (!vd) { prop->val.fmt = "d"; prop->val.ptr = &vd->atol.d.val; }
-		else { id = mpt_vecpar_get(&vd->atol, &prop->val); }
+		else { id = mpt_solver_vecpar_get(&vd->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == ++id)) {
 		if (!vd) { prop->val.fmt = "d"; prop->val.ptr = &vd->rtol.d.val; }
-		else { id = mpt_vecpar_get(&vd->rtol, &prop->val); }
+		else { id = mpt_solver_vecpar_get(&vd->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}
