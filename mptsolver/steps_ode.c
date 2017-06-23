@@ -74,7 +74,7 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(iterator) *src, MPT
 	if (!sd || !src) {
 		return MPT_ERROR(BadArgument);
 	}
-	if ((ret = src->_vptr->meta.conv((void *) src, 'd', &end)) < 0) {
+	if ((ret = src->_vptr->get(src, 'd', &end)) < 0) {
 		return MPT_ERROR(MissingData);
 	}
 	if (!ret) {
@@ -121,9 +121,14 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(iterator) *src, MPT
 			if (!ret) {
 				return ret;
 			}
-			if ((ret = src->_vptr->meta.conv((void *) src, 'd', &end)) < 0) {
+			if ((ret = src->_vptr->get(src, 'd', &end)) < 0) {
 				mpt_log(out, __func__, MPT_LOG(Warning), "%s",
 				        MPT_tr("bad time step data"));
+				return ret;
+			}
+			if (!ret) {
+				mpt_log(out, __func__, MPT_LOG(Error), "%s",
+				        MPT_tr("bad time step state"));
 				return ret;
 			}
 		} while (end <= curr);

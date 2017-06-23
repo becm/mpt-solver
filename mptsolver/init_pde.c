@@ -37,7 +37,7 @@ extern MPT_SOLVER_STRUCT(pdefcn) *mpt_init_pde(MPT_SOLVER(IVP) *sol, int neqs, i
 	val.fmt = "ii";
 	val.ptr = ivp;
 	
-	if (mpt_object_pset((void *) sol, "", &val, 0) < 0) {
+	if (mpt_object_iset((void *) sol, "", &val) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s [%d, %d]",
 		                 MPT_tr("failed to set PDE size"), neqs, len);
 		return 0;

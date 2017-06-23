@@ -64,7 +64,7 @@ static int nextTime(MPT_INTERFACE(iterator) *src, double *end, const char *fcn, 
 			        arg ? MPT_tr("argument") : MPT_tr("internal"));
 			return 0;
 		}
-		if ((ret = src->_vptr->meta.conv((void *) src, 'd', end)) < 0) {
+		if ((ret = src->_vptr->get(src, 'd', end)) < 0) {
 			mpt_log(info, fcn, MPT_LOG(Error), "%s (%s)",
 			        MPT_tr("bad value on time source"),
 			        arg ? MPT_tr("argument") : MPT_tr("internal"));
@@ -121,7 +121,7 @@ static void deleteIVP(MPT_INTERFACE(unrefable) *gen)
 	mpt_proxy_fini(&ivp->pr);
 	
 	if ((it = ivp->steps)) {
-		it->_vptr->meta.ref.unref((void *) it);
+		it->_vptr->ref.unref((void *) it);
 	}
 	if (ivp->sd) {
 		mpt_solver_data_fini(ivp->sd);
@@ -212,7 +212,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			return ret;
 		}
 		/* set solver parameters */
-		mpt_solver_param((void *) sol, conf->children, 0, info);
+		mpt_solver_param((void *) sol, conf->children, info);
 		
 		/* prepare solver */
 		if ((ret = sol->_vptr->step(sol, 0)) < 0) {
@@ -361,12 +361,12 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 			return MPT_ERROR(BadValue);
 		}
 		if ((old = ivp->steps)) {
-			old->_vptr->meta.ref.unref((void *) old);
+			old->_vptr->ref.unref((void *) old);
 		}
 		ivp->steps = it;
 	}
 	ivp->t = 0;
-	if (it && (ret = it->_vptr->meta.conv((void *) it, 'd', &ivp->t)) <= 0) {
+	if (it && (ret = it->_vptr->get(it, 'd', &ivp->t)) <= 0) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
 		        MPT_tr("failed to query"), MPT_tr("initial time value"));
 		return ret;

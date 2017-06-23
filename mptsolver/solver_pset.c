@@ -24,6 +24,7 @@ struct outputProc {
 static int procProp(void *ptr, const MPT_INTERFACE(property) *pr)
 {
 	static const char fcn[] = "mpt_solver_pset";
+	MPT_STRUCT(value) val;
 	struct outputProc *o = ptr;
 	int ret;
 	
@@ -36,7 +37,8 @@ static int procProp(void *ptr, const MPT_INTERFACE(property) *pr)
 		o->err |= 8;
 		return 4;
 	}
-	if ((ret = mpt_object_pset(o->obj, pr->name, &pr->val, 0)) >= 0) {
+	val = pr->val;
+	if ((ret = mpt_object_iset(o->obj, pr->name, &val)) >= 0) {
 		return 0;
 	}
 	/* unknown property */

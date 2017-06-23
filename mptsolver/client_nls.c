@@ -175,7 +175,7 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			return MPT_ERROR(BadOperation);
 		}
 		/* set solver parameters from config */
-		mpt_solver_param((void *) sol, conf->children, 0, info);
+		mpt_solver_param((void *) sol, conf->children, info);
 		
 		if ((ret = mpt_conf_history(nls->out._data, conf->children)) < 0) {
 			return ret;

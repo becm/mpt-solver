@@ -21,7 +21,7 @@
  * \param arg  text type properties
  * \param out  logging descriptor
  */
-extern void mpt_solver_param(MPT_INTERFACE(object) *obj, const MPT_STRUCT(node) *base, MPT_INTERFACE(metatype) *arg, MPT_INTERFACE(logger) *out)
+extern void mpt_solver_param(MPT_INTERFACE(object) *obj, const MPT_STRUCT(node) *base, MPT_INTERFACE(logger) *out)
 {
 	static const int maskSpecific = MPT_ENUM(TraverseNonLeafs) | MPT_ENUM(TraverseEmpty);
 	static const int maskGeneric  = MPT_ENUM(TraverseNonLeafs) | MPT_ENUM(TraverseEmpty) | MPT_ENUM(TraverseUnknown) | MPT_ENUM(TraverseDefault);
@@ -44,37 +44,5 @@ extern void mpt_solver_param(MPT_INTERFACE(object) *obj, const MPT_STRUCT(node) 
 	}
 	if ((conf = mpt_node_next(base, "solver")) && (conf = conf->children)) {
 		mpt_solver_pset(obj, conf, ~maskGeneric, out);
-	}
-	if (!arg) {
-		return;
-	}
-	while (1) {
-		int len;
-		
-		if (!(len = arg->_vptr->conv(arg, MPT_ENUM(TypeProperty), &pr))) {
-			break;
-		}
-		if (len > 0) {
-			if (!*pr.name) {
-				mpt_log(out, __func__, MPT_LOG(Warning), "%s",
-				        MPT_tr("no property name"));
-				continue;
-			}
-			if (mpt_object_pset(obj, pr.name, &pr.val, 0) < 0) {
-				mpt_log(out, __func__, MPT_LOG(Warning), "%s: <%s>",
-				        MPT_tr("unable to set property"), pr.name);
-			}
-			continue;
-		}
-		if ((len = arg->_vptr->conv(arg, 's', &pr.val)) <= 0) {
-			break;
-		}
-		pr.val.fmt = 0;
-		if ((len = mpt_object_pset(obj, 0, &pr.val, 0)) >= 0) {
-			break;
-		}
-		mpt_log(out, __func__, MPT_LOG(Warning), "%s: <%s>",
-		        MPT_tr("bad assignment argument"), pr.name);
-		break;
 	}
 }

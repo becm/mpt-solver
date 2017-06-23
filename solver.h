@@ -408,13 +408,17 @@ struct vecpar
 	}
 	struct value value() const
 	{
+		::mpt::value v;
 		if (base) {
 			static const char fmt[2] = { static_cast<char>(vectorIdentifier<T>()), 0 };
-			return ::mpt::value(fmt, this);
+			v.fmt = fmt;
+			v.ptr = &d;
 		} else {
 			static const char fmt[2] = { static_cast<char>(typeIdentifier<T>()), 0 };
-			return ::mpt::value(fmt, &d.val);
+			v.fmt = fmt;
+			v.ptr = &d.val;
 		}
+		return v;
 	}
 protected:
 	T *base;
@@ -422,6 +426,8 @@ protected:
 		size_t len;
 		T val;
 	} d;
+private:
+	vecpar & operator =(const vecpar &);
 };
 
 # if __cplusplus >= 201103L
@@ -537,7 +543,7 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *, int , const cha
 
 /* set solver parameter */
 extern int  mpt_solver_pset (MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-extern void mpt_solver_param(MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, MPT_INTERFACE(metatype) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern void mpt_solver_param(MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* generic solver output */
 extern int mpt_solver_info  (MPT_SOLVER(generic) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
@@ -571,9 +577,19 @@ extern int mpt_nlspar_set(MPT_SOLVER_NLS_STRUCT(parameters) *, MPT_INTERFACE(met
 __MPT_EXTDECL_END
 
 #ifdef __cplusplus
+
+
 } /* namespace solver */
 #endif
 
 __MPT_NAMESPACE_END
+
+#ifdef __cplusplus
+template <typename T>
+inline std::ostream &operator<<(std::ostream &o, mpt::solver::vecpar<T> &d)
+{
+    return o << d.data();
+}
+#endif
 
 #endif /* _MPT_SOLVER_H */

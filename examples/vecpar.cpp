@@ -23,10 +23,10 @@ int main()
 	mtrace();
 	
 	dvecpar vd(7.6);
-	std::cout << vd.value().fmt << ": " << vd.data() << std::endl;
+	std::cout << vd.value().fmt << ": " << vd << std::endl;
 	
 	vd.resize(8);
-	std::cout << vd.value().fmt << ": " << vd.data() << std::endl;
+	std::cout << vd.value().fmt << ": " << vd << std::endl;
 	
 	vecpar<short> vi;
 	vi[0] = 4;

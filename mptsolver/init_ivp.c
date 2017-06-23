@@ -25,7 +25,7 @@ extern int mpt_init_ivp(MPT_SOLVER(IVP) *sol, double t, int len, const double *p
 	/* set equotation count */
 	val.fmt = "i";
 	val.ptr = &neqs;
-	if ((ret = mpt_object_pset((void *) sol, "", &val, 0)) <= 0) {
+	if ((ret = mpt_object_iset((void *) sol, "", &val)) <= 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to save problem parameter to solver"));
 		return ret;
@@ -37,8 +37,7 @@ extern int mpt_init_ivp(MPT_SOLVER(IVP) *sol, double t, int len, const double *p
 	
 	val.fmt = fmt;
 	val.ptr = &tmp;
-	
-	if ((ret = mpt_object_pset((void *) sol, 0, &val, 0)) < 0) {
+	if ((ret = mpt_object_iset((void *) sol, 0, &val)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("failed to set initial values"));
 	}
