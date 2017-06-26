@@ -78,9 +78,19 @@ static int solverNext(MPT_STRUCT(solver_value) *val, void *dest, int type, size_
 			return 0;
 		}
 		if (fmt != type) {
-			return MPT_ERROR(BadType);
+			MPT_INTERFACE(metatype) *mt;
+			if (fmt != MPT_ENUM(TypeMeta)) {
+				return MPT_ERROR(BadType);
+			}
+			if (!(mt = *((MPT_INTERFACE(metatype) **) val->_val.ptr))) {
+				return MPT_ERROR(BadType);
+			}
+			if ((ret = mt->_vptr->conv(mt, type, dest)) < 0) {
+				return ret;
+			}
+			len = sizeof(mt);
 		}
-		if (dest) {
+		else if (dest) {
 			memcpy(dest, val->_val.ptr, len);
 		}
 		val->_val.ptr = ((uint8_t *) val->_val.ptr) + len;
