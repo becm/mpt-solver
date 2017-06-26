@@ -119,7 +119,7 @@ extern int mpt_solver_next_key(MPT_STRUCT(solver_value) *val, uintptr_t *key)
 {
 	int ret;
 	const char *tmp;
-	if ((ret =  solverNext(val, &tmp, 'k', sizeof(*tmp))) < 0) {
+	if ((ret =  solverNext(val, &tmp, 'k', sizeof(tmp))) < 0) {
 		return ret;
 	}
 	if (ret && tmp && key) {
