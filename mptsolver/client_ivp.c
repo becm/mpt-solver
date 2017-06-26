@@ -156,6 +156,9 @@ static MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen, const
 	if (!(conf = mpt_node_query(conf, &p, 0))) {
 		return 0;
 	}
+	if (!conf->_meta) {
+		return mpt_metatype_default();
+	}
 	return conf->_meta;
 }
 static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, const MPT_STRUCT(value) *val)

@@ -40,7 +40,7 @@ extern int mpt_conf_history(MPT_INTERFACE(output) *out, const MPT_STRUCT(node) *
 	} else if (!(data = mpt_node_data(tmp, 0))) {
 		data = data_def;
 	}
-	e1 = mpt_object_set((void *) out, "format", "s", data);
+	e1 = mpt_object_pset((void *) out, "format", data, 0);
 	
 	/* set history output */
 	if (!(tmp = conf ? mpt_node_next(conf, "outfile") : 0)) {
@@ -48,7 +48,7 @@ extern int mpt_conf_history(MPT_INTERFACE(output) *out, const MPT_STRUCT(node) *
 	} else if (!(data = mpt_node_data(tmp, 0))) {
 		data = data_def;
 	}
-	if ((e2 = mpt_object_set((void *) out, "file", "s", data)) < 0) {
+	if ((e2 = mpt_object_pset((void *) out, "file", data, 0)) < 0) {
 		return (e1 < 0) ? e1 : (e1 ? 1 : 0);
 	}
 	if (e2) {

@@ -121,6 +121,9 @@ static MPT_INTERFACE(metatype) *queryNLS(const MPT_INTERFACE(config) *gen, const
 	if (!(conf = mpt_node_query(conf, &p, 0))) {
 		return 0;
 	}
+	if (!conf->_meta) {
+		return mpt_metatype_default();
+	}
 	return conf->_meta;
 }
 static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, const MPT_STRUCT(value) *val)
