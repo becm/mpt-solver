@@ -34,8 +34,8 @@ struct NLS {
 	MPT_STRUCT(solver_data) *sd;
 	char *cfg;
 	
-	MPT_SOLVER(NLS) *sol;
-	int (*uinit)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
+	MPT_SOLVER(generic) *sol;
+	int (*uinit)(MPT_SOLVER(generic) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
 	struct timeval  ru_usr,  /* user time in solver backend */
 	                ru_sys;  /* system time in solver backend */
 };
@@ -144,7 +144,7 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	if (!porg) {
 		struct _outNLSdata ctx;
 		MPT_STRUCT(solver_data) *dat;
-		MPT_SOLVER(NLS) *sol;
+		MPT_SOLVER(generic) *sol;
 		int ret;
 		
 		/* set (new) config base */
@@ -431,7 +431,7 @@ static MPT_INTERFACE_VPTR(client) ctlNLS = {
  * 
  * \return NLS client
  */
-extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *))
+extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(generic) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *))
 {
 	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	struct NLS *nls;

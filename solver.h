@@ -7,12 +7,13 @@
 #define _MPT_SOLVER_H  @INTERFACE_VERSION@
 
 #include "object.h"
+#include "array.h"
+
+#include <sys/uio.h>
 
 #ifdef __cplusplus
 # include <stdlib.h>
 #endif
-
-struct iovec;
 
 struct rusage;
 struct timeval;
@@ -31,7 +32,6 @@ MPT_STRUCT(event);
 MPT_STRUCT(proxy);
 MPT_STRUCT(node);
 
-#ifdef _MPT_ARRAY_H
 MPT_STRUCT(solver_data)
 {
 #ifdef __cplusplus
@@ -43,8 +43,8 @@ MPT_STRUCT(solver_data)
 	_MPT_ARRAY_TYPE(double) param;  /* parameter matrix */
 	_MPT_ARRAY_TYPE(double) val;    /* input/output (matrix) data */
 	
-	int npar;  /* leading dimension of parameter data */
-	int nval;  /* length of value matrix row */
+	long npar;  /* leading dimension of parameter data */
+	long nval;  /* length of value matrix row */
 };
 
 MPT_STRUCT(solver_output)
@@ -62,15 +62,11 @@ protected:
 #endif
 	_MPT_ARRAY_TYPE(uint8_t) _pass;  /*  process flags for data dimensions */
 };
-#else
-MPT_STRUCT(solver_data);
-MPT_STRUCT(solver_output);
-#endif /* _MPT_ARRAY_H */
 
 MPT_STRUCT(solver_value)
 {
 #ifdef __cplusplus
-	inline solver_value : _it(0)
+	inline solver_value() : _it(0)
 	{ }
 protected:
 #endif
@@ -124,16 +120,20 @@ namespace solver {
 
 enum MPT_SOLVER_ENUM(Flags)
 {
+	MPT_SOLVER_ENUM(CapableIvp) = 0xf,
+	MPT_SOLVER_ENUM(IvpRside)   = 0x1,
+	MPT_SOLVER_ENUM(IvpJac)     = 0x2,
+	MPT_SOLVER_ENUM(ODE)        = 0x3,
+	MPT_SOLVER_ENUM(IvpMas)     = 0x4,
+	MPT_SOLVER_ENUM(DAE)        = 0x7,
+	MPT_SOLVER_ENUM(PDE)        = 0x8,
 	
-	MPT_SOLVER_ENUM(CapableNls) = 0x0f,
-	MPT_SOLVER_ENUM(NlsVector)  = 0x01,
-	MPT_SOLVER_ENUM(NlsOverDet) = 0x02,
-	
-	MPT_SOLVER_ENUM(CapableIvp) = 0xf0,
-	MPT_SOLVER_ENUM(ODE)        = 0x10,
-	MPT_SOLVER_ENUM(DAE)        = 0x20,
-	MPT_SOLVER_ENUM(PDE)        = 0x40,
-	MPT_SOLVER_ENUM(IVP)        = 0x70,
+	MPT_SOLVER_ENUM(CapableNls) = 0xf00,
+	MPT_SOLVER_ENUM(NlsVector)  = 0x100,
+	MPT_SOLVER_ENUM(NlsJac)     = 0x200,
+	MPT_SOLVER_ENUM(NlsUser)    = 0x300,
+	MPT_SOLVER_ENUM(NlsOut)     = 0x400,
+	MPT_SOLVER_ENUM(NlsOverdet) = 0x800,
 	
 	MPT_SOLVER_ENUM(Header)     = 0x1,
 	MPT_SOLVER_ENUM(Status)     = 0x2,
@@ -150,7 +150,8 @@ protected:
 public:
 	enum { Type = TypeSolver };
 	
-	virtual int report(int what, PropertyHandler out, void *opar) = 0;
+	virtual int report(int , PropertyHandler , void *) = 0;
+	virtual int setFunctions(int , const void *) = 0;
 };
 #else
 MPT_SOLVER(generic);
@@ -159,20 +160,15 @@ MPT_INTERFACE_VPTR(solver)
 	/* metatype operations */
 	MPT_INTERFACE_VPTR(object) obj;
 	/* call output function with data to report for type */
-	int (*report)(MPT_SOLVER(generic) *, int , MPT_TYPE(PropertyHandler) , void *opar);
+	int (*report)(MPT_SOLVER(generic) *, int , MPT_TYPE(PropertyHandler) , void *);
+	int (*setFunctions)(MPT_SOLVER(generic) *, int , const void *);
 };
 MPT_SOLVER(generic)
 { const MPT_INTERFACE_VPTR(solver) *_vptr; };
-
-MPT_SOLVER_IVP_STRUCT(parameters);
 #endif
 
 /*! extension for Initial Value Problems */
 #ifdef __cplusplus
-struct odefcn;
-struct daefcn;
-struct pdefcn;
-
 class IVP : public generic
 {
 protected:
@@ -180,152 +176,157 @@ protected:
 public:
 	
 	virtual int step(double *end) = 0;
-	virtual void *functions(int);
-	virtual double *initstate();
 	
 	struct parameters;
-	struct functions;
+	struct rside;
+	struct jacobian;
+	struct odefcn;
+	struct daefcn;
+	struct pdefcn;
 	
-	inline operator struct odefcn *();
-	inline operator struct daefcn *();
-	inline operator struct pdefcn *();
+	bool set(const rside &);
+	bool set(const jacobian &);
+	bool set(const odefcn &);
+	bool set(const daefcn &);
+#else
+MPT_SOLVER_IVP_STRUCT(parameters);
 #endif
-/* ODE solver functions */
-typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Fcn))(void *upar, double t, const double *y, double *f);
-typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Jac))(void *upar, double t, const double *y, double *jac, int ldjac);
-/* extension for DAE solvers */
-typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Mas))(void *upar, double t, const double *y, double *band, int *ir, int *ic);
+/* right side function */
+typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Fcn))(void *, double t, const double *, double *);
+typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Pde))(void *, double t, const double *, double *, const MPT_SOLVER_IVP_STRUCT(parameters) *);
+/* extension for ODE/DAE solvers */
+typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Jac))(void *, double , const double *, double *, int);
+typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Mas))(void *, double , const double *, double *, int *, int *);
 /* extensions for PDE solvers */
-typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Rside))(void *upar, double t, const double *y, double *f, double x, double *dx, double *dy);
-typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Pde))(void *upar, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *, const double *x, _MPT_SOLVER_IVP_TYPEDEF(Rside));
+typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Rside))(void *, double , const double *, double *, double , double *, double *);
 #ifdef __cplusplus
 };
-inline void *IVP::functions(int)
-{ return 0; }
-inline double *IVP::initstate()
-{ return 0; }
-#endif
-
-/*! generic IVP functions */
-MPT_SOLVER_STRUCT(odefcn)
-{
-#ifdef __cplusplus
-	enum { Type = ODE };
-	
-	inline odefcn(IVP::Fcn f, IVP::Jac j = 0) : fcn(f), param(0), jac(j)
-	{ }
-#endif
-	MPT_SOLVER_IVP(Fcn) fcn;   /* unified right side calculation */
-	void               *param; /* user parameter for handler functions */
-	MPT_SOLVER_IVP(Jac) jac;   /* (full/banded) jacobi matrix */
-};
-MPT_SOLVER_STRUCT(daefcn)
-{
-#ifdef __cplusplus
-	enum { Type = DAE };
-	
-	inline daefcn(IVP::Fcn f, IVP::Mas m, IVP::Jac j = 0) : fcn(f), param(0), jac(j), mas(m)
-	{ }
-#endif
-	MPT_SOLVER_IVP(Fcn)  fcn;   /* unified right side calculation */
-	void                *param; /* user parameter for handler functions */
-	MPT_SOLVER_IVP(Jac)  jac;   /* (full/banded) jacobi matrix */
-	MPT_SOLVER_IVP(Mas)  mas;   /* (sparse) mass matrix */
-};
-MPT_SOLVER_STRUCT(pdefcn)
-{
-#ifdef __cplusplus
-	enum { Type = PDE };
-	
-	inline pdefcn(IVP::Pde f, IVP::Rside r = 0) : rside(r), grid(0), fcn(f), param(0)
-	{ }
-#endif
-	MPT_SOLVER_IVP(Rside) rside; /* per node right side */
-	double               *grid;  /* solver grid data */
-	MPT_SOLVER_IVP(Pde)   fcn;   /* right side function */
-	void                 *param; /* user parameter for handler functions */
-};
-
-/*! general IVP parameter */
-MPT_SOLVER_IVP_STRUCT(parameters)
-{
-#ifdef __cplusplus
-	inline parameters() : neqs(0), pint(0)
-	{ }
 #else
-# define MPT_IVPPAR_INIT(d)  ((d)->neqs = 0, (d)->pint = 0)
-#endif
-	int32_t neqs,  /* number of equotations */
-	        pint;  /* number pde intervals */
-};
-/*! initial value problem functions */
-MPT_SOLVER_IVP_STRUCT(functions)
+MPT_SOLVER(IVP);
+MPT_INTERFACE_VPTR(solver_ivp)
 {
-#ifdef __cplusplus
-	enum { Type = mpt::solver::IVP };
-	
-	inline functions(void *par = 0) : rside(0), grid(0), dae(0, 0)
-	{
-		dae.param = par;
-	}
-	void *select(int type, const struct parameters &par)
-	{
-		switch (type) {
-		  case odefcn::Type: if (par.pint) return 0; dae.mas = 0; return &dae;
-		  case daefcn::Type: return par.pint ? 0 : &dae;
-		  case pdefcn::Type: if (!par.pint) return 0; dae.jac = 0; dae.mas = 0;
-		  case Type: return this;
-		  default: return 0;
-		}
-	}
-#else
-# define MPT_IVPFCN_INIT(d)  ((MPT_SOLVER_IVP_STRUCT(functions) *) memset(d, 0, sizeof(MPT_SOLVER_IVP_STRUCT(functions))))
-#endif
-	MPT_SOLVER_IVP(Rside)     rside; /* right side function */
-	double                   *grid;  /* solver grid data */
-	MPT_SOLVER_STRUCT(daefcn) dae;
+	MPT_INTERFACE_VPTR(solver) gen;
+	int (*step)(MPT_SOLVER(IVP) *, double *end);
 };
-
-#ifdef __cplusplus
-inline IVP::operator struct odefcn *()
-{ return reinterpret_cast<odefcn *>(functions(odefcn::Type)); }
-inline IVP::operator struct daefcn *()
-{ return reinterpret_cast<daefcn *>(functions(daefcn::Type)); }
-inline IVP::operator struct pdefcn *()
-{ return reinterpret_cast<pdefcn *>(functions(pdefcn::Type)); }
+MPT_SOLVER(IVP)
+{ const MPT_INTERFACE_VPTR(solver_ivp) *_vptr; };
+#endif
 
 /*! extension for NonLinear Systems */
+#ifdef __cplusplus
 class NLS : public generic
 {
 protected:
 	inline ~NLS() {}
     public:
 	struct parameters;
+	struct residuals;
+	struct jacobian;
+	struct outdata;
 	struct functions;
 	
 	virtual int solve() = 0;
-	
-	virtual operator functions *();
-	
 #endif
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Fcn))(void *rpar, const double *p, double *res, const int *lres);
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Jac))(void *jpar, const double *p, double *jac, const int *ld, const double *res);
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Out))(void *opar, const MPT_STRUCT(value) *val);
 #ifdef __cplusplus
 };
-inline NLS::operator NLS::functions *()
-{ return 0; }
 #else
 MPT_SOLVER(NLS);
 MPT_INTERFACE_VPTR(solver_nls)
 {
 	MPT_INTERFACE_VPTR(solver) gen;
 	int (*solve)(MPT_SOLVER(NLS) *s);
-	MPT_SOLVER_NLS_STRUCT(functions) *(*functions)(MPT_SOLVER(NLS) *);
 };
 MPT_SOLVER(NLS)
 { const MPT_INTERFACE_VPTR(solver_nls) *_vptr; };
 #endif
+
+
+/*! general IVP parameter */
+MPT_SOLVER_IVP_STRUCT(parameters)
+{
+#ifdef __cplusplus
+	inline parameters(int n = 0) : neqs(n), pint(0), t(0), grid(0)
+	{ }
+#else
+# define MPT_IVPPAR_INIT  { 1, 0, 0 }
+#endif
+	int32_t   neqs;  /* number of equotations */
+	uint32_t  pint;  /* PDE intervals */
+	double   *grid;  /* PDE grid data */
+};
+/*! initial value problem functions */
+MPT_SOLVER_IVP_STRUCT(rside)
+{
+#ifdef __cplusplus
+	inline rside(Fcn f, void *p = 0) : fcn(f), par(p)
+	{ }
+	enum { Type = IvpRside };
+#else
+# define MPT_IVP_RSIDE_INIT { 0, 0 }
+#endif
+	MPT_SOLVER_IVP(Fcn) fcn;  /* unified right side calculation */
+	void *par;
+};
+/*! initial value problem functions */
+MPT_SOLVER_IVP_STRUCT(jacobian)
+{
+#ifdef __cplusplus
+	inline jacobian(Jac f, void *p = 0) : fcn(f), par(p)
+	{ }
+	enum { Type = IvpJac };
+#else
+# define MPT_IVP_JAC_INIT { 0, 0 }
+#endif
+	MPT_SOLVER_IVP(Jac) fcn;  /* (full/banded) jacobi matrix */
+	void  *par;
+};
+/*! initial value problem functions */
+MPT_SOLVER_IVP_STRUCT(odefcn)
+{
+#ifdef __cplusplus
+	inline odefcn(Fcn f, void *p = 0, Jac j = 0) : rside(f, p), jac(j, p)
+	{ }
+	enum { Type = ODE };
+#else
+# define MPT_IVP_ODE_INIT  { MPT_IVP_RSIDE_INIT, MPT_IVP_JAC_INIT }
+#endif
+	MPT_SOLVER_IVP_STRUCT(rside)    rside;
+	MPT_SOLVER_IVP_STRUCT(jacobian) jac;
+};
+/*! initial value problem functions */
+#ifdef __cplusplus
+MPT_SOLVER_IVP_STRUCT(daefcn) : public IVP::odefcn
+{
+	inline daefcn(Fcn f, void *p = 0, Jac j = 0) : IVP::odefcn(f, p, j)
+	{ mas.fcn = 0; mas.par = 0; }
+	enum { Type = DAE };
+#else
+MPT_SOLVER_IVP_STRUCT(daefcn)
+{
+# define MPT_IVP_DAE_INIT  { MPT_IVP_RSIDE_INIT, MPT_IVP_JAC_INIT, { 0, 0 } }
+	MPT_SOLVER_IVP_STRUCT(rside)    rside;
+	MPT_SOLVER_IVP_STRUCT(jacobian) jac;
+#endif
+	struct {
+		MPT_SOLVER_IVP(Mas) fcn;  /* (sparse) mass matrix */
+		void *par;
+	} mas;
+};
+MPT_SOLVER_IVP_STRUCT(pdefcn)
+{
+#ifdef __cplusplus
+	inline pdefcn(Pde f, void *p = 0) :fcn(f), par(p)
+	{ }
+	enum { Type = IvpRside | PDE };
+#else
+# define MPT_IVP_PDE_INIT  { 0, 0 }
+#endif
+	MPT_SOLVER_IVP(Pde) fcn;  /* (sparse) mass matrix */
+	void *par;
+};
 
 /*! general nonlinear system parameter */
 MPT_SOLVER_NLS_STRUCT(parameters)
@@ -334,29 +335,79 @@ MPT_SOLVER_NLS_STRUCT(parameters)
 	inline parameters() : nval(0), nres(0)
 	{ }
 #else
-# define MPT_NLSPAR_INIT(d)  ((d)->nres = (d)->nval = 0)
+# define MPT_NLSPAR_INIT  { 0, 0 }
 #endif
 	int32_t nval,  /* parameters to optimize */
 	        nres;  /* number of residuals */
 };
 /*! generic nonlinear system functions */
+MPT_SOLVER_NLS_STRUCT(residuals)
+{
+#ifdef __cplusplus
+	inline residuals(Fcn f, void *p = 0) : fcn(f), par(p)
+	{ }
+#else
+# define MPT_NLS_RES_INIT  { 0, 0 }
+#endif
+	MPT_SOLVER_NLS(Fcn) fcn;  /* calculate residuals */
+	void *par;
+};
+/*! generic nonlinear system functions */
+MPT_SOLVER_NLS_STRUCT(jacobian)
+{
+#ifdef __cplusplus
+	inline jacobian(Jac f, void *p = 0) : fcn(f), par(p)
+	{ }
+#else
+# define MPT_NLS_JAC_INIT  { 0, 0 }
+#endif
+	MPT_SOLVER_NLS(Jac) fcn;  /* calculate jacobian */
+	void *par;
+};
+/*! generic nonlinear system functions */
 MPT_SOLVER_NLS_STRUCT(functions)
 {
 #ifdef __cplusplus
-	inline functions(Fcn f, void *u = 0) : res(f), jac(0), rpar(u), jpar(0), out(0), opar(0)
-	{ }
+	inline functions(Fcn f, void *u = 0, Jac j = 0) : res(f, u), jac(j, u)
+	{ out.fcn = 0; out.par = 0; }
+	enum { Type = NlsVector | NlsJacobian };
 #else
-# define MPT_NLSFCN_INIT(d)  ((MPT_SOLVER_NLS_STRUCT(functions) *) memset(d, 0, sizeof(MPT_SOLVER_NLS_STRUCT(functions))))
+# define MPT_NLSFCN_INIT(r, p, j)  { { (r), (p) }, { (j), (p) } }
 #endif
-	MPT_SOLVER_NLS(Fcn) res;  /* calculate residuals */
-	MPT_SOLVER_NLS(Jac) jac;  /* calculate residual jacobian */
-	void *rpar, *jpar;        /* residual/jacobian function parameter */
-	
-	MPT_SOLVER_NLS(Out) out;  /* output current parameter/residuals */
-	void *opar;               /* output function parameter */
+	MPT_SOLVER_NLS_STRUCT(residuals) res;
+	MPT_SOLVER_NLS_STRUCT(jacobian)  jac;
+};
+
+MPT_SOLVER_NLS_STRUCT(output)
+{
+#ifdef __cplusplus
+	inline functions(Out f, void *u = 0) : fcn(f), par(u)
+	{ }
+	enum { Type = NlsOutput };
+#else
+# define MPT_NLSOUT_INIT(r, p)  { (r), (p) }
+#endif
+	MPT_SOLVER_NLS(Out) fcn;  /* output current parameter/residuals */
+	void *par;
 };
 
 #ifdef __cplusplus
+inline bool IVP::set(const IVP::rside &r)
+{
+	return setFunctions(r.Type, &r) >= 0;
+}
+inline bool IVP::set(const IVP::jacobian &j)
+{
+	return setFunctions(j.Type, &j) >= 0;
+}
+inline bool IVP::set(const IVP::odefcn &o)
+{
+	return setFunctions(o.Type, &o) >= 0;
+}
+inline bool IVP::set(const IVP::daefcn &d)
+{
+	return setFunctions(d.Type, &d) >= 0;
+}
 template <typename T>
 struct vecpar
 {
@@ -460,36 +511,25 @@ typedef struct
 	int *base;
 	union { size_t len; int val; } d;
 } MPT_SOLVER_TYPE(ivecpar);
-
-MPT_SOLVER(IVP);
-MPT_INTERFACE_VPTR(solver_ivp)
-{
-	MPT_INTERFACE_VPTR(solver) gen;
-	int (*step)(MPT_SOLVER(IVP) *, double *end);
-	void *(*functions)(MPT_SOLVER(IVP) *, int);
-	double *(*initstate)(MPT_SOLVER(IVP) *);
-};
-MPT_SOLVER(IVP)
-{ const MPT_INTERFACE_VPTR(solver_ivp) *_vptr; };
 #endif
 
 __MPT_EXTDECL_BEGIN
 
 
 /* create interface to solver */
-extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *, int (*)(MPT_SOLVER(IVP) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
-extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *, int (*)(MPT_SOLVER(NLS) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
+extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *, int (*)(MPT_SOLVER(generic) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
+extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *, int (*)(MPT_SOLVER(generic) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
 
 
 /* initialize IVP solver states */
-extern int mpt_init_ivp(MPT_SOLVER(IVP) *, double , int , const double *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_ivp(MPT_INTERFACE(object) *, const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
-extern MPT_SOLVER_STRUCT(daefcn) *mpt_init_dae(MPT_SOLVER(IVP) *, const MPT_STRUCT(array) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-extern MPT_SOLVER_STRUCT(odefcn) *mpt_init_ode(MPT_SOLVER(IVP) *, const MPT_STRUCT(array) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-extern MPT_SOLVER_STRUCT(pdefcn) *mpt_init_pde(MPT_SOLVER(IVP) *, int , int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_dae(MPT_SOLVER(generic) *, const MPT_SOLVER_IVP_STRUCT(daefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_ode(MPT_SOLVER(generic) *, const MPT_SOLVER_IVP_STRUCT(odefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_pde(MPT_SOLVER(generic) *, const MPT_SOLVER_IVP_STRUCT(pdefcn) *, int , const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* initialize NLS solver states */
-extern MPT_SOLVER_NLS_STRUCT(functions) *mpt_init_nls(MPT_SOLVER(NLS) *, const MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_nls(MPT_SOLVER(generic) *, const MPT_SOLVER_NLS_STRUCT(functions) *, const MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 
 /* register events on notifier */
@@ -528,13 +568,12 @@ extern int mpt_conf_graphic(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *);
 extern int mpt_conf_history(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *);
 
 /* create profile data */
-extern int mpt_conf_profiles(int , double *, int , const MPT_STRUCT(node) *, const double *, MPT_INTERFACE(logger) *);
-extern int mpt_conf_profile (int , double *, int , const MPT_STRUCT(node) *, const double *);
+extern MPT_INTERFACE(iterator) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *, int , double , const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *);
 
 /* append user data */
 extern int mpt_conf_param(MPT_STRUCT(array) *, const MPT_STRUCT(node) *, int);
 /* set grid data */
-extern int mpt_conf_grid(MPT_STRUCT(array) *, const MPT_STRUCT(node) *);
+extern int mpt_conf_grid(MPT_STRUCT(array) *, const MPT_INTERFACE(metatype) *);
 
 
 /* get/initialize solver data parameters */
@@ -583,10 +622,10 @@ extern void *mpt_solver_valloc(struct iovec *, size_t len, size_t size);
 extern int mpt_solver_vecpar_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);
 extern int mpt_solver_vecpar_set(double **, int , int , const MPT_INTERFACE(metatype) *);
 
-/* solver module parameter query */
+/* solver module parameter assignment */
 extern int mpt_solver_ivpset(MPT_SOLVER_IVP_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
+extern int mpt_solver_ivpstate(const MPT_SOLVER_IVP_STRUCT(parameters) *, double *, double **, const MPT_INTERFACE(metatype) *);
 extern int mpt_solver_nlsset(MPT_SOLVER_NLS_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
-
 
 /* get value and advance source */
 extern int mpt_solver_value_set(MPT_STRUCT(solver_value) *, const MPT_INTERFACE(metatype) *);

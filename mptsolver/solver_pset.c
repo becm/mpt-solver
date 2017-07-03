@@ -41,7 +41,7 @@ static int procProp(void *ptr, const MPT_INTERFACE(property) *pr)
 	if (!val.fmt) {
 		ret = mpt_object_pset(o->obj, pr->name, val.ptr, 0);
 	} else {
-		ret = mpt_object_iset(o->obj, pr->name, &val);
+		ret = mpt_object_nset(o->obj, pr->name, &val);
 	}
 	if (ret >= 0) {
 		return 0;

@@ -39,7 +39,8 @@ extern int mpt_conf_pde(MPT_STRUCT(solver_data) *md, const MPT_STRUCT(node) *con
 	}
 	/* grid setup */
 	if (!md->nval) {
-		if ((len = mpt_conf_grid(&md->val, mpt_node_next(conf, "grid"))) < 0) {
+		const MPT_STRUCT(node) *grid = mpt_node_next(conf, "grid");
+		if ((len = mpt_conf_grid(&md->val, grid ? grid->_meta : 0)) < 0) {
 			if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s",
 			                 MPT_tr("unable to get grid data"));
 			return MPT_ERROR(BadValue);

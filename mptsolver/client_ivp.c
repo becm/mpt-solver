@@ -35,8 +35,8 @@ struct IVP {
 	MPT_STRUCT(solver_data) *sd;
 	char *cfg;
 	
-	MPT_SOLVER(IVP) *sol;
-	int (*uinit)(MPT_SOLVER(IVP) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
+	MPT_SOLVER(generic) *sol;
+	int (*uinit)(MPT_SOLVER(generic) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
 	struct timeval ru_usr,   /* user time in solver backend */
 	               ru_sys;   /* system time in solver backend */
 	double t;
@@ -204,7 +204,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			        MPT_tr("missing data descriptor"));
 			return MPT_ERROR(BadOperation);
 		}
-		if (!(sol = ivp->sol)) {
+		if (!(sol = (void *) ivp->sol)) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("missing solver descriptor"));
 			return MPT_ERROR(BadOperation);
@@ -396,7 +396,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	}
 	/* get PDE grid data */
 	if ((curr = mpt_node_next(conf->children, "grid"))) {
-		if ((ret = mpt_conf_grid(&dat->val, curr)) < 0) {
+		if ((ret = mpt_conf_grid(&dat->val, curr->_meta)) < 0) {
 			mpt_log(info, _func, MPT_LOG(Warning), "%s: %s",
 			        "grid", MPT_tr("invalid parameter format"));
 		}
@@ -446,42 +446,50 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	if ((ret = ivp->uinit(ivp->sol, dat, info)) < 0) {
 		return ret;
 	}
-	/* setup PDE time data */
-	if ((ivp->pdim = dat->nval)) {
+	ivp->pdim = dat->nval;
+	/* set data segment size */
+	dat->nval = dat->val._buf->_used / sizeof(double);
+	
+	/* setup PDE time and profile data */
+	if (ivp->pdim) {
+		MPT_STRUCT(node) *pcfg = mpt_node_next(conf->children, "profile");
+		MPT_INTERFACE(iterator) *it;
 		int err;
-		if ((err = mpt_object_set((void *) ivp->sol, 0, "d", ivp->t)) < 0) {
-			mpt_log(info, 0, MPT_LOG(Error), "%s: %s",
-			        MPT_tr("solver"), MPT_tr("failed to set initial time"));
+		/* no profile data requested or available */
+		if (!ret || !pcfg) {
+			if ((err = mpt_object_set((void *) ivp->sol, 0, "d", ivp->t)) < 0) {
+				mpt_log(info, 0, MPT_LOG(Error), "%s: %s",
+				        MPT_tr("solver"), MPT_tr("failed to set initial time"));
+				return err;
+			}
+		}
+		/* process profile data */
+		else if (!(it = mpt_conf_profiles(dat, ivp->t, ret, pcfg, info)) < 0) {
+			return MPT_ERROR(BadOperation);
+		}
+		else if ((err = mpt_object_iset((void *) ivp->sol, 0, it)) < 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+			        MPT_tr("PDE init state assignment failed"));
 			return err;
 		}
 	}
-	/* save ODE/PDE segment size */
-	else {
-		dat->nval = dat->val._buf->_used / sizeof(double);
-	}
-	/* process profile data */
-	if (ret && ivp->pdim) {
-		MPT_STRUCT(node) *pcfg;
-		const double *grid;
-		double *pdata;
-		
-		if (!(pdata = ivp->sol->_vptr->initstate(ivp->sol))) {
-			mpt_log(info, _func, MPT_LOG(Error), "%s",
-			        MPT_tr("failed to get initial state"));
+	else if (ret++) {
+		double *post;
+		if (ret <= dat->nval) {
+			dat->nval = ret;
+			dat->val._buf->_used = ret * sizeof(double);
+		}
+		else if (!(post = mpt_values_prepare(&dat->val, dat->nval - ret))) {
 			return MPT_ERROR(BadOperation);
 		}
-		pcfg = mpt_node_next(conf->children, "profile");
-		grid = mpt_solver_data_grid(dat);
-		
-		if ((ret = mpt_conf_profiles(dat->nval, pdata, ret, pcfg, grid, info)) < 0) {
+		if ((ret = mpt_init_ivp((void *) ivp->sol, &dat->val, info)) < 0) {
 			return ret;
 		}
 	}
-	if (ret >= 0) {
-		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
-		        MPT_tr("IVP client preparation finished"));
-	}
-	return ret;
+	mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
+	        MPT_tr("IVP client preparation finished"));
+	
+	return 0;
 }
 /* step operation on solver */
 static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
@@ -502,7 +510,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	}
 	ctx.out = &ivp->out;
 	
-	if (!(sol = ivp->sol) || !(ctx.dat = ivp->sd)) {
+	if (!(sol = (void *) ivp->sol) || !(ctx.dat = ivp->sd)) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("client not prepared for step operation"));
 		return MPT_ERROR(BadOperation);
@@ -519,7 +527,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		/* current time data */
 		getrusage(RUSAGE_SELF, &pre);
 		/* execute possible steps */
-		ret = mpt_steps_ode(ivp->sol, src, ivp->sd, info);
+		ret = mpt_steps_ode(sol, src, ivp->sd, info);
 		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
 		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
@@ -609,7 +617,7 @@ static const MPT_INTERFACE_VPTR(client) clientIVP = {
  * 
  * \return IVP client
  */
-extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(IVP) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *))
+extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *out, int (*uinit)(MPT_SOLVER(generic) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *))
 {
 	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	struct IVP *ivp;
