@@ -9,6 +9,14 @@
 
 extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *data)
 {
+	if (data->ivp.grid) {
+		free(data->ivp.grid);
+		data->ivp.grid = 0;
+	}
+	if (data->y) {
+		free(data->y);
+		data->y = 0;
+	}
 	mpt_solver_valloc(&data->rwork, 0, 0);
 	mpt_solver_valloc(&data->iwork, 0, 0);
 	
@@ -20,13 +28,12 @@ extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *data)
 
 extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *data)
 {
-	/* allocate inital space for parameters */
-	data->rwork.iov_base = 0; data->rwork.iov_len = 0;
-	data->iwork.iov_base = 0; data->iwork.iov_len = 0;
+	const MPT_SOLVER_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
+	const struct iovec vec = { 0, 0 };
 	
-	MPT_IVPPAR_INIT(&data->ivp);
-	data->t = 0.0;
+	data->ivp = ivp;
 	data->y = 0;
+	data->t = 0;
 	
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);
@@ -40,6 +47,8 @@ extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *data)
 	data->itask = 1;   /* default to "normal" operation */
 	data->iopt = 0;
 	
+	data->rwork = vec;
+	data->iwork = vec;
 	data->rpar = 0;
 	data->ipar = 0;
 	

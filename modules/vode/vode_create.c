@@ -9,7 +9,7 @@
 
 static void vdFini(MPT_INTERFACE(unrefable) *gen)
 {
-	mpt_vode_fini((MPT_SOLVER_STRUCT(vode) *) (gen+1));
+	mpt_vode_fini((MPT_SOLVER_STRUCT(vode) *) (gen + 1));
 	free(gen);
 }
 static uintptr_t vdAddref()
@@ -18,66 +18,45 @@ static uintptr_t vdAddref()
 }
 static int vdGet(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
 {
-	return mpt_vode_get((MPT_SOLVER_STRUCT(vode) *) (gen+1), pr);
+	return mpt_vode_get((MPT_SOLVER_STRUCT(vode) *) (gen + 1), pr);
 }
 static int vdSet(MPT_INTERFACE(object) *gen, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	return mpt_vode_set((MPT_SOLVER_STRUCT(vode) *) (gen+1), pr, src);
+	return mpt_vode_set((MPT_SOLVER_STRUCT(vode) *) (gen + 1), pr, src);
 }
 
 static int vdReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	return mpt_vode_report((MPT_SOLVER_STRUCT(vode) *) (gen+1), what, out, data);
+	return mpt_vode_report((MPT_SOLVER_STRUCT(vode) *) (gen + 1), what, out, data);
+}
+static int vdFcn(MPT_SOLVER(generic) *gen, int type, const void *ptr)
+{
+	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen + 1);
+	return mpt_vode_ufcn(vd, (void *) (vd + 1), type, ptr);
 }
 
 static int vdStep(MPT_SOLVER(IVP) *sol, double *tend)
 {
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (sol+1);
+	MPT_SOLVER_STRUCT(vode) *vd = (void *) (sol + 1);
 	int ret;
 	
 	if (!tend) {
-		if (!vd->fcn && (ret = mpt_vode_ufcn(vd, (void *) (vd+1))) < 0) {
-			return ret;
-		}
 		return mpt_vode_prepare(vd);
 	}
 	ret = mpt_vode_step(vd, *tend);
 	*tend = vd->t;
 	return ret;
 }
-static void *vdFcn(MPT_SOLVER(IVP) *sol, int type)
-{
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (sol+1);
-	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) (vd+1);
-	switch (type) {
-	  case MPT_SOLVER_ENUM(ODE): break;
-	  case MPT_SOLVER_ENUM(PDE): if (!vd->ivp.pint) return 0; fcn->dae.jac = 0; fcn->dae.mas = 0;
-	  case MPT_SOLVER_ENUM(IVP): return fcn;
-	  default: return 0;
-	}
-	if (vd->ivp.pint) {
-		return 0;
-	}
-	fcn->dae.mas = 0;
-	return &fcn->dae;
-}
-static double *vdInitState(MPT_SOLVER(IVP) *sol)
-{
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (sol+1);
-	return vd->y;
-}
 static const MPT_INTERFACE_VPTR(solver_ivp) vodeCtl = {
-	{ { { vdFini }, vdAddref, vdGet, vdSet }, vdReport },
-	vdStep,
-	vdFcn,
-	vdInitState
+	{ { { vdFini }, vdAddref, vdGet, vdSet }, vdReport, vdFcn },
+	vdStep
 };
 
 extern MPT_SOLVER(IVP) *mpt_vode_create()
 {
 	MPT_SOLVER(IVP) *sol;
 	MPT_SOLVER_STRUCT(vode) *vd;
-	MPT_SOLVER_IVP_STRUCT(functions) *fcn;
+	MPT_SOLVER_IVP_STRUCT(odefcn) *fcn;
 	
 	if (!(sol = malloc(sizeof(*sol) + sizeof(*vd) + sizeof(*fcn)))) {
 		return 0;
@@ -85,8 +64,7 @@ extern MPT_SOLVER(IVP) *mpt_vode_create()
 	vd = (void *) (sol + 1);
 	mpt_vode_init(vd);
 	
-	fcn = MPT_IVPFCN_INIT(vd + 1);
-	fcn->dae.param = vd;
+	memset(vd + 1, 0, sizeof(*fcn));
 	
 	sol->_vptr = &vodeCtl;
 	

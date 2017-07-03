@@ -7,8 +7,6 @@
 
 #include "../solver.h"
 
-#include <sys/uio.h>
-
 __MPT_SOLVER_BEGIN
 
 typedef void vode_fcn_t(int *, double *, double *, double *, double *, int *);
@@ -23,11 +21,10 @@ public:
 #endif
 	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
-	double t;         /* reference time */
+	double *y;        /* state data */
+	double  t;        /* independent variable */
 	
 	MPT_SOLVER_TYPE(dvecpar) rtol, atol;  /* tolerances */
-	
-	double *y;        /* state data */
 	
 	char meth, miter, /* method flags */
 	     jsv,         /* save jacobian iteration */
@@ -67,7 +64,7 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *);
 extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *);
 extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *);
 /* set wrapper for user functions */
-extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *, const MPT_SOLVER_IVP_STRUCT(functions) *);
+extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *, MPT_SOLVER_IVP_STRUCT(odefcn) *, int , const void *);
 
 /* vode status information */
 extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(PropertyHandler) , void *);
@@ -88,10 +85,8 @@ inline vode::~vode()
 class Vode : public IVP, vode
 {
 public:
-	inline Vode()
-	{
-		_fcn.dae.param = &ivp;
-	}
+	inline Vode() : _fcn(0)
+	{ }
 	virtual ~Vode()
 	{ }
 	void unref() __MPT_OVERRIDE
@@ -113,22 +108,18 @@ public:
 	int step(double *end) __MPT_OVERRIDE
 	{
 		if (!end) {
-			int ret;
-			if (!vode::fcn && _fcn.dae.fcn && (ret = mpt_vode_ufcn(this, &_fcn)) < 0) {
-				return ret;
-			}
 			return mpt_vode_prepare(this);
 		}
 		int ret = mpt_vode_step(this, *end);
 		*end = t;
 		return ret;
 	}
-	void *functions(int type) __MPT_OVERRIDE
+	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
 	{
-		return (type == DAE) ? 0 : _fcn.select(type, ivp);
+		return mpt_vode_ufcn(this, &_fcn, type, ptr);
 	}
 protected:
-	struct functions _fcn;
+	struct odefcn _fcn;
 };
 #endif
 

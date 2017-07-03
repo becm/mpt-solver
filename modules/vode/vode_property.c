@@ -211,43 +211,19 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT
 	int ret = 0;
 	
 	if (!name) {
-		double t = vd->t;
-		size_t required;
-		int ry;
-		
-		if (src) {
-			MPT_INTERFACE(iterator) *it;
-			if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it) >= 0)) {
-				if (ret && it) {
-					if ((ret = it->_vptr->get(it, 'd', &t)) < 0
-					 || (ret = it->_vptr->advance(it)) < 0) {
-						return ret;
-					}
-					ret = 1;
-				}
-			}
-			else if ((ret = src->_vptr->conv(src, 'd', &t) <= 0)) {
-				return ret;
-			}
-		}
-		required = vd->ivp.pint ? vd->ivp.pint + 1 : 0;
-		if ((ry = mpt_solver_vecpar_set(&vd->y, vd->ivp.neqs, required, src)) < 0) {
-			return ry;
-		}
-		vd->t = t;
-		
-		return ry + ret;
+		return mpt_solver_ivpstate(&vd->ivp, &vd->t, &vd->y, src);
 	}
 	else if (!*name) {
-		MPT_SOLVER_IVP_STRUCT(parameters) ivp = vd->ivp;
+		MPT_SOLVER_IVP_STRUCT(parameters) ivp;
 		ret = 0;
-		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
+		if (src && (ret =  mpt_solver_ivpset(&vd->ivp, src)) < 0) {
 			return ret;
 		}
+		ivp = vd->ivp;
 		mpt_vode_fini(vd);
 		mpt_vode_init(vd);
-		
 		vd->ivp = ivp;
+		
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
