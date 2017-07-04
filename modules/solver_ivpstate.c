@@ -146,34 +146,47 @@ extern int mpt_solver_ivpstate(const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, dou
 	}
 	/* read initial value segments */
 	while (len <= ivp->pint) {
+		part = 0;
+		/* get profile segment */
 		if ((ret = it->_vptr->get(it, MPT_value_toVector('d'), &vec)) < 0) {
+			/* read contant profile values */
+			for (part = 0; part < neqs; ++part) {
+				if ((ret = it->_vptr->get(it, 'd', dest + part)) <= 0
+				 || (ret = it->_vptr->advance(it)) <= 0) {
+					break;
+				}
+			}
+			dest += neqs;
+			ret = part;
+			len = 1;
 			break;
 		}
-		if ((part = vec.iov_len / sizeof(double)) > neqs) {
-			part = neqs;
+		if (!ret || (ret = it->_vptr->advance(it)) < 0) {
+			ret = len;
+			break;
 		}
-		if (part) {
+		/* copy profile segment data */
+		if ((part = vec.iov_len / sizeof(double))) {
+			if (part > neqs) {
+				part = neqs;
+			}
 			if (vec.iov_base) {
 				memcpy(dest, vec.iov_base, part * sizeof(double));
-			} else {
-				memset(dest, 0, part * sizeof(double));
 			}
-		}
-		for ( ; part < neqs; ++part) {
-			dest[part] = 0;
-		}
-		if ((ret = it->_vptr->advance(it)) <= 0) {
-			break;
 		}
 		dest += ivp->neqs;
 		++len;
+		if (!ret) {
+			ret = len;
+			break;
+		}
 	}
-	if (!(ret = len)) {
-		memset(dest, 0, neqs * sizeof(double));
-	}
-	while (len++ <= ivp->pint) {
-		double *next = dest + neqs;
-		memcpy(next, dest, neqs * sizeof(double));
+	/* repeat last profile segment */
+	if (len) {
+		while (len++ <= ivp->pint) {
+			memcpy(dest, dest - neqs, neqs * sizeof(double));
+			dest += neqs;
+		}
 	}
 	if (t) {
 		*t = tmp;

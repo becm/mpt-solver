@@ -94,7 +94,16 @@ extern int mpt_solver_ivpset(MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const MPT_I
 		/* PDE without grid data */
 		if ((ret = it->_vptr->get(it, MPT_value_toVector('d'), &grid)) < 0) {
 			if ((ret = it->_vptr->get(it, 'u', &pint)) < 0) {
-				return ret;
+				int tmp;
+				if ((ret = it->_vptr->get(it, 'i', &tmp)) < 0) {
+					return ret;
+				}
+				if (ret > 0) {
+					if (tmp < 0) {
+						return MPT_ERROR(BadValue);
+					}
+					pint = tmp;
+				}
 			}
 			if (!ret) {
 				pint = 0;
@@ -122,13 +131,13 @@ extern int mpt_solver_ivpset(MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const MPT_I
 			}
 			pint = part - 1;
 			part *= sizeof(double);
-			if (!(ptr = malloc(grid.iov_len))) {
+			if (!(ptr = malloc(part))) {
 				return MPT_ERROR(BadOperation);
 			}
 			if (grid.iov_base) {
-				memcpy(ptr, grid.iov_base, grid.iov_len);
+				memcpy(ptr, grid.iov_base, part);
 			} else {
-				memset(ptr, 0, grid.iov_len);
+				memset(ptr, 0, part);
 			}
 			if (ivp->grid) {
 				free(ivp->grid);
