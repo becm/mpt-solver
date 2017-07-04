@@ -97,7 +97,7 @@ static void deleteNLS(MPT_INTERFACE(unrefable) *gen)
 	}
 	free(nls);
 }
-static MPT_INTERFACE(metatype) *queryNLS(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
+static const MPT_INTERFACE(metatype) *queryNLS(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 {
 	const struct NLS *nls = (void *) gen;
 	MPT_STRUCT(node) *conf;

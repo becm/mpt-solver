@@ -132,7 +132,7 @@ static void deleteIVP(MPT_INTERFACE(unrefable) *gen)
 	}
 	free(ivp);
 }
-static MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
+static const MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 {
 	const struct IVP *ivp = (void *) gen;
 	MPT_STRUCT(node) *conf;

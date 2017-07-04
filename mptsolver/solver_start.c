@@ -60,7 +60,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 	/* problem config filename from configuration/terminal */
 	else {
 		static const char defExt[] = "conf\0";
-		MPT_INTERFACE(metatype) *cfg;
+		const MPT_INTERFACE(metatype) *cfg;
 		const char *fname, *cname;
 		char *rname, buf[128];
 		

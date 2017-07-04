@@ -82,7 +82,7 @@ cmdsolv[] = {
 extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *cl)
 {
 	MPT_INTERFACE(logger) *log = 0;
-	MPT_INTERFACE(metatype) *mt;
+	const MPT_INTERFACE(metatype) *mt;
 	uintptr_t id;
 	size_t i;
 	int err;

@@ -86,9 +86,10 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 	}
 	/* change library symbol */
 	else {
+		const MPT_INTERFACE(metatype) *cfg;
 		const char *lpath = 0;
-		if ((mt = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
-			mt->_vptr->conv(mt, 's', &lpath);
+		if ((cfg = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
+			cfg->_vptr->conv(cfg, 's', &lpath);
 		}
 		if (!(mt = mpt_library_bind(MPT_ENUM(TypeSolver), conf, lpath, log))) {
 			return 0;
