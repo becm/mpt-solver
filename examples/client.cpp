@@ -18,18 +18,28 @@ public:
 	void unref() __MPT_OVERRIDE
 	{ delete this; }
 	
-	mpt::metatype *query(const mpt::path *) const __MPT_OVERRIDE
-	{ return 0; }
-	int assign(const mpt::path *, const mpt::value *) __MPT_OVERRIDE
-	{ return 0; }
-	int remove(const mpt::path *) __MPT_OVERRIDE
-	{ return 0; }
+	int assign(const mpt::path *p, const mpt::value *v);
 	
 	int step(mpt::iterator *) __MPT_OVERRIDE
 	{ return 0; }
 	int init(mpt::iterator *) __MPT_OVERRIDE
 	{ return 0; }
 };
+int MyClient::assign(const mpt::path *p, const mpt::value *v)
+{
+	int ret;
+	
+	if (!p) {
+		return v ? mpt::BadArgument : 0;
+	}
+	ret = mpt::client::assign(p, v);
+	
+	// simulate solver config existance
+	if (p->empty()) {
+		set("solconf", "");
+	}
+	return ret;
+}
 
 int main(int argc, char * const argv[])
 {
