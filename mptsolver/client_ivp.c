@@ -43,6 +43,25 @@ struct IVP {
 	int pdim;
 };
 
+static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
+{
+	if (!pr || pr->name) {
+		return 0;
+	}
+	if (!pr->val.fmt || *pr->val.fmt != 'd') {
+		return MPT_ERROR(BadValue);
+	}
+	*((double *) ptr) = *((double *) pr->val.ptr);
+	return 1;
+}
+
+static double getTime(MPT_SOLVER(generic) *sol)
+{
+	double t;
+	sol->_vptr->report(sol, MPT_SOLVER_ENUM(Values), setTime, &t);
+	return t;
+}
+
 static int nextTime(MPT_INTERFACE(iterator) *src, double *end, const char *fcn, void *arg, MPT_INTERFACE(logger) *info)
 {
 	double ref = *end;
@@ -176,7 +195,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	}
 	if (!porg) {
 		MPT_STRUCT(solver_data) *dat;
-		MPT_SOLVER(IVP) *sol;
+		MPT_SOLVER(generic) *sol;
 		int ret;
 		
 		/* set (new) config base */
@@ -204,7 +223,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			        MPT_tr("missing data descriptor"));
 			return MPT_ERROR(BadOperation);
 		}
-		if (!(sol = (void *) ivp->sol)) {
+		if (!(sol = ivp->sol)) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("missing solver descriptor"));
 			return MPT_ERROR(BadOperation);
@@ -218,24 +237,25 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		mpt_solver_param((void *) sol, conf->children, info);
 		
 		/* prepare solver */
-		if ((ret = sol->_vptr->step(sol, 0)) < 0) {
+		if ((ret = sol->_vptr->obj.setProperty((void *) sol, 0, 0)) < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("solver backend prepare failed"));
 			return ret;
 		}
 		if (info) {
-			mpt_solver_info((void *) sol, info);
+			mpt_solver_info(sol, info);
 			mpt_log(info, 0, MPT_LOG(Message), "");
 		}
 		if (!ivp->pdim) {
-			mpt_solver_status((void *) sol, info, 0, 0);
+			mpt_solver_status(sol, info, 0, 0);
 		}
 		else {
 			struct _clientPdeOut ctx;
 			ctx.out = &ivp->out;
 			ctx.dat = ivp->sd;
 			ctx.state = MPT_ENUM(DataStateInit);
-			mpt_solver_status((void *) sol, info, outPDE, &ctx);
+			mpt_solver_status(sol, info, outPDE, &ctx);
+			ivp->t = getTime(sol);
 		}
 		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
 		        MPT_tr("IVP client preparation finished"));
@@ -499,7 +519,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	struct IVP *ivp = (void *) cl;
 	MPT_INTERFACE(iterator) *src;
 	MPT_INTERFACE(logger) *info;
-	MPT_SOLVER(IVP) *sol;
+	MPT_SOLVER(generic) *sol;
 	struct _clientPdeOut ctx;
 	struct rusage pre, post;
 	double end;
@@ -510,7 +530,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	}
 	ctx.out = &ivp->out;
 	
-	if (!(sol = (void *) ivp->sol) || !(ctx.dat = ivp->sd)) {
+	if (!(sol = ivp->sol) || !(ctx.dat = ivp->sd)) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("client not prepared for step operation"));
 		return MPT_ERROR(BadOperation);
@@ -542,7 +562,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		mpt_solver_output_ode(&ivp->out, state, ivp->sd);
 		
 		if (!ret) {
-			mpt_solver_statistics((void *) sol, info, &ivp->ru_usr, &ivp->ru_sys);
+			mpt_solver_statistics(sol, info, &ivp->ru_usr, &ivp->ru_sys);
 		}
 		return ret;
 	}
@@ -561,20 +581,25 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s (t = %g > %g)",
 		        MPT_tr("attempt solver step"), ivp->t, end);
 		
-		ivp->t = end;
-		if ((ret = sol->_vptr->step(sol, &ivp->t)) < 0) {
-			ctx.state |= MPT_ENUM(DataStateFail);
-			mpt_log(info, _func, MPT_LOG(Error), "%s (t = %g)",
-			        MPT_tr("solver step failed"), ivp->t);
-			break;
-		}
+		/* assign solver step end time */
+		ret = mpt_object_set((void *) sol, "t", "d", end);
+		
+		/* collect time difference */
 		getrusage(RUSAGE_SELF, &post);
 		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
 		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
 		
-		/* retry step */
+		/* get end time */
+		ivp->t = end = getTime((void *) sol);
+		if (ret < 0) {
+			ctx.state |= MPT_ENUM(DataStateFail);
+			mpt_log(info, _func, MPT_LOG(Error), "%s (t = %g)",
+			        MPT_tr("solver step failed"), end);
+			break;
+		}
+		/* end time not reached, retry */
 		if (ivp->t < end) {
-			mpt_solver_status((void *) sol, info, outPDE, &ctx);
+			mpt_solver_status(sol, info, outPDE, &ctx);
 			continue;
 		}
 		end = ivp->t;
@@ -589,10 +614,10 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		else if (!ret) {
 			ctx.state |= MPT_ENUM(DataStateFini);
 		}
-		mpt_solver_status((void *) sol, info, outPDE, &ctx);
+		mpt_solver_status(sol, info, outPDE, &ctx);
 		
 		if (!ret) {
-			mpt_solver_statistics((void *) sol, info, &ivp->ru_usr, &ivp->ru_sys);
+			mpt_solver_statistics(sol, info, &ivp->ru_usr, &ivp->ru_sys);
 		}
 		if (!args || ret < 1) {
 			break;

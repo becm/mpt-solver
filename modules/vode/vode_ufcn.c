@@ -47,6 +47,8 @@ extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_SOLVER_IVP_STRUCT(odef
 	int ret;
 	if (!ptr) {
 		switch (type) {
+		  case 0:
+			return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
 		  case MPT_SOLVER_ENUM(IvpRside):
 		  case MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE):
 			if (ufcn) ufcn->rside.fcn = 0;

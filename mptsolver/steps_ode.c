@@ -10,6 +10,25 @@
 
 #include "solver.h"
 
+static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
+{
+	if (!pr || pr->name) {
+		return 0;
+	}
+	if (!pr->val.fmt || *pr->val.fmt != 'd') {
+		return MPT_ERROR(BadValue);
+	}
+	*((double *) ptr) = *((double *) pr->val.ptr);
+	return 1;
+}
+
+static double getTime(MPT_SOLVER(generic) *sol)
+{
+	double t;
+	sol->_vptr->report(sol, MPT_SOLVER_ENUM(Values), setTime, &t);
+	return t;
+}
+
 static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 {
 	MPT_STRUCT(solver_data) *dat = ctx;
@@ -66,7 +85,7 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  * 
  * \return step operation result
  */
-extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(iterator) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+extern int mpt_steps_ode(MPT_SOLVER(generic) *sol, MPT_INTERFACE(iterator) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	double curr, end, *data;
 	int ret;
@@ -83,21 +102,20 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(iterator) *src, MPT
 	if (sd->nval < 1 || !(data = mpt_solver_data_grid(sd))) {
 		return MPT_ERROR(BadArgument);
 	}
-	curr = *data;
+	curr = getTime(sol);
 	/* try to complete full run */
 	while(1) {
 		mpt_log(out, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
 		        MPT_tr("attempt solver step"), curr, end);
 		
 		/* call ODE/DAE solver with current/target time and in/out-data */
-		curr = end;
-		ret = sol->_vptr->step(sol, &curr);
-		
+		ret = mpt_object_set((void *) sol, "t", "d", end);
+		curr = getTime(sol);
 		if (ret < 0) {
 			if (out) {
-				mpt_solver_status((void *) sol, out, 0, 0);
+				mpt_solver_status(sol, out, 0, 0);
 			}
-			mpt_log(out, __func__, MPT_LOG(Debug2), "%s (t = %g)",
+			mpt_log(out, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
 			        MPT_tr("failed solver step"), curr, end);
 			return ret;
 		}
@@ -107,16 +125,16 @@ extern int mpt_steps_ode(MPT_SOLVER(IVP) *sol, MPT_INTERFACE(iterator) *src, MPT
 			continue;
 		}
 		if (out) {
-			mpt_solver_status((void *) sol, out, updateIvpData, sd);
+			mpt_solver_status(sol, out, updateIvpData, sd);
 		} else {
-			sol->_vptr->gen.report((void *) sol, MPT_SOLVER_ENUM(Values), updateIvpDataWrap, sd);
+			sol->_vptr->report(sol, MPT_SOLVER_ENUM(Values), updateIvpDataWrap, sd);
 		}
 		/* get next target value */
 		do {
 			if ((ret = src->_vptr->advance(src)) < 0) {
 				mpt_log(out, __func__, MPT_LOG(Warning), "%s",
 				        MPT_tr("bad time step advance"));
-				ret = 0;
+				return ret;
 			}
 			if (!ret) {
 				return ret;

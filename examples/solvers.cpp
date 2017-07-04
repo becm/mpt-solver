@@ -58,11 +58,12 @@ static void info(generic &s)
 static void pde(class IVP &s)
 {
 	// PDE equotations and intervals
-	mpt_object_set(&s, "", "ii", 3, 10);
+	mpt_object_set(&s, "", "iu", 3, 10);
 	// PDE time and start values
 	mpt_object_set(&s, 0, "dddd", 0.5, 1.1, 1.2, 1.3);
 	
 	s.set(IVP::rside(0));
+	s.step(1);
 }
 
 int main()

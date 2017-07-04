@@ -340,7 +340,7 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	struct NLS *nls = (void *) cl;
 	MPT_STRUCT(solver_data) *dat;
 	MPT_INTERFACE(logger) *info;
-	MPT_SOLVER(NLS) *sol;
+	MPT_SOLVER(generic) *sol;
 	MPT_STRUCT(node) *names;
 	struct _outNLSdata ctx;
 	struct rusage pre, post;
@@ -353,12 +353,14 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		info = mpt_log_default();
 	}
 	
-	if (!(sol = (void *) nls->sol) || !(dat = nls->sd)) {
+	if (!(sol = nls->sol) || !(dat = nls->sd)) {
 		return -1;
 	}
 	/* initialize current time structures */
 	getrusage(RUSAGE_SELF, &pre);
-	res = sol->_vptr->solve(sol);
+	
+	/* trigger solver iteration */
+	res = sol->_vptr->obj.setProperty((void *) sol, 0, 0);
 	
 	/* add solver runtime */
 	getrusage(RUSAGE_SELF, &post);

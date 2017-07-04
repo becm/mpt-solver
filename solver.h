@@ -12,6 +12,7 @@
 #include <sys/uio.h>
 
 #ifdef __cplusplus
+# include "meta.h"
 # include <stdlib.h>
 #endif
 
@@ -171,11 +172,8 @@ MPT_SOLVER(generic)
 #ifdef __cplusplus
 class IVP : public generic
 {
-protected:
-	inline ~IVP() {}
 public:
-	
-	virtual int step(double *end) = 0;
+	virtual ~IVP() {}
 	
 	struct parameters;
 	struct rside;
@@ -184,6 +182,33 @@ public:
 	struct daefcn;
 	struct pdefcn;
 	
+	inline bool prepare()
+	{
+		return setProperty(0, 0) >= 0;
+	}
+	bool step(double end)
+	{
+		class End : public metatype
+		{
+		public:
+			inline End(double end) : _end(end)
+			{ }
+			inline void unref() __MPT_OVERRIDE
+			{ }
+			inline metatype *clone() const __MPT_OVERRIDE
+			{ return 0; }
+			inline int conv(int type, void *dest) const __MPT_OVERRIDE
+			{
+				const int me = typeIdentifier<double>();
+				if (type != me) return BadType;
+				if (dest) *static_cast<double *>(dest) = _end;
+				return me;
+			}
+		private:
+			double _end;
+		} val(end);
+		return setProperty("t", &val);
+	}
 	template <typename T>
 	inline bool set(const T &fcn)
 	{
@@ -202,46 +227,26 @@ typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Mas))(void *, double , const double *, dou
 typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Rside))(void *, double , const double *, double *, double , double *, double *);
 #ifdef __cplusplus
 };
-#else
-MPT_SOLVER(IVP);
-MPT_INTERFACE_VPTR(solver_ivp)
-{
-	MPT_INTERFACE_VPTR(solver) gen;
-	int (*step)(MPT_SOLVER(IVP) *, double *end);
-};
-MPT_SOLVER(IVP)
-{ const MPT_INTERFACE_VPTR(solver_ivp) *_vptr; };
 #endif
 
 /*! extension for NonLinear Systems */
 #ifdef __cplusplus
 class NLS : public generic
 {
-protected:
-	inline ~NLS() {}
-    public:
+public:
+	virtual ~NLS() {}
+	
 	struct parameters;
 	struct residuals;
 	struct jacobian;
 	struct output;
 	struct functions;
-	
-	virtual int solve() = 0;
 #endif
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Fcn))(void *rpar, const double *p, double *res, const int *lres);
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Jac))(void *jpar, const double *p, double *jac, const int *ld, const double *res);
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Out))(void *opar, const MPT_STRUCT(value) *val);
 #ifdef __cplusplus
 };
-#else
-MPT_SOLVER(NLS);
-MPT_INTERFACE_VPTR(solver_nls)
-{
-	MPT_INTERFACE_VPTR(solver) gen;
-	int (*solve)(MPT_SOLVER(NLS) *s);
-};
-MPT_SOLVER(NLS)
-{ const MPT_INTERFACE_VPTR(solver_nls) *_vptr; };
 #endif
 
 
@@ -566,7 +571,7 @@ extern double *mpt_solver_data_grid (MPT_STRUCT(solver_data) *);
 extern double *mpt_solver_data_param(MPT_STRUCT(solver_data) *);
 
 /* execute specific IVP solver step */
-extern int mpt_steps_ode(MPT_SOLVER(IVP) *, MPT_INTERFACE(iterator) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_steps_ode(MPT_SOLVER(generic) *, MPT_INTERFACE(iterator) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* inner node residuals with central differences */
 extern int mpt_residuals_cdiff(void *, double , const double *, double *, const MPT_SOLVER_IVP_STRUCT(parameters) *, const double *, MPT_SOLVER_IVP(Rside));
