@@ -18,17 +18,16 @@ static int rh_side(void *udata, double t, const double *y, double *f)
 	return 0;
 }
 
-extern int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+extern int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
-	MPT_SOLVER_STRUCT(odefcn) *usr;
+	MPT_SOLVER_IVP_STRUCT(odefcn) usr = MPT_IVP_ODE_INIT;
 	double *param;
 	int i, n;
 	
-	if (!(usr = mpt_init_ode(sol, &sd->val, out))) {
-		return MPT_ERROR(BadArgument);
+	usr.rside.fcn = rh_side;
+	if ((i = mpt_init_ode(sol, &usr, 2, out)) < 0) {
+		return i;
 	}
-	usr->fcn = rh_side;
-	
 	param = mpt_solver_data_param(sd);
 	
 	n = sd->npar < 3 ? sd->npar : 3;

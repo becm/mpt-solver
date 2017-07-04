@@ -62,8 +62,7 @@ static void pde(class IVP &s)
 	// PDE time and start values
 	mpt_object_set(&s, 0, "dddd", 0.5, 1.1, 1.2, 1.3);
 	
-	pdefcn *fcn = s;
-	fcn->rside = 0;
+	s.set(IVP::rside(0));
 }
 
 int main()

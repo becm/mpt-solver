@@ -184,10 +184,11 @@ public:
 	struct daefcn;
 	struct pdefcn;
 	
-	bool set(const rside &);
-	bool set(const jacobian &);
-	bool set(const odefcn &);
-	bool set(const daefcn &);
+	template <typename T>
+	inline bool set(const T &fcn)
+	{
+		return setFunctions(T::Type, &fcn) >= 0;
+	}
 #else
 MPT_SOLVER_IVP_STRUCT(parameters);
 #endif
@@ -222,7 +223,7 @@ protected:
 	struct parameters;
 	struct residuals;
 	struct jacobian;
-	struct outdata;
+	struct output;
 	struct functions;
 	
 	virtual int solve() = 0;
@@ -248,7 +249,7 @@ MPT_SOLVER(NLS)
 MPT_SOLVER_IVP_STRUCT(parameters)
 {
 #ifdef __cplusplus
-	inline parameters(int n = 0) : neqs(n), pint(0), t(0), grid(0)
+	inline parameters(int n = 0) : neqs(n), pint(0), grid(0)
 	{ }
 #else
 # define MPT_IVPPAR_INIT  { 1, 0, 0 }
@@ -369,8 +370,8 @@ MPT_SOLVER_NLS_STRUCT(functions)
 {
 #ifdef __cplusplus
 	inline functions(Fcn f, void *u = 0, Jac j = 0) : res(f, u), jac(j, u)
-	{ out.fcn = 0; out.par = 0; }
-	enum { Type = NlsVector | NlsJacobian };
+	{ }
+	enum { Type = NlsVector | NlsJac };
 #else
 # define MPT_NLSFCN_INIT(r, p, j)  { { (r), (p) }, { (j), (p) } }
 #endif
@@ -381,9 +382,9 @@ MPT_SOLVER_NLS_STRUCT(functions)
 MPT_SOLVER_NLS_STRUCT(output)
 {
 #ifdef __cplusplus
-	inline functions(Out f, void *u = 0) : fcn(f), par(u)
+	inline output(Out f, void *u = 0) : fcn(f), par(u)
 	{ }
-	enum { Type = NlsOutput };
+	enum { Type = NlsOut };
 #else
 # define MPT_NLSOUT_INIT(r, p)  { (r), (p) }
 #endif
@@ -392,22 +393,6 @@ MPT_SOLVER_NLS_STRUCT(output)
 };
 
 #ifdef __cplusplus
-inline bool IVP::set(const IVP::rside &r)
-{
-	return setFunctions(r.Type, &r) >= 0;
-}
-inline bool IVP::set(const IVP::jacobian &j)
-{
-	return setFunctions(j.Type, &j) >= 0;
-}
-inline bool IVP::set(const IVP::odefcn &o)
-{
-	return setFunctions(o.Type, &o) >= 0;
-}
-inline bool IVP::set(const IVP::daefcn &d)
-{
-	return setFunctions(d.Type, &d) >= 0;
-}
 template <typename T>
 struct vecpar
 {
