@@ -4,19 +4,16 @@
 
 #include "solver_ivp.h"
 
-static double *param;
 static const int N_PDE = 2;
 
 /* solver right side calculation */
-static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const double *grid, MPT_SOLVER_IVP(Rside) rs)
+static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp)
 {
 	const double *yr;
 	double *fr, phi, zeta, dzeta, dzeta2, dum, alpha, beta, c = 4.0, k = 100.0;
 	int npde, nint, i;
 	
 	(void) udata;
-	(void) grid;
-	(void) rs;
 	
 	npde = ivp->neqs;
 	nint = ivp->pint;
@@ -63,17 +60,15 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 }
 
 /* setup solver for PDE run */
-extern int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+extern int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
-	MPT_SOLVER_STRUCT(pdefcn) *usr;
-	
-	if (!(usr = mpt_init_pde(sol, N_PDE, sd->nval, out))) {
-		return MPT_ERROR(BadArgument);
+	MPT_SOLVER_IVP_STRUCT(pdefcn) usr;
+	int ret;
+	usr.fcn = rs_pde;
+	usr.par = mpt_solver_data_param(sd);
+	if ((ret = mpt_init_pde(sol, &usr, N_PDE, &sd->val, out)) < 0) {
+		return ret;
 	}
-	usr->fcn = rs_pde;
-	
-	param = mpt_solver_data_param(sd);
-	
 	return N_PDE;
 }
 

@@ -28,25 +28,27 @@ static int rfcn(void *udata, double t, const double *u, double *f, double x, dou
 }
 
 /* solver right side calculation */
-static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const double *grid, MPT_SOLVER_IVP(Rside) rs)
+static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp)
 {
+	const double *grid;
 	double *fr, dx, fg;
 	int npde, nint;
 	
 	npde = ivp->neqs;
 	nint = ivp->pint;
+	grid = ivp->grid;
 	
 	fr = f + npde * nint;
 	
 	/* inner residuals (central differences) */
-	mpt_residuals_cdiff(udata, t, y, f, ivp, grid, rs);
+	mpt_residuals_cdiff(udata, t, y, f, ivp, rfcn);
 	
 	/* left boundary: neumann */
-	dx = grid[1]-grid[0];
+	dx = grid[1] - grid[0];
 	fg = damkohler * y[0] * exp(-de/y[1]);
 	
-	f[0] = 2*(y[npde] - y[0])/dx/dx - fg;
-	f[1] = 2*(y[npde+1] - y[1])/dx/dx + a / L * fg;
+	f[0] = 2 * (y[npde]     - y[0]) / dx / dx - fg;
+	f[1] = 2 * (y[npde + 1] - y[1]) / dx / dx + a / L * fg;
 	
 	/* right boundary: dirichlet */
 	fr[0] = 0;
@@ -56,18 +58,15 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 }
 
 /* setup solver for PDE run */
-extern int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+extern int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
-	MPT_SOLVER_STRUCT(pdefcn) *usr;
-	int npde = 2;
+	MPT_SOLVER_IVP_STRUCT(pdefcn) pde;
+	int ret, npde = 2;
 	
-	if (!(usr = mpt_init_pde(sol, npde, sd->nval, out))
-	    || !(usr->grid = mpt_solver_data_grid(sd))) {
+	pde.fcn = rs_pde;
+	if ((ret = mpt_init_pde(sol, &pde, npde, &sd->val, out)) < 0) {
 		return MPT_ERROR(BadArgument);
 	}
-	usr->fcn = rs_pde;
-	usr->rside = rfcn;
-	
 	param = mpt_solver_data_param(sd);
 	
 	switch (sd->npar) {
