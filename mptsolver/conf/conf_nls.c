@@ -93,10 +93,12 @@ extern int mpt_conf_nls(MPT_STRUCT(solver_data) *md, const MPT_STRUCT(node) *con
 			return MPT_ERROR(BadOperation);
 		}
 		if (mpt_values_file(fd, len, nd, val) < 0) {
+			fclose(fd);
 			if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s",
 			                 MPT_tr("error while reading user data"));
 			return MPT_ERROR(MissingData);
 		}
+		fclose(fd);
 		md->nval = len;
 		return nd;
 	}

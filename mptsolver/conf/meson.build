@@ -7,6 +7,5 @@ src = files(
   'conf_ode.c',
   'conf_param.c',
   'conf_pde.c',
-  'conf_profile.c',
   'conf_profiles.c',
 )

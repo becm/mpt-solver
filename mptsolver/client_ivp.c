@@ -138,6 +138,7 @@ static void deleteIVP(MPT_INTERFACE(unrefable) *gen)
 	MPT_INTERFACE(iterator) *it;
 	
 	mpt_proxy_fini(&ivp->pr);
+	mpt_solver_output_close(&ivp->out);
 	
 	if ((it = ivp->steps)) {
 		it->_vptr->ref.unref((void *) it);

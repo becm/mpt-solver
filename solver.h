@@ -594,6 +594,7 @@ extern void mpt_solver_statistics(MPT_SOLVER(generic) *, MPT_INTERFACE(logger) *
 
 
 /* output for solvers */
+extern void mpt_solver_output_close(MPT_STRUCT(solver_output) *);
 extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
 extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
 extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(solver_data) *);

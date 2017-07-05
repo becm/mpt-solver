@@ -87,6 +87,7 @@ static void deleteNLS(MPT_INTERFACE(unrefable) *gen)
 	struct NLS *nls = (void *) gen;
 	
 	mpt_proxy_fini(&nls->pr);
+	mpt_solver_output_close(&nls->out);
 	
 	if (nls->sd) {
 		mpt_solver_data_fini(nls->sd);
