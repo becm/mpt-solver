@@ -558,7 +558,7 @@ extern int mpt_conf_graphic(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *);
 extern int mpt_conf_history(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *);
 
 /* create profile data */
-extern MPT_INTERFACE(iterator) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *, int , double , const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *);
+extern MPT_INTERFACE(iterator) *mpt_conf_profiles(const MPT_STRUCT(solver_data) * , double , const MPT_STRUCT(node) *, int, MPT_INTERFACE(logger) *);
 
 /* append user data */
 extern int mpt_conf_param(MPT_STRUCT(array) *, const MPT_STRUCT(node) *, int);
@@ -574,7 +574,7 @@ extern double *mpt_solver_data_param(MPT_STRUCT(solver_data) *);
 extern int mpt_steps_ode(MPT_SOLVER(generic) *, MPT_INTERFACE(iterator) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* inner node residuals with central differences */
-extern int mpt_residuals_cdiff(void *, double , const double *, double *, const MPT_SOLVER_IVP_STRUCT(parameters) *, const double *, MPT_SOLVER_IVP(Rside));
+extern int mpt_residuals_cdiff(void *, double , const double *, double *, const MPT_SOLVER_IVP_STRUCT(parameters) *, MPT_SOLVER_IVP(Rside));
 
 /* generate library description form short form */
 extern const char *mpt_solver_alias(const char *);

@@ -26,7 +26,7 @@ struct iterProfile
 
 static void iterProfileUnref(MPT_INTERFACE(unrefable) *ref)
 {
-	const struct iterProfile *p = (void *) (ref + 1);
+	const struct iterProfile *p = (void *) ref;
 	MPT_INTERFACE(iterator) **iptr = (void *) (p + 1);
 	int i;
 	
@@ -40,7 +40,7 @@ static void iterProfileUnref(MPT_INTERFACE(unrefable) *ref)
 }
 static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 {
-	const struct iterProfile *p = (void *) (it + 1);
+	const struct iterProfile *p = (void *) it;
 	MPT_INTERFACE(iterator) **iptr = (void *) (p + 1);
 	double *tmp = (void *) (iptr + p->neqs);
 	struct iovec *vec;
@@ -53,6 +53,7 @@ static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 		if (dest) {
 			*((double *) dest) = p->t;
 		}
+		return 'd';
 	}
 	if (type != MPT_value_toVector('d')) {
 		return MPT_ERROR(BadType);
@@ -83,7 +84,7 @@ static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 }
 static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 {
-	struct iterProfile *p = (void *) (it + 1);
+	struct iterProfile *p = (void *) it;
 	MPT_INTERFACE(iterator) **iptr = (void *) (p + 1);
 	long i;
 	
@@ -108,7 +109,7 @@ static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 }
 static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 {
-	struct iterProfile *p = (void *) (it + 1);
+	struct iterProfile *p = (void *) it;
 	MPT_INTERFACE(iterator) **iptr = (void *) (p + 1);
 	long i;
 	
@@ -143,7 +144,7 @@ static const MPT_INTERFACE_VPTR(iterator) iterProfileCtl = {
  * 
  * \return iterator containing profile segments
  */
-extern MPT_INTERFACE(iterator) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *dat, int neqs, double t, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
+extern MPT_INTERFACE(iterator) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *dat, double t, const MPT_STRUCT(node) *conf, int neqs, MPT_INTERFACE(logger) *out)
 {
 	struct iterProfile *ip;
 	MPT_INTERFACE(iterator) **iptr;
