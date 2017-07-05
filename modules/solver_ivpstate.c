@@ -174,7 +174,7 @@ extern int mpt_solver_ivpstate(const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, dou
 				memcpy(dest, vec.iov_base, part * sizeof(double));
 			}
 		}
-		dest += ivp->neqs;
+		dest += neqs;
 		++len;
 		if (!ret) {
 			ret = len;

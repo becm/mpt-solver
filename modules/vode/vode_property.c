@@ -214,12 +214,11 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT
 		return mpt_solver_ivpstate(&vd->ivp, &vd->t, &vd->y, src);
 	}
 	else if (!*name) {
-		MPT_SOLVER_IVP_STRUCT(parameters) ivp;
+		MPT_SOLVER_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		ret = 0;
-		if (src && (ret =  mpt_solver_ivpset(&vd->ivp, src)) < 0) {
+		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
 			return ret;
 		}
-		ivp = vd->ivp;
 		mpt_vode_fini(vd);
 		mpt_vode_init(vd);
 		vd->ivp = ivp;
