@@ -37,6 +37,9 @@ static int n2Set(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 static int n2Report(MPT_SOLVER(generic) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
 	struct _mpt_portn2_data *d = (void *) sol;
+	if (!what && !out && !data) {
+		return MPT_SOLVER_ENUM(NlsUser) | MPT_SOLVER_ENUM(NlsOverdet);
+	}
 	return mpt_portn2_report(&d->n2, what, out, data);
 }
 static int n2Fcn(MPT_SOLVER(generic) *sol, int type, const void *ptr)

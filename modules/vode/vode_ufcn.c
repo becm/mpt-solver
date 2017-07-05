@@ -47,8 +47,6 @@ extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_SOLVER_IVP_STRUCT(odef
 	int ret;
 	if (!ptr) {
 		switch (type) {
-		  case 0:
-			return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
 		  case MPT_SOLVER_ENUM(IvpRside):
 		  case MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE):
 			if (ufcn) ufcn->rside.fcn = 0;
@@ -74,7 +72,15 @@ extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_SOLVER_IVP_STRUCT(odef
 			if (!vd->ivp.pint) {
 				return MPT_ERROR(BadType);
 			}
+			if (!((MPT_SOLVER_IVP_STRUCT(pdefcn) *) ptr)->fcn) {
+				return MPT_ERROR(BadValue);
+			}
+			ufcn->rside = *((MPT_SOLVER_IVP_STRUCT(rside) *) ptr);
+			break;
 		  case MPT_SOLVER_ENUM(IvpRside):
+			if (vd->ivp.pint) {
+				return MPT_ERROR(BadType);
+			}
 			if (!((MPT_SOLVER_IVP_STRUCT(rside) *) ptr)->fcn) {
 				return MPT_ERROR(BadValue);
 			}

@@ -33,6 +33,9 @@ static int vdSet(MPT_INTERFACE(object) *gen, const char *pr, const MPT_INTERFACE
 static int vdReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
 	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen + 1);
+	if (!what && !out && !data) {
+		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
+	}
 	return mpt_vode_report(vd, what, out, data);
 }
 static int vdFcn(MPT_SOLVER(generic) *gen, int type, const void *ptr)

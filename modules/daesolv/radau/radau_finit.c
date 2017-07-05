@@ -17,17 +17,18 @@ extern void mpt_radau_fini(MPT_SOLVER_STRUCT(radau) *data)
 		free(data->y);
 		data->y = 0;
 	}
-	mpt_vecpar_alloc(&data->rwork, 0, 0);
-	mpt_vecpar_alloc(&data->iwork, 0, 0);
+	mpt_solver_valloc(&data->rwork, 0, 0);
+	mpt_solver_valloc(&data->iwork, 0, 0);
 	
-	mpt_vecpar_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_vecpar_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
 }
 
 extern void mpt_radau_init(MPT_SOLVER_STRUCT(radau) *data)
 {
+	const MPT_SOLVER_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	
-	MPT_IVPPAR_INIT(&data->ivp);
+	data->ivp = par;
 	
 	(void) memset(&data->count, 0, sizeof(data->count));
 	/* indicate unprepared state */

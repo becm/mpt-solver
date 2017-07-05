@@ -6,89 +6,77 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "meta.h"
+
 #include "mebdfi.h"
 
-static void meFini(MPT_INTERFACE(unrefable) *gen)
+static void meFini(MPT_INTERFACE(unrefable) *ref)
 {
-	mpt_mebdfi_fini((MPT_SOLVER_STRUCT(mebdfi *)) (gen+1));
-	free(gen);
+	mpt_mebdfi_fini((MPT_SOLVER_STRUCT(mebdfi *)) (ref + 1));
+	free(ref);
 }
 static uintptr_t meAddref()
 {
 	return 0;
 }
-static int meGet(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
+static int meGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	return mpt_mebdfi_get((MPT_SOLVER_STRUCT(mebdfi *)) (gen+1), pr);
+	return mpt_mebdfi_get((MPT_SOLVER_STRUCT(mebdfi *)) (obj + 1), pr);
 }
-static int meSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metatype) *src)
+static int meSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	return mpt_mebdfi_set((MPT_SOLVER_STRUCT(mebdfi *)) (gen+1), pr, src);
-}
-
-static int meReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{
-	return mpt_mebdfi_report((MPT_SOLVER_STRUCT(mebdfi *)) (gen+1), what, out, data);
+	return _mpt_mebdfi_set((MPT_SOLVER_STRUCT(mebdfi *)) (obj + 1), pr, src);
 }
 
-static int meStep(MPT_SOLVER(IVP) *sol, double *tend)
+static int meReport(MPT_SOLVER(generic) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (sol + 1);
-	int err;
-	
-	if (!tend) {
-		if (!me->fcn && (err = mpt_mebdfi_ufcn(me, (void *) (me + 1))) < 0) {
-			return err;
-		}
-		return mpt_mebdfi_prepare(me);
+	if (!what && !out && !data) {
+		return MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 	}
-	err = mpt_mebdfi_step(me, *tend);
-	*tend = me->t;
-	return err;
+	return mpt_mebdfi_report((MPT_SOLVER_STRUCT(mebdfi *)) (sol + 1), what, out, data);
 }
-static void *meFcn(MPT_SOLVER(IVP) *sol, int type)
+static int meFcn(MPT_SOLVER(generic) *sol, int type, const void *par)
 {
 	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (sol + 1);
-	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) (me + 1);
-	
-	switch (type) {
-	  case MPT_SOLVER_ENUM(ODE): break;
-	  case MPT_SOLVER_ENUM(DAE): return me->ivp.pint ? 0 : &fcn->dae;
-	  case MPT_SOLVER_ENUM(PDE): if (!me->ivp.pint) return 0; fcn->dae.mas = 0; fcn->dae.jac = 0;
-	  case MPT_SOLVER_ENUM(IVP): return fcn;
-	  default: return 0;
-	}
-	if (me->ivp.pint) {
-		return 0;
-	}
-	fcn->dae.mas = 0;
-	return &fcn->dae;
-}
-static double *meState(MPT_SOLVER(IVP) *sol)
-{
-	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (sol + 1);
-	return me->y;
+	return mpt_mebdfi_ufcn(me, (void *) (me + 1), type, par);
 }
 
-static const MPT_INTERFACE_VPTR(solver_ivp) mebdfiCtl = {
-	{ { { meFini }, meAddref, meGet, meSet }, meReport },
-	meStep,
-	meFcn,
-	meState
+static const MPT_INTERFACE_VPTR(solver) mebdfiCtl = {
+	{ { meFini }, meAddref, meGet, meSet },
+	meReport,
+	meFcn
 };
 
-extern MPT_SOLVER(IVP) *mpt_mebdfi_create()
+extern int _mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_SOLVER(IVP) *sol;
+	if (!pr) {
+		if (!src) {
+			return mpt_mebdfi_prepare(me);
+		}
+	} else if (src && pr[0] == 't' && pr[1] == 0) {
+		double end;
+		int ret = src->_vptr->conv(src, 'd', &end);
+		
+		if (ret < 0) return ret;
+		if (!ret) return MPT_ERROR(BadValue);
+		return mpt_mebdfi_step(me, end);
+	}
+	return mpt_mebdfi_set(me, pr, src);
+}
+
+extern MPT_SOLVER(generic) *mpt_mebdfi_create()
+{
+	MPT_SOLVER(generic) *sol;
 	MPT_SOLVER_STRUCT(mebdfi) *md;
+	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*md) + sizeof(MPT_SOLVER_IVP_STRUCT(functions))))) {
+	if (!(sol = malloc(sizeof(*sol) + sizeof(*md) + sizeof(*fcn)))) {
 		return 0;
 	}
-	md = (MPT_SOLVER_STRUCT(mebdfi) *) (sol+1);
+	md = (MPT_SOLVER_STRUCT(mebdfi) *) (sol + 1);
 	mpt_mebdfi_init(md);
 	
-	MPT_IVPFCN_INIT(md + 1)->dae.param = &md;
+	md->ipar = memset(md + 1, 0, sizeof(*fcn));
 	
 	sol->_vptr = &mebdfiCtl;
 	

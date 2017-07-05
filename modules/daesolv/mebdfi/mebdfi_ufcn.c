@@ -6,15 +6,18 @@
 
 #include "mebdfi.h"
 
+#include "solver_daefcn.h"
+
 static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, int *ipar, double *rpar, int *flg)
 {
-	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) ipar;
+	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
+	MPT_SOLVER_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
 	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) rpar;
 	
-	if ((*flg = ((MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, *t, y, f, &me->ivp, fcn->grid, fcn->rside)) < 0) {
+	if ((*flg = pde->fcn(pde->par, *t, y, f, &me->ivp)) < 0) {
 		return;
 	}
-	if (!fcn->dae.mas) {
+	if (!fcn->mas.fcn) {
 		int i, neqs = *neq;
 		for (i = 0; i < neqs; i++) {
 			f[i] -= yp[i];
@@ -33,7 +36,7 @@ static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, in
 		*idrow = nz;
 		*idcol = me->ivp.neqs;
 		
-		if ((nz = fcn->dae.mas(fcn->dae.param, *t, y, mas, idrow, idcol)) < 0) {
+		if ((nz = fcn->mas.fcn(fcn->mas.par, *t, y, mas, idrow, idcol)) < 0) {
 			*flg = nz;
 			return;
 		}
@@ -46,7 +49,7 @@ static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, in
 
 static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, int *mbnd, double *con, int *ipar, double *rpar, int *info)
 {
-	MPT_SOLVER_IVP_STRUCT(functions) *fcn = (void *) ipar;
+	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
 	int i, neqs = *neq, ljac;
 	
 	(void) yp;
@@ -59,10 +62,10 @@ static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, 
 		jac += mbnd[1];
 		ljac = mbnd[3];
 	}
-	*info = fcn->dae.jac(fcn->dae.param, *t, y, jac, ljac);
+	*info = fcn->jac.fcn(fcn->jac.par, *t, y, jac, ljac);
 	
 	/* Jac -= con*B */
-	if (!fcn->dae.mas) {
+	if (!fcn->mas.fcn) {
 		++ljac;
 		for (i = 0; i < neqs; i++) {
 			jac[i * ljac] -= *con;
@@ -87,7 +90,7 @@ static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, 
 			idrow[0] = nz;
 			idcol[0] = i;
 			
-			if ((nz = fcn->dae.mas(fcn->dae.param, *t, y, mas, idrow, idcol)) < 0) {
+			if ((nz = fcn->mas.fcn(fcn->mas.par, *t, y, mas, idrow, idcol)) < 0) {
 				*info = nz;
 				return;
 			}
@@ -99,12 +102,22 @@ static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, 
 	}
 }
 
-extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_SOLVER_IVP_STRUCT(functions) *ufcn)
+extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_SOLVER_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
 {
-	if (!ufcn || !ufcn->dae.fcn) {
-		return MPT_ERROR(BadArgument);
+	int ret;
+	
+	if ((ret = _mpt_solver_daefcn_set(me->ivp.pint, ufcn, type, ptr)) < 0) {
+		return ret;
 	}
-	if (ufcn->dae.mas) {
+	me->fcn = 0;
+	me->jac = 0;
+	
+	if (!ufcn) {
+		me->ipar = 0;
+		me->rpar = 0;
+		return 0;
+	}
+	if (ufcn->mas.fcn) {
 		double *mas;
 		size_t nz = me->ivp.neqs * me->ivp.neqs;
 		
@@ -119,12 +132,15 @@ extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_SOLVER_IVP_S
 		}
 		me->dmas = mas;
 	}
-	me->fcn = mebdfi_fcn;
-	me->jac = ufcn->dae.jac ? mebdfi_jac : 0;
-	
+	if (ufcn->jac.fcn) {
+		me->jac = mebdfi_jac;
+	}
+	if (ufcn->rside.fcn) {
+		me->fcn = mebdfi_fcn;
+	}
 	me->ipar = (int *) ufcn;
 	me->rpar = (double *) me;
 	
-	return 0;
+	return ret;
 }
 

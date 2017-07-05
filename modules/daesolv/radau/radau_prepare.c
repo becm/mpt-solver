@@ -26,25 +26,25 @@ extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *rd)
 	if (neqs < 2 || (!rd->rtol.base && !rd->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_vecpar_cktol(&rd->rtol, rd->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
-		return -1;
+	if (mpt_solver_cktol(&rd->rtol, rd->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
+		return MPT_ERROR(BadOperation);
 	}
-	if (mpt_vecpar_cktol(&rd->atol, rd->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
-		return -1;
+	if (mpt_solver_cktol(&rd->atol, rd->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
+		return MPT_ERROR(BadOperation);
 	}
 	/* (2 + (NSMAX - 1) / 2) * N + 20 */
-	liw = (2 + (nsmax-1) / 2) * neqs + 20;
-	/* LJAC */	lrw  = (rd->mljac >= neqs) ? neqs : rd->mljac+rd->mujac+1;
-	/* LMAS */	lrw += rd->mas ? ((rd->mljac >= neqs) ? neqs : rd->mlmas+rd->mumas+1) : 0;
-	/* NSMAX*LE */	lrw += nsmax * ((rd->mljac >= neqs) ? neqs : 2*rd->mljac+rd->mujac+1);
+	liw = (2 + (nsmax - 1) / 2) * neqs + 20;
+	/* LJAC */	lrw  = (rd->mljac >= neqs) ? neqs : rd->mljac + rd->mujac + 1;
+	/* LMAS */	lrw += rd->mas ? ((rd->mljac >= neqs) ? neqs : rd->mlmas + rd->mumas + 1) : 0;
+	/* NSMAX*LE */	lrw += nsmax * ((rd->mljac >= neqs) ? neqs : 2 * rd->mljac + rd->mujac + 1);
 	/* N * (LJAC + LMAS + NSMAX*LE + 3*NSMAX + 3) + 20 */
-	lrw = neqs * (lrw + 3*nsmax + 3) + 20;
+	lrw = neqs * (lrw + 3 * nsmax + 3) + 20;
 	
-	if (!mpt_vecpar_alloc(&rd->iwork, liw, sizeof(int))) {
-		return -1;
+	if (!mpt_solver_valloc(&rd->iwork, liw, sizeof(int))) {
+		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_vecpar_alloc(&rd->rwork, lrw, sizeof(double))) {
-		return -1;
+	if (!mpt_solver_valloc(&rd->rwork, lrw, sizeof(double))) {
+		return MPT_ERROR(BadOperation);
 	}
 	(void) memset(&rd->count, 0, sizeof(rd->count));
 	

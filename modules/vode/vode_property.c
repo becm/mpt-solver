@@ -46,13 +46,20 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 	MPT_STRUCT(solver_value) val;
 	int32_t ml, mu;
 	int key, ret;
+	long max;
 	
 	if (!src) {
 		vd->miter = 0;
 		return 0;
 	}
-	if ((ret = mpt_solver_value_set(&val, src)) < 0) {
-		return ret;
+	ret = 1;
+	if ((key = mpt_solver_value_set(&val, src)) < 0) {
+		const char *ptr;
+		if ((key = src->_vptr->conv(src, 'k', &ptr)) < 0) {
+			return key;
+		}
+		key = ptr ? *ptr : 0;
+		ret = 0;
 	}
 	if ((key = mpt_solver_next_key(&val)) < 0) {
 		return key;
@@ -62,10 +69,10 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		return 0;
 	}
 	switch (key) {
-		case 'n': case 'N': vd->miter = 0; return 1;
-		case 'F': vd->miter = 1; return 1;
-		case 'f': vd->miter = 2; return 1;
-		case 'd': case 'D': vd->miter = 3; return 1;
+		case 'n': case 'N': vd->miter = 0; return ret;
+		case 'F': vd->miter = 1; return ret;
+		case 'f': vd->miter = 2; return ret;
+		case 'd': case 'D': vd->miter = 3; return ret;
 		case 'B': case 'b': break;
 		default:
 			return MPT_ERROR(BadValue);
@@ -90,8 +97,12 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 	if (ml < 0 || mu < 0) {
 		return MPT_ERROR(BadValue);
 	}
+	max = vd->ivp.neqs * (vd->ivp.pint + 1);
+	if (ml >= max || mu >= max) {
+		return MPT_ERROR(BadValue);
+	}
 	if (setInt(vd, 0, ml) < 0
-	    || setInt(vd, 1, mu) < 0) {
+	 || setInt(vd, 1, mu) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	vd->miter = (key == 'B') ? 4 : 5;
@@ -265,7 +276,7 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 	else if (!*name) {
 		prop->name = "vode"; prop->desc = "implicit ODE solver with BDF";
 		prop->val.fmt  = "iid"; prop->val.ptr = &vd->ivp;
-		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
+		return vd->ivp.neqs == 1 && !vd->ivp.pint ? 0 : 1;
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";

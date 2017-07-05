@@ -133,24 +133,24 @@ class MinPack : public NLS, minpack
 	{
 		return 0;
 	}
-	void unref()
+	void unref() __MPT_OVERRIDE
 	{
 		delete this;
 	}
-	int property(struct property *pr) const
+	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_minpack_get(this, pr);
 	}
-	int setProperty(const char *pr, const metatype *src = 0)
+	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
 		return _mpt_minpack_set(this, pr, src);
 	}
 	
-	int report(int what, PropertyHandler out, void *data)
+	int report(int what, PropertyHandler out, void *data) __MPT_OVERRIDE
 	{
 		return mpt_minpack_report(this, what, out, data);
 	}
-	int setFunctions(int what, const void *ptr)
+	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
 	{
 		return mpt_minpack_ufcn(this, &_fcn, what, ptr);
 	}

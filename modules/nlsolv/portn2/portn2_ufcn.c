@@ -42,8 +42,6 @@ extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *n2, MPT_SOLVER_NLS_STRUCT(
 	int ret;
 	if (!ptr) {
 		switch (type) {
-		  case 0:
-			return MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsJac);
 		  case MPT_SOLVER_ENUM(NlsVector):
 			if (ufcn) ufcn->res.fcn = 0;
 			break;

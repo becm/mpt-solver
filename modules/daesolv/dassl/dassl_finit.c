@@ -10,8 +10,8 @@
 
 extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *data)
 {
-	mpt_vecpar_alloc(&data->rwork, 0, 0);
-	mpt_vecpar_alloc(&data->iwork, 0, 0);
+	mpt_solver_valloc(&data->rwork, 0, 0);
+	mpt_solver_valloc(&data->iwork, 0, 0);
 	
 	if (data->y) {
 		free(data->y);
@@ -25,13 +25,15 @@ extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *data)
 		free(data->dmas);
 		data->dmas = 0;
 	}
-	mpt_vecpar_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_vecpar_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
 }
 
 extern void mpt_dassl_init(MPT_SOLVER_STRUCT(dassl) *data)
 {
-	MPT_IVPPAR_INIT(&data->ivp);
+	const MPT_SOLVER_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
+	
+	data->ivp = par;
 	data->t = 0.0;
 	
 	/* delay work vector initialization */

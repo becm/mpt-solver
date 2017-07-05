@@ -22,19 +22,20 @@ extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *me)
 		free(me->dmas);
 		me->dmas = 0;
 	}
-	mpt_vecpar_alloc(&me->rwork, 0, 0);
-	mpt_vecpar_alloc(&me->iwork, 0, 0);
+	mpt_solver_valloc(&me->rwork, 0, 0);
+	mpt_solver_valloc(&me->iwork, 0, 0);
 	
-	mpt_vecpar_cktol(&me->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_vecpar_cktol(&me->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_cktol(&me->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_cktol(&me->atol, 0, 0, __MPT_IVP_ATOL);
 	
 	me->state = -1;
 }
 
 extern void mpt_mebdfi_init(MPT_SOLVER_STRUCT(mebdfi) *me)
 {
-	MPT_IVPPAR_INIT(&me->ivp);
+	const MPT_SOLVER_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	
+	me->ivp = par;
 	me->t = 0.;
 	me->h = 0.;
 	

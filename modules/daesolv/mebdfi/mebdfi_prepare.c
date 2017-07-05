@@ -21,10 +21,10 @@ extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *me)
 	if (neqs < 2 || (!me->rtol.base && !me->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_vecpar_cktol(&me->atol, me->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_cktol(&me->atol, me->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return -1;
 	}
-	if (mpt_vecpar_cktol(&me->rtol, me->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_cktol(&me->rtol, me->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
 		return -1;
 	}
 	/* set banded matrix parameters */
@@ -40,10 +40,10 @@ extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *me)
 	/* ignore wrong comments in mebdfi.f and set ACTUALLY needed size */
 	lrw = (32 + 2 * me->mbnd[3]) * neqs + 2;
 	
-	if (!(iwk = mpt_vecpar_alloc(&me->iwork, liw, sizeof(int)))) {
+	if (!(iwk = mpt_solver_valloc(&me->iwork, liw, sizeof(int)))) {
 		return -1;
 	}
-	if (!mpt_vecpar_alloc(&me->rwork, lrw, sizeof(double))) {
+	if (!mpt_solver_valloc(&me->rwork, lrw, sizeof(double))) {
 		return -1;
 	}
 	len = sizeof(*v) * neqs;

@@ -4,12 +4,11 @@
 
 #include "solver_ivp.h"
 
-static double *param;
-
 /* DY(i)/DY(j) */
 int rh_side(void *udata, double t, const double *y, double *f)
 {
-	(void) udata; (void) t;
+	const double *param = udata;
+	(void) t;
 	
 	/* ODEs */
 	f[0] = -param[0] * y[0] + param[2] * y[1] * y[2];
@@ -34,7 +33,8 @@ int bmat_bcf(void *udata, double t, const double *y, double *b, int *row_ind, in
 /* DF/DY */
 int jac_eval(void *udata, double t, const double *y, double *jac, int ljac)
 {
-	(void) udata; (void) t; (void) y;
+	const double *param = udata;
+	(void) t; (void) y;
 	
 	jac[0] = -param[0]; /* DF(i)/DY(1) */
 	jac[1] =  param[0];
@@ -55,21 +55,27 @@ int jac_eval(void *udata, double t, const double *y, double *jac, int ljac)
 	return 0;
 }
 
-int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
-	MPT_SOLVER_STRUCT(daefcn) *usr;
+	MPT_SOLVER_IVP_STRUCT(daefcn) usr = MPT_IVP_DAE_INIT;
+	double *param;
+	const int neqs = 3;
+	int ret;
 	
-	if (!(usr = mpt_init_dae(sol, &sd->val, out))) {
-		return MPT_ERROR(BadArgument);
+	if (sd->npar < 3) {
+		return MPT_ERROR(MissingData);
 	}
-	usr->fcn = rh_side;
-	usr->jac = jac_eval;
-	usr->mas = bmat_bcf;
-	
 	param = mpt_solver_data_param(sd);
 	
-	if (sd->npar < 3) return -1;
+	usr.rside.fcn = rh_side;
+	usr.jac.fcn   = jac_eval;
+	usr.mas.fcn   = bmat_bcf;
+	usr.rside.par = param;
+	usr.jac.par   = param;
 	
-	return 3;
+	if ((ret = mpt_init_dae(sol, &usr, neqs, out)) < 0) {
+		return ret;
+	}
+	return neqs;
 }
 

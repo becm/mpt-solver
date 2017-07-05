@@ -78,7 +78,8 @@ extern int mpt_radau_step(MPT_SOLVER_STRUCT(radau) *, double);
 
 /* set bacol functions/parameters */
 extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *, MPT_STRUCT(property) *);
-extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *, const char *, MPT_INTERFACE(metatype) *);
+extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int _mpt_radau_set(MPT_SOLVER_STRUCT(radau) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* validate settings and working space for use */
 extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *);
@@ -87,14 +88,14 @@ extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *);
 extern void mpt_radau_init(MPT_SOLVER_STRUCT(radau) *);
 extern void mpt_radau_fini(MPT_SOLVER_STRUCT(radau) *);
 /* set wrapper for user functions */
-extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *, const MPT_SOLVER_IVP_STRUCT(functions) *);
+extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *, MPT_SOLVER_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* radau status information */
 extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *, int , MPT_TYPE(PropertyHandler) , void *);
 
 /* setup generic solver to use radau */
 #ifndef __cplusplus
-extern MPT_SOLVER(IVP) *mpt_radau_create(void);
+extern MPT_SOLVER(generic) *mpt_radau_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -111,51 +112,33 @@ inline radau::~radau()
 class Radau : public IVP, radau
 {
 public:
-	Radau()
-	{
-		_fcn.dae.param = &ivp;
-	}
-	virtual ~Radau()
+	inline Radau() : _fcn(0)
 	{ }
-	void unref()
+	~Radau() __MPT_OVERRIDE
+	{ }
+	void unref() __MPT_OVERRIDE
 	{
 		delete this;
 	}
-	int property(struct property *pr) const
+	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_radau_get(this, pr);
 	}
-	int setProperty(const char *pr, metatype *src = 0)
+	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
-		return mpt_radau_set(this, pr, src);
+		return _mpt_radau_set(this, pr, src);
 	}
-	int report(int what, PropertyHandler out, void *opar)
+	
+	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
 		return mpt_radau_report(this, what, out, opar);
 	}
-	int step(double *tend)
+	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
 	{
-		int ret;
-		if (!tend) {
-			if (!fcn && _fcn.dae.fcn && (ret = mpt_radau_ufcn(this, &_fcn)) < 0) {
-				return ret;
-			}
-			return mpt_radau_prepare(this);
-		}
-		ret = mpt_radau_step(this, *tend);
-		*tend = t;
-		return ret;
-	}
-	void *functions(int type)
-	{
-		return _fcn.select(type, ivp);
-	}
-	double *initstate()
-	{
-		return y;
+		return mpt_radau_ufcn(this, &_fcn, type, ptr);
 	}
 protected:
-	struct functions _fcn;
+	struct daefcn _fcn;
 };
 #endif
 

@@ -7,6 +7,7 @@
 
 #include "solver_ivp.h"
 
+static const int neqs = 6;
 static double
 k1   = 18.7,
 k2   = 0.58,
@@ -48,13 +49,14 @@ static int rs_akzo(void *udata, double t, const double *y, double *f)
 	f[3] =         - r2 + r3 - 2.0*r4;
 	f[4] =           r2 - r3              + r5;
 	
+	/* algebraic component */
 	f[5] = Ks*y[0]*y[3] - y[5];
 	
 	return 0;
 }
 static int bm_akzo(void *udata, double t, const double *y, double *b, int *idrow, int *idcol)
 {
-	int i, n = 5;
+	int i, n = neqs - 1;
 	
 	(void) udata; (void) t; (void) y;
 	
@@ -66,17 +68,17 @@ static int bm_akzo(void *udata, double t, const double *y, double *b, int *idrow
 	return n;
 }
 
-int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
-	MPT_SOLVER_STRUCT(daefcn) *usr;
+	MPT_SOLVER_IVP_STRUCT(daefcn) usr = MPT_IVP_DAE_INIT;
 	double *param;
+	int ret;
 	
-	if (!(usr = mpt_init_dae(sol, &sd->val, out))) {
-		return MPT_ERROR(BadArgument);
+	usr.rside.fcn = rs_akzo;
+	usr.mas.fcn   = bm_akzo;
+	if ((ret = mpt_init_dae(sol, &usr, neqs, out)) < 0) {
+		return ret;
 	}
-	usr->fcn = rs_akzo;
-	usr->mas = bm_akzo;
-	
 	param = mpt_solver_data_param(sd);
 	
 	switch (sd->npar) {
@@ -92,6 +94,6 @@ int user_init(MPT_SOLVER(IVP) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(l
 	  case 1: k1   = param[0];
 	  case 0:;
 	}
-	return 6;
+	return neqs;
 }
 

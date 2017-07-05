@@ -2,6 +2,7 @@
  * set dDASSL integrator parameters
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
@@ -11,6 +12,8 @@
 
 #include "dassl.h"
 
+#include "solver_yprime.h"
+
 static int setInt(MPT_SOLVER_STRUCT(dassl) *da, size_t pos, int val)
 {
 	int *iwk = da->iwork.iov_base;
@@ -19,7 +22,7 @@ static int setInt(MPT_SOLVER_STRUCT(dassl) *da, size_t pos, int val)
 		if (!val) {
 			return 0;
 		}
-		if (!(iwk = mpt_vecpar_alloc(&da->iwork, pos + 1, sizeof(int)))) {
+		if (!(iwk = mpt_solver_valloc(&da->iwork, pos + 1, sizeof(int)))) {
 			return MPT_ERROR(BadOperation);
 		}
 	}
@@ -34,7 +37,7 @@ static int setReal(MPT_SOLVER_STRUCT(dassl) *da, size_t pos, double val)
 		if (!val) {
 			return 0;
 		}
-		if (!(rwk = mpt_vecpar_alloc(&da->rwork, pos + 1, sizeof(double)))) {
+		if (!(rwk = mpt_solver_valloc(&da->rwork, pos + 1, sizeof(double)))) {
 			return MPT_ERROR(BadOperation);
 		}
 	}
@@ -42,67 +45,75 @@ static int setReal(MPT_SOLVER_STRUCT(dassl) *da, size_t pos, double val)
 	return 1;
 }
 
-static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, MPT_INTERFACE(metatype) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, const MPT_INTERFACE(metatype) *src)
 {
-	char *key;
+	MPT_STRUCT(solver_value) val;
 	int32_t ld, ud;
-	int ret, len, ujac, max;
+	int key, ret, ujac;
+	long max;
 	
 	if (!src) {
 		da->info[4] = 1;
 		da->info[5] = 0;
 		return 0;
 	}
-	if ((len = src->_vptr->conv(src, 'k' | MPT_ENUM(ValueConsume), &key)) < 0) {
-		return len;
+	ret = 1;
+	if ((key = mpt_solver_value_set(&val, src)) < 0) {
+		const char *ptr;
+		if ((key = src->_vptr->conv(src, 'k', &ptr)) < 0) {
+			return key;
+		}
+		key = ptr ? *ptr : 0;
+		ret = 0;
 	}
-	if (!len || !key) {
+	else if ((key = mpt_solver_next_key(&val)) < 0) {
+		return key;
+	}
+	if (!key) {
 		da->info[4] = 1;
 		da->info[5] = 0;
-		return 0;
+		return ret;
 	}
-	
-	switch (key[0]) {
-		case 'F': da->info[4] = 1; da->info[5] = 0; return 1;
-		case 'f': da->info[4] = 0; da->info[5] = 0; return 1;
+	switch (key) {
+		case 'F': da->info[4] = 1; da->info[5] = 0; return ret;
+		case 'f': da->info[4] = 0; da->info[5] = 0; return ret;
 		case 'B': ujac = 1; break;
 		case 'b': ujac = 0; break;
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	len = 1;
-	if ((ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &ld) < 0)) {
+	if ((ret = mpt_solver_next_int(&val, &ld)) < 0) {
 		return ret;
 	}
-	max = da->ivp.neqs * (da->ivp.pint + 1);
-	if (!ret) {
-		ld = da->ivp.neqs;
-		ud = ld;
+	else if (!ret) {
+		ld = ud = da->ivp.neqs;
+		ret = 1;
 	}
-	else if (ld < 0 || ld > max) {
-		return MPT_ERROR(BadValue);
-	}
-	else if (src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &ud) < 0) {
+	else if ((ret = mpt_solver_next_int(&val, &ud)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
 		ud = ld;
-		len = 2;
-	}
-	else if (ud < 0 || ud > max) {
-		return MPT_ERROR(BadValue);
+		ret = 2;
 	}
 	else {
-		len = 3;
+		ret = 3;
 	}
-	
-	if (setInt(da, 1, ud) < 0 || setInt(da, 0, ld) < 0) {
+	if (ld < 0 || ud < 0) {
+		return MPT_ERROR(BadValue);
+	}
+	max = da->ivp.neqs * (da->ivp.pint + 1);
+	if (ld >= max || ud >= max) {
+		return MPT_ERROR(BadValue);
+	}
+	if (setInt(da, 1, ud) < 0
+	 || setInt(da, 0, ld) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	da->info[4] = ujac;
 	da->info[5] = 1;
 	
-	return len;
+	return ret;
 }
 
 
@@ -119,61 +130,51 @@ static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, MPT_INTERFACE(metatype) *sr
  * \retval <0   failure
  * \retval >=0  used elements
  */
-extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, MPT_INTERFACE(metatype) *src)
+extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const MPT_INTERFACE(metatype) *src)
 {
 	int ret = 0;
 	
 	if (!name) {
-		double t = da->t;
-		size_t required;
-		
-		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
-			if (ret < 0) {
-				return ret;
-			}
-			src = 0;
-		}
-		required = da->ivp.neqs * (da->ivp.pint + 1);
-		if ((ret = mpt_vecpar_set(&da->y, required, src)) < 0) {
-			return ret;
-		}
-		da->t = t;
-		
-		return src ? ++ret : 0;
+		return mpt_solver_ivpstate(&da->ivp, &da->t, &da->y, src);
 	}
 	if (!*name) {
-		MPT_SOLVER_IVP_STRUCT(parameters) ivp = da->ivp;
+		MPT_SOLVER_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		
-		if (src && (ret =  mpt_ivppar_set(&ivp, src)) < 0) {
+		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
 			return ret;
 		}
 		mpt_dassl_fini(da);
 		mpt_dassl_init(da);
-		
 		da->ivp = ivp;
 		
 		return ret;
 	}
 	
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&da->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_settol(&da->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&da->atol, src, __MPT_IVP_RTOL);
+		return mpt_solver_settol(&da->atol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jacobian", 3)) {
 		return setJacobian(da, src);
 	}
 	if (!strcasecmp(name, "info3")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
-		if (val < 0 || val > 1) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+			return ret;
+		}
+		if (val < 0 || val > 1) {
+			return MPT_ERROR(BadValue);
+		}
 		da->info[2] = val;
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "tstop")) {
 		double val;
-		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+			return ret;
+		}
 		if (!ret) {
 			da->info[3] = 0; /* clear max time flag */
 			return 0;
@@ -182,11 +183,13 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, MPT_INT
 			return MPT_ERROR(BadOperation);
 		}
 		da->info[3] = 1;
-		return 1;
+		return 0;
 	}
 	if (!strcasecmp(name, "maxstep") || !strcasecmp(name, "hmax")) {
 		double val;
-		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+			return ret;
+		}
 		if (!ret) {
 			da->info[6] = 0; /* clear max time flag */
 			return 0;
@@ -199,7 +202,9 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, MPT_INT
 	}
 	if (!strcasecmp(name, "h0") || !strcasecmp(name, "initstep") || !strcasecmp(name, "stepinit")) {
 		double val;
-		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+			return ret;
+		}
 		if (!ret) {
 			da->info[7] = 0; /* clear explicit initstep flag */
 			return 0;
@@ -212,7 +217,9 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, MPT_INT
 	}
 	if (!strcasecmp(name, "maxord")) {
 		int32_t val;
-		if (src && (ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+			return ret;
+		}
 		if (!ret) {
 			da->info[8] = 0; /* clear explicit initstep flag */
 			return 0;
@@ -228,7 +235,9 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, MPT_INT
 	}
 	if (!strcasecmp(name, "info10") || strncasecmp(name, "nonnegative", 6)) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+			return ret;
+		}
 		if (val < 0 || val > 1) {
 			return MPT_ERROR(BadValue);
 		}
@@ -236,8 +245,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, MPT_INT
 		return ret ? 1 : 0;
 	}
 	if (!strncasecmp(name, "yprime", 2)) {
-		ret = src ? da->ivp.neqs * (da->ivp.pint + 1) : -1;
-		if ((ret = mpt_vecpar_set(&da->yp, ret, src)) < 0) {
+		if ((ret = _mpt_solver_yprime_set(&da->ivp, &da->y, src)) < 0) {
 			return ret;
 		}
 		da->info[10] = 1;
@@ -275,7 +283,7 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 	else if (!*name) {
 		prop->name = "dassl"; prop->desc = "implicit DAE solver with BDF";
 		prop->val.fmt = "iid"; prop->val.ptr = &da->ivp;
-		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
+		return da->ivp.neqs == 1 && !da->ivp.pint ? 0 : 1;
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
@@ -287,13 +295,13 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
 		if (!da) { prop->val.fmt = "d"; prop->val.ptr = &da->rtol.d.val; }
-		else { id = mpt_vecpar_get(&da->rtol, &prop->val); }
+		else { id = mpt_solver_vecpar_get(&da->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		if (!da) { prop->val.fmt = "d"; prop->val.ptr = &da->rtol.d.val; }
-		else { id = mpt_vecpar_get(&da->rtol, &prop->val); }
+		else { id = mpt_solver_vecpar_get(&da->rtol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}

@@ -28,6 +28,9 @@ static int mpSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 
 static int mpReport(MPT_SOLVER(generic) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
+	if (!what && !out && !data) {
+		return MPT_SOLVER_ENUM(NlsUser) | MPT_SOLVER_ENUM(NlsOverdet);
+	}
 	return mpt_minpack_report((MPT_SOLVER_STRUCT(minpack) *) (sol + 1), what, out, data);
 }
 static int mpFcn(MPT_SOLVER(generic) *sol, int type, const void *ptr)

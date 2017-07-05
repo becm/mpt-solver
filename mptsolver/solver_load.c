@@ -103,13 +103,9 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 		return 0;
 	}
 	if (sol) {
-		MPT_STRUCT(property) prop;
 		MPT_INTERFACE(metatype) *pre;
 		
-		prop.name = "";
-		prop.desc = 0;
-		
-		if ((mode = sol->_vptr->obj.property((void *) sol, &prop)) < 0) {
+		if ((mode = sol->_vptr->report(sol, 0, 0, 0)) < 0) {
 			mode = MPT_ERROR(BadOperation);
 			mt->_vptr->ref.unref((void *) mt);
 			return 0;

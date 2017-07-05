@@ -54,7 +54,8 @@ extern int mpt_dassl_step(MPT_SOLVER_STRUCT(dassl) *, double);
 
 /* set dassl parameter */
 extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *, MPT_STRUCT(property) *);
-extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *, const char *, MPT_INTERFACE(metatype) *);
+extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int _mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* validate settings and working space for use */
 extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *);
@@ -63,14 +64,16 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *);
 extern void mpt_dassl_init(MPT_SOLVER_STRUCT(dassl) *);
 extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *);
 /* set wrapper for user functions */
-extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *, const MPT_SOLVER_IVP_STRUCT(functions) *);
+
+/* set deviation values */
+extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *, MPT_SOLVER_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* dassl status information */
 extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *, int , MPT_TYPE(PropertyHandler) , void *);
 
 /* handle for generic solver type */
 #ifndef __cplusplus
-extern MPT_SOLVER(IVP) *mpt_dassl_create(void);
+extern MPT_SOLVER(generic) *mpt_dassl_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -83,51 +86,33 @@ inline dassl::~dassl()
 class Dassl : public IVP, dassl
 {
 public:
-	Dassl()
-	{
-		_fcn.dae.param = &ivp;
-	}
-	virtual ~Dassl()
+	inline Dassl() : _fcn(0)
 	{ }
-	void unref()
+	~Dassl() __MPT_OVERRIDE
+	{ }
+	void unref() __MPT_OVERRIDE
 	{
 		delete this;
 	}
-	int property(struct property *pr) const
+	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_dassl_get(this, pr);
 	}
-	int setProperty(const char *pr, metatype *src = 0)
+	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
-		return mpt_dassl_set(this, pr, src);
+		return _mpt_dassl_set(this, pr, src);
 	}
-	int report(int what, PropertyHandler out, void *opar)
+	
+	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
 		return mpt_dassl_report(this, what, out, opar);
 	}
-	int step(double *tend)
+	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
 	{
-		int ret;
-		if (!tend) {
-			if (!fcn && (ret = mpt_dassl_ufcn(this, &_fcn)) < 0) {
-				return ret;
-			}
-			return mpt_dassl_prepare(this);
-		}
-		ret = mpt_dassl_step(this, *tend);
-		*tend = t;
-		return ret;
-	}
-	void *functions(int type)
-	{
-		return _fcn.select(type, ivp);
-	}
-	double *initstate()
-	{
-		return y;
+		return mpt_dassl_ufcn(this, &_fcn, type, ptr);
 	}
 protected:
-	struct functions _fcn;
+	struct daefcn _fcn;
 };
 #endif
 

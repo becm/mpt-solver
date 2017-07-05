@@ -65,8 +65,6 @@ extern int mpt_minpack_ufcn_hybrid(MPT_SOLVER_STRUCT(minpack) *mp, MPT_SOLVER_NL
 	}
 	if (!ptr) {
 		switch (type) {
-		  case 0:
-			return MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsJac);
 		  case MPT_SOLVER_ENUM(NlsVector):
 			if (ufcn) ufcn->res.fcn = 0;
 			break;

@@ -65,7 +65,8 @@ extern int mpt_mebdfi_step(MPT_SOLVER_STRUCT(mebdfi) *, double);
 
 /* set mebdfi parameter */
 extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *, MPT_STRUCT(property) *);
-extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *, const char *, MPT_INTERFACE(metatype) *);
+extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int _mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* validate settings and working space for use */
 extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *);
@@ -74,14 +75,14 @@ extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *);
 extern void mpt_mebdfi_init(MPT_SOLVER_STRUCT(mebdfi) *);
 extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *);
 /* set wrapper for user functions */
-extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *, const MPT_SOLVER_IVP_STRUCT(functions) *);
+extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *, MPT_SOLVER_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* mebdfi status information */
 extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *, int , MPT_TYPE(PropertyHandler) , void *);
 
 /* setup generic solver to use mebfi */
 #ifndef __cplusplus
-extern MPT_SOLVER(IVP) *mpt_mebdfi_create(void);
+extern MPT_SOLVER(generic) *mpt_mebdfi_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -95,51 +96,33 @@ inline mebdfi::~mebdfi()
 class Mebdfi : public IVP, mebdfi
 {
     public:
-	Mebdfi()
-	{
-		_fcn.dae.param = &ivp;
-	}
-	virtual ~Mebdfi()
+	inline Mebdfi() : _fcn(0)
 	{ }
-	void unref()
+	~Mebdfi() __MPT_OVERRIDE
+	{ }
+	void unref() __MPT_OVERRIDE
 	{
 		delete this;
 	}
-	int property(struct property *pr) const
+	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_mebdfi_get(this, pr);
 	}
-	int setProperty(const char *pr, metatype *src)
+	int setProperty(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
-		return mpt_mebdfi_set(this, pr, src);
+		return _mpt_mebdfi_set(this, pr, src);
 	}
-	int report(int what, PropertyHandler out, void *opar)
+	
+	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
 		return mpt_mebdfi_report(this, what, out, opar);
 	}
-	int step(double *tend)
+	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
 	{
-		int ret;
-		if (!tend) {
-			if (!fcn && (ret = mpt_mebdfi_ufcn(this, &_fcn)) < 0) {
-				return ret;
-			}
-			return mpt_mebdfi_prepare(this);
-		}
-		ret = mpt_mebdfi_step(this, *tend);
-		*tend = t;
-		return ret;
-	}
-	void *functions(int type)
-	{
-		return _fcn.select(type, ivp);
-	}
-	double *initstate()
-	{
-		return y;
+		return mpt_mebdfi_ufcn(this, &_fcn, type, ptr);
 	}
 protected:
-	struct functions _fcn;
+	struct daefcn _fcn;
 };
 #endif
 
