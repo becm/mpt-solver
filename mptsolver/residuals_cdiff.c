@@ -37,14 +37,14 @@ static void cdiff_step(int npde, const double *left, const double *curr, const d
  * 
  * \return argument or user function error
  */
-extern int mpt_residuals_cdiff(void *ctx, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const double *grid, MPT_SOLVER_IVP(Rside) rfcn)
+extern int mpt_residuals_cdiff(void *ctx, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, MPT_SOLVER_IVP(Rside) rfcn)
 {
-	const double *left;
+	const double *left, *grid;
 	double dx, *diff, *vx;
 	int pts, i, npde;
 	
 	/* require PDE arguments */
-	if (!ivp || (npde = ivp->neqs) < 1 || !rfcn || !grid) {
+	if (!ivp || (npde = ivp->neqs) < 1 || !rfcn || !(grid = ivp->grid)) {
 		return MPT_ERROR(BadArgument);
 	}
 	/* inner nodes required */

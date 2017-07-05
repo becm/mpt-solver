@@ -54,38 +54,38 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 	len = 0;
 	ret = -1;
 	while (1) {
-		/* fill buffer data */
-		while (len) {
-			/* get iterator data */
-			if ((ret = it->_vptr->get(it, 'd', dest)) < 0) {
-				if (nit) {
-					nit->_vptr->ref.unref((void *) it);
-				}
-				buf->_used = old;
-				return ret;
-			}
-			if (!ret) {
-				break;
-			}
-			/* advance position and iterator */
-			--len;
-			++pts;
-			++dest;
-			if ((ret = it->_vptr->advance(it)) < 0) {
-				if (nit) {
-					nit->_vptr->ref.unref((void *) it);
-				}
-				buf->_used = old;
-				return ret;
-			}
-			if (!ret) {
-				break;
-			}
-		}
 		/* increase buffer size */
-		if (!(dest = mpt_values_prepare(grid, len = 16))) {
-			if (buf) buf->_used = old;
-			return MPT_ERROR(BadOperation);
+		if (!len) {
+			if (!(dest = mpt_values_prepare(grid, len = 16))) {
+				if (buf) buf->_used = old;
+				return MPT_ERROR(BadOperation);
+			}
+			buf = grid->_buf;
+		}
+		/* get iterator data */
+		if ((ret = it->_vptr->get(it, 'd', dest)) < 0) {
+			if (nit) {
+				nit->_vptr->ref.unref((void *) it);
+			}
+			buf->_used = old;
+			return ret;
+		}
+		if (!ret) {
+			break;
+		}
+		/* advance position and iterator */
+		--len;
+		++pts;
+		++dest;
+		if ((ret = it->_vptr->advance(it)) < 0) {
+			if (nit) {
+				nit->_vptr->ref.unref((void *) it);
+			}
+			buf->_used = old;
+			return ret;
+		}
+		if (!ret) {
+			break;
 		}
 	}
 	if (nit) {
