@@ -20,7 +20,7 @@ static int rh_side(void *udata, double t, const double *y, double *f)
 
 extern int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
-	MPT_SOLVER_IVP_STRUCT(odefcn) usr = MPT_IVP_ODE_INIT;
+	MPT_IVP_STRUCT(odefcn) usr = MPT_IVP_ODE_INIT;
 	double *param;
 	int i, n;
 	

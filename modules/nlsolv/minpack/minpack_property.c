@@ -137,7 +137,7 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, con
 		return ret;
 	}
 	if (!*name) {
-		MPT_SOLVER_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;
+		MPT_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;
 		
 		if (src && (ret =  mpt_solver_nlsset(&nls, src)) < 0) {
 			return ret;

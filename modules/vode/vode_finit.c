@@ -28,7 +28,7 @@ extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *data)
 
 extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *data)
 {
-	const MPT_SOLVER_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
+	const MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 	const struct iovec vec = { 0, 0 };
 	
 	data->ivp = ivp;

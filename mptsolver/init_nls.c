@@ -17,7 +17,7 @@
  * 
  * \return pointer to nonlinear user funtions
  */
-extern int mpt_init_nls(MPT_SOLVER(generic) *sol, const MPT_SOLVER_NLS_STRUCT(functions) *fcn, const MPT_STRUCT(solver_data) *dat, MPT_INTERFACE(logger) *log)
+extern int mpt_init_nls(MPT_SOLVER(generic) *sol, const MPT_NLS_STRUCT(functions) *fcn, const MPT_STRUCT(solver_data) *dat, MPT_INTERFACE(logger) *log)
 {
 	static const char fmt[] = { MPT_value_toVector('d'), 0 };
 	struct iovec vec;

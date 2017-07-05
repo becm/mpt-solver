@@ -33,7 +33,7 @@ extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *me)
 
 extern void mpt_mebdfi_init(MPT_SOLVER_STRUCT(mebdfi) *me)
 {
-	const MPT_SOLVER_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
+	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	
 	me->ivp = par;
 	me->t = 0.;

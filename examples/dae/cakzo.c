@@ -70,7 +70,7 @@ static int bm_akzo(void *udata, double t, const double *y, double *b, int *idrow
 
 int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
-	MPT_SOLVER_IVP_STRUCT(daefcn) usr = MPT_IVP_DAE_INIT;
+	MPT_IVP_STRUCT(daefcn) usr = MPT_IVP_DAE_INIT;
 	double *param;
 	int ret;
 	

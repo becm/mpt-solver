@@ -95,7 +95,7 @@ extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *name, const M
 		return mpt_solver_ivpstate(&rd->ivp, &rd->t, &rd->y, src);
 	}
 	if (!*name) {
-		MPT_SOLVER_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
+		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		
 		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
 			return ret;

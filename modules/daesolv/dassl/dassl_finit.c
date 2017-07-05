@@ -31,7 +31,7 @@ extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *data)
 
 extern void mpt_dassl_init(MPT_SOLVER_STRUCT(dassl) *data)
 {
-	const MPT_SOLVER_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
+	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	
 	data->ivp = par;
 	data->t = 0.0;

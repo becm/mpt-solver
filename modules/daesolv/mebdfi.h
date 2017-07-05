@@ -21,7 +21,7 @@ public:
 	mebdfi();
 	~mebdfi();
 #endif
-	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
+	MPT_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
 	double t;        /* reference time */
 	
@@ -75,7 +75,7 @@ extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *);
 extern void mpt_mebdfi_init(MPT_SOLVER_STRUCT(mebdfi) *);
 extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *);
 /* set wrapper for user functions */
-extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *, MPT_SOLVER_IVP_STRUCT(daefcn) *, int , const void *);
+extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *, MPT_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* mebdfi status information */
 extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *, int , MPT_TYPE(PropertyHandler) , void *);

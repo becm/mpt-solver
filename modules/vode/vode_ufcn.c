@@ -8,7 +8,7 @@
 
 static void vode_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)
 {
-	const MPT_SOLVER_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
+	const MPT_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
 	const MPT_SOLVER_STRUCT(vode) *vd = (void *) rpar;
 	int ret;
 	(void) neq;
@@ -25,7 +25,7 @@ static void vode_fcn(int *neq, double *t, double *y, double *f, double *rpar, in
 
 static void vode_jac(int *neq, double *t, double *y, int *ml, int *mu, double *jac, int *ljac, double *rpar, int *ipar)
 {
-	const MPT_SOLVER_IVP_STRUCT(odefcn) *ufcn = (void *) ipar;
+	const MPT_IVP_STRUCT(odefcn) *ufcn = (void *) ipar;
 	int ld;
 	
 	(void) rpar;
@@ -42,7 +42,7 @@ static void vode_jac(int *neq, double *t, double *y, int *ml, int *mu, double *j
 	}
 }
 
-extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_SOLVER_IVP_STRUCT(odefcn) *ufcn, int type, const void *ptr)
+extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_IVP_STRUCT(odefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	if (!ptr) {
@@ -72,31 +72,31 @@ extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_SOLVER_IVP_STRUCT(odef
 			if (!vd->ivp.pint) {
 				return MPT_ERROR(BadType);
 			}
-			if (!((MPT_SOLVER_IVP_STRUCT(pdefcn) *) ptr)->fcn) {
+			if (!((MPT_IVP_STRUCT(pdefcn) *) ptr)->fcn) {
 				return MPT_ERROR(BadValue);
 			}
-			ufcn->rside = *((MPT_SOLVER_IVP_STRUCT(rside) *) ptr);
+			ufcn->rside = *((MPT_IVP_STRUCT(rside) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(IvpRside):
 			if (vd->ivp.pint) {
 				return MPT_ERROR(BadType);
 			}
-			if (!((MPT_SOLVER_IVP_STRUCT(rside) *) ptr)->fcn) {
+			if (!((MPT_IVP_STRUCT(rside) *) ptr)->fcn) {
 				return MPT_ERROR(BadValue);
 			}
-			ufcn->rside = *((MPT_SOLVER_IVP_STRUCT(rside) *) ptr);
+			ufcn->rside = *((MPT_IVP_STRUCT(rside) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(IvpJac):
-			ufcn->jac = *((MPT_SOLVER_IVP_STRUCT(jacobian) *) ptr);
+			ufcn->jac = *((MPT_IVP_STRUCT(jacobian) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(ODE):
-			*ufcn = *((MPT_SOLVER_IVP_STRUCT(odefcn) *) ptr);
+			*ufcn = *((MPT_IVP_STRUCT(odefcn) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(DAE):
-			if (((MPT_SOLVER_IVP_STRUCT(daefcn) *) ptr)->mas.fcn) {
+			if (((MPT_IVP_STRUCT(daefcn) *) ptr)->mas.fcn) {
 				return MPT_ERROR(BadValue);
 			}
-			*ufcn = *((MPT_SOLVER_IVP_STRUCT(odefcn) *) ptr);
+			*ufcn = *((MPT_IVP_STRUCT(odefcn) *) ptr);
 			break;
 		  default:
 			return MPT_ERROR(BadType);

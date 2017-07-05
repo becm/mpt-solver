@@ -69,7 +69,7 @@ extern MPT_SOLVER(generic) *mpt_vode_create()
 {
 	MPT_SOLVER(generic) *sol;
 	MPT_SOLVER_STRUCT(vode) *vd;
-	MPT_SOLVER_IVP_STRUCT(odefcn) *fcn;
+	MPT_IVP_STRUCT(odefcn) *fcn;
 	
 	if (!(sol = malloc(sizeof(*sol) + sizeof(*vd) + sizeof(*fcn)))) {
 		return 0;

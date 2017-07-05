@@ -12,8 +12,8 @@
 
 static void dassl_fcn(double *t, double *y, double *yp, double *f, int *ires, double *rpar, int *ipar)
 {
-	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
-	MPT_SOLVER_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
+	MPT_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
+	MPT_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
 	MPT_SOLVER_STRUCT(dassl) *data = (void *) rpar;
 	int i, neqs;
 	
@@ -58,7 +58,7 @@ static void dassl_fcn(double *t, double *y, double *yp, double *f, int *ires, do
 
 static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cjp, double *rpar, int *ipar)
 {
-	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
+	MPT_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(dassl) *data = (void *) rpar;
 	double cj = *cjp;
 	long ld, neqs, pint;
@@ -108,7 +108,7 @@ static void dassl_jac(double *t, double *y, double *ys, double *jac, double *cjp
 	}
 }
 
-extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, MPT_SOLVER_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
+extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	

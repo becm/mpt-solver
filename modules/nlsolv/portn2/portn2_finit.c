@@ -13,7 +13,7 @@ extern void mpt_portn2_fini(MPT_SOLVER_STRUCT(portn2) *n2)
 
 extern int mpt_portn2_init(MPT_SOLVER_STRUCT(portn2) *n2)
 {
-	const MPT_SOLVER_NLS_STRUCT(parameters) par = MPT_NLSPAR_INIT;
+	const MPT_NLS_STRUCT(parameters) par = MPT_NLSPAR_INIT;
 	
 	n2->nls = par;
 	n2->pv.iov_base = 0;

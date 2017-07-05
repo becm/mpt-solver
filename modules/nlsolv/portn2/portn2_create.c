@@ -10,7 +10,7 @@
 struct _mpt_portn2_data {
 	MPT_SOLVER(generic) sol;
 	MPT_SOLVER_STRUCT(portn2) n2;
-	MPT_SOLVER_NLS_STRUCT(functions) uf;
+	MPT_NLS_STRUCT(functions) uf;
 };
 
 static void n2Unref(MPT_INTERFACE(unrefable) *ref)

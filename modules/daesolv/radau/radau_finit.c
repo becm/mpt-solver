@@ -26,7 +26,7 @@ extern void mpt_radau_fini(MPT_SOLVER_STRUCT(radau) *data)
 
 extern void mpt_radau_init(MPT_SOLVER_STRUCT(radau) *data)
 {
-	const MPT_SOLVER_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
+	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	
 	data->ivp = par;
 	

@@ -100,7 +100,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 		return mpt_solver_ivpstate(&me->ivp, &me->t, &me->y, src);
 	}
 	if (!*name) {
-		MPT_SOLVER_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
+		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		
 		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
 			return ret;

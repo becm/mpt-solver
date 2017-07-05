@@ -33,7 +33,7 @@ public:
 	minpack();
 	~minpack();
 #endif
-	MPT_SOLVER_NLS_STRUCT(parameters) nls; /* inherit nonlinear system parameter */
+	MPT_NLS_STRUCT(parameters) nls; /* inherit nonlinear system parameter */
 	
 	char solv;    /* solver selection */
 	char mode;    /* mode of operation */
@@ -66,8 +66,8 @@ public:
 		lmstr_fcn_t *str;
 	} fcn;  /* residual calculation */
 	
-	const MPT_SOLVER_NLS_STRUCT(functions) *ufcn;
-	const MPT_SOLVER_NLS_STRUCT(output) *out;
+	const MPT_NLS_STRUCT(functions) *ufcn;
+	const MPT_NLS_STRUCT(output) *out;
 };
 
 __MPT_EXTDECL_BEGIN
@@ -99,9 +99,9 @@ extern void mpt_minpack_init(MPT_SOLVER_STRUCT(minpack) *);
 extern void mpt_minpack_fini(MPT_SOLVER_STRUCT(minpack) *);
 
 /* set wrapper for user functions */
-extern int mpt_minpack_ufcn_hybrid(MPT_SOLVER_STRUCT(minpack) *, MPT_SOLVER_NLS_STRUCT(functions) *, int , const void *);
-extern int mpt_minpack_ufcn_lmderv(MPT_SOLVER_STRUCT(minpack) *, MPT_SOLVER_NLS_STRUCT(functions) *, int , const void *);
-extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *, MPT_SOLVER_NLS_STRUCT(functions) *, int , const void *);
+extern int mpt_minpack_ufcn_hybrid(MPT_SOLVER_STRUCT(minpack) *);
+extern int mpt_minpack_ufcn_lmderv(MPT_SOLVER_STRUCT(minpack) *);
+extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *, MPT_NLS_STRUCT(functions) *, int , const void *);
 
 /* set wrapper for user functions */
 extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *);

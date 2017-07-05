@@ -9,7 +9,7 @@
 
 extern int mpt_minpack_solve(MPT_SOLVER_STRUCT(minpack) *mpack)
 {
-	MPT_SOLVER_NLS_STRUCT(parameters) *nl = &mpack->nls;
+	MPT_NLS_STRUCT(parameters) *nl = &mpack->nls;
 	double *wa1, *wa2, *wa3, *wa4, *qtf, *fjac, *r;
 	double *x, *fvec;
 	int n, m, lr, nfev = 0, njev = 0, mode, nprint, info;

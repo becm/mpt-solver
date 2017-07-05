@@ -79,11 +79,11 @@ static int initIvpData(MPT_SOLVER(generic) *sol, const void *fcn, int neqs, MPT_
 	return ret;
 }
 
-extern int mpt_init_dae(MPT_SOLVER(generic) *sol, const MPT_SOLVER_IVP_STRUCT(daefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
+extern int mpt_init_dae(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(daefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
 {
 	return initIvpData(sol, fcn, neqs, log, MPT_SOLVER_ENUM(DAE), __func__);
 }
-extern int mpt_init_ode(MPT_SOLVER(generic) *sol, const MPT_SOLVER_IVP_STRUCT(odefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
+extern int mpt_init_ode(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(odefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
 {
 	return initIvpData(sol, fcn, neqs, log, MPT_SOLVER_ENUM(ODE), __func__);
 }

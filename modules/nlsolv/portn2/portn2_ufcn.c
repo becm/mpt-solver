@@ -6,7 +6,7 @@
 
 static void portn2_fcn(const int *n, const int *p, const double *x, int *nf, double *r, int *ui, double *ur, void (*uf)())
 {
-	MPT_SOLVER_NLS_STRUCT(functions) *ufcn = (void *) ui;
+	MPT_NLS_STRUCT(functions) *ufcn = (void *) ui;
 	int ld[2];
 	
 	(void) ur;
@@ -22,7 +22,7 @@ static void portn2_fcn(const int *n, const int *p, const double *x, int *nf, dou
 
 static void portn2_jac(const int *n, const int *p, const double *x, int *nf, double *jac, int *ui, double *ur, void (*uf)())
 {
-	MPT_SOLVER_NLS_STRUCT(functions) *ufcn = (void *) ui;
+	MPT_NLS_STRUCT(functions) *ufcn = (void *) ui;
 	int ld[3];
 	
 	(void) ur;
@@ -37,7 +37,7 @@ static void portn2_jac(const int *n, const int *p, const double *x, int *nf, dou
 	}
 }
 
-extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *n2, MPT_SOLVER_NLS_STRUCT(functions) *ufcn, int type, const void *ptr)
+extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *n2, MPT_NLS_STRUCT(functions) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	if (!ptr) {
@@ -61,19 +61,19 @@ extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *n2, MPT_SOLVER_NLS_STRUCT(
 	else if (ufcn) {
 		switch (type) {
 		  case MPT_SOLVER_ENUM(NlsVector):
-			if (!((MPT_SOLVER_NLS_STRUCT(residuals) *) ptr)->fcn) {
+			if (!((MPT_NLS_STRUCT(residuals) *) ptr)->fcn) {
 				return MPT_ERROR(BadValue);
 			}
-			ufcn->res = *((MPT_SOLVER_NLS_STRUCT(residuals) *) ptr);
+			ufcn->res = *((MPT_NLS_STRUCT(residuals) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(NlsJac):
-			ufcn->jac = *((MPT_SOLVER_NLS_STRUCT(jacobian) *) ptr);
+			ufcn->jac = *((MPT_NLS_STRUCT(jacobian) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsJac):
-			if (!((MPT_SOLVER_NLS_STRUCT(functions) *) ptr)->res.fcn) {
+			if (!((MPT_NLS_STRUCT(functions) *) ptr)->res.fcn) {
 				return MPT_ERROR(BadValue);
 			}
-			*ufcn = *((MPT_SOLVER_NLS_STRUCT(functions) *) ptr);
+			*ufcn = *((MPT_NLS_STRUCT(functions) *) ptr);
 			break;
 		  default:
 			return MPT_ERROR(BadType);

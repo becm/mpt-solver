@@ -52,7 +52,7 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const
 		return MPT_ERROR(BadType);
 	}
 	if (!*name) {
-		MPT_SOLVER_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;
+		MPT_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;
 		int ret = 0;
 		if (src && (ret = mpt_solver_nlsset(&nls, src)) < 0) {
 			return ret;

@@ -10,8 +10,8 @@
 
 static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, int *ipar, double *rpar, int *flg)
 {
-	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
-	MPT_SOLVER_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
+	MPT_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
+	MPT_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
 	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) rpar;
 	
 	if ((*flg = pde->fcn(pde->par, *t, y, f, &me->ivp)) < 0) {
@@ -49,7 +49,7 @@ static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, in
 
 static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, int *mbnd, double *con, int *ipar, double *rpar, int *info)
 {
-	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
+	MPT_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
 	int i, neqs = *neq, ljac;
 	
 	(void) yp;
@@ -102,7 +102,7 @@ static void mebdfi_jac(double *t, double *y, double *jac, int *neq, double *yp, 
 	}
 }
 
-extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_SOLVER_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
+extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	

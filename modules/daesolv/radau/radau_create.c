@@ -69,7 +69,7 @@ extern MPT_SOLVER(generic) *mpt_radau_create()
 {
 	MPT_SOLVER(generic) *sol;
 	MPT_SOLVER_STRUCT(radau) *rd;
-	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn;
+	MPT_IVP_STRUCT(daefcn) *fcn;
 	
 	if (!(sol = malloc(sizeof(*sol) + sizeof(*rd) + sizeof(*fcn)))) {
 		return 0;

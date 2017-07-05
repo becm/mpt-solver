@@ -21,7 +21,7 @@ public:
 	portn2();
 	~portn2();
 #endif
-	MPT_SOLVER_NLS_STRUCT(parameters) nls; /* inherit nonlinear system parameter */
+	MPT_NLS_STRUCT(parameters) nls; /* inherit nonlinear system parameter */
 	
 	int          nd,  /* partial residual dimension, no jacobian if < 0 */
 	             bnd; /* apply parameter boundaries */
@@ -95,7 +95,7 @@ extern int mpt_portn2_init(MPT_SOLVER_STRUCT(portn2) *);
 extern void mpt_portn2_fini(MPT_SOLVER_STRUCT(portn2) *);
 
 /* set wrapper for user functions */
-extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *, MPT_SOLVER_NLS_STRUCT(functions) *, int , const void *);
+extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *, MPT_NLS_STRUCT(functions) *, int , const void *);
 
 /* set wrapper for user functions */
 extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *);

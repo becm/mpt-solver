@@ -21,7 +21,7 @@ public:
 	~dassl();
 	dassl();
 #endif
-	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
+	MPT_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
 	double  t;     /* reference time */
 	
@@ -66,7 +66,7 @@ extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *);
 /* set wrapper for user functions */
 
 /* set deviation values */
-extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *, MPT_SOLVER_IVP_STRUCT(daefcn) *, int , const void *);
+extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *, MPT_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* dassl status information */
 extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *, int , MPT_TYPE(PropertyHandler) , void *);

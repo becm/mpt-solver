@@ -23,7 +23,7 @@ public:
 	radau();
 	~radau();
 #endif
-	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
+	MPT_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
 	double t;  /*reference time */
 	double h;  /* initial/previous step size */
@@ -88,7 +88,7 @@ extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *);
 extern void mpt_radau_init(MPT_SOLVER_STRUCT(radau) *);
 extern void mpt_radau_fini(MPT_SOLVER_STRUCT(radau) *);
 /* set wrapper for user functions */
-extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *, MPT_SOLVER_IVP_STRUCT(daefcn) *, int , const void *);
+extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *, MPT_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* radau status information */
 extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *, int , MPT_TYPE(PropertyHandler) , void *);

@@ -6,7 +6,7 @@
 
 #include "meta.h"
 
-static int _mpt_solver_yprime_set(const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, double **yp, const MPT_INTERFACE(metatype) *src)
+static int _mpt_solver_yprime_set(const MPT_IVP_STRUCT(parameters) *ivp, double **yp, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_INTERFACE(iterator) *it = 0;
 	long max;

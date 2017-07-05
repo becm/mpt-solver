@@ -13,7 +13,7 @@ extern void mpt_minpack_fini(MPT_SOLVER_STRUCT(minpack) *mpack)
 
 extern void mpt_minpack_init(MPT_SOLVER_STRUCT(minpack) *mpack)
 {
-	const MPT_SOLVER_NLS_STRUCT(parameters) par = MPT_NLSPAR_INIT;
+	const MPT_NLS_STRUCT(parameters) par = MPT_NLSPAR_INIT;
 	mpack->nls = par;
 	
 	mpack->val.iov_base = 0;

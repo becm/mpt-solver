@@ -68,7 +68,7 @@ extern MPT_SOLVER(generic) *mpt_mebdfi_create()
 {
 	MPT_SOLVER(generic) *sol;
 	MPT_SOLVER_STRUCT(mebdfi) *md;
-	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn;
+	MPT_IVP_STRUCT(daefcn) *fcn;
 	
 	if (!(sol = malloc(sizeof(*sol) + sizeof(*md) + sizeof(*fcn)))) {
 		return 0;

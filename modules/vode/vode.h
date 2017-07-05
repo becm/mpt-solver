@@ -19,7 +19,7 @@ public:
 	~vode();
 	vode();
 #endif
-	MPT_SOLVER_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
+	MPT_IVP_STRUCT(parameters) ivp; /* inherit IVP parameter */
 	
 	double *y;        /* state data */
 	double  t;        /* independent variable */
@@ -65,7 +65,7 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *);
 extern void mpt_vode_init(MPT_SOLVER_STRUCT(vode) *);
 extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *);
 /* set wrapper for user functions */
-extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *, MPT_SOLVER_IVP_STRUCT(odefcn) *, int , const void *);
+extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *, MPT_IVP_STRUCT(odefcn) *, int , const void *);
 
 /* vode status information */
 extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(PropertyHandler) , void *);

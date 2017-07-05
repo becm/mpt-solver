@@ -18,7 +18,7 @@
  * 
  * \return pointer to nonlinear user funtions
  */
-extern int mpt_init_pde(MPT_SOLVER(generic) *sol, const MPT_SOLVER_IVP_STRUCT(pdefcn) *fcn, int neqs, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
+extern int mpt_init_pde(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(pdefcn) *fcn, int neqs, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
 {
 	static const char fmt[] = { 'i', MPT_value_toVector('d'), 0 };
 	MPT_STRUCT(buffer) *buf;

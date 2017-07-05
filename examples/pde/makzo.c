@@ -7,7 +7,7 @@
 static const int N_PDE = 2;
 
 /* solver right side calculation */
-static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_SOLVER_IVP_STRUCT(parameters) *ivp)
+static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_IVP_STRUCT(parameters) *ivp)
 {
 	const double *yr;
 	double *fr, phi, zeta, dzeta, dzeta2, dum, alpha, beta, c = 4.0, k = 100.0;
@@ -62,7 +62,7 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_S
 /* setup solver for PDE run */
 extern int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
-	MPT_SOLVER_IVP_STRUCT(pdefcn) usr;
+	MPT_IVP_STRUCT(pdefcn) usr = MPT_IVP_PDE_INIT;
 	int ret;
 	usr.fcn = rs_pde;
 	usr.par = mpt_solver_data_param(sd);

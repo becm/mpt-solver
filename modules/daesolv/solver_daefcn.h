@@ -2,7 +2,7 @@
  * generic user functions dDASSL solver instance
  */
 
-static int _mpt_solver_daefcn_set(long pint, MPT_SOLVER_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
+static int _mpt_solver_daefcn_set(long pint, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	if (!ptr) {
@@ -32,29 +32,29 @@ static int _mpt_solver_daefcn_set(long pint, MPT_SOLVER_IVP_STRUCT(daefcn) *ufcn
 			if (!pint) {
 				return MPT_ERROR(BadType);
 			}
-			if (!((MPT_SOLVER_IVP_STRUCT(rside) *) ptr)->fcn) {
+			if (!((MPT_IVP_STRUCT(rside) *) ptr)->fcn) {
 				return MPT_ERROR(BadValue);
 			}
-			ufcn->rside = *((MPT_SOLVER_IVP_STRUCT(rside) *) ptr);
+			ufcn->rside = *((MPT_IVP_STRUCT(rside) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(IvpRside):
 			if (pint) {
 				return MPT_ERROR(BadType);
 			}
-			if (!((MPT_SOLVER_IVP_STRUCT(rside) *) ptr)->fcn) {
+			if (!((MPT_IVP_STRUCT(rside) *) ptr)->fcn) {
 				return MPT_ERROR(BadValue);
 			}
-			ufcn->rside = *((MPT_SOLVER_IVP_STRUCT(rside) *) ptr);
+			ufcn->rside = *((MPT_IVP_STRUCT(rside) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(IvpJac):
-			ufcn->jac = *((MPT_SOLVER_IVP_STRUCT(jacobian) *) ptr);
+			ufcn->jac = *((MPT_IVP_STRUCT(jacobian) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(ODE):
-			ufcn->rside = ((MPT_SOLVER_IVP_STRUCT(odefcn) *) ptr)->rside;
-			ufcn->jac   = ((MPT_SOLVER_IVP_STRUCT(odefcn) *) ptr)->jac;
+			ufcn->rside = ((MPT_IVP_STRUCT(odefcn) *) ptr)->rside;
+			ufcn->jac   = ((MPT_IVP_STRUCT(odefcn) *) ptr)->jac;
 			break;
 		  case MPT_SOLVER_ENUM(DAE):
-			*ufcn = *((MPT_SOLVER_IVP_STRUCT(daefcn) *) ptr);
+			*ufcn = *((MPT_IVP_STRUCT(daefcn) *) ptr);
 			break;
 		  default:
 			return MPT_ERROR(BadType);

@@ -11,7 +11,7 @@
 static void radau_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)
 {
 	MPT_SOLVER_STRUCT(radau) *rd = (void *) rpar;
-	MPT_SOLVER_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
+	MPT_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
 	
 	(void) neq;
 	
@@ -22,7 +22,7 @@ static void radau_fcn(int *neq, double *t, double *y, double *f, double *rpar, i
 
 static void radau_jac(int *neq, double *t, double *y, double *jac, int *ljac, double *rpar, int *ipar)
 {
-	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
+	MPT_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(radau) *rd = (void *) rpar;
 	int ld;
 	
@@ -43,7 +43,7 @@ static void radau_jac(int *neq, double *t, double *y, double *jac, int *ljac, do
 
 static void radau_mas(int *neq, double *b, int *lmasp, double *rpar, int *ipar)
 {
-	MPT_SOLVER_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
+	MPT_IVP_STRUCT(daefcn) *fcn = (void *) ipar;
 	MPT_SOLVER_STRUCT(radau) *rd = (void *) rpar;
 	double *mas;
 	int *idrow, *idcol;
@@ -77,7 +77,7 @@ static void radau_mas(int *neq, double *b, int *lmasp, double *rpar, int *ipar)
 	}
 }
 
-extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, MPT_SOLVER_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
+extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	

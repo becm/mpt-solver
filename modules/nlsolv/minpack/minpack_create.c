@@ -55,13 +55,6 @@ extern int _mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *pr, cons
 	}
 	return mpt_minpack_set(mp, pr, src);
 }
-extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *mp, MPT_SOLVER_NLS_STRUCT(functions) *fcn, int type, const void *ptr)
-{
-	if (mp->nls.nres != mp->nls.nval) {
-		return mpt_minpack_ufcn_lmderv(mp, fcn, type, ptr);
-	}
-	return mpt_minpack_ufcn_hybrid(mp, fcn, type, ptr);
-}
 
 extern MPT_SOLVER(generic) *mpt_minpack_create()
 {
