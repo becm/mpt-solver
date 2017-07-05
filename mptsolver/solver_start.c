@@ -75,7 +75,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			const char *sep = strrchr(cname, '/');
 			if (sep) cname = sep + 1;
 		}
-		if (!fname || access(fname, R_OK) < 0) {
+		if (!fname) {
 			static const char defName[] = "client\0";
 			const char *conf = cname ? cname : defName;
 			snprintf(buf, sizeof(buf), "%s [%s.%s]: ",

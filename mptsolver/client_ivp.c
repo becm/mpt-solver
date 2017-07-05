@@ -71,7 +71,7 @@ static int nextTime(MPT_INTERFACE(iterator) *src, double *end, const char *fcn, 
 		mpt_log(info, fcn, MPT_LOG(Info), "%s (%g <= %g)",
 		        MPT_tr("skip time value argument"), *end, ref);
 		
-		if ((ret = src->_vptr->advance(src) < 0)) {
+		if ((ret = src->_vptr->advance(src)) < 0) {
 			mpt_log(info, fcn, MPT_LOG(Error), "%s (%s)",
 			        MPT_tr("bad time source state"),
 			        arg ? MPT_tr("argument") : MPT_tr("internal"));
@@ -125,7 +125,7 @@ static MPT_STRUCT(node) *configIVP(const char *base)
 		if ((conf = mpt_config_node(&p))) {
 			return conf;
 		}
-		if (mpt_config_set(0, base, "ivp.conf", '.', 0) < 0) {
+		if (mpt_config_set(0, base, 0, '.', 0) < 0) {
 			return 0;
 		}
 		return mpt_config_node(base ? &p : 0);
@@ -351,15 +351,18 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	if ((curr = mpt_node_find(conf, "solconf", 1))
 	    && !curr->children
 	    && (val = mpt_node_data(curr, 0))) {
-		FILE *fd;
-		if (!(fd = fopen(val, "r"))) {
+		MPT_STRUCT(parse) parse = MPT_PARSE_INIT;
+		if (!(parse.src.arg = fopen(val, "r"))) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s: %s: %s",
 			        MPT_tr("failed to open"), MPT_tr("solver config"), val);
 			return MPT_ERROR(BadOperation);
 		}
-		ret = mpt_node_read(curr, fd, "[ ] = !#", "ns", info);
-		fclose(fd);
+		parse.src.getc = (int (*)()) mpt_getchar_stdio;
+		ret = mpt_parse_node(curr, &parse, "[ ] = !#");
+		fclose(parse.src.arg);
 		if (ret < 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s (%d): line = %d: %s",
+			        MPT_tr("parse error"), parse.curr, (int) parse.src.line, val);
 			return ret;
 		}
 		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
@@ -378,9 +381,14 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		MPT_INTERFACE(iterator) *old;
 		val = mpt_node_data(curr, 0);
 		
-		if (!val || !(it = mpt_iterator_create(val))) {
+		if (!val) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+			        MPT_tr("missing time source"));
+			return MPT_ERROR(MissingData);
+		}
+		if (!(it = mpt_iterator_create(val))) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
-			        MPT_tr("no time source"), MPT_tr("iteratior creation failed"));
+			        MPT_tr("bad iteratior description"), val);
 			return MPT_ERROR(BadValue);
 		}
 		if ((old = ivp->steps)) {
@@ -484,7 +492,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 			}
 		}
 		/* process profile data */
-		else if (!(it = mpt_conf_profiles(dat, ivp->t, ret, pcfg, info)) < 0) {
+		else if (!(it = mpt_conf_profiles(dat, ivp->t, pcfg, ret, info)) < 0) {
 			return MPT_ERROR(BadOperation);
 		}
 		else if ((err = mpt_object_iset((void *) ivp->sol, 0, it)) < 0) {

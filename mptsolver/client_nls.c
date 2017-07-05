@@ -75,7 +75,7 @@ static MPT_STRUCT(node) *configNLS(const char *base)
 		if ((conf = mpt_config_node(&p))) {
 			return conf;
 		}
-		if (mpt_config_set(0, base, "nls.conf", '.', 0) < 0) {
+		if (mpt_config_set(0, base, 0, '.', 0) < 0) {
 			return 0;
 		}
 		return mpt_config_node(base ? &p : 0);
@@ -283,17 +283,22 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	if ((sol = mpt_node_find(conf, "solconf", 1))
 	    && !sol->children
 	    && (val = mpt_node_data(sol, 0))) {
-		FILE *fd;
-		if (!(fd = fopen(val, "r"))) {
+		MPT_STRUCT(parse) parse = MPT_PARSE_INIT;
+		if (!(parse.src.arg = fopen(val, "r"))) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s: %s: %s",
 			        MPT_tr("failed to open"), MPT_tr("solver config"), val);
 			return MPT_ERROR(BadOperation);
 		}
-		ret = mpt_node_read(sol, fd, "[ ] = !#", "ns", info);
-		fclose(fd);
+		parse.src.getc = (int (*)()) mpt_getchar_stdio;
+		ret = mpt_parse_node(sol, &parse, "[ ] = !#");
+		fclose(parse.src.arg);
 		if (ret < 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s (%d): line = %d: %s",
+			        MPT_tr("parse error"), parse.curr, (int) parse.src.line, val);
 			return ret;
 		}
+		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
+		        MPT_tr("loaded solver config file"), val);
 	}
 	/* clear/create solver data */
 	if ((dat = nls->sd)) {
