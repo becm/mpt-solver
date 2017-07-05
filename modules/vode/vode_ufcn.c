@@ -91,6 +91,7 @@ extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_SOLVER_IVP_STRUCT(odef
 				return MPT_ERROR(BadValue);
 			}
 			*ufcn = *((MPT_SOLVER_IVP_STRUCT(odefcn) *) ptr);
+			break;
 		  default:
 			return MPT_ERROR(BadType);
 		}

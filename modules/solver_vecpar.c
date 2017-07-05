@@ -16,6 +16,20 @@ extern int mpt_solver_vecpar_set(double *dest, long elem, long parts, MPT_INTERF
 	uint32_t len;
 	int ret;
 	
+	if (elem < 0) {
+		return MPT_ERROR(BadArgument);
+	}
+	/* reset target data */
+	if (!it) {
+		size_t total;
+		if (!parts) {
+			total = elem;
+		} else {
+			total = elem * parts;
+		}
+		memset(dest, 0, total * sizeof(*dest));
+		return 0;
+	}
 	if (!parts) {
 		/* get complete data segment */
 		if ((ret = it->_vptr->get(it, MPT_value_toVector('d'), &vec)) >= 0) {

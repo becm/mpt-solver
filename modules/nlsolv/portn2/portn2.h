@@ -84,7 +84,8 @@ extern int dn2pb_(const int *n, const int *nd, const int *p, double *x, const do
 
 /* set solver parameter */
 extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *, MPT_STRUCT(property) *);
-extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *, const char *, MPT_INTERFACE(metatype) *);
+extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int _mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* call solver routine */
 extern int mpt_portn2_solve(MPT_SOLVER_STRUCT(portn2) *);
@@ -94,7 +95,7 @@ extern int mpt_portn2_init(MPT_SOLVER_STRUCT(portn2) *);
 extern void mpt_portn2_fini(MPT_SOLVER_STRUCT(portn2) *);
 
 /* set wrapper for user functions */
-extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *, const MPT_SOLVER_NLS_STRUCT(functions) *);
+extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *, MPT_SOLVER_NLS_STRUCT(functions) *, int , const void *);
 
 /* set wrapper for user functions */
 extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *);
@@ -107,7 +108,7 @@ extern const double *mpt_portn2_residuals(const MPT_SOLVER_STRUCT(portn2) *);
 
 /* assign portdn2 solver to interface */
 #ifndef __cplusplus
-extern MPT_SOLVER(NLS) *mpt_portn2_create(void);
+extern MPT_SOLVER(generic) *mpt_portn2_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -129,42 +130,26 @@ class PortN2 : public NLS, portn2
 	{
 		return 0;
 	}
-	void unref()
+	void unref() __MPT_OVERRIDE
 	{
 		delete this;
 	}
-	int property(struct property *pr) const
+	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_portn2_get(this, pr);
 	}
-	int setProperty(const char *pr, metatype *src = 0)
+	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
-		return mpt_portn2_set(this, pr, src);
+		return _mpt_portn2_set(this, pr, src);
 	}
 	
-	int report(int what, PropertyHandler out, void *data)
+	int report(int what, PropertyHandler out, void *data) __MPT_OVERRIDE
 	{
 		return mpt_portn2_report(this, what, out, data);
 	}
-	int solve()
+	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
 	{
-		int ret;
-		if (_fcn.res && (ret = mpt_portn2_ufcn(this, &_fcn)) < 0) {
-			return ret;
-		}
-		if ((ret = mpt_portn2_prepare(this)) < 0) {
-			return ret;
-		}
-		return mpt_portn2_solve(this);
-	}
-	operator struct functions *() const
-	{
-		return const_cast<functions *>(&_fcn);
-	}
-	
-	inline operator const struct parameters *() const
-	{
-		return &nls;
+		return mpt_portn2_ufcn(this, &_fcn, what, ptr);
 	}
     protected:
 	struct functions _fcn;

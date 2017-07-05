@@ -8,6 +8,8 @@
 #include <limits.h>
 #include <float.h>
 
+#include "meta.h"
+
 #include "version.h"
 
 #include "portn2.h"
@@ -25,9 +27,10 @@
  * \retval <0   failure
  * \retval >=0  used values
  */
-extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, MPT_INTERFACE(metatype) *src)
+extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const MPT_INTERFACE(metatype) *src)
 {
 	if (!name) {
+		MPT_INTERFACE(iterator) *it;
 		double *dst;
 		int len;
 		
@@ -36,19 +39,22 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, MPT_I
 		}
 		len = n2->bnd ? 3 * n2->nls.nval : n2->nls.nval;
 		
-		if (!(dst = mpt_vecpar_alloc(&n2->pv, len, sizeof(double)))) {
+		if (!(dst = mpt_solver_valloc(&n2->pv, len, sizeof(double)))) {
 			return MPT_ERROR(BadOperation);
 		}
 		if (!src) {
 			memset(dst, 0, n2->nls.nval * sizeof(double));
 			return 0;
 		}
-		return mpt_vecpar_set(&dst, n2->nls.nval, src);
+		if (src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it) > 0) {
+			return mpt_solver_vecpar_set(dst, n2->nls.nval, 0, it);
+		}
+		return MPT_ERROR(BadType);
 	}
 	if (!*name) {
-		MPT_SOLVER_NLS_STRUCT(parameters) nls = n2->nls;
+		MPT_SOLVER_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;
 		int ret = 0;
-		if (src && (ret = mpt_nlspar_set(&nls, src)) < 0) {
+		if (src && (ret = mpt_solver_nlsset(&nls, src)) < 0) {
 			return ret;
 		}
 		mpt_portn2_fini(n2);
@@ -89,7 +95,7 @@ extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *data, MPT_STRUCT(prop
 	else if (!*name) {
 		prop->name = "portn2"; prop->desc = "solver for overdetermined nonlinear equotations";
 		prop->val.fmt = "ii"; prop->val.ptr = &data->nls;
-		return MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverDet);
+		return MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverdet);
 	}
 	
 	if (name && !strcasecmp(name, "version")) {

@@ -61,7 +61,7 @@ static int solverNext(MPT_STRUCT(solver_value) *val, void *dest, int type, size_
 			int32_t i;
 		} tmp;
 		int next;
-		if ((ret = it->_vptr->get(it, type, &tmp)) < 0) {
+		if ((ret = it->_vptr->get(it, type, &tmp)) <= 0) {
 			return ret;
 		}
 		if ((next = it->_vptr->advance(it)) < 0) {
@@ -125,17 +125,14 @@ extern int mpt_solver_next_double(MPT_STRUCT(solver_value) *val, double *d)
  * 
  * \return conversion result
  */
-extern int mpt_solver_next_key(MPT_STRUCT(solver_value) *val, uintptr_t *key)
+extern int mpt_solver_next_key(MPT_STRUCT(solver_value) *val)
 {
 	int ret;
 	const char *tmp;
-	if ((ret =  solverNext(val, &tmp, 'k', sizeof(tmp))) < 0) {
+	if ((ret = solverNext(val, &tmp, 'k', sizeof(tmp))) <= 0) {
 		return ret;
 	}
-	if (ret && tmp && key) {
-		*key = tmp[0];
-	}
-	return ret;
+	return tmp ? *tmp : ' ';
 }
 
 /*!

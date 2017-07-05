@@ -35,10 +35,10 @@ extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *n2)
 		lrv = 105 + nres*(17 + 2*nres) + (nres+1)*nd + nval;
 	}
 	
-	if (!mpt_vecpar_alloc(&n2->rv, lrv, sizeof(double))) {
+	if (!mpt_solver_valloc(&n2->rv, lrv, sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_vecpar_alloc(&n2->iv, liv, sizeof(int))) {
+	if (!mpt_solver_valloc(&n2->iv, liv, sizeof(int))) {
 		return MPT_ERROR(BadOperation);
 	}
 	lrv = n2->pv.iov_len/sizeof(double);
@@ -46,7 +46,7 @@ extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *n2)
 	if (lrv < liv) {
 		double *bnd;
 		
-		if (!(bnd = mpt_vecpar_alloc(&n2->pv, liv, sizeof(double)))) {
+		if (!(bnd = mpt_solver_valloc(&n2->pv, liv, sizeof(double)))) {
 			return MPT_ERROR(BadOperation);
 		}
 		/* fill default initial parameters */

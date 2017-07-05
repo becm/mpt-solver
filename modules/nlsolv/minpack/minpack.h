@@ -67,6 +67,7 @@ public:
 	} fcn;  /* residual calculation */
 	
 	const MPT_SOLVER_NLS_STRUCT(functions) *ufcn;
+	const MPT_SOLVER_NLS_STRUCT(output) *out;
 };
 
 __MPT_EXTDECL_BEGIN
@@ -87,7 +88,8 @@ extern int lmstr1(lmstr_fcn_t *fcn, int m, int n, double *x, double *fvec,
 
 /* set hybrd parameter */
 extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *, MPT_STRUCT(property) *);
-extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *, MPT_INTERFACE(metatype) *);
+extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int _mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* call minpack solver routine */
 extern int mpt_minpack_solve(MPT_SOLVER_STRUCT(minpack) *);
@@ -97,8 +99,9 @@ extern void mpt_minpack_init(MPT_SOLVER_STRUCT(minpack) *);
 extern void mpt_minpack_fini(MPT_SOLVER_STRUCT(minpack) *);
 
 /* set wrapper for user functions */
-extern int mpt_minpack_ufcn_hybrid(MPT_SOLVER_STRUCT(minpack) *);
-extern int mpt_minpack_ufcn_lmderv(MPT_SOLVER_STRUCT(minpack) *);
+extern int mpt_minpack_ufcn_hybrid(MPT_SOLVER_STRUCT(minpack) *, MPT_SOLVER_NLS_STRUCT(functions) *, int , const void *);
+extern int mpt_minpack_ufcn_lmderv(MPT_SOLVER_STRUCT(minpack) *, MPT_SOLVER_NLS_STRUCT(functions) *, int , const void *);
+extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *, MPT_SOLVER_NLS_STRUCT(functions) *, int , const void *);
 
 /* set wrapper for user functions */
 extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *);
@@ -108,7 +111,7 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *, int , MPT_TYPE
 
 /* assign minpack solver to interface */
 #ifndef __cplusplus
-extern MPT_SOLVER(NLS) *mpt_minpack_create(void);
+extern MPT_SOLVER(generic) *mpt_minpack_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -138,27 +141,18 @@ class MinPack : public NLS, minpack
 	{
 		return mpt_minpack_get(this, pr);
 	}
-	int setProperty(const char *pr, metatype *src = 0)
+	int setProperty(const char *pr, const metatype *src = 0)
 	{
-		return mpt_minpack_set(this, pr, src);
+		return _mpt_minpack_set(this, pr, src);
 	}
 	
 	int report(int what, PropertyHandler out, void *data)
 	{
 		return mpt_minpack_report(this, what, out, data);
 	}
-	int solve()
+	int setFunctions(int what, const void *ptr)
 	{
-		return mpt_minpack_solve(this);
-	}
-	operator struct functions *() const
-	{
-		return const_cast<struct functions *>(&_fcn);
-	}
-	
-	inline operator const struct parameters *() const
-	{
-		return &nls;
+		return mpt_minpack_ufcn(this, &_fcn, what, ptr);
 	}
     protected:
 	struct functions _fcn;

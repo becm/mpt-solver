@@ -43,10 +43,9 @@ static int setReal(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, double val)
 }
 static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_SOLVER_STRUCT(value) val;
-	uintptr_t key;
+	MPT_STRUCT(solver_value) val;
 	int32_t ml, mu;
-	int ret;
+	int key, ret;
 	
 	if (!src) {
 		vd->miter = 0;
@@ -55,17 +54,18 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 	if ((ret = mpt_solver_value_set(&val, src)) < 0) {
 		return ret;
 	}
-	if ((ret = mpt_solver_next_key(&val, &key)) < 0) {
-		return ret;
+	if ((key = mpt_solver_next_key(&val)) < 0) {
+		return key;
 	}
-	if (ret) {
-		ret = 1;
+	if (!key) {
+		vd->miter = 0;
+		return 0;
 	}
 	switch (key) {
-		case 'n': case 'N': vd->miter = 0; return ret;
-		case 'F': vd->miter = 1; return ret;
-		case 'f': vd->miter = 2; return ret;
-		case 'd': case 'D': vd->miter = 3; return ret;
+		case 'n': case 'N': vd->miter = 0; return 1;
+		case 'F': vd->miter = 1; return 1;
+		case 'f': vd->miter = 2; return 1;
+		case 'd': case 'D': vd->miter = 3; return 1;
 		case 'B': case 'b': break;
 		default:
 			return MPT_ERROR(BadValue);
@@ -100,51 +100,31 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 }
 static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_INTERFACE(iterator) *it = 0;
-	MPT_STRUCT(value) val = MPT_VALUE_INIT;
-	const char *key;
+	MPT_STRUCT(solver_value) val;
 	double tcrit;
-	int ret;
+	int ret, key;
 	
 	if (!src) {
 		vd->itask = 1;
 		return 0;
 	}
-	if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0) {
-		const char * const *ptr;
-		key = 0;
-		if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeValue), &val)) < 0 || !val.fmt) {
-			if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
-				return ret;
-			}
-			ret = 1;
-		}
-		else if ((ret = *val.fmt)) {
-			if (ret != 's') {
-				return MPT_ERROR(BadType);
-			}
-			if (!(ptr = val.ptr)) {
-				return MPT_ERROR(BadValue);
-			}
-			val.ptr = ptr + 1;
-			++val.fmt;
-			key = *ptr;
-			ret = 1;
-		}
-	}
-	else if (it) {
-		if ((ret = it->_vptr->get(it, 'k', &key)) < 0
-		 || (ret = it->_vptr->advance(it)) < 0) {
+	ret = 1;
+	if ((ret = mpt_solver_value_set(&val, src)) < 0) {
+		const char *ptr = 0;
+		if ((ret = src->_vptr->conv(src, 'k', &ptr)) < 0) {
 			return ret;
 		}
-		ret = 1;
+		key = ptr ? *ptr : 0;
+		ret = 0;
 	}
-	if (!ret || !key) {
+	else if ((key = mpt_solver_next_key(&val)) < 0) {
+		return key;
+	}
+	if (!key) {
 		vd->itask = 1;
 		return 0;
 	}
-	ret = 1;
-	switch (key[0]) {
+	switch (key) {
 		/* single step */
 		case 's': case '2': vd->itask = 2; return ret;
 		/* disable interpolation */
@@ -157,27 +137,16 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if (it) {
-		if ((ret = it->_vptr->get(it, 'd', &tcrit)) < 0) {
-			return ret;
-		}
-		if (!ret) {
-			return MPT_ERROR(BadOperation);
-		}
-		if ((ret = it->_vptr->advance(it)) < 0) {
-			return ret;
-		}
-	}
-	else if (val.fmt && val.fmt[0] == 'd' && val.ptr) {
-		tcrit = *((double *) val.ptr);
-	}
-	else {
+	if (!ret || !(ret = mpt_solver_next_double(&val, &tcrit))) {
 		return MPT_ERROR(MissingData);
+	}
+	if (ret < 0) {
+		return ret;
 	}
 	if (setReal(vd, 0, tcrit) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	vd->itask = (key[0] == 'S' || key[0] == '5') ? 5 : 4;
+	vd->itask = (key == 'S' || key == '5') ? 5 : 4;
 	
 	return 2;
 }

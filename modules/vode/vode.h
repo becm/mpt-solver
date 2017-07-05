@@ -52,11 +52,11 @@ extern void dvode_(vode_fcn_t *, int *, double *, double *, double *, int *, dou
 
 /* execute next step on supplied vode instance */
 extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *, double);
-extern int _mpt_vode_set(MPT_SOLVER_STRUCT(vode) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* set vode parameter */
-extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *, const char *, const MPT_INTERFACE(metatype) *);
 extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *, MPT_STRUCT(property) *);
+extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int _mpt_vode_set(MPT_SOLVER_STRUCT(vode) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* validate settings and working space for use */
 extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *);

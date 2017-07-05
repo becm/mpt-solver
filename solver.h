@@ -622,7 +622,7 @@ extern int mpt_solver_value_set(MPT_STRUCT(solver_value) *, const MPT_INTERFACE(
 extern int mpt_solver_next_double(MPT_STRUCT(solver_value) *, double *);
 extern int mpt_solver_next_uint(MPT_STRUCT(solver_value) *, uint32_t *);
 extern int mpt_solver_next_int(MPT_STRUCT(solver_value) *, int32_t *);
-extern int mpt_solver_next_key(MPT_STRUCT(solver_value) *, uintptr_t *);
+extern int mpt_solver_next_key(MPT_STRUCT(solver_value) *);
 
 __MPT_EXTDECL_END
 
