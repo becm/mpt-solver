@@ -198,10 +198,10 @@ static int setMethod(MPT_SOLVER_STRUCT(vode) *data, const MPT_INTERFACE(metatype
 		return 0;
 	}
 	switch (key[0]) {
-		case 'a': data->jsv = -1; data->meth = 1; return 1;
-		case 'A': data->jsv =  1; data->meth = 1; return 1;
-		case 'b': data->jsv = -1; data->meth = 2; return 1;
-		case 'B': data->jsv =  1; data->meth = 2; return 1;
+		case 'a': data->jsv = -1; data->meth = 1; return 0;
+		case 'A': data->jsv =  1; data->meth = 1; return 0;
+		case 'b': data->jsv = -1; data->meth = 2; return 0;
+		case 'B': data->jsv =  1; data->meth = 2; return 0;
 		default: return MPT_ERROR(BadValue);
 	}
 }
