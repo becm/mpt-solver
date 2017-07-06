@@ -23,10 +23,10 @@ extern int mpt_limex_prepare(MPT_SOLVER_STRUCT(limex) *data)
 	if (data->ivp.neqs < 2 || (!data->rtol.base && !data->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_vecpar_cktol(&data->atol, neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_cktol(&data->atol, neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (mpt_vecpar_cktol(&data->rtol, neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_cktol(&data->rtol, neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	if (!(ipos = data->ipos)) {

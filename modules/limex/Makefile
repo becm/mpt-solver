@@ -19,3 +19,4 @@ include ../mpt.solver.mk
 #
 # local dependencies
 limex_property.o : ${DIR_BASE}version.h
+limex_property.o : ../solver_yprime.h

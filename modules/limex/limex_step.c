@@ -9,7 +9,8 @@ extern int mpt_limex_step(MPT_SOLVER_STRUCT(limex) *lx, double tend)
 	double *atol, *rtol;
 	struct {
 		int neqs, pint;
-		const void *ufcn;
+		const MPT_SOLVER_STRUCT(limex) *lx;
+		const MPT_IVP_STRUCT(daefcn) *ufcn;
 	} neq;
 	
 	if (lx->iopt[15] < 0) {
@@ -20,6 +21,7 @@ extern int mpt_limex_step(MPT_SOLVER_STRUCT(limex) *lx, double tend)
 	}
 	neq.neqs = lx->ivp.neqs * (lx->ivp.pint + 1);
 	neq.pint = lx->ivp.pint;
+	neq.lx   = lx;
 	neq.ufcn = lx->ufcn;
 	
 	/* set tolerance flags and adresses */

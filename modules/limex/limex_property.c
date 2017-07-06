@@ -13,176 +13,211 @@
 
 #include "limex.h"
 
-static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, MPT_INTERFACE(metatype) *src)
+#include "solver_yprime.h"
+
+static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatype) *src)
 {
-	char *key;
-	int len, res, usr;
+	MPT_STRUCT(solver_value) val;
+	int ret, usr, key;
 	int32_t lb, ub;
+	long max;
 	
 	if (!src) {
 		lx->iopt[6] = 0;
 		return 0;
 	}
-	if ((res = src->_vptr->conv(src, 'k' | MPT_ENUM(ValueConsume), &key)) < 0) {
-		return res;
+	ret = 1;
+	if ((key = mpt_solver_value_set(&val, src)) < 0) {
+		const char *par = 0;
+		if ((key = src->_vptr->conv(src, 'k', &par)) < 0) {
+			return key;
+		}
+		key = (ret && par) ? *par : 0;
+		ret = 0;
 	}
-	if (!res || !key) {
+	else if ((key = mpt_solver_next_key(&val)) < 0) {
+		return key;
+	}
+	if (!key) {
 		lx->iopt[6] = 0;
 		return 0;
 	}
+	max = lx->ivp.neqs * (lx->ivp.pint + 1);
 	usr = 0;
-	len = 1;
-	switch (key[0]) {
+	switch (key) {
 		case 'F':
 			usr = 1;
 		case 'f':
-			lb = lx->ivp.neqs * (lx->ivp.pint + 1);
+			lb = max;
 			ub = lb;
 			break;
 		case 'B':
 			usr = 1;
 		case 'b':
-			if ((res = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &lb)) < 0) {
-				return res;
+			if (!ret) {
+				lb = ub = lx->ivp.neqs;
 			}
-			if (!res) {
-				lb = lx->ivp.neqs;
-				ub = lb;
+			else if ((ret = mpt_solver_next_int(&val, &lb)) < 0) {
+				return ret;
+			}
+			else if (!ret) {
+				lb = ub = lx->ivp.neqs;
+				ret = 1;
 				break;
 			}
-			++len;
-			if ((res = src->_vptr->conv(src, 'i' | MPT_ENUM(ValueConsume), &ub)) < 0) {
-				return res;
+			else if ((ret = mpt_solver_next_int(&val, &ub)) < 0) {
+				return ret;
 			}
-			if (!res) {
+			else if (!ret) {
 				ub = lb;
+				ret = 2;
 				break;
 			}
-			++len;
-			break;;
+			else {
+				ret = 3;
+			}
+			break;
 		default: 
 			return MPT_ERROR(BadValue);
+	}
+	if (lb < 0 || ub < 0) {
+		return MPT_ERROR(BadValue);
+	}
+	if (lb > max || ub > max) {
+		return MPT_ERROR(BadValue);
 	}
 	lx->iopt[6] = usr;
 	lx->iopt[7] = lb;
 	lx->iopt[8] = ub;
-	return len;
+	return ret;
 }
 
-extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, MPT_INTERFACE(metatype) *src)
+extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, const MPT_INTERFACE(metatype) *src)
 {
 	int ret = 0;
 	
 	/* initial values */
 	if (!name) {
-		double t = lx->t;
-		size_t required;
-		
-		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
-			if (ret < 0) {
-				return ret;
-			}
-			src = 0;
-		}
-		required = lx->ivp.neqs * (lx->ivp.pint + 1);
-		if ((ret = mpt_vecpar_set(&lx->y, required, src)) < 0) {
-			return ret;
-		}
-		lx->t = t;
-		
-		return src ? ++ret : 0;
+		return mpt_solver_ivpstate(&lx->ivp, &lx->t, &lx->y, src);
 	}
 	/* change solver dimensions, reinit */
 	if (!*name) {
-		MPT_SOLVER_IVP_STRUCT(parameters) ivp = lx->ivp;
-		int ret = 0;
+		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		
-		if (src && (ret = mpt_ivppar_set(&ivp, src)) < 0) {
+		if (src && (ret = mpt_solver_ivpset(&ivp, src)) < 0) {
 			return ret;
 		}
-		mpt_limex_reset(lx);
+		mpt_limex_fini(lx);
+		mpt_limex_init(lx);
 		lx->ivp = ivp;
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&lx->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_settol(&lx->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&lx->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_settol(&lx->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return setJacobian(lx, src);
 	}
 	if (!strcasecmp(name, "h") || !strcasecmp(name, "initstep")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
-		if (val < 0) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+			return ret;
+		}
+		if (val < 0) {
+			return MPT_ERROR(BadValue);
+		}
 		lx->h = val;
-		return ret ? 1 : 0;
+		return 0;
 	}
 	/* integer parameter */
 	if (!strcasecmp(name, "monitor") || !strcasecmp(name, "iopt1")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if (val < 0 || val > 2) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+			return ret;
+		}
+		if (val < 0 || val > 2) {
+			return MPT_ERROR(BadValue);
+		}
 		lx->iopt[0] = val;
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "solout") || !strcasecmp(name, "iopt3")) {
 		return MPT_ERROR(BadOperation);
 	}
 	if (!strncasecmp(name, "bnosingular", 4) || !strcasecmp(name, "iopt5")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if (val < 0 || val > 1) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+			return ret;
+		}
+		if (val < 0 || val > 1) {
+			return MPT_ERROR(BadValue);
+		}
 		lx->iopt[4] = val;
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "jacreuse") || !strcasecmp(name, "iopt10")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+			return ret;
+		}
 		if (val < 0 || val > 1) return MPT_ERROR(BadValue);
 		lx->iopt[9] = val;
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "single") || !strcasecmp(name, "iopt12")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if (val < 0 || val > 1) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+			return ret;
+		}
+		if (val < 0 || val > 1) {
+			return MPT_ERROR(BadValue);
+		}
 		lx->iopt[11] = val;
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "denseout")) {
 		return MPT_ERROR(BadOperation);
 	}
 	if (!strcasecmp(name, "tend") || !strcasecmp(name, "ropt3")) {
 		double val;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+			return ret;
+		}
 		if (ret) {
 			lx->ropt[2] = val;
 			lx->iopt[16] = 1;
-			return 1;
 		} else {
 			lx->iopt[16] = 0;
-			return 0;
 		}
+		return 0;
 	}
 	if (!strcasecmp(name, "plotjac") || !strcasecmp(name, "iopt18")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
-		if (val < -1) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+			return ret;
+		}
+		if (val < -1) {
+			return MPT_ERROR(BadValue);
+		}
 		lx->iopt[17] = val;
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "maxstep") || !strcasecmp(name, "ropt1")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
-		if (val < 0) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+			return ret;
+		}
+		if (val < 0) {
+			return MPT_ERROR(BadValue);
+		}
 		lx->ropt[0] = val;
-		return ret ? 1 : 0;
+		return 0;
 	}
 	if (!strncasecmp(name, "yprime", 2) || !strcasecmp(name, "ys")) {
-		return mpt_vecpar_set(&lx->ys, src ? (lx->ivp.pint + 1) * lx->ivp.neqs : -1, src);
+		return _mpt_solver_yprime_set(&lx->ivp, &lx->ys, src);
 	}
 	return MPT_ERROR(BadArgument);
 }
@@ -216,13 +251,13 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 	id = 0;
 	if (name ? !strcasecmp(name, "atol") : pos == id++) {
 		if (!lx) { prop->val.fmt = "d"; prop->val.ptr = &lx->atol.d.val; }
-		else { id = mpt_vecpar_get(&lx->atol, &prop->val); }
+		else { id = mpt_solver_vecpar_get(&lx->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == id++) {
 		if (!lx) { prop->val.fmt = "d"; prop->val.ptr = &lx->rtol.d.val; }
-		else { id = mpt_vecpar_get(&lx->rtol, &prop->val); }
+		else { id = mpt_solver_vecpar_get(&lx->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

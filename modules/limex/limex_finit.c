@@ -17,6 +17,10 @@
  */
 extern void mpt_limex_fini(MPT_SOLVER_STRUCT(limex) *data)
 {
+	if (data->ivp.grid) {
+		free(data->ivp.grid);
+		data->ivp.grid = 0;
+	}
 	if (data->y) {
 		free(data->y);
 		data->y = 0;
@@ -29,32 +33,9 @@ extern void mpt_limex_fini(MPT_SOLVER_STRUCT(limex) *data)
 		free(data->ipos);
 		data->ipos = 0;
 	}
-	mpt_vecpar_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_vecpar_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
 	
-	data->iopt[15] = -1;
-}
-/*!
- * \ingroup mptSolverLimex
- * \brief reset LIMEX data
- * 
- * Prepare LIMEX data for new problem
- * 
- * \param data  IDA data
- */
-extern void mpt_limex_reset(MPT_SOLVER_STRUCT(limex) *data)
-{
-	mpt_limex_fini(data);
-	data->h = 0.;
-	
-	(void) memset(&data->ifail, 0, sizeof(data->ifail));
-	(void) memset(&data->ropt,  0, sizeof(data->ropt));
-	(void) memset(&data->iopt,  0, sizeof(data->iopt));
-	
-	/* invalidate jacobian parameter */
-	data->iopt[7] = data->iopt[8] = -1;
-	
-	/* invalidate solver state */
 	data->iopt[15] = -1;
 }
 /*!
@@ -67,9 +48,12 @@ extern void mpt_limex_reset(MPT_SOLVER_STRUCT(limex) *data)
  */
 extern void mpt_limex_init(MPT_SOLVER_STRUCT(limex) *data)
 {
-	MPT_IVPPAR_INIT(&data->ivp);
+	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	
-	data->t = 0;
+	data->ivp = par;
+	
+	data->t = 0.0;
+	data->h = 0.0;
 	
 	data->y = 0;
 	data->ys = 0;
@@ -79,7 +63,6 @@ extern void mpt_limex_init(MPT_SOLVER_STRUCT(limex) *data)
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);
 	
-	data->h = 0.;
 	
 	(void) memset(&data->ropt,  0, sizeof(data->ropt));
 	(void) memset(&data->iopt,  0, sizeof(data->iopt));

@@ -4,27 +4,23 @@
 
 #include "limex.h"
 
-struct _limexParam
-{
-	int neq, pdim;
-	const MPT_SOLVER_IVP_STRUCT(functions) *ufcn;
-};
+#include "../solver_daefcn.h"
+
 static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double *b, int *ir, int *ic, int *info)
 {
-	const MPT_SOLVER_IVP_STRUCT(functions) *fcn = ((struct _limexParam *) neq)->ufcn;
-	MPT_SOLVER_IVP_STRUCT(parameters) ivp;
-	int res, nint = neq[1];
-	
-	ivp.neqs = neq[0] / (nint + 1);
-	ivp.pint = nint;
+	const MPT_SOLVER_STRUCT(limex_param) *lp = (void *) neq;
+	const MPT_SOLVER_STRUCT(limex) *lx = (void *) neq;
+	const MPT_IVP_STRUCT(daefcn) *fcn = lp->ufcn;
+	const MPT_IVP_STRUCT(pdefcn) *pde = (void *) fcn;
+	int res;
 	
 	/* calcualte PDE */
-	if ((res = ((const MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, *t, y, f, &ivp, fcn->grid, fcn->rside)) < 0) {
+	if ((res = pde->fcn(pde->par, *t, y, f, &lx->ivp)) < 0) {
 		*info = res;
 		return;
 	}
 	/* identity matrix */
-	if (!fcn->dae.mas) {
+	if (!fcn->mas.fcn) {
 		int i, n = neq[0];
 		for (i = 0; i < n; ++i) {
 			ir[i] = i + 1;
@@ -41,8 +37,8 @@ static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double
 	else {
 		int i, max, neqs, pint;
 		
-		neqs = ivp.neqs;
-		pint = ivp.pint;
+		neqs = lx->ivp.neqs;
+		pint = lx->ivp.pint;
 		
 		max = neq[0] * neq[0];
 		*nz = 0;
@@ -52,7 +48,7 @@ static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double
 			*ir = max;
 			*ic = i;
 			
-			if ((n = fcn->dae.mas(fcn->dae.param, *t, y, b, ir, ic)) < 0) {
+			if ((n = fcn->mas.fcn(fcn->mas.par, *t, y, b, ir, ic)) < 0) {
 				*info = n;
 				return;
 			}
@@ -75,7 +71,8 @@ static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double
 
 static void limex_jac(int *neq, double *t, double *y, double *ys, double *jac, int *ldjac, int *ml, int *mu, int *banded, int *info)
 {
-	const MPT_SOLVER_IVP_STRUCT(functions) *fcn = ((struct _limexParam *) neq)->ufcn;
+	const MPT_SOLVER_STRUCT(limex_param) *lp = (void *) neq;
+	const MPT_IVP_STRUCT(daefcn) *fcn = lp->ufcn;
 	int ld;
 	
 	(void) ys;
@@ -88,19 +85,27 @@ static void limex_jac(int *neq, double *t, double *y, double *ys, double *jac, i
 		jac += *mu;
 		ld = *ldjac - 1;
 	}
-	*info = fcn->dae.jac(fcn->dae.param, *t, y, jac, ld);
+	*info = fcn->jac.fcn(fcn->jac.par, *t, y, jac, ld);
 }
 
-extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *lx, const MPT_SOLVER_IVP_STRUCT(functions) *usr)
+extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *lx, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *par)
 {
-	if (!usr || !usr->dae.fcn) {
-		return MPT_ERROR(BadArgument);
+	int ret;
+	
+	if ((ret = _mpt_solver_daefcn_set(lx->ivp.pint, ufcn, type, par)) < 0) {
+		return ret;
 	}
-	
-	lx->fcn  = limex_fcn;
-	lx->jac  = usr->dae.jac ? limex_jac : 0;
-	lx->ufcn = usr;
-	
-	return 0;
+	lx->fcn = 0;
+	lx->jac = 0;
+	if (!(lx->ufcn = ufcn)) {
+		return 0;
+	}
+	if (ufcn->jac.fcn) {
+		lx->jac = limex_jac;
+	}
+	if (ufcn->rside.fcn) {
+		lx->fcn = limex_fcn;
+	}
+	return ret;
 }
 

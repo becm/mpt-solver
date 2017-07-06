@@ -5,97 +5,86 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "meta.h"
+
 #include "limex.h"
 
 static MPT_SOLVER_STRUCT(limex) lxGlob;
-static MPT_SOLVER_IVP_STRUCT(functions) lxGlobFcn;
+static MPT_IVP_STRUCT(daefcn) lxGlobFcn;
+static int lxReserved = 0;
 
 extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global()
 {
-	if (lxGlob.ufcn) return &lxGlob;
+	if (lxReserved) return &lxGlob;
 	
 	mpt_limex_init(&lxGlob);
-	
-	lxGlob.ufcn = MPT_IVPFCN_INIT(&lxGlobFcn);
-	lxGlobFcn.dae.param = &lxGlob.ivp;
-	
+	lxGlob.ufcn = memset(&lxGlobFcn, 0, sizeof(lxGlobFcn));
+	lxReserved = 1;
 	return &lxGlob;
 }
 
-static void lxFini(MPT_INTERFACE(unrefable) *gen)
+static void lxFini(MPT_INTERFACE(unrefable) *ref)
 {
-	(void) gen;
+	(void) ref;
 	mpt_limex_fini(&lxGlob);
 }
 static uintptr_t lxAddref()
 {
 	return 0;
 }
-static int lxGet(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
+static int lxGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	(void) gen;
+	(void) obj;
 	return mpt_limex_get(&lxGlob, pr);
 }
-static int lxSet(MPT_INTERFACE(object) *gen, const char *pr, MPT_INTERFACE(metatype) *src)
+static int lxSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	(void) gen;
-	return mpt_limex_set(&lxGlob, pr, src);
+	(void) obj;
+	return _mpt_limex_set(&lxGlob, pr, src);
 }
 
-static int lxReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int lxReport(MPT_SOLVER(generic) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	(void) gen;
+	(void) sol;
+	if (!what && !out && !data) {
+		return MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
+	}
 	return mpt_limex_report(&lxGlob, what, out, data);
 }
-
-static int lxStep(MPT_SOLVER(IVP) *sol, double *tend)
+static int lxFcn(MPT_SOLVER(generic) *sol, int type, const void *par)
 {
-	int ret;
 	(void) sol;
-	
-	if (!tend) {
-		if (!lxGlob.fcn && (ret = mpt_limex_ufcn(&lxGlob, &lxGlobFcn))) {
-			return ret;
+	return mpt_limex_ufcn(&lxGlob, &lxGlobFcn, type, par);
+}
+
+extern int _mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *pr, const MPT_INTERFACE(metatype) *src)
+{
+	if (!pr) {
+		if (!src) {
+			return mpt_limex_prepare(lx);
 		}
-		return mpt_limex_prepare(&lxGlob);
+	} else if (pr[0] == 't' && !pr[1]) {
+		double end;
+		int ret;
+		
+		if (!src) return MPT_ERROR(BadValue);
+		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
+		if (!ret) return MPT_ERROR(BadValue);
+		return mpt_limex_step(lx, end);
 	}
-	ret = mpt_limex_step(&lxGlob, *tend);
-	*tend = lxGlob.t;
-	return ret;
-}
-static void *lxFcn(MPT_SOLVER(IVP) *sol, int type)
-{
-	(void) sol;
-	switch (type) {
-	  case MPT_SOLVER_ENUM(ODE): break;
-	  case MPT_SOLVER_ENUM(DAE): return lxGlob.ivp.pint ? 0 : &lxGlobFcn.dae;
-	  case MPT_SOLVER_ENUM(PDE): if (!lxGlob.ivp.pint) return 0; lxGlobFcn.dae.jac = 0; lxGlobFcn.dae.mas = 0;
-	  case MPT_SOLVER_ENUM(IVP): return &lxGlobFcn;
-	  default: return 0;
-	}
-	if (lxGlob.ivp.pint) {
-		return 0;
-	}
-	lxGlobFcn.dae.mas = 0;
-	return &lxGlobFcn.dae;
-}
-static double *lxState(MPT_SOLVER(IVP) *sol)
-{
-	(void) sol;
-	return lxGlob.y;
+	return mpt_limex_set(lx, pr, src);
 }
 
-static const MPT_INTERFACE_VPTR(solver_ivp) limexCtl = {
-	{ { { lxFini }, lxAddref, lxGet, lxSet }, lxReport },
-	lxStep,
-	lxFcn,
-	lxState
+static const MPT_INTERFACE_VPTR(solver) limexCtl = {
+	{ { lxFini }, lxAddref, lxGet, lxSet },
+	lxReport,
+	lxFcn
 };
 
-extern MPT_SOLVER(IVP) *mpt_limex_create()
+extern MPT_SOLVER(generic) *mpt_limex_create()
 {
-	static const MPT_SOLVER(IVP) lxGlobControl = { &limexCtl };
-	if (lxGlob.ufcn) return 0;
+	static const MPT_SOLVER(generic) lxGlobControl = { &limexCtl };
+	if (lxReserved) return 0;
 	mpt_limex_global();
-	return (MPT_SOLVER(IVP) *) &lxGlobControl;
+	return (MPT_SOLVER(generic) *) &lxGlobControl;
 }
