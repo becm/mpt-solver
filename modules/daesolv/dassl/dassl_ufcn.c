@@ -122,7 +122,6 @@ extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, MPT_IVP_STRUCT(daefcn) *
 		da->rpar = 0;
 		return 0;
 	}
-	ret = 0;
 	if (ufcn->mas.fcn) {
 		double *mas;
 		size_t nz = da->ivp.neqs * da->ivp.neqs;

@@ -57,7 +57,7 @@ extern int _mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *pr, const MP
 		double end;
 		int ret;
 		
-		if (!src) MPT_ERROR(BadValue);
+		if (!src) return MPT_ERROR(BadValue);
 		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
 		if (!ret) return MPT_ERROR(BadValue);
 		return mpt_dassl_step(da, end);
