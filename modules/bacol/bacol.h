@@ -35,22 +35,23 @@ MPT_SOLVER_STRUCT(bacol_out)
 {
 #ifdef __cplusplus
 public:
-	bacolout();
-	~bacolout();
+	bacol_out();
+	~bacol_out();
 	
 	inline const double *x() const
-	{ return with_x && nint ? static_cast<double *>(_val.iov_base) : 0; }
+	{ return nint ? static_cast<double *>(_val.iov_base) : 0; }
 	const double *y() const
 	{
-		const double *val = static_cast<double *>(_val.iov_base)
+		const double *val = static_cast<double *>(_val.iov_base);
 		if (!val || !nint || deriv) return 0;
-		if (with_x) val += nint + 1;
-		return val;
+		return val + nint + 1;
 	}
 	inline int intervals() const
 	{ return nint; }
 	inline int equotations() const
 	{ return neqs; }
+	inline void invalidate()
+	{ nint = 0; }
 	
 	bool set(const MPT_SOLVER_STRUCT(bacol) *);
 protected:
@@ -178,7 +179,6 @@ public:
 	inline Bacol(const char *t = 0)
 	{
 		mpt_bacol_backend(this, t);
-		_out = &_values;
 	}
 	~Bacol() __MPT_OVERRIDE
 	{ }
@@ -196,11 +196,34 @@ public:
 	}
 	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
+		_values.invalidate();
 		return _mpt_bacol_set(this, pr, src);
 	}
 	
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
+		if (what & Values) {
+			update();
+			if (out) {
+				struct context {
+					PropertyHandler out;
+					void *par;
+					static int setProp(void *ptr, value val)
+					{
+						const context *ctx = static_cast<context *>(ptr);
+						struct property pr;
+						pr.desc = "BACOL solver state";
+						pr.val = val;
+						return ctx->out(ctx->par, &pr);
+					}
+				};
+				struct context ctx;
+				ctx.out = out;
+				ctx.par = opar;
+				mpt_bacol_output_report(&_values, t, context::setProp, &ctx);
+			}
+			what &= ~Values;
+		}
 		return mpt_bacol_report(this, what, out, opar);
 	}
 	int setFunctions(int , const void *) __MPT_OVERRIDE
@@ -210,11 +233,22 @@ public:
 	
 	inline const double *x() const
 	{
-		return _out ? _out->x() : 0;
+		return _values.x();
 	}
 	inline const double *y() const
 	{
-		return _out ? _out->y() : 0;
+		return _values.y();
+	}
+	inline long update()
+	{
+		long len = _values.intervals();
+		if (!len) {
+			if (!mpt_bacol_values(&_values, this)
+			 || !(len = _values.intervals())) {
+				return 0;
+			}
+		}
+		return len + 1;
 	}
 protected:
 	struct bacol_out _values;

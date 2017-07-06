@@ -21,6 +21,9 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	if (npde < 1 || bac->nint < 1 || bac->nint > nimx) {
 		return MPT_ERROR(BadArgument);
 	}
+	if (!bac->ivp.pint) {
+		bac->ivp.pint = bac->nint;
+	}
 	/* invalidate prepared state */
 	bac->mflag.noinit = -1;
 	

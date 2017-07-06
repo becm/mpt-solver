@@ -27,7 +27,7 @@ extern const double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacol_out) *out, const M
 	
 	/* check output work data availability */
 	wlen = (kcol * MPT_BACOL_NCONTI) * (1 + deriv);
-	wlen += kcol * (nint + 1) + 2 * MPT_BACOL_NCONTI;
+	wlen += kcol * (bac->nint + 1) + 2 * MPT_BACOL_NCONTI;
 	
 	if (!(wrk = mpt_solver_valloc(&out->_wrk, wlen, sizeof(double)))) {
 		return 0;
@@ -51,7 +51,7 @@ extern const double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacol_out) *out, const M
 		memcpy(val, bac->ivp.grid, npts * sizeof(*val));
 	}
 	else {
-		mpt_bacol_grid_init(0, 0, npts, val);
+		nint = mpt_bacol_grid_init(0, 0, nint, val);
 	}
 	if (bac->mflag.noinit) {
 		/* generate y-values for grid */
