@@ -26,6 +26,10 @@ CPPFLAGS += -I ${DIR_BASE}/mptcore
 .PHONY : static clear_static
 install :
 clear : clear_static
+clean : clean_objects
+
+clean_objects :
+	${RM} ${OBJS}
 
 clear_static :
 	${RM} "${DIR_LIB}/lib${LIB}.a"
@@ -39,8 +43,8 @@ static :
 ${OBJS} : ${HEADER}
 #
 # pass target to solver makefiles
-.PHONY : install header clear
-.DEFAULT install header clear :
+.PHONY : install header clear clean
+.DEFAULT install header clear clean :
 	@for i in ${SOLVER}; do \
 		if ! ${MAKE} -C "$${i}" ${@}; then break ; fi ; \
 	done

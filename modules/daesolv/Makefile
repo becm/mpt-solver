@@ -41,5 +41,5 @@ dassl/%.o : dassl.h
 radau/%.o : dassl.h
 mebdfi/%.o : mebdfi.h
 dassl/dassl_property.o mebdfi/mebdfi_property.o radau/radau_property.o : ${DIR_BASE}version.h
-dassl/dassl_property.o mebdfi/mebdfi_property.o : solver_yprime.h
-dassl/dassl_ufcn.o mebdfi/mebdfi_ufcn.o radau/radau_property.o : solver_daefcn.h
+dassl/dassl_property.o mebdfi/mebdfi_property.o : ../solver_yprime.h
+dassl/dassl_ufcn.o mebdfi/mebdfi_ufcn.o radau/radau_property.o : ../solver_daefcn.h
