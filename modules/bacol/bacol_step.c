@@ -35,10 +35,6 @@ extern int mpt_bacol_step(MPT_SOLVER_STRUCT(bacol) *bac, double tend)
 	lrp = bac->rpar.iov_len / sizeof(double);
 	lip = bac->ipar.iov_len / sizeof(int);
 	
-	/* invalidate output data */
-	if (bac->_out) {
-		bac->_out->nint = 0;
-	}
 	/* fortran routine call */
 	switch (bac->_backend) {
 #ifdef MPT_BACOL_RADAU

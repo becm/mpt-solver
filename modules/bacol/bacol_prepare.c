@@ -21,14 +21,16 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	if (npde < 1 || bac->nint < 1 || bac->nint > nimx) {
 		return MPT_ERROR(BadArgument);
 	}
+	/* invalidate prepared state */
+	bac->mflag.noinit = -1;
 	
 	/* use vector tolerances if one is set */
 	odim = (npde > 1 && (bac->rtol.base || bac->atol.base)) ? 1 : 0;
 	
-	if (mpt_vecpar_cktol(&bac->rtol, bac->ivp.neqs, odim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_cktol(&bac->rtol, bac->ivp.neqs, odim, __MPT_IVP_RTOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (mpt_vecpar_cktol(&bac->atol, bac->ivp.neqs, odim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_cktol(&bac->atol, bac->ivp.neqs, odim, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	/* choose default backend */
@@ -78,24 +80,18 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	}
 	bac->xy = tmp;
 	
-	if (!mpt_vecpar_alloc(&bac->ipar, lip, sizeof(int))) {
+	if (!mpt_solver_valloc(&bac->ipar, lip, sizeof(int))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_vecpar_alloc(&bac->rpar, lrp, sizeof(double))) {
+	if (!mpt_solver_valloc(&bac->rpar, lrp, sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (lcp && !mpt_vecpar_alloc(&bac->bd.cpar, lcp, 2*sizeof(double))) {
+	if (lcp && !mpt_solver_valloc(&bac->bd.cpar, lcp, 2*sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
 	((double *) bac->rpar.iov_base)[0] = bac->bd.tstop;
 	((double *) bac->rpar.iov_base)[1] = bac->initstep;
 	
-	if (bac->ivp.pint >= 0 && !bac->_out) {
-		if (!(bac->_out = malloc(sizeof(*bac->_out)))) {
-			return MPT_ERROR(BadOperation);
-		}
-		mpt_bacolout_init(bac->_out);
-	}
 	bac->mflag.noinit = 0;
 	
 	return 0;

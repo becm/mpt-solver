@@ -13,7 +13,7 @@
 
 #include "bacol.h"
 
-static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(metatype) *src)
+static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, const MPT_INTERFACE(metatype) *src)
 {
 	char *val = 0;
 	int len = 0;
@@ -40,66 +40,36 @@ static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(metatype) *s
  * \retval <0  failure
  * \retval >=0 consumed value count
  */
-extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_INTERFACE(metatype) *src)
+extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const MPT_INTERFACE(metatype) *src)
 {
-	int len = 0;
+	int ret = 0;
 	
 	if (!name) {
-		double t = bac->t;
-		
-		if (src && (len = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
-			if (len < 0) {
-				return len;
-			}
-			src = 0;
+		double t = 0;
+		if (src && (ret = src->_vptr->conv(src, 'd', &t)) < 0) {
+			return ret;
 		}
-		if (src && (len = mpt_vecpar_set(&bac->xy, bac->nint + 1, src)) <= 0) {
-			if (len < 0) {
-				return len;
-			}
-			mpt_bacol_grid_init(0, 0, bac->nint, bac->xy);
-		}
-		bac->mflag.noinit = -2;
 		bac->t = t;
-		return src ? len + 1 : 0;
+		bac->mflag.noinit = -1;
+		return ret;
 	}
 	if (!*name) {
-		MPT_SOLVER_IVP_STRUCT(parameters) ivp = bac->ivp;
+		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		
-		if (src) {
-			if ((len =  mpt_ivppar_set(&ivp, src)) < 0) {
-				return len;
-			}
-			if (len < 2) {
-				ivp.pint = -1;
-			}
-			else if (ivp.pint < 0) {
-				return MPT_ERROR(BadValue);
-			}
+		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
+			return ret;
 		}
 		mpt_bacol_fini(bac);
 		mpt_bacol_init(bac);
 		bac->ivp = ivp;
-		return len;
+		
+		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&bac->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_settol(&bac->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&bac->rtol, src, __MPT_IVP_RTOL);
-	}
-	if (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) {
-		int32_t oint = 10;
-		
-		if (src && (len = src->_vptr->conv(src, 'i', &oint)) < 0) return len;
-		if (tolower(*name) != 'i') {
-			--oint;
-		}
-		if (oint < 1) {
-			return MPT_ERROR(BadValue);
-		}
-		bac->ivp.pint = oint;
-		return len ? 1 : 0;
+		return mpt_solver_settol(&bac->rtol, src, __MPT_IVP_RTOL);
 	}
 	/* no interaction after prepare */
 	if (bac->mflag.noinit >= 0) {
@@ -109,10 +79,14 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	if (!strcasecmp(name, "kcol")) {
 		int32_t kcol = 2;
 	
-		if (src && (len = src->_vptr->conv(src, 'i', &kcol)) < 0) return len;
-		else if (kcol < 2 || kcol > 10) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'i', &kcol)) < 0) {
+			return ret;
+		}
+		else if (kcol < 2 || kcol > 10) {
+			return MPT_ERROR(BadValue);
+		}
 		bac->kcol = kcol;
-		return len ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "nint")) {
 		int32_t nint = 10;
@@ -121,30 +95,42 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 		if (bac->xy) {
 			return MPT_ERROR(BadOperation);
 		}
-		if (src && (len = src->_vptr->conv(src, 'i', &nint)) < 0) return len;
-		if (nint < 2 || nint > bac->nintmx) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'i', &nint)) < 0) {
+			return ret;
+		}
+		if (nint < 2 || nint > bac->nintmx) {
+			return MPT_ERROR(BadValue);
+		}
 		bac->nint = nint;
-		return len ? 1 : 0;
+		return 0;
 	}
 	if (!strcasecmp(name, "nintmx")) {
 		int32_t nintmx = 127;
 		
-		if (src && (len = src->_vptr->conv(src, 'i', &nintmx)) < 0) return len;
-		if (nintmx < bac->nint) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'i', &nintmx)) < 0) {
+			return ret;
+		}
+		if (nintmx < bac->nint) {
+			return MPT_ERROR(BadValue);
+		}
 		bac->nintmx = nintmx;
-		return len ? 1 : 0;
+		return 0;
 	}
 	if (!strncasecmp(name, "dirichlet", 3)) {
-		if (src && (len = src->_vptr->conv(src, 'i', &bac->mflag.bdir) < 0)) return len;
-		if (!len) bac->mflag.bdir = 0;
-		return len ? 1 : 0;
+		int32_t bdir = 0;
+		if (src && (ret = src->_vptr->conv(src, 'i', &bdir) < 0)) {
+			return ret;
+		}
+		bac->mflag.bdir = bdir;
+		return 0;
 	}
 	/* ode parameter */
 	if (!strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) {
-		if (src && (len = src->_vptr->conv(src, 'd', &bac->initstep)) < 0) return len;
-		bac->mflag.step = len ? 1 : 0;
-		
-		return len ? 1 : 0;
+		if (src && (ret = src->_vptr->conv(src, 'd', &bac->initstep)) < 0) {
+			return ret;
+		}
+		bac->mflag.step = ret ? 1 : 0;
+		return 0;
 	}
 	/* solving backend */
 	if (!strcasecmp(name, "backend")) {
@@ -154,20 +140,28 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_IN
 	/* dassl parameter */
 	if (bac->_backend == 'd' || bac->_backend == 'D') {
 	if (!strcasecmp(name, "tstop")) {
-		if (src && (len = src->_vptr->conv(src, 'd', &bac->bd.tstop)) < 0) return len;
-		bac->mflag.tstop = len ? 1 : 0;
-		return len ? 1 : 0;
+		if (src && (ret = src->_vptr->conv(src, 'd', &bac->bd.tstop)) < 0) {
+			return ret;
+		}
+		bac->mflag.tstop = ret ? 1 : 0;
+		return 0;
 	}
 	/* dassl parameter */
 	if (!strcasecmp(name, "maxstep")) {
-		if (src && (len = src->_vptr->conv(src, 'i', &bac->mflag.mstep)) < 0) return len;
-		if (!len) return bac->mflag.mstep = 0;
-		return len ? 1 : 0;
+		int32_t ms = 0;
+		if (src && (ret = src->_vptr->conv(src, 'i', &ms)) < 0) {
+			return ret;
+		}
+		bac->mflag.mstep = ms;
+		return 0;
 	}
 	if (!strcasecmp(name, "dasslbdf") || !strcasecmp(name, "bdf")) {
-		if (src && (len = src->_vptr->conv(src, 'i', &bac->mflag.dbmax)) < 0) return len;
-		if (!len) return bac->mflag.dbmax = 0;
-		return len ? 1 : 0;
+		int32_t dbmax = 0;
+		if (src && (ret = src->_vptr->conv(src, 'i', &dbmax)) < 0) {
+			return ret;
+		}
+		bac->mflag.dbmax = dbmax;
+		return 0;
 	}
 	}
 #endif
@@ -219,7 +213,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 			prop->val.fmt = 0; prop->val.ptr = &bac->atol;
 			return id;
 		}
-		return mpt_vecpar_get(&bac->atol, &prop->val);
+		return mpt_solver_vecpar_get(&bac->atol, &prop->val);
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		prop->name = "rtol"; prop->desc = "relative tolerances";
@@ -227,7 +221,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 			prop->val.fmt = 0; prop->val.ptr = &bac->rtol;
 			return id;
 		}
-		return mpt_vecpar_get(&bac->rtol, &prop->val);
+		return mpt_solver_vecpar_get(&bac->rtol, &prop->val);
 	}
 	/* bacol parameters */
 	if (name ? !strcasecmp(name, "kcol") : pos == ++id) {

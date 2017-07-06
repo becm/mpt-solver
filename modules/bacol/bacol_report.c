@@ -6,10 +6,9 @@
 
 #include "bacol.h"
 
-extern int mpt_bacol_report(MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
-	double *u;
 	int lines = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -54,25 +53,21 @@ extern int mpt_bacol_report(MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_TYPE(Pr
 	++lines;
 	}
 	
-	if (show & MPT_SOLVER_ENUM(Values)
-	    && bac->_out
-	    && ((u = mpt_bacol_values(bac->_out, bac)))) {
-		static const char fmt[] = { 'd', MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
-		MPT_SOLVER_STRUCT(bacolout) *bo = bac->_out;
-		struct {
-			double t;
-			struct iovec x, y;
-		} s;
-		s.t = bac->t;
-		s.x.iov_base = bo->_xy.iov_base;
-		s.x.iov_len  = (bo->nint + 1) * sizeof(double);
-		s.y.iov_base = u;
-		s.y.iov_len  = bo->neqs * s.x.iov_len;
+	if (show & MPT_SOLVER_ENUM(Values)) {
+		struct iovec *vec;
+		uint8_t buf[sizeof(bac->t) + 2 * sizeof(*vec)];
+		size_t len;
+		const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
 		
+		vec = (void *) (buf + sizeof(bac->t));
+		len = bac->ivp.pint + 1;
+		vec->iov_base = bac->ivp.grid;
+		vec->iov_len = len * sizeof(double);
+
 		pr.name = 0;
 		pr.desc = MPT_tr("solver state");
 		pr.val.fmt = fmt;
-		pr.val.ptr = &s;
+		pr.val.ptr = buf;
 		out(usr, &pr);
 	}
 	return lines;

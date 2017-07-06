@@ -72,18 +72,26 @@ static int initIvpData(MPT_SOLVER(generic) *sol, const void *fcn, int neqs, MPT_
 		return ret;
 	}
 	/* set user funtions according to type */
-	if ((ret = sol->_vptr->setFunctions(sol, type, fcn)) < 0) {
+	if (fcn && (ret = sol->_vptr->setFunctions(sol, type, fcn)) < 0) {
 		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-		                 MPT_tr("unable to get user functions"));
+		                 MPT_tr("unable to set user functions"));
 	}
 	return ret;
 }
 
 extern int mpt_init_dae(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(daefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
 {
+	if (fcn && !fcn->rside.fcn) {
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
+		                 MPT_tr("missing user right side"));
+	}
 	return initIvpData(sol, fcn, neqs, log, MPT_SOLVER_ENUM(DAE), __func__);
 }
 extern int mpt_init_ode(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(odefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
 {
+	if (fcn && !fcn->rside.fcn) {
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
+		                 MPT_tr("missing user right side"));
+	}
 	return initIvpData(sol, fcn, neqs, log, MPT_SOLVER_ENUM(ODE), __func__);
 }

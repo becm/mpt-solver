@@ -25,6 +25,11 @@ extern int mpt_init_nls(MPT_SOLVER(generic) *sol, const MPT_NLS_STRUCT(functions
 	int32_t dim[2];
 	int ret;
 	
+	if (fcn && !fcn->res.fcn) {
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
+		                 MPT_tr("missing residual function pointer"));
+		return MPT_ERROR(BadArgument);
+	}
 	if ((dim[0] = dat->npar) < 1) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("parameter count too low"));
@@ -52,7 +57,7 @@ extern int mpt_init_nls(MPT_SOLVER(generic) *sol, const MPT_NLS_STRUCT(functions
 		                 MPT_tr("failed to set problem dimensions"), dim[0], dim[1]);
 		return ret;
 	}
-	if ((ret = sol->_vptr->setFunctions(sol, MPT_SOLVER_ENUM(NlsUser), fcn)) < 0) {
+	if (fcn && (ret = sol->_vptr->setFunctions(sol, MPT_SOLVER_ENUM(NlsUser), fcn)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to set user functions"));
 		return ret;

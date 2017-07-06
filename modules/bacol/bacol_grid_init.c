@@ -15,7 +15,7 @@ extern int mpt_bacol_grid_init(int vint, const double *val, int xint, double *x)
 		double min, dx;
 		int i;
 		
-		min = (vint > 0) ? val[0] : 0;;
+		min = (vint > 0) ? val[0] : 0;
 		dx  = (vint > 1) ? val[1] : min + 1.;
 		
 		if (!dx || !(dx /= xint)) {

@@ -27,22 +27,18 @@ extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *bac)
 	}
 	bac->rpar.iov_len  = 0;
 	
-	if (bac->_out) {
-		mpt_bacolout_fini(bac->_out);
-		free(bac->_out);
-		bac->_out = 0;
-	}
-	
-	mpt_vecpar_cktol(&bac->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_vecpar_cktol(&bac->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_cktol(&bac->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_cktol(&bac->atol, 0, 0, __MPT_IVP_ATOL);
 	
 	bac->mflag.noinit = -1;
 	
 	switch (bac->_backend) {
 #ifdef MPT_BACOL_RADAU
 	  case 'r': case 'R':
-		free(bac->bd.cpar.iov_base);
-		bac->bd.cpar.iov_base = 0;
+		if (bac->bd.cpar.iov_base) {
+			free(bac->bd.cpar.iov_base);
+			bac->bd.cpar.iov_base = 0;
+		}
 		bac->bd.cpar.iov_len  = 0;
 #endif
 		break;
@@ -58,7 +54,6 @@ extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *bac)
 	MPT_VECPAR_INIT(&bac->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&bac->atol, __MPT_IVP_ATOL);
 	
-	bac->_out = 0;
 	bac->initstep = NAN;
 	
 	bac->nint     = 10;
