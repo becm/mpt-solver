@@ -40,6 +40,7 @@ SHLIB_OBJS ?= libinfo.o ${default_objects} ${MATH_OBJS_SHARED}
 #
 # import library creation
 include ${DIR_BASE}/mpt.lib.mk
+CLEAN_FILES += libinfo.o
 # compiler flags for FORTRAN math objects
 FFLAGS ?= -fpic -O5 -Wall -fstack-protector
 #

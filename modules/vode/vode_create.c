@@ -55,11 +55,12 @@ extern int _mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *pr, const MPT_
 		if (!src) {
 			return mpt_vode_prepare(vd);
 		}
-	} else if (src && pr[0] == 't' && pr[1] == 0) {
+	} else if (pr[0] == 't' && pr[1] == 0) {
 		double end;
-		int ret = src->_vptr->conv(src, 'd', &end);
+		int ret;
 		
-		if (ret < 0) return ret;
+		if (!src) return MPT_ERROR(BadValue);
+		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
 		if (!ret) return MPT_ERROR(BadValue);
 		return mpt_vode_step(vd, end);
 	}

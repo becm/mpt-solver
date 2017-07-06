@@ -54,11 +54,12 @@ extern int _mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *pr, const MP
 		if (!src) {
 			return mpt_radau_prepare(rd);
 		}
-	} else if (src && pr[0] == 't' && pr[1] == 0) {
+	} else if (pr[0] == 't' && pr[1] == 0) {
 		double end;
-		int ret = src->_vptr->conv(src, 'd', &end);
+		int ret;
 		
-		if (ret < 0) return ret;
+		if (!src) return MPT_ERROR(BadValue);
+		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
 		if (!ret) return MPT_ERROR(BadValue);
 		return mpt_radau_step(rd, end);
 	}

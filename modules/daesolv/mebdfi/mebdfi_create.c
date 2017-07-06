@@ -53,11 +53,12 @@ extern int _mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *pr, const 
 		if (!src) {
 			return mpt_mebdfi_prepare(me);
 		}
-	} else if (src && pr[0] == 't' && pr[1] == 0) {
+	} else if (pr[0] == 't' && pr[1] == 0) {
 		double end;
-		int ret = src->_vptr->conv(src, 'd', &end);
+		int ret;
 		
-		if (ret < 0) return ret;
+		if (!src) return MPT_ERROR(BadValue);
+		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
 		if (!ret) return MPT_ERROR(BadValue);
 		return mpt_mebdfi_step(me, end);
 	}
