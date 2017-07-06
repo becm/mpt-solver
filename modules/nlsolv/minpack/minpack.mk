@@ -29,5 +29,6 @@ minpack_wrapper = \
 	minpack_property.o \
 	minpack_solve.o \
 	minpack_report.o \
+	minpack_ufcn.o \
 	minpack_ufcn_hybrid.o \
 	minpack_ufcn_lmderv.o

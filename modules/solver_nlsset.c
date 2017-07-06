@@ -8,7 +8,7 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_nlsset(MPT_SOLVER_NLS_STRUCT(parameters) *nls, const MPT_INTERFACE(metatype) *src)
+extern int mpt_solver_nlsset(MPT_NLS_STRUCT(parameters) *nls, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_STRUCT(solver_value) val;
 	int32_t nv = 1, nr = 0;

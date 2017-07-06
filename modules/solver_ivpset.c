@@ -12,7 +12,7 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_ivpset(MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const MPT_INTERFACE(metatype) *src)
+extern int mpt_solver_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_INTERFACE(iterator) *it;
 	struct iovec grid;
@@ -94,7 +94,7 @@ extern int mpt_solver_ivpset(MPT_SOLVER_IVP_STRUCT(parameters) *ivp, const MPT_I
 		/* PDE without grid data */
 		if ((ret = it->_vptr->get(it, MPT_value_toVector('d'), &grid)) < 0) {
 			if ((ret = it->_vptr->get(it, 'u', &pint)) < 0) {
-				int tmp;
+				int32_t tmp;
 				if ((ret = it->_vptr->get(it, 'i', &tmp)) < 0) {
 					return ret;
 				}

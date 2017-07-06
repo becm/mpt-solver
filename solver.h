@@ -207,7 +207,7 @@ public:
 		private:
 			double _end;
 		} val(end);
-		return setProperty("t", &val);
+		return setProperty("t", &val) >= 0;
 	}
 	template <typename T>
 	inline bool set(const T &fcn)

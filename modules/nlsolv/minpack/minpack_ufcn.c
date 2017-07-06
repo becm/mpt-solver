@@ -4,11 +4,9 @@
 
 #include "minpack.h"
 
-extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *mp, MPT_SOLVER_NLS_STRUCT(functions) *ufcn, int type, const void *ptr)
+extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *mp, MPT_NLS_STRUCT(functions) *ufcn, int type, const void *ptr)
 {
-	int ret;
-	
-	if (mp->nls.nval != mp->nls.nres) {
+	if (mp->nls.nval > mp->nls.nres) {
 		return MPT_ERROR(BadArgument);
 	}
 	if (!ptr) {
@@ -32,19 +30,19 @@ extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *mp, MPT_SOLVER_NLS_STRUC
 	else if (ufcn) {
 		switch (type) {
 		  case MPT_SOLVER_ENUM(NlsVector):
-			if (!((MPT_SOLVER_NLS_STRUCT(residuals) *) ptr)->fcn) {
+			if (!((MPT_NLS_STRUCT(residuals) *) ptr)->fcn) {
 				return MPT_ERROR(BadValue);
 			}
-			ufcn->res = *((MPT_SOLVER_NLS_STRUCT(residuals) *) ptr);
+			ufcn->res = *((MPT_NLS_STRUCT(residuals) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(NlsJac):
-			ufcn->jac = *((MPT_SOLVER_NLS_STRUCT(jacobian) *) ptr);
+			ufcn->jac = *((MPT_NLS_STRUCT(jacobian) *) ptr);
 			break;
 		  case MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsJac):
-			if (!((MPT_SOLVER_NLS_STRUCT(functions) *) ptr)->res.fcn) {
+			if (!((MPT_NLS_STRUCT(functions) *) ptr)->res.fcn) {
 				return MPT_ERROR(BadValue);
 			}
-			*ufcn = *((MPT_SOLVER_NLS_STRUCT(functions) *) ptr);
+			*ufcn = *((MPT_NLS_STRUCT(functions) *) ptr);
 			break;
 		  default:
 			return MPT_ERROR(BadType);

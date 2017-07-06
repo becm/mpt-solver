@@ -32,7 +32,7 @@ static double *setValues(double **y, uint32_t part, int32_t neqs, const double *
 	return dest;
 }
 
-extern int mpt_solver_ivpstate(const MPT_SOLVER_IVP_STRUCT(parameters) *ivp, double *t, double **y, const MPT_INTERFACE(metatype) *src)
+extern int mpt_solver_ivpstate(const MPT_IVP_STRUCT(parameters) *ivp, double *t, double **y, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_INTERFACE(iterator) *it;
 	struct iovec vec;
