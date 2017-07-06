@@ -55,9 +55,8 @@ static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 	return 1;
 }
 
-static double getTime(MPT_SOLVER(generic) *sol)
+static double getTime(MPT_SOLVER(generic) *sol, double t)
 {
-	double t;
 	sol->_vptr->report(sol, MPT_SOLVER_ENUM(Values), setTime, &t);
 	return t;
 }
@@ -66,14 +65,12 @@ static int nextTime(MPT_INTERFACE(iterator) *src, double *end, const char *fcn, 
 {
 	double ref = *end;
 	
-	while (*end <= ref) {
-		int ret;
-		mpt_log(info, fcn, MPT_LOG(Info), "%s (%g <= %g)",
-		        MPT_tr("skip time value argument"), *end, ref);
-		
-		if ((ret = src->_vptr->advance(src)) < 0) {
+	while (1) {
+		double next;
+		int ret, adv;
+		if ((ret = src->_vptr->get(src, 'd', &next)) < 0) {
 			mpt_log(info, fcn, MPT_LOG(Error), "%s (%s)",
-			        MPT_tr("bad time source state"),
+			        MPT_tr("bad value on time source"),
 			        arg ? MPT_tr("argument") : MPT_tr("internal"));
 			return ret;
 		}
@@ -83,20 +80,26 @@ static int nextTime(MPT_INTERFACE(iterator) *src, double *end, const char *fcn, 
 			        arg ? MPT_tr("argument") : MPT_tr("internal"));
 			return 0;
 		}
-		if ((ret = src->_vptr->get(src, 'd', end)) < 0) {
-			mpt_log(info, fcn, MPT_LOG(Error), "%s (%s)",
-			        MPT_tr("bad value on time source"),
-			        arg ? MPT_tr("argument") : MPT_tr("internal"));
+		if (ref < next) {
+			*end = next;
 			return ret;
 		}
-		if (!ret) {
+		mpt_log(info, fcn, MPT_LOG(Info), "%s (%g <= %g)",
+		        MPT_tr("skip time value argument"), next, ref);
+		
+		if ((adv = src->_vptr->advance(src)) < 0) {
+			mpt_log(info, fcn, MPT_LOG(Error), "%s (%s)",
+			        MPT_tr("bad time source state"),
+			        arg ? MPT_tr("argument") : MPT_tr("internal"));
+			return adv;
+		}
+		if (!adv) {
 			mpt_log(info, fcn, MPT_LOG(Warning), "%s (%s)",
 			        MPT_tr("no further data in time source"),
 			        arg ? MPT_tr("argument") : MPT_tr("internal"));
 			return 0;
 		}
 	}
-	return 'd';
 }
 
 /* output for PDE solvers */
@@ -256,7 +259,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			ctx.dat = ivp->sd;
 			ctx.state = MPT_ENUM(DataStateInit);
 			mpt_solver_status(sol, info, outPDE, &ctx);
-			ivp->t = getTime(sol);
+			ivp->t = getTime(sol, 0);
 		}
 		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
 		        MPT_tr("IVP client preparation finished"));
@@ -599,7 +602,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
 		
 		/* get end time */
-		ivp->t = end = getTime((void *) sol);
+		ivp->t = getTime(sol, end);
 		if (ret < 0) {
 			ctx.state |= MPT_ENUM(DataStateFail);
 			mpt_log(info, _func, MPT_LOG(Error), "%s (t = %g)",
@@ -612,7 +615,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 			continue;
 		}
 		end = ivp->t;
-		if ((ret = nextTime(src, &end, _func, args, info)) < 0) {
+		if ((ret = src->_vptr->advance(src)) < 0) {
 			/* interrupt iteration */
 			mpt_log(info, _func, MPT_LOG(Error), "%s (t = %g, %d, %s)",
 			        MPT_tr("time source in bad state"), end, ret,
