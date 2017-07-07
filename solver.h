@@ -188,25 +188,7 @@ public:
 	}
 	bool step(double end)
 	{
-		class End : public metatype
-		{
-		public:
-			inline End(double end) : _end(end)
-			{ }
-			inline void unref() __MPT_OVERRIDE
-			{ }
-			inline metatype *clone() const __MPT_OVERRIDE
-			{ return 0; }
-			inline int conv(int type, void *dest) const __MPT_OVERRIDE
-			{
-				const int me = typeIdentifier<double>();
-				if (type != me) return BadType;
-				if (dest) *static_cast<double *>(dest) = _end;
-				return me;
-			}
-		private:
-			double _end;
-		} val(end);
+		Metatype<double> val(end);
 		return setProperty("t", &val) >= 0;
 	}
 	template <typename T>
@@ -637,7 +619,7 @@ __MPT_NAMESPACE_END
 template <typename T>
 inline std::ostream &operator<<(std::ostream &o, mpt::solver::vecpar<T> &d)
 {
-    return o << d.data();
+	return o << d.data();
 }
 #endif
 
