@@ -6,6 +6,11 @@
 
 #include "vode.h"
 
+#define MPT_SOLVER_MODULE_FCN(x) mpt_vode_##x
+#include "solver_modfcn.h"
+
+#include "solver_odefcn.c"
+
 static void vode_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)
 {
 	const MPT_IVP_STRUCT(pdefcn) *pde = (void *) ipar;
@@ -45,62 +50,9 @@ static void vode_jac(int *neq, double *t, double *y, int *ml, int *mu, double *j
 extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_IVP_STRUCT(odefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
-	if (!ptr) {
-		switch (type) {
-		  case MPT_SOLVER_ENUM(IvpRside):
-		  case MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE):
-			if (ufcn) ufcn->rside.fcn = 0;
-			break;
-		  case MPT_SOLVER_ENUM(IvpJac):
-			if (ufcn) ufcn->jac.fcn = 0;
-			break;
-		  case MPT_SOLVER_ENUM(ODE):
-		  case MPT_SOLVER_ENUM(DAE):
-		  case MPT_SOLVER_ENUM(PDE):
-			if (ufcn) {
-				ufcn->rside.fcn = 0;
-				ufcn->jac.fcn = 0;
-			}
-			break;
-		  default:
-			return MPT_ERROR(BadType);
-		}
-	}
-	else if (ufcn) {
-		switch (type) {
-		  case MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE):
-			if (!vd->ivp.pint) {
-				return MPT_ERROR(BadType);
-			}
-			if (!((MPT_IVP_STRUCT(pdefcn) *) ptr)->fcn) {
-				return MPT_ERROR(BadValue);
-			}
-			ufcn->rside = *((MPT_IVP_STRUCT(rside) *) ptr);
-			break;
-		  case MPT_SOLVER_ENUM(IvpRside):
-			if (vd->ivp.pint) {
-				return MPT_ERROR(BadType);
-			}
-			if (!((MPT_IVP_STRUCT(rside) *) ptr)->fcn) {
-				return MPT_ERROR(BadValue);
-			}
-			ufcn->rside = *((MPT_IVP_STRUCT(rside) *) ptr);
-			break;
-		  case MPT_SOLVER_ENUM(IvpJac):
-			ufcn->jac = *((MPT_IVP_STRUCT(jacobian) *) ptr);
-			break;
-		  case MPT_SOLVER_ENUM(ODE):
-			*ufcn = *((MPT_IVP_STRUCT(odefcn) *) ptr);
-			break;
-		  case MPT_SOLVER_ENUM(DAE):
-			if (((MPT_IVP_STRUCT(daefcn) *) ptr)->mas.fcn) {
-				return MPT_ERROR(BadValue);
-			}
-			*ufcn = *((MPT_IVP_STRUCT(odefcn) *) ptr);
-			break;
-		  default:
-			return MPT_ERROR(BadType);
-		}
+	
+	if ((ret = mpt_vode_odefcn_set(vd->ivp.pint, ufcn, type, ptr)) < 0) {
+		return ret;
 	}
 	vd->fcn = 0;
 	vd->jac = 0;
