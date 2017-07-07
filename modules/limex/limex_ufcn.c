@@ -4,7 +4,9 @@
 
 #include "limex.h"
 
-#include "../solver_daefcn.h"
+#include "limex_modfcn.h"
+
+#include "solver_daefcn.c"
 
 static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double *b, int *ir, int *ic, int *info)
 {
@@ -92,7 +94,7 @@ extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *lx, MPT_IVP_STRUCT(daefcn) *
 {
 	int ret;
 	
-	if ((ret = _mpt_solver_daefcn_set(lx->ivp.pint, ufcn, type, par)) < 0) {
+	if ((ret = mpt_limex_daefcn_set(lx->ivp.pint, ufcn, type, par)) < 0) {
 		return ret;
 	}
 	lx->fcn = 0;

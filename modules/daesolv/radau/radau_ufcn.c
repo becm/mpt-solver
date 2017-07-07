@@ -6,7 +6,7 @@
 
 #include "radau.h"
 
-#include "solver_daefcn.h"
+#include "daesolv_modfcn.h"
 
 static void radau_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)
 {
@@ -81,7 +81,7 @@ extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, MPT_IVP_STRUCT(daefcn) *
 {
 	int ret;
 	
-	if ((ret = _mpt_solver_daefcn_set(rd->ivp.pint, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_daesolv_daefcn_set(rd->ivp.pint, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	rd->fcn = 0;

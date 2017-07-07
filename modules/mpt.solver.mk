@@ -54,6 +54,10 @@ install : module_config
 module_config : ${CONFIG}; $(call install_files,${DIR_TOP}/etc/mpt.conf.d,${CONFIG})
 CLEAR_FILES += $(CONFIG:%=${DIR_TOP}/etc/mpt.conf.d/%) libinfo.o
 #
+# module file dependencies
+${DIR_SOLVER_MODULES}solver_daefcn.c : ${DIR_SOLVER_MODULES}solver_modfcn.h
+${DIR_SOLVER_MODULES}solver_odefcn.c : ${DIR_SOLVER_MODULES}solver_modfcn.h
+#
 # additional service targets
 .PHONY : clean_math
 clean_math :

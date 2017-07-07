@@ -2,9 +2,7 @@
  * generic user functions dDASSL solver instance
  */
 
-#include "solver_modfcn.h"
-
-extern int MPT_SOLVER_MODULE_FCN(odefcn_set)(long pint, MPT_IVP_STRUCT(odefcn) *ufcn, int type, const void *ptr)
+extern int MPT_SOLVER_MODULE_FCN(daefcn_set)(long pint, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	
@@ -18,6 +16,9 @@ extern int MPT_SOLVER_MODULE_FCN(odefcn_set)(long pint, MPT_IVP_STRUCT(odefcn) *
 		}
 		if (!(type & MPT_SOLVER_ENUM(IvpJac))) {
 			ufcn->jac.fcn = 0;
+		}
+		if (!(type & MPT_SOLVER_ENUM(IvpMas))) {
+			ufcn->mas.fcn = 0;
 		}
 	}
 	else switch (type) {
@@ -47,15 +48,15 @@ extern int MPT_SOLVER_MODULE_FCN(odefcn_set)(long pint, MPT_IVP_STRUCT(odefcn) *
 		ufcn->jac   = ((MPT_IVP_STRUCT(odefcn) *) ptr)->jac;
 		break;
 	  case MPT_SOLVER_ENUM(DAE):
-		if (((MPT_IVP_STRUCT(daefcn) *) ptr)->mas.fcn) {
-			return MPT_ERROR(BadValue);
-		}
-		*ufcn = *((MPT_IVP_STRUCT(odefcn) *) ptr);
+		*ufcn = *((MPT_IVP_STRUCT(daefcn) *) ptr);
 		break;
 	  default:
 		return MPT_ERROR(BadType);
 	}
 	ret = 0;
+	if (ufcn->mas.fcn) {
+		ret |= MPT_SOLVER_ENUM(IvpMas);
+	}
 	if (ufcn->jac.fcn) {
 		ret |= MPT_SOLVER_ENUM(IvpJac);
 	}

@@ -18,7 +18,7 @@ LINK   = ${FC}
 dassl_sources := $(wildcard dassl/dassl_*.c)
 radau_sources := $(wildcard radau/radau_*.c)
 mebdfi_sources := $(wildcard mebdfi/mebdfi_*.c)
-SRCS = ${dassl_sources} ${radau_sources} ${mebdfi_sources}
+SRCS = ${dassl_sources} ${radau_sources} ${mebdfi_sources} daesolv_ufcn.c
 MATH = \
 	mebdfi.o \
 	radau.o radaua.o \
@@ -37,9 +37,10 @@ include ../mpt.solver.mk
 ${DIR_MATH}/mebdfi.o : FFLAGS=-O0 -fpic -Wall
 #
 # object dependencies
-dassl/%.o : dassl.h
-radau/%.o : dassl.h
-mebdfi/%.o : mebdfi.h
-dassl/dassl_property.o mebdfi/mebdfi_property.o radau/radau_property.o : ${DIR_BASE}version.h
-dassl/dassl_property.o mebdfi/mebdfi_property.o : ../solver_yprime.h
-dassl/dassl_ufcn.o mebdfi/mebdfi_ufcn.o radau/radau_property.o : ../solver_daefcn.h
+libinfo.o : ${HEADER}
+dassl/*.o : dassl.h
+radau/*.o : radau.h
+mebdfi/*.o : mebdfi.h
+dassl/*.o mebdfi/*.o radau/*.o : daesolv_modfcn.h ${DIR_SOLVER_MODULES}solver_modfcn.h ${DIR_BASE}version.h
+dassl/dassl_property.o mebdfi/mebdfi_property.o : ${DIR_SOLVER_MODULES}solver_yprime.h
+daesolv_ufcn.o : ${DIR_SOLVER_MODULES}solver_daefcn.c

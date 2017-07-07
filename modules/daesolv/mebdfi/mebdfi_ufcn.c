@@ -6,7 +6,7 @@
 
 #include "mebdfi.h"
 
-#include "solver_daefcn.h"
+#include "daesolv_modfcn.h"
 
 static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, int *ipar, double *rpar, int *flg)
 {
@@ -106,7 +106,7 @@ extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_IVP_STRUCT(daefcn)
 {
 	int ret;
 	
-	if ((ret = _mpt_solver_daefcn_set(me->ivp.pint, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_daesolv_daefcn_set(me->ivp.pint, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	me->fcn = 0;

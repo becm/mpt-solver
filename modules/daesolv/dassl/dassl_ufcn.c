@@ -8,7 +8,7 @@
 
 #include "dassl.h"
 
-#include "solver_daefcn.h"
+#include "daesolv_modfcn.h"
 
 static void dassl_fcn(double *t, double *y, double *yp, double *f, int *ires, double *rpar, int *ipar)
 {
@@ -112,7 +112,7 @@ extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, MPT_IVP_STRUCT(daefcn) *
 {
 	int ret;
 	
-	if ((ret = _mpt_solver_daefcn_set(da->ivp.pint, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_daesolv_daefcn_set(da->ivp.pint, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	da->fcn = 0;

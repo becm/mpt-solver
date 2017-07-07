@@ -6,9 +6,7 @@
 
 #include "vode.h"
 
-#define MPT_SOLVER_MODULE_FCN(x) mpt_vode_##x
-#include "solver_modfcn.h"
-
+#include "vode_modfcn.h"
 #include "solver_odefcn.c"
 
 static void vode_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)

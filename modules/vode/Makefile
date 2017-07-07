@@ -21,5 +21,7 @@ CONFIG = vode.conf
 #
 # solver rules
 include ../mpt.solver.mk
+vode_*.o : vode_modfcn.h
+vode_*.o vode_modfcn.h : ${DIR_SOLVER_MODULES}solver_modfcn.h
 vode_property.o : ${DIR_BASE}version.h
-vode_ufcn.o : ../solver_modfcn.h ../solver_odefcn.c
+vode_ufcn.o : ${DIR_SOLVER_MODULES}solver_odefcn.c

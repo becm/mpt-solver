@@ -18,5 +18,8 @@ CONFIG = limex.conf
 include ../mpt.solver.mk
 #
 # local dependencies
+limex_*.o libinfo.o : limex.h limex_modfcn.h
+limex_modfcn.h : ${DIR_SOLVER_MODULES}solver_modfcn.h
 limex_property.o : ${DIR_BASE}version.h
-limex_property.o : ../solver_yprime.h
+limex_property.o : ${DIR_SOLVER_MODULES}solver_yprime.h
+limex_ufcn.o : ${DIR_SOLVER_MODULES}solver_daefcn.c
