@@ -11,7 +11,7 @@
 
 #include "mebdfi.h"
 
-#include "solver_yprime.h"
+#include "daesolv_modfcn.h"
 
 static int setInt(MPT_SOLVER_STRUCT(mebdfi) *me, size_t pos, int val)
 {
@@ -186,7 +186,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 		return ret ? 1 : 0;
 	}
 	if (!strncasecmp(name, "yp", 2)) {
-		return _mpt_solver_yprime_set(&me->ivp, &me->y, src);
+		return MPT_SOLVER_MODULE_FCN(ivpvec_set)(&me->ivp, &me->y, src);
 	}
 	return MPT_ERROR(BadArgument);
 }

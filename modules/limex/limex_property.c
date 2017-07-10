@@ -13,7 +13,7 @@
 
 #include "limex.h"
 
-#include "solver_yprime.h"
+#include "limex_modfcn.h"
 
 static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatype) *src)
 {
@@ -217,7 +217,7 @@ extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, const M
 		return 0;
 	}
 	if (!strncasecmp(name, "yprime", 2) || !strcasecmp(name, "ys")) {
-		return _mpt_solver_yprime_set(&lx->ivp, &lx->ys, src);
+		return MPT_SOLVER_MODULE_FCN(ivpvec_set)(&lx->ivp, &lx->ys, src);
 	}
 	return MPT_ERROR(BadArgument);
 }
