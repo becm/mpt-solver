@@ -14,6 +14,8 @@
 
 #include "portn2.h"
 
+#include "module_functions.h"
+
 /*!
  * \ingroup mptNlSolvPortN2
  * \brief set N2 property
@@ -47,7 +49,7 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const
 			return 0;
 		}
 		if (src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it) > 0) {
-			return mpt_solver_vecpar_set(dst, n2->nls.nval, 0, it);
+			return MPT_SOLVER_MODULE_FCN(data_set)(dst, n2->nls.nval, 0, it);
 		}
 		return MPT_ERROR(BadType);
 	}

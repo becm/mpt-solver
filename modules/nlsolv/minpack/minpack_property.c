@@ -15,6 +15,8 @@
 
 #include "minpack.h"
 
+#include "module_functions.h"
+
 static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_STRUCT(solver_value) val;
@@ -82,7 +84,7 @@ static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, const MPT_INTERFACE(metatyp
 	if (!(diag = malloc(nd * sizeof(*diag)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if ((ret = mpt_solver_vecpar_set(diag, nd, 0, it)) < 0) {
+	if ((ret = MPT_SOLVER_MODULE_FCN(data_set)(diag, nd, 0, it)) < 0) {
 		free(diag);
 		return ret;
 	}
@@ -131,7 +133,7 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, con
 		if (!(par = mpt_solver_valloc(&mp->val, all, sizeof(*par)))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if ((ret = mpt_solver_vecpar_set(par, mp->nls.nval, 0, ret ? it : 0)) < 0) {
+		if ((ret = MPT_SOLVER_MODULE_FCN(data_set)(par, mp->nls.nval, 0, ret ? it : 0)) < 0) {
 			return ret;
 		}
 		return ret;

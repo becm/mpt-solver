@@ -25,7 +25,8 @@ MATH = \
 OBJS = \
 	$(portn2_wrapper:%=portn2/%) \
 	$(minpack_wrapper:%=minpack/%) \
-	$(direct_wrapper:%=direct/%)
+	$(direct_wrapper:%=direct/%) \
+	nlsolv_modfcn.o
 
 HEADER = minpack/minpack.h portn2/portn2.h
 CONFIG = nlsolv.conf

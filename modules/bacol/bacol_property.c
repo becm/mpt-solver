@@ -24,7 +24,7 @@ static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, const MPT_INTERFACE(metaty
 	if (mpt_bacol_backend(data, val) < 0) {
 		return MPT_ERROR(BadValue);
 	}
-	return len;
+	return 0;
 }
 
 /*!
