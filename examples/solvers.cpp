@@ -38,6 +38,14 @@
 using namespace mpt;
 using namespace mpt::solver;
 
+static int val(void *, const property *pr)
+{
+	if (!pr || pr->name) {
+		return BadArgument;
+	}
+	return 0;
+}
+
 static void info(generic &s)
 {
 	property pr("");
@@ -51,6 +59,7 @@ static void info(generic &s)
 	
 	println("<%s> %s (%s)", name, ver, type);
 	
+	s.report(s.Values, val, 0);
 	mpt_solver_info(&s, 0);
 	mpt_solver_report(&s, 0);
 	println(0);
@@ -63,6 +72,7 @@ static void pde(class IVP &s)
 	mpt_object_set(&s, 0, "dddd", 0.5, 1.1, 1.2, 1.3);
 	
 	s.set(IVP::rside(0));
+	s.prepare();
 	s.step(1);
 }
 

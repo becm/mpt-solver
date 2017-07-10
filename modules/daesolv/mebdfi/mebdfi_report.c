@@ -7,6 +7,8 @@
 
 #include "mebdfi.h"
 
+#include "daesolv_modfcn.h"
+
 extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
@@ -34,22 +36,7 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)) {
-	static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
-	struct {
-		double t;
-		struct iovec vec;
-	} dat;
-	size_t len = me->ivp.pint + 1;
-	
-	dat.t = me->t;
-	dat.vec.iov_base = me->y;
-	dat.vec.iov_len  = len * me->ivp.neqs * sizeof(double);
-	
-	pr.name = 0;
-	pr.desc = MPT_tr("LIMEX solver state");
-	pr.val.fmt = fmt;
-	pr.val.ptr = &dat;
-	out(usr, &pr);
+	MPT_SOLVER_MODULE_FCN(ivp_values)(&me->ivp, me->t, me->y, MPT_tr("MEBDFI solver state"), out, usr);
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Status)) {

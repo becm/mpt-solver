@@ -5,4 +5,4 @@
 
 #include "daesolv_modfcn.h"
 
-#include "solver_ivpvec_set.c"
+#include "solver_ivp_vecset.c"

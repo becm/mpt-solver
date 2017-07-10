@@ -7,7 +7,7 @@
 #include "vode.h"
 
 #include "vode_modfcn.h"
-#include "solver_odefcn.c"
+#include "solver_ufcn_ode.c"
 
 static void vode_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)
 {
@@ -49,7 +49,7 @@ extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_IVP_STRUCT(odefcn) *uf
 {
 	int ret;
 	
-	if ((ret = mpt_vode_odefcn_set(vd->ivp.pint, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_vode_ufcn_ode(vd->ivp.pint, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	vd->fcn = 0;

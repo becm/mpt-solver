@@ -4,7 +4,7 @@
 
 #include "solver_modfcn.h"
 
-extern int MPT_SOLVER_MODULE_FCN(odefcn_set)(long pint, MPT_IVP_STRUCT(odefcn) *ufcn, int type, const void *ptr)
+extern int MPT_SOLVER_MODULE_FCN(ufcn_ode)(long pint, MPT_IVP_STRUCT(odefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	

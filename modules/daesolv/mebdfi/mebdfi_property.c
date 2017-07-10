@@ -186,7 +186,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 		return ret ? 1 : 0;
 	}
 	if (!strncasecmp(name, "yp", 2)) {
-		return MPT_SOLVER_MODULE_FCN(ivpvec_set)(&me->ivp, &me->y, src);
+		return MPT_SOLVER_MODULE_FCN(ivp_vecset)(&me->ivp, &me->y, src);
 	}
 	return MPT_ERROR(BadArgument);
 }

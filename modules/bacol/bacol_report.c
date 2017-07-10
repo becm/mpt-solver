@@ -54,20 +54,13 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_T
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)) {
-		struct iovec *vec;
-		uint8_t buf[sizeof(bac->t) + 2 * sizeof(*vec)];
-		size_t len;
-		const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
-		
-		vec = (void *) (buf + sizeof(bac->t));
-		len = bac->ivp.pint + 1;
-		vec->iov_base = bac->ivp.grid;
-		vec->iov_len = len * sizeof(double);
+		const char fmt[] = { 'd', 0 };
+		double t = bac->t;
 
 		pr.name = 0;
-		pr.desc = MPT_tr("solver state");
+		pr.desc = MPT_tr("BACOL solver state");
 		pr.val.fmt = fmt;
-		pr.val.ptr = buf;
+		pr.val.ptr = &t;
 		out(usr, &pr);
 	}
 	return lines;

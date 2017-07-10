@@ -245,7 +245,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 		return ret ? 1 : 0;
 	}
 	if (!strncasecmp(name, "yprime", 2)) {
-		if ((ret = MPT_SOLVER_MODULE_FCN(ivpvec_set)(&da->ivp, &da->yp, src)) < 0) {
+		if ((ret = MPT_SOLVER_MODULE_FCN(ivp_vecset)(&da->ivp, &da->yp, src)) < 0) {
 			return ret;
 		}
 		da->info[10] = 1;

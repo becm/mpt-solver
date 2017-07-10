@@ -15,6 +15,8 @@
 
 #include "limex_modfcn.h"
 
+#include "solver_ivp_vecset.c"
+
 static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_STRUCT(solver_value) val;
@@ -217,7 +219,7 @@ extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, const M
 		return 0;
 	}
 	if (!strncasecmp(name, "yprime", 2) || !strcasecmp(name, "ys")) {
-		return MPT_SOLVER_MODULE_FCN(ivpvec_set)(&lx->ivp, &lx->ys, src);
+		return MPT_SOLVER_MODULE_FCN(ivp_vecset)(&lx->ivp, &lx->ys, src);
 	}
 	return MPT_ERROR(BadArgument);
 }

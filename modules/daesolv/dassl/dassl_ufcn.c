@@ -112,7 +112,7 @@ extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, MPT_IVP_STRUCT(daefcn) *
 {
 	int ret;
 	
-	if ((ret = mpt_daesolv_daefcn_set(da->ivp.pint, ufcn, type, ptr)) < 0) {
+	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_dae)(da->ivp.pint, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	da->fcn = 0;

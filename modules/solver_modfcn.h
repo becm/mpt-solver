@@ -4,6 +4,8 @@
 
 #include "../solver.h"
 
+__MPT_SOLVER_BEGIN
+
 #ifndef MPT_SOLVER_MODULE_DATA_CONTAINER
 # define MPT_SOLVER_MODULE_DATA_CONTAINER double *
 #endif
@@ -16,13 +18,13 @@
 # define MPT_SOLVER_MODULE_FCN(x) _mpt_solver_module_##x
 #endif
 
-__MPT_SOLVER_BEGIN
-
 __MPT_EXTDECL_BEGIN
 
-extern int MPT_SOLVER_MODULE_FCN(odefcn_set)(long , MPT_IVP_STRUCT(odefcn) *, int , const void *);
-extern int MPT_SOLVER_MODULE_FCN(daefcn_set)(long , MPT_IVP_STRUCT(daefcn) *, int , const void *);
-extern int MPT_SOLVER_MODULE_FCN(ivpvec_set)(const MPT_IVP_STRUCT(parameters) *, MPT_SOLVER_MODULE_DATA_CONTAINER *, const MPT_INTERFACE(metatype) *);
+extern int MPT_SOLVER_MODULE_FCN(ufcn_ode)(long , MPT_IVP_STRUCT(odefcn) *, int , const void *);
+extern int MPT_SOLVER_MODULE_FCN(ufcn_dae)(long , MPT_IVP_STRUCT(daefcn) *, int , const void *);
+
+extern int MPT_SOLVER_MODULE_FCN(ivp_vecset)(const MPT_IVP_STRUCT(parameters) *, MPT_SOLVER_MODULE_DATA_CONTAINER *, const MPT_INTERFACE(metatype) *);
+extern int MPT_SOLVER_MODULE_FCN(ivp_values)(const MPT_IVP_STRUCT(parameters) *, double , const MPT_SOLVER_MODULE_DATA_TYPE *, const char *, MPT_TYPE(PropertyHandler) , void *);
 
 __MPT_EXTDECL_END
 

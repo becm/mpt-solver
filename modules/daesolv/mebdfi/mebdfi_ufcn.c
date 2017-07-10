@@ -106,7 +106,7 @@ extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_IVP_STRUCT(daefcn)
 {
 	int ret;
 	
-	if ((ret = mpt_daesolv_daefcn_set(me->ivp.pint, ufcn, type, ptr)) < 0) {
+	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_dae)(me->ivp.pint, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	me->fcn = 0;

@@ -2,7 +2,7 @@
  * generic user functions dDASSL solver instance
  */
 
-extern int MPT_SOLVER_MODULE_FCN(daefcn_set)(long pint, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
+extern int MPT_SOLVER_MODULE_FCN(ufcn_dae)(long pint, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	

@@ -134,12 +134,7 @@ enum MPT_SOLVER_ENUM(Flags)
 	MPT_SOLVER_ENUM(NlsJac)     = 0x200,
 	MPT_SOLVER_ENUM(NlsUser)    = 0x300,
 	MPT_SOLVER_ENUM(NlsOut)     = 0x400,
-	MPT_SOLVER_ENUM(NlsOverdet) = 0x800,
-	
-	MPT_SOLVER_ENUM(Header)     = 0x1,
-	MPT_SOLVER_ENUM(Status)     = 0x2,
-	MPT_SOLVER_ENUM(Report)     = 0x4,
-	MPT_SOLVER_ENUM(Values)     = 0x8
+	MPT_SOLVER_ENUM(NlsOverdet) = 0x800
 };
 
 /*! generic solver interface */
@@ -153,7 +148,18 @@ public:
 	
 	virtual int report(int , PropertyHandler , void *) = 0;
 	virtual int setFunctions(int , const void *) = 0;
+	
+	enum Report {
+#else
+enum MPT_SOLVER_ENUM(Report) {
+#endif
+	MPT_SOLVER_ENUM(Header)     = 0x1,
+	MPT_SOLVER_ENUM(Status)     = 0x2,
+	MPT_SOLVER_ENUM(Report)     = 0x4,
+	MPT_SOLVER_ENUM(Values)     = 0x8
 };
+#ifdef __cplusplus
+}; /* generic solver end */
 #else
 MPT_SOLVER(generic);
 MPT_INTERFACE_VPTR(solver)

@@ -4,6 +4,8 @@
 
 #include "dassl.h"
 
+#include "daesolv_modfcn.h"
+
 extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
@@ -32,22 +34,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TY
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)) {
-	static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
-	struct {
-		double t;
-		struct iovec vec;
-	} dat;
-	size_t len = da->ivp.pint + 1;
-	
-	dat.t = da->t;
-	dat.vec.iov_base = da->y;
-	dat.vec.iov_len  = len * da->ivp.neqs * sizeof(double);
-	
-	pr.name = 0;
-	pr.desc = MPT_tr("LIMEX solver state");
-	pr.val.fmt = fmt;
-	pr.val.ptr = &dat;
-	out(usr, &pr);
+	MPT_SOLVER_MODULE_FCN(ivp_values)(&da->ivp, da->t, da->y, MPT_tr("DASSL solver state"), out, usr);
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Status) && rwork) {

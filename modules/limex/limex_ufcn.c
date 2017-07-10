@@ -6,12 +6,12 @@
 
 #include "limex_modfcn.h"
 
-#include "solver_daefcn.c"
+#include "solver_ufcn_dae.c"
 
 static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double *b, int *ir, int *ic, int *info)
 {
 	const MPT_SOLVER_STRUCT(limex_param) *lp = (void *) neq;
-	const MPT_SOLVER_STRUCT(limex) *lx = (void *) neq;
+	const MPT_SOLVER_STRUCT(limex) *lx = lp->lx;
 	const MPT_IVP_STRUCT(daefcn) *fcn = lp->ufcn;
 	const MPT_IVP_STRUCT(pdefcn) *pde = (void *) fcn;
 	int res;
@@ -94,7 +94,7 @@ extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *lx, MPT_IVP_STRUCT(daefcn) *
 {
 	int ret;
 	
-	if ((ret = mpt_limex_daefcn_set(lx->ivp.pint, ufcn, type, par)) < 0) {
+	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_dae)(lx->ivp.pint, ufcn, type, par)) < 0) {
 		return ret;
 	}
 	lx->fcn = 0;
