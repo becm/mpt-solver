@@ -21,10 +21,10 @@ extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *me)
 	if (neqs < 2 || (!me->rtol.base && !me->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_solver_cktol(&me->atol, me->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_tol_check(&me->atol, me->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return -1;
 	}
-	if (mpt_solver_cktol(&me->rtol, me->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_tol_check(&me->rtol, me->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
 		return -1;
 	}
 	/* set banded matrix parameters */

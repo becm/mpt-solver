@@ -33,8 +33,8 @@ extern void mpt_limex_fini(MPT_SOLVER_STRUCT(limex) *data)
 		free(data->ipos);
 		data->ipos = 0;
 	}
-	mpt_solver_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_solver_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
 	
 	data->iopt[15] = -1;
 }

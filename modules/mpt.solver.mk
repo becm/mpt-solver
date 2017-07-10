@@ -15,8 +15,13 @@ INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and other shared operations
 src_gen = solver_valloc.c solver_vecpar.c solver_value.c
-src_ivp = solver_ivpset.c solver_ivpstate.c solver_cktol.c solver_settol.c
+src_ivp = solver_ivpset.c solver_tol_check.c solver_tol_set.c solver_tol_get.c
 src_nls = solver_nlsset.c
+src_mod = \
+	solver_data_new.c solver_data_set.c \
+	solver_ivp_state.c solver_ivp_vecset.c \
+	solver_ivp_values.c \
+	solver_ufcn_dae.c solver_ufcn_ode.c
 #
 # additional objects for solver
 ifeq (${SOL}, ivp)
@@ -55,8 +60,7 @@ module_config : ${CONFIG}; $(call install_files,${DIR_TOP}/etc/mpt.conf.d,${CONF
 CLEAR_FILES += $(CONFIG:%=${DIR_TOP}/etc/mpt.conf.d/%) libinfo.o
 #
 # module file dependencies
-${DIR_SOLVER_MODULES}solver_daefcn.c : ${DIR_SOLVER_MODULES}solver_modfcn.h
-${DIR_SOLVER_MODULES}solver_odefcn.c : ${DIR_SOLVER_MODULES}solver_modfcn.h
+*_modfcn.o : $(src_mod:%=${DIR_SOLVER_MODULES}%)
 #
 # additional service targets
 .PHONY : clean_math

@@ -8,7 +8,7 @@
 
 #include "dassl.h"
 
-#include "daesolv_modfcn.h"
+#include "module_functions.h"
 
 static void dassl_fcn(double *t, double *y, double *yp, double *f, int *ires, double *rpar, int *ipar)
 {

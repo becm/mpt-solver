@@ -22,9 +22,7 @@ SRCS = \
 	${dassl_sources} \
 	${radau_sources} \
 	${mebdfi_sources} \
-	daesolv_ufcn.c \
-	daesolv_vecset.c \
-	daesolv_values.c
+	daesolv_modfcn.c
 MATH = \
 	mebdfi.o \
 	radau.o radaua.o \
@@ -47,7 +45,7 @@ libinfo.o : ${HEADER}
 dassl/*.o : dassl.h
 radau/*.o : radau.h
 mebdfi/*.o : mebdfi.h
-${OBJS} : daesolv_modfcn.h ${DIR_SOLVER_MODULES}solver_modfcn.h ${DIR_BASE}version.h
+${OBJS} : module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h ${DIR_BASE}version.h
 daesolv_ufcn.o : ${DIR_SOLVER_MODULES}solver_daefcn.c
 daesolv_values.o : ${DIR_SOLVER_MODULES}solver_ivp_values.c
 daesolv_vecset.o : ${DIR_SOLVER_MODULES}solver_ivp_vecset.c

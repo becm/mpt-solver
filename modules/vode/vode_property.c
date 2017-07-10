@@ -11,6 +11,8 @@
 
 #include "vode.h"
 
+#include "module_functions.h"
+
 static int setInt(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, int val)
 {
 	int *iwk = vd->iwork.iov_base;
@@ -191,7 +193,7 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT
 	int ret = 0;
 	
 	if (!name) {
-		return mpt_solver_ivpstate(&vd->ivp, &vd->t, &vd->y, src);
+		return MPT_SOLVER_MODULE_FCN(ivp_state)(&vd->ivp, &vd->t, &vd->y, src);
 	}
 	else if (!*name) {
 		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
@@ -206,10 +208,10 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_settol(&vd->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_tol_set(&vd->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_settol(&vd->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_tol_set(&vd->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return setJacobian(vd, src);
@@ -288,13 +290,13 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : (pos == ++id)) {
 		if (!vd) { prop->val.fmt = "d"; prop->val.ptr = &vd->atol.d.val; }
-		else { id = mpt_solver_vecpar_get(&vd->atol, &prop->val); }
+		else { id = mpt_solver_tol_get(&vd->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == ++id)) {
 		if (!vd) { prop->val.fmt = "d"; prop->val.ptr = &vd->rtol.d.val; }
-		else { id = mpt_solver_vecpar_get(&vd->rtol, &prop->val); }
+		else { id = mpt_solver_tol_get(&vd->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

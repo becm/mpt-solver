@@ -6,7 +6,7 @@
 
 #include "mebdfi.h"
 
-#include "daesolv_modfcn.h"
+#include "module_functions.h"
 
 static void mebdfi_fcn(int *neq, double *t, double *y, double *f, double *yp, int *ipar, double *rpar, int *flg)
 {

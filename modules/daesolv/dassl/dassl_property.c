@@ -12,7 +12,7 @@
 
 #include "dassl.h"
 
-#include "daesolv_modfcn.h"
+#include "module_functions.h"
 
 static int setInt(MPT_SOLVER_STRUCT(dassl) *da, size_t pos, int val)
 {
@@ -135,7 +135,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 	int ret = 0;
 	
 	if (!name) {
-		return mpt_solver_ivpstate(&da->ivp, &da->t, &da->y, src);
+		return MPT_SOLVER_MODULE_FCN(ivp_state)(&da->ivp, &da->t, &da->y, src);
 	}
 	if (!*name) {
 		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
@@ -151,10 +151,10 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 	}
 	
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_settol(&da->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_tol_set(&da->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_settol(&da->atol, src, __MPT_IVP_RTOL);
+		return mpt_solver_tol_set(&da->atol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jacobian", 3)) {
 		return setJacobian(da, src);
@@ -295,13 +295,13 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
 		if (!da) { prop->val.fmt = "d"; prop->val.ptr = &da->rtol.d.val; }
-		else { id = mpt_solver_vecpar_get(&da->rtol, &prop->val); }
+		else { id = mpt_solver_tol_get(&da->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		if (!da) { prop->val.fmt = "d"; prop->val.ptr = &da->rtol.d.val; }
-		else { id = mpt_solver_vecpar_get(&da->rtol, &prop->val); }
+		else { id = mpt_solver_tol_get(&da->rtol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}

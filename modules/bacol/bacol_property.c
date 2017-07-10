@@ -66,10 +66,10 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_settol(&bac->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_tol_set(&bac->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_settol(&bac->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_tol_set(&bac->rtol, src, __MPT_IVP_RTOL);
 	}
 	/* no interaction after prepare */
 	if (bac->mflag.noinit >= 0) {
@@ -213,7 +213,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 			prop->val.fmt = 0; prop->val.ptr = &bac->atol;
 			return id;
 		}
-		return mpt_solver_vecpar_get(&bac->atol, &prop->val);
+		return mpt_solver_tol_get(&bac->atol, &prop->val);
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		prop->name = "rtol"; prop->desc = "relative tolerances";
@@ -221,7 +221,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 			prop->val.fmt = 0; prop->val.ptr = &bac->rtol;
 			return id;
 		}
-		return mpt_solver_vecpar_get(&bac->rtol, &prop->val);
+		return mpt_solver_tol_get(&bac->rtol, &prop->val);
 	}
 	/* bacol parameters */
 	if (name ? !strcasecmp(name, "kcol") : pos == ++id) {

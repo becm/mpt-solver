@@ -6,7 +6,7 @@
 
 #include "radau.h"
 
-#include "daesolv_modfcn.h"
+#include "module_functions.h"
 
 static void radau_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)
 {

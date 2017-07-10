@@ -7,10 +7,10 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_cktol(MPT_SOLVER_TYPE(dvecpar) *tol, int neqs, int post, double def)
+extern int mpt_solver_tol_check(MPT_SOLVER_TYPE(dvecpar) *tol, long neqs, long post, double def)
 {
 	double *tmp, val;
-	int  i, len;
+	long  i, len;
 	
 	if (post < 0) {
 		return MPT_ERROR(BadArgument);

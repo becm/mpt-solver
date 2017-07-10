@@ -11,7 +11,7 @@
 
 #include "mebdfi.h"
 
-#include "daesolv_modfcn.h"
+#include "module_functions.h"
 
 static int setInt(MPT_SOLVER_STRUCT(mebdfi) *me, size_t pos, int val)
 {
@@ -97,7 +97,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 	
 	/* initial values */
 	if (!name) {
-		return mpt_solver_ivpstate(&me->ivp, &me->t, &me->y, src);
+		return MPT_SOLVER_MODULE_FCN(ivp_state)(&me->ivp, &me->t, &me->y, src);
 	}
 	if (!*name) {
 		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
@@ -113,10 +113,10 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 	}
 	
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_settol(&me->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_tol_set(&me->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_settol(&me->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_tol_set(&me->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jacobian", 3)) {
 		return setJacobian(me, src);
@@ -219,13 +219,13 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
 		if (!me) { prop->val.fmt = "d"; prop->val.ptr = &me->atol.d.val; }
-		else { id = mpt_solver_vecpar_get(&me->atol, &prop->val); }
+		else { id = mpt_solver_tol_get(&me->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		if (!me) { prop->val.fmt = "d"; prop->val.ptr = &me->rtol.d.val; }
-		else { id = mpt_solver_vecpar_get(&me->rtol, &prop->val); }
+		else { id = mpt_solver_tol_get(&me->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

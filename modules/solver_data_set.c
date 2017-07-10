@@ -8,15 +8,15 @@
 
 #include "meta.h"
 
-#include "../solver.h"
+#include "solver_modfcn.h"
 
-extern int mpt_solver_vecpar_set(double *dest, long elem, long parts, MPT_INTERFACE(iterator) *it)
+extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, int32_t elem, long parts, MPT_INTERFACE(iterator) *it)
 {
 	struct iovec vec;
 	uint32_t len;
 	int ret;
 	
-	if (elem < 0) {
+	if (elem < 1 || parts < 0) {
 		return MPT_ERROR(BadArgument);
 	}
 	/* reset target data */
@@ -32,7 +32,7 @@ extern int mpt_solver_vecpar_set(double *dest, long elem, long parts, MPT_INTERF
 	}
 	if (!parts) {
 		/* get complete data segment */
-		if ((ret = it->_vptr->get(it, MPT_value_toVector('d'), &vec)) >= 0) {
+		if ((ret = it->_vptr->get(it, MPT_value_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) >= 0) {
 			if (!ret) {
 				parts = 0;
 			}
@@ -60,7 +60,7 @@ extern int mpt_solver_vecpar_set(double *dest, long elem, long parts, MPT_INTERF
 		parts = 0;
 		/* get single elements */
 		while (parts < elem) {
-			if ((ret = it->_vptr->get(it, 'd', dest)) <= 0) {
+			if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, dest)) <= 0) {
 				break;
 			}
 			if ((ret = it->_vptr->advance(it)) <= 0) {
@@ -80,10 +80,10 @@ extern int mpt_solver_vecpar_set(double *dest, long elem, long parts, MPT_INTERF
 	while (len < parts) {
 		long curr;
 		/* get profile segment */
-		if ((ret = it->_vptr->get(it, MPT_value_toVector('d'), &vec)) < 0) {
+		if ((ret = it->_vptr->get(it, MPT_value_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
 			/* read constant profile values */
 			for (curr = 0; curr < elem; ++curr) {
-				if ((ret = it->_vptr->get(it, 'd', dest + curr)) <= 0
+				if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, dest + curr)) <= 0
 				 || (ret = it->_vptr->advance(it)) <= 0) {
 					break;
 				}
@@ -125,23 +125,4 @@ extern int mpt_solver_vecpar_set(double *dest, long elem, long parts, MPT_INTERF
 		}
 	}
 	return ret;
-}
-
-extern int mpt_solver_vecpar_get(const MPT_SOLVER_TYPE(dvecpar) *tol, MPT_STRUCT(value) *val)
-{
-	int len = tol->base ? tol->d.len/sizeof(double) : 0;
-	
-	if (!val) {
-		return len;
-	}
-	if (tol->base) {
-		static const char fmt[2] = { MPT_value_toVector('d') };
-		val->fmt = fmt;
-		val->ptr = tol;
-	} else {
-		static const char fmt[2] = "d";
-		val->fmt = fmt;
-		val->ptr = &tol->d.val;
-	}
-	return len;
 }

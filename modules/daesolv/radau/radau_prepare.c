@@ -26,10 +26,10 @@ extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *rd)
 	if (neqs < 2 || (!rd->rtol.base && !rd->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_solver_cktol(&rd->rtol, rd->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_tol_check(&rd->rtol, rd->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (mpt_solver_cktol(&rd->atol, rd->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_tol_check(&rd->atol, rd->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	/* (2 + (NSMAX - 1) / 2) * N + 20 */

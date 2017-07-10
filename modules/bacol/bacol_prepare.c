@@ -30,10 +30,10 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	/* use vector tolerances if one is set */
 	odim = (npde > 1 && (bac->rtol.base || bac->atol.base)) ? 1 : 0;
 	
-	if (mpt_solver_cktol(&bac->rtol, bac->ivp.neqs, odim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_tol_check(&bac->rtol, bac->ivp.neqs, odim, __MPT_IVP_RTOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (mpt_solver_cktol(&bac->atol, bac->ivp.neqs, odim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_tol_check(&bac->atol, bac->ivp.neqs, odim, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	/* choose default backend */

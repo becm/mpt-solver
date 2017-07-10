@@ -4,9 +4,7 @@
 
 #include "limex.h"
 
-#include "limex_modfcn.h"
-
-#include "solver_ivp_values.c"
+#include "module_functions.h"
 
 extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {

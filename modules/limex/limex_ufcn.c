@@ -4,9 +4,7 @@
 
 #include "limex.h"
 
-#include "limex_modfcn.h"
-
-#include "solver_ufcn_dae.c"
+#include "module_functions.h"
 
 static void limex_fcn(int *neq, int *nz, double *t, double *y, double *f, double *b, int *ir, int *ic, int *info)
 {

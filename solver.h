@@ -591,19 +591,16 @@ extern int mpt_output_ivp_header(MPT_INTERFACE(output) *, int , int , const doub
 extern int mpt_output_solver_history(MPT_INTERFACE(output) *, const double *, int , const double *, int);
 
 
-
 /* solver module tolerance handling */
-extern int mpt_solver_settol(MPT_SOLVER_TYPE(dvecpar) *, const MPT_INTERFACE(metatype) *, double);
-extern int mpt_solver_cktol(MPT_SOLVER_TYPE(dvecpar) *, int , int , double);
+extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *, const MPT_INTERFACE(metatype) *, double);
+extern int mpt_solver_tol_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);
+extern int mpt_solver_tol_check(MPT_SOLVER_TYPE(dvecpar) *, long , long , double);
 
 /* solver module memory management */
 extern void *mpt_solver_valloc(struct iovec *, size_t len, size_t size);
-extern int mpt_solver_vecpar_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);
-extern int mpt_solver_vecpar_set(double *, long , long , MPT_INTERFACE(iterator) *);
 
 /* solver module parameter assignment */
 extern int mpt_solver_ivpset(MPT_IVP_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
-extern int mpt_solver_ivpstate(const MPT_IVP_STRUCT(parameters) *, double *, double **, const MPT_INTERFACE(metatype) *);
 extern int mpt_solver_nlsset(MPT_NLS_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
 
 /* get value and advance source */

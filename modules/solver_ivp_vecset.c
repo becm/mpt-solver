@@ -6,11 +6,13 @@
 
 #include "meta.h"
 
-extern int MPT_SOLVER_MODULE_FCN(ivp_vecset)(const MPT_IVP_STRUCT(parameters) *ivp, double **yp, const MPT_INTERFACE(metatype) *src)
+#include "solver_modfcn.h"
+
+extern int MPT_SOLVER_MODULE_FCN(ivp_vecset)(const MPT_IVP_STRUCT(parameters) *ivp, MPT_SOLVER_MODULE_DATA_CONTAINER *val, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_INTERFACE(iterator) *it = 0;
 	long max;
-	double *ptr;
+	MPT_SOLVER_MODULE_DATA_TYPE *ptr;
 	int ret;
 	
 	if (src && (ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0) {
@@ -19,13 +21,11 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_vecset)(const MPT_IVP_STRUCT(parameters) *i
 	if ((max = ivp->pint)) {
 		++max;
 	}
-	ptr = *yp;
-	if (!(ptr = realloc(ptr, max * ivp->neqs * sizeof(*yp)))) {
+	if (!(ptr = MPT_SOLVER_MODULE_FCN(data_new)(val, max * ivp->neqs, 0))) {
 		return MPT_ERROR(BadOperation);
 	}
-	*yp = ptr;
 	if (!ivp->pint) {
 		max = 0;
 	}
-	return mpt_solver_vecpar_set(ptr, ivp->neqs, max, ret ? it : 0);
+	return MPT_SOLVER_MODULE_FCN(data_set)(ptr, ivp->neqs, max, ret ? it : 0);
 }

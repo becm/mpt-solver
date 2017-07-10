@@ -7,7 +7,7 @@
 
 #include "mebdfi.h"
 
-#include "daesolv_modfcn.h"
+#include "module_functions.h"
 
 extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {

@@ -5,9 +5,7 @@
 
 #include "vode.h"
 
-#include "vode_modfcn.h"
-
-#include "solver_ivp_values.c"
+#include "module_functions.h"
 
 extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {

@@ -4,7 +4,7 @@
 
 #include "dassl.h"
 
-#include "daesolv_modfcn.h"
+#include "module_functions.h"
 
 extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {

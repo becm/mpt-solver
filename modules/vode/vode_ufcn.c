@@ -6,8 +6,7 @@
 
 #include "vode.h"
 
-#include "vode_modfcn.h"
-#include "solver_ufcn_ode.c"
+#include "module_functions.h"
 
 static void vode_fcn(int *neq, double *t, double *y, double *f, double *rpar, int *ipar)
 {

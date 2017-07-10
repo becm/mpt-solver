@@ -16,11 +16,11 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data)
 	lrw  = data->ivp.pint + 1;
 	
 	mf = (data->atol.base && neqs > 1) ? lrw : 0;
-	if (mpt_solver_cktol(&data->atol, neqs, mf, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_tol_check(&data->atol, neqs, mf, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	mf = (data->rtol.base && neqs > 1) ? lrw : 0;
-	if (mpt_solver_cktol(&data->rtol, neqs, mf, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_tol_check(&data->rtol, neqs, mf, __MPT_IVP_RTOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	neqs *= lrw;  /* total dimension for solver */

@@ -11,6 +11,8 @@
 
 #include "radau.h"
 
+#include "module_functions.h"
+
 static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_STRUCT(solver_value) val;
@@ -92,7 +94,7 @@ extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *name, const M
 	
 	/* initial values */
 	if (!name) {
-		return mpt_solver_ivpstate(&rd->ivp, &rd->t, &rd->y, src);
+		return MPT_SOLVER_MODULE_FCN(ivp_state)(&rd->ivp, &rd->t, &rd->y, src);
 	}
 	if (!*name) {
 		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
@@ -107,10 +109,10 @@ extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *name, const M
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_settol(&rd->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_tol_set(&rd->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_settol(&rd->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_tol_set(&rd->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jacobian", 3)) {
 		return setJacobian(rd, src);
@@ -180,13 +182,13 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
 		if (!rd) { prop->val.fmt = "d"; prop->val.ptr = &rd->atol.d.val; }
-		else { id = mpt_solver_vecpar_get(&rd->atol, &prop->val); }
+		else { id = mpt_solver_tol_get(&rd->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		if (!rd) { prop->val.fmt = "d"; prop->val.ptr = &rd->rtol.d.val; }
-		else { id = mpt_solver_vecpar_get(&rd->rtol, &prop->val); }
+		else { id = mpt_solver_tol_get(&rd->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

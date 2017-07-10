@@ -21,10 +21,10 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data)
 	if (data->ivp.neqs < 2 || (!data->rtol.base && !data->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_solver_cktol(&data->atol, data->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_tol_check(&data->atol, data->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return -1;
 	}
-	if (mpt_solver_cktol(&data->rtol, data->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_tol_check(&data->rtol, data->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
 		return -1;
 	}
 	iwork = data->iwork.iov_base;
