@@ -16,11 +16,10 @@ if not (sundials_dir == '')
   sundials_deps += declare_dependency(include_directories : sundials_inc)
   
   sundials_src = files(
-    'ewtfcn.c', 'jacobian.c', 'nvector.c',
-    'report.c', 'vector_set.c',
-    '../ivppar_set.c',
-    '../vecpar_settol.c',  '../vecpar_cktol.c',
-    '../vecpar_value.c'
+    'data_new.c', 'ewtfcn.c', 'jacobian.c', 'nvector.c', 'report.c',
+    'sundials_modfcn.c',
+    '../solver_ivpset.c',
+    '../solver_tol_set.c', '../solver_tol_get.c', '../solver_tol_check.c'
   )
   
   if sundials_ida.found()
