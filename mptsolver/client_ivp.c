@@ -496,7 +496,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 			}
 		}
 		/* process profile data */
-		else if (!(it = mpt_conf_profiles(dat, ivp->t, pcfg, ret, info)) < 0) {
+		else if (!(it = mpt_conf_profiles(dat, ivp->t, pcfg, ret, info))) {
 			return MPT_ERROR(BadOperation);
 		}
 		else if ((err = mpt_object_set_iterator((void *) ivp->sol, 0, it)) < 0) {
