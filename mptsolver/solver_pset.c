@@ -8,83 +8,15 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include "meta.h"
 #include "node.h"
-
 #include "object.h"
 
 #include "client.h"
 
-struct outputProc {
-	MPT_INTERFACE(logger) *log;
-	MPT_INTERFACE(object) *obj;
-	const char *name;
-	int err, mask;
-};
-
-static int procProp(void *ptr, const MPT_INTERFACE(property) *pr)
-{
-	static const char fcn[] = "mpt_solver_pset";
-	MPT_STRUCT(value) val;
-	struct outputProc *o = ptr;
-	int ret;
-	
-	/* complain on missing name */
-	if (!pr->name) {
-		if (o->log) {
-			mpt_log(o->log, fcn, MPT_LOG(Error), "%s: %s: <%p>",
-			        o->name, MPT_tr("no property name"), pr->val.ptr);
-		}
-		o->err |= 8;
-		return 4;
-	}
-	val = pr->val;
-	if (!val.fmt) {
-		ret = mpt_object_set_string(o->obj, pr->name, val.ptr, 0);
-	} else {
-		ret = mpt_object_set_value(o->obj, pr->name, &val);
-	}
-	if (ret >= 0) {
-		return 0;
-	}
-	/* unknown property */
-	if (ret == MPT_ERROR(BadArgument)) {
-		o->err |= 1;
-		if (!(o->mask & MPT_ENUM(TraverseUnknown)) || !o->log) {
-			return 1;
-		}
-		mpt_log(o->log, fcn, MPT_LOG(Error), "%s: %s: %s",
-		        o->name, MPT_tr("bad property name"), pr->name);
-		return 1;
-	}
-	/* bad property value */
-	if (ret == MPT_ERROR(BadValue)) {
-		const char *tmp;
-		o->err |= 2;
-		if (!o->log) {
-			return 2;
-		}
-		if ((tmp = pr->val.fmt)) {
-			mpt_log(o->log, fcn, MPT_LOG(Error), "%s: %s: %s <%s>",
-			        o->name, MPT_tr("bad property value"), pr->name, tmp);
-		} else {
-			if (!(tmp = pr->val.ptr)) tmp = "";
-			mpt_log(o->log, fcn, MPT_LOG(Error), "%s: %s: %s = %s",
-			        o->name, MPT_tr("bad property value"), pr->name, tmp);
-		}
-		return 2;
-	}
-	/* other property set error */
-	if (o->log) {
-		mpt_log(o->log, fcn, MPT_LOG(Error), "%s: %s: %s",
-		        o->name, MPT_tr("error setting property"), pr->name);
-	}
-	o->err |= 4;
-	return 3;
-}
-
 /*!
  * \ingroup mptSolver
- * \brief set solver property
+ * \brief set solver properties
  * 
  * Set parameters from configuration elements.
  * 
@@ -93,22 +25,88 @@ static int procProp(void *ptr, const MPT_INTERFACE(property) *pr)
  * \param mask errors to ignore
  * \param out  logging descriptor
  */
-extern int mpt_solver_pset(MPT_INTERFACE(object) *obj, const MPT_STRUCT(node) *conf, int mask, MPT_INTERFACE(logger) *out)
+extern void mpt_solver_pset(MPT_INTERFACE(object) *obj, const MPT_STRUCT(node) *conf, int mask, MPT_INTERFACE(logger) *out)
 {
-	struct outputProc proc;
 	MPT_STRUCT(property) pr;
 	
-	proc.log = out;
-	proc.obj = obj;
-	proc.mask = mask;
-	proc.err = 0;
-	
+	if (!conf) {
+		return;
+	}
 	pr.name = "";
 	pr.desc = 0;
-	if (obj->_vptr->property(obj, &pr) < 0 || !(proc.name = pr.name)) {
-		proc.name = "solver";
+	if (obj->_vptr->property(obj, &pr) < 0 || !pr.name) {
+		pr.name = "solver";
 	}
-	
-	return mpt_node_foreach(conf, procProp, &proc, mask) ? -1 : proc.err;
+	do {
+		const MPT_INTERFACE(metatype) *mt;
+		const char *name, *str = 0;
+		int flg, ret;
+		
+		flg = conf->children ? MPT_ENUM(TraverseNonLeafs) : MPT_ENUM(TraverseLeafs);
+		
+		if (mask & flg) {
+			continue;
+		}
+		if (!mpt_identifier_len(&conf->ident)
+		 || !(name = mpt_identifier_data(&conf->ident))) {
+			/* avoid empty property */
+			if ((mask & MPT_ENUM(TraverseEmpty))) {
+				continue;
+			}
+			if (out) {
+				mpt_log(out, __func__, MPT_LOG(Error), "%s: %s: <%p>",
+				        pr.name, MPT_tr("no property name"), conf);
+			}
+			continue;
+		}
+		/* skip default value */
+		if (!(mt = conf->_meta)) {
+			if (!(mask & MPT_ENUM(TraverseDefault))) {
+				if (out) {
+					mpt_log(out, __func__, MPT_LOG(Error), "%s: %s: %s",
+					        pr.name, MPT_tr("no element value"), name);
+				}
+				continue;
+			}
+			ret = obj->_vptr->setProperty(obj, name, 0);
+		} else if ((str = mpt_meta_data(mt, 0))) {
+			ret = mpt_object_set_string(obj, name, str, 0);
+		} else {
+			ret = obj->_vptr->setProperty(obj, name, mt);
+		}
+		if (ret >= 0) {
+			if (out) {
+				mpt_log(out, __func__, MPT_LOG(Debug), "%s: %s.%s",
+				        MPT_tr("assigned property"), pr.name, name);
+			}
+			continue;
+		}
+		if (ret == MPT_ERROR(BadArgument)) {
+			if ((mask & MPT_ENUM(TraverseUnknown))) {
+				continue;
+			}
+			if (out) {
+				mpt_log(out, __func__, MPT_LOG(Error), "%s: %s: %s",
+				        pr.name, MPT_tr("bad property name"), name);
+			}
+			continue;
+		}
+		if (!out) {
+			continue;
+		}
+		if (str) {
+			mpt_log(out, __func__, MPT_LOG(Error), "%s: %s.%s = %s",
+			        MPT_tr("bad property value"), pr.name, name, str);
+			continue;
+		}
+		flg = mt->_vptr->conv(mt, 0, 0);
+		if (isalnum(flg)) {
+			mpt_log(out, __func__, MPT_LOG(Error), "%s: %s.%s = <%c>",
+			        MPT_tr("bad property value"), pr.name, name, flg);
+		} else {
+			mpt_log(out, __func__, MPT_LOG(Error), "%s: %s.%s = <0x%x>",
+			        MPT_tr("bad property value"), pr.name, name, flg);
+		}
+	} while ((conf = conf->next));
 }
 
