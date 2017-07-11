@@ -12,34 +12,12 @@
 
 #include "../solver.h"
 
-#ifndef MPT_SOLVER_MODULE_DATA_RESIZE
-# define MPT_SOLVER_MODULE_DATA_RESIZE setValues
-static double *setValues(MPT_SOLVER_MODULE_DATA_CONTAINER *y, uint32_t part, int32_t neqs, const MPT_SOLVER_MODULE_DATA_TYPE *from)
-{
-	struct iovec val = { 0, 0 };
-	MPT_SOLVER_MODULE_DATA_TYPE *dest;
-	size_t size;
-	if (!(dest = mpt_solver_valloc(&val, part, neqs * sizeof(*dest)))) {
-		return 0;
-	}
-	size = part * neqs * sizeof(*dest);
-	if (*y) {
-		free(*y);
-	}
-	if (from) {
-		*y = memcpy(dest, from, size);
-	} else {
-		*y = memset(dest, 0, size);
-	}
-	return dest;
-}
-#endif
-
 extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *ivp, MPT_SOLVER_MODULE_DATA_TYPE *t, MPT_SOLVER_MODULE_DATA_CONTAINER *y, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_INTERFACE(iterator) *it;
 	struct iovec vec;
 	MPT_SOLVER_MODULE_DATA_TYPE *dest, tmp;
+	size_t size;
 	uint32_t neqs, len;
 	int ret;
 	
@@ -63,18 +41,19 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 			part = vec.iov_len / sizeof(double);
 		}
 		if (ivp->pint) {
-			if ((part /= neqs) < (ivp->pint + 1)) {
+			size = ivp->pint + 1;
+			if ((part /= neqs) < size) {
 				return MPT_ERROR(BadValue);
 			}
-			if (!(dest = setValues(y, ivp->pint + 1, neqs, vec.iov_base))) {
+			if (!(dest = MPT_SOLVER_MODULE_FCN(data_new)(y, size * neqs, vec.iov_base))) {
 				return MPT_ERROR(BadOperation);
 			}
 		}
-		else if (!(dest = setValues(y, 1, neqs, 0))) {
+		else if (!(dest = MPT_SOLVER_MODULE_FCN(data_new)(y, neqs, 0))) {
 			return MPT_ERROR(BadOperation);
 		}
 		else {
-			const double *src;
+			const MPT_SOLVER_MODULE_DATA_TYPE *src;
 			size_t i = 0;
 			if ((src = vec.iov_base)) {
 				while (i < part) {
@@ -106,7 +85,8 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 		}
 	}
 	/* reserve total state size */
-	if (!(dest = setValues(y, ivp->pint + 1, ivp->neqs, 0))) {
+	size = ivp->pint + 1;
+	if (!(dest = MPT_SOLVER_MODULE_FCN(data_new)(y, size * neqs, 0))) {
 		return MPT_ERROR(BadOperation);
 	}
 	if (!len) {
@@ -116,8 +96,7 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 		return len;
 	}
 	/* get segment content */
-	ret = ivp->pint ? ivp->pint + 1 : 0;
-	ret = MPT_SOLVER_MODULE_FCN(data_set)(dest, neqs, ret, it);
+	ret = MPT_SOLVER_MODULE_FCN(data_set)(dest, neqs, size, it);
 	
 	if (ret < 0) {
 		return ret;

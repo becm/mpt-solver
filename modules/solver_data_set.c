@@ -40,14 +40,14 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 				return ret;
 			}
 			else {
-				if ((parts = vec.iov_len / sizeof(double)) > elem) {
+				if ((parts = vec.iov_len / sizeof(MPT_SOLVER_MODULE_DATA_TYPE)) > elem) {
 					parts = elem;
 				}
 				ret = 1;
 			}
 			if (parts) {
 				if (vec.iov_base) {
-					memcpy(dest, vec.iov_base, parts * sizeof(double));
+					memcpy(dest, vec.iov_base, parts * sizeof(MPT_SOLVER_MODULE_DATA_TYPE));
 				} else {
 					parts = 0;
 				}
@@ -101,11 +101,11 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 		if (!vec.iov_base) {
 			curr = 0;
 		}
-		else if ((curr = vec.iov_len / sizeof(double))) {
+		else if ((curr = vec.iov_len / sizeof(MPT_SOLVER_MODULE_DATA_TYPE))) {
 			if (curr > elem) {
 				curr = elem;
 			}
-			memcpy(dest, vec.iov_base, curr * sizeof(double));
+			memcpy(dest, vec.iov_base, curr * sizeof(MPT_SOLVER_MODULE_DATA_TYPE));
 		}
 		for ( ; curr < elem; ++curr) {
 			dest[curr] = 0;
@@ -116,11 +116,12 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 			ret = len;
 			break;
 		}
+		ret = len;
 	}
 	/* repeat last profile segment */
 	if (len) {
 		while (len++ < parts) {
-			memcpy(dest, dest - elem, elem * sizeof(double));
+			memcpy(dest, dest - elem, elem * sizeof(MPT_SOLVER_MODULE_DATA_TYPE));
 			dest += elem;
 		}
 	}
