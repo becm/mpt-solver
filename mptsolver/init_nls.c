@@ -21,8 +21,7 @@ extern int mpt_init_nls(MPT_SOLVER(generic) *sol, const MPT_NLS_STRUCT(functions
 {
 	static const char fmt[] = { MPT_value_toVector('d'), 0 };
 	struct iovec vec;
-	MPT_STRUCT(value) val;
-	int32_t dim[2];
+	int32_t npar, nres;
 	int ret;
 	
 	if (fcn && !fcn->res.fcn) {
@@ -30,31 +29,28 @@ extern int mpt_init_nls(MPT_SOLVER(generic) *sol, const MPT_NLS_STRUCT(functions
 		                 MPT_tr("missing residual function pointer"));
 		return MPT_ERROR(BadArgument);
 	}
-	if ((dim[0] = dat->npar) < 1) {
+	if ((npar = dat->npar) < 1) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("parameter count too low"));
 		return MPT_ERROR(BadArgument);
 	}
 	vec.iov_base = dat->param._buf + 1;
-	vec.iov_len  = dim[0] * sizeof(double);
-	dim[1] = 0;
-	if (!dat->param._buf
-	    || dim[0] > (dim[1] = dat->param._buf->_used)) {
+	vec.iov_len  = npar * sizeof(double);
+	nres = dat->param._buf ? dat->param._buf->_used / sizeof(double) : 0;
+	if (npar > nres) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (%d < %d)",
-		                 MPT_tr("not enough data for parameter count"), dim[0], dim[1]);
+		                 MPT_tr("not enough data for parameter count"), nres, npar);
 		return MPT_ERROR(BadValue);
 	}
-	if ((dim[1] = dat->nval)
-	    && dim[1] < dim[0]) {
+	if ((nres = dat->nval)
+	    && nres < npar) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (%d < %d)",
-		                 MPT_tr("bad number of residuals for parameters"), dim[0], dim[1]);
+		                 MPT_tr("bad number of residuals for parameters"), nres, npar);
 		return MPT_ERROR(BadValue);
 	}
-	val.fmt = dim[1] ? "ii" : "i";
-	val.ptr = dim;
-	if ((ret = mpt_object_nset((void *) sol, "", &val)) < 0) {
+	if ((ret = mpt_object_set((void *) sol, "", nres ? "ii" : "i", npar, nres)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (npar = %d, nres = %d)",
-		                 MPT_tr("failed to set problem dimensions"), dim[0], dim[1]);
+		                 MPT_tr("failed to set problem dimensions"), npar, nres);
 		return ret;
 	}
 	if (fcn && (ret = sol->_vptr->setFunctions(sol, MPT_SOLVER_ENUM(NlsUser), fcn)) < 0) {
@@ -62,11 +58,9 @@ extern int mpt_init_nls(MPT_SOLVER(generic) *sol, const MPT_NLS_STRUCT(functions
 		                 MPT_tr("unable to set user functions"));
 		return ret;
 	}
-	val.fmt = fmt;
-	val.ptr = &vec;
-	if ((ret = mpt_object_nset((void *) sol, 0, &val)) < 0) {
+	if ((ret = mpt_object_set((void *) sol, 0, fmt, vec)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (%d)",
-		                 MPT_tr("failed to set initial parameters"), dim[0]);
+		                 MPT_tr("failed to set initial parameters"), npar);
 		return ret;
 	}
 	return 0;

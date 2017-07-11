@@ -22,10 +22,7 @@ extern int mpt_init_pde(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(pdefcn) *
 {
 	static const char fmt[] = { 'i', MPT_value_toVector('d'), 0 };
 	MPT_STRUCT(buffer) *buf;
-	MPT_STRUCT(value) val;
-	struct iovec *vec;
-	int32_t *neq;
-	uint8_t tmp[sizeof(*neq) + sizeof(*vec)];
+	struct iovec vec;
 	uint64_t len;
 	int ret;
 	
@@ -39,10 +36,6 @@ extern int mpt_init_pde(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(pdefcn) *
 		                 MPT_tr("bad equotation count"));
 		return MPT_ERROR(BadValue);
 	}
-	/* aligned value content */
-	neq = (void *) tmp;
-	vec = (void *) (tmp + sizeof(*neq));
-	
 	if (!arr
 	 || !(buf = arr->_buf)
 	 || (len = buf->_used / sizeof(double)) < 2) {
@@ -50,12 +43,9 @@ extern int mpt_init_pde(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(pdefcn) *
 		                 MPT_tr("bad grid size"), len);
 		return MPT_ERROR(BadValue);
 	}
-	*neq = neqs;
-	vec->iov_base = buf + 1;
-	vec->iov_len  = len * sizeof(double);
-	val.fmt = fmt;
-	val.ptr = tmp;
-	if ((ret = mpt_object_nset((void *) sol, "", &val)) < 0) {
+	vec.iov_base = buf + 1;
+	vec.iov_len  = len * sizeof(double);
+	if ((ret = mpt_object_set((void *) sol, "", fmt, neqs, vec)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s [%d, " PRIu64 "]",
 		                 MPT_tr("failed to set PDE size"), neqs, len);
 		return ret;

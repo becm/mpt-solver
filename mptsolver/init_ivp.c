@@ -24,12 +24,8 @@ extern int mpt_init_ivp(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double
 {
 	static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
 	const MPT_STRUCT(buffer) *buf;
+	struct iovec vec;
 	double *src;
-	struct {
-		double t;
-		struct iovec val;
-	} tmp;
-	MPT_STRUCT(value) val;
 	size_t len;
 	int ret;
 	
@@ -45,13 +41,10 @@ extern int mpt_init_ivp(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double
 	}
 	/* initial value setup */
 	src = (void *) (buf + 1);
-	tmp.t = *src;
-	tmp.val.iov_base = src + 1;
-	tmp.val.iov_len  = (len - 1) * sizeof(double);
+	vec.iov_base = src + 1;
+	vec.iov_len  = (len - 1) * sizeof(double);
 	
-	val.fmt = fmt;
-	val.ptr = &tmp;
-	if ((ret = mpt_object_nset(sol, 0, &val)) < 0) {
+	if ((ret = mpt_object_set(sol, 0, fmt, *src, vec)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("failed to set initial values"));
 	}
@@ -60,13 +53,10 @@ extern int mpt_init_ivp(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double
 
 static int initIvpData(MPT_SOLVER(generic) *sol, const void *fcn, int neqs, MPT_INTERFACE(logger) *log, int type, const char *_func)
 {
-	MPT_STRUCT(value) val;
 	int ret;
 	
 	/* set equotation count */
-	val.fmt = "i";
-	val.ptr = &neqs;
-	if ((ret = mpt_object_nset((void *) sol, "", &val)) < 0) {
+	if ((ret = mpt_object_set((void *) sol, "", "i", (int32_t) neqs)) < 0) {
 		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to save problem parameter to solver"));
 		return ret;
