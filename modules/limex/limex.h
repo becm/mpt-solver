@@ -126,6 +126,9 @@ public:
 	
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
+		if (!what && !out && !opar) {
+			return DAE | PDE;
+		}
 		return _lx ? mpt_limex_report(_lx, what, out, opar) : MPT_ERROR(BadOperation);
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE

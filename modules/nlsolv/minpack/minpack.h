@@ -146,9 +146,12 @@ class MinPack : public NLS, minpack
 		return _mpt_minpack_set(this, pr, src);
 	}
 	
-	int report(int what, PropertyHandler out, void *data) __MPT_OVERRIDE
+	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
-		return mpt_minpack_report(this, what, out, data);
+		if (!what && !out && !opar) {
+			return NlsUser | NlsOverdet;
+		}
+		return mpt_minpack_report(this, what, out, opar);
 	}
 	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
 	{

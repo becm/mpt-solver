@@ -57,7 +57,8 @@ static void info(generic &s)
 	s.property(&pr);
 	const char *ver = pr.val.fmt || !pr.val.ptr ? "" : reinterpret_cast<const char *>(pr.val.ptr);
 	
-	println("<%s> %s (%s)", name, ver, type);
+	int types = s.report(0, 0, 0);
+	println("<%s> [0x%x] %s (%s)", name, types, ver, type);
 	
 	s.report(s.Values, val, 0);
 	mpt_solver_info(&s, 0);
@@ -91,7 +92,7 @@ int main()
 	Limex l;    pde(l); info(l);
 #endif
 #ifdef with_sundials
-	CVode cv;   pde(cv); info(cv);
+	CVode cv;   pde(cv);  info(cv);
 	IDA ida;    pde(ida); info(ida);
 #endif
 #ifdef with_nlsolv

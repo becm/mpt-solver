@@ -104,6 +104,9 @@ public:
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
+		if (!what && !out && !opar) {
+			return ODE | PDE;
+		}
 		return mpt_vode_report(this, what, out, opar);
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
