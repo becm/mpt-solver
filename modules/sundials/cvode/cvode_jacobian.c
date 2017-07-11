@@ -21,7 +21,7 @@ extern int sundials_cvode_jac_dense(long int n, realtype t,
                                     DlsMat Jac, const MPT_SOLVER_STRUCT(cvode) *cv,
                                     N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-	const MPT_SOLVER_IVP_STRUCT(functions) *fcn;
+	const MPT_IVP_STRUCT(odefcn) *fcn;
 	double *jac;
 	int ld;
 	
@@ -29,14 +29,14 @@ extern int sundials_cvode_jac_dense(long int n, realtype t,
 	(void) fy;
 	(void) tmp1; (void) tmp2; (void) tmp3;
 	
-	if (!cv || !(fcn = cv->ufcn) || !fcn->dae.jac) {
+	if (!cv || !(fcn = cv->ufcn) || !fcn->jac.fcn) {
 		return CV_MEM_NULL;
 	}
 	jac = DENSE_COL(Jac,0);
 	ld = DENSE_COL(Jac,1) - jac;
 	
 	/* calculate jacobian */
-	return fcn->dae.jac(fcn->dae.param, t, N_VGetArrayPointer(y), jac, ld);
+	return fcn->jac.fcn(fcn->jac.par, t, N_VGetArrayPointer(y), jac, ld);
 }
 
 /*!
@@ -53,7 +53,7 @@ extern int sundials_cvode_jac_band(long int n, long int mu, long int ml,
                                    DlsMat Jac, const MPT_SOLVER_STRUCT(cvode) *cv,
                                    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
-	const MPT_SOLVER_IVP_STRUCT(functions) *fcn;
+	const MPT_IVP_STRUCT(odefcn) *fcn;
 	double *jac;
 	int ld;
 	
@@ -62,7 +62,7 @@ extern int sundials_cvode_jac_band(long int n, long int mu, long int ml,
 	(void) fy;
 	(void) tmp1; (void) tmp2; (void) tmp3;
 	
-	if (!cv || !(fcn = cv->ufcn) || !fcn->dae.jac) {
+	if (!cv || !(fcn = cv->ufcn) || !fcn->jac.fcn) {
 		return CV_MEM_NULL;
 	}
 	/* BAND_COL(Jac,i) is diagonal element */
@@ -70,6 +70,6 @@ extern int sundials_cvode_jac_band(long int n, long int mu, long int ml,
 	ld  = BAND_COL(Jac,1) - jac - 1;
 	
 	/* calculate jacobian */
-	return fcn->dae.jac(fcn->dae.param, t, N_VGetArrayPointer(y), jac, ld);
+	return fcn->jac.fcn(fcn->jac.par, t, N_VGetArrayPointer(y), jac, ld);
 }
 

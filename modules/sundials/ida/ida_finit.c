@@ -29,8 +29,8 @@ extern void sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
 		N_VDestroy(data->yp);
 		data->yp = 0;
 	}
-	mpt_vecpar_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_vecpar_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
 	
 	if (data->tmp.size && data->tmp.base) {
 		free(data->tmp.base);
@@ -68,12 +68,14 @@ extern void sundials_ida_fini(MPT_SOLVER_STRUCT(ida) *data)
  */
 extern int sundials_ida_init(MPT_SOLVER_STRUCT(ida) *data)
 {
+	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
+	
 	if (!(data->mem = IDACreate())) {
 		return IDA_MEM_NULL;
 	}
 	IDASetUserData(data->mem, data);
 	
-	MPT_IVPPAR_INIT(&data->ivp);
+	data->ivp = par;
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);
 	

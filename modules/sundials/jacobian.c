@@ -6,7 +6,7 @@
 
 #include "sundials.h"
 
-extern int sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, int neqs, MPT_INTERFACE(metatype) *src)
+extern int sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, const MPT_INTERFACE(metatype) *src)
 {
 	char *key;
 	int l1, l2, l3;

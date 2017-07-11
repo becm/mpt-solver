@@ -8,6 +8,8 @@
 
 #include "sundials.h"
 
+#include "module_functions.h"
+
 /*!
  * \ingroup mptSundialsCVode
  * \brief CVode solver report
@@ -70,28 +72,10 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int show, M
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)) {
-		static const char fmt[] = {
-			MPT_SOLVER_ENUM(SundialsRealtype),
-			MPT_value_toVector(MPT_SOLVER_ENUM(SundialsRealtype)),
-			0
-		};
-		struct {
-			double t;
-			struct iovec s;
-		} val;
-		size_t pts = cv->ivp.pint + 1;
-		
-		val.t = cv->t;
-		val.s.iov_base = cv->sd.y ? N_VGetArrayPointer(cv->sd.y) : 0;
-		val.s.iov_len  = pts * cv->ivp.neqs * sizeof(realtype);
-		
-		pr.name = 0;
-		pr.desc = MPT_tr("CVode solver state");
-		pr.val.fmt = fmt;
-		pr.val.ptr = &val;
-		
-		out(usr, &pr);
+	realtype *val = cv->sd.y ? N_VGetArrayPointer(cv->sd.y) : 0;
+	MPT_SOLVER_MODULE_FCN(ivp_values)(&cv->ivp, cv->t, val, MPT_tr("CVode solver state"), out, usr);
 	}
+	
 	if ((show & MPT_SOLVER_ENUM(Status))
 	    && (CVodeGetLastStep(cv_mem, &dval) == CV_SUCCESS)) {
 	pr.name = "h";

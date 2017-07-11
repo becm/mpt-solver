@@ -13,9 +13,11 @@
 
 #include "sundials.h"
 
+#include "module_functions.h"
+
 static const char bdfText[] = "BDF", adamsText[] = "Adams";
 
-static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(metatype) *src)
+static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, const MPT_INTERFACE(metatype) *src)
 {
 	char *val;
 	int len;
@@ -48,7 +50,7 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(metatype) *src)
  * \retval <0   failure
  * \retval >=0  used values
  */
-extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MPT_INTERFACE(metatype) *src)
+extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, const MPT_INTERFACE(metatype) *src)
 {
 	CVodeMem cv_mem;
 	int ret = 0;
@@ -57,37 +59,21 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MP
 		return MPT_ERROR(BadArgument);
 	}
 	if (!name) {
-		realtype t = 0;
-		long required = cv->ivp.pint + 1;
-		/* initialize with zeros */
-		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t)) <= 0) {
-			if (ret < 0) {
-				return ret;
-			}
-			src = 0;
-		}
-		if ((ret = sundials_vector_set(&cv->sd.y, required * cv->ivp.neqs, src)) < 0) {
-			return ret;
-		}
-		if (src) {
-			++ret;
-		}
-		cv->t = t;
-		return ret;
+		return MPT_SOLVER_MODULE_FCN(ivp_state)(&cv->ivp, &cv->t, &cv->sd.y, src);
 	}
 	if (!*name) {
-		if (src && (ret = mpt_ivppar_set(&cv->ivp, src)) < 0) {
+		if (src && (ret = mpt_solver_ivpset(&cv->ivp, src)) < 0) {
 			return ret;
 		}
 		sundials_cvode_reset(cv);
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&cv->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_tol_set(&cv->atol, src, __MPT_IVP_ATOL);
 		return ret;
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&cv->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_tol_set(&cv->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return sundials_jacobian(&cv->sd, cv->ivp.neqs, src);
@@ -166,7 +152,7 @@ extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(pro
 	else if (!*name) {
 		prop->name = "cvode"; prop->desc = "ODE solver from Sundials Library";
 		prop->val.fmt = "ii"; prop->val.ptr = &cv->ivp;
-		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
+		return (cv->ivp.pint || cv->ivp.neqs != 1) ? 1 : 0;
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
@@ -178,13 +164,13 @@ extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(pro
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : (pos == ++id)) {
 		if (!cv) { prop->val.fmt = dblfmt; prop->val.ptr = &cv->atol.d.val; }
-		else { id = mpt_vecpar_get(&cv->atol, &prop->val); }
+		else { id = mpt_solver_tol_get(&cv->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == ++id)) {
 		if (!cv) { prop->val.fmt = dblfmt; prop->val.ptr = &cv->rtol.d.val; }
-		else { id = mpt_vecpar_get(&cv->rtol, &prop->val); };
+		else { id = mpt_solver_tol_get(&cv->rtol, &prop->val); };
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

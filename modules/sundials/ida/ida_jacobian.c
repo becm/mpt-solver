@@ -9,15 +9,15 @@
 
 static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double t, const double *y, double cj, double *jac, int ldjac)
 {
-	const MPT_SOLVER_IVP_STRUCT(functions) *fcn = ida->ufcn;
+	const MPT_IVP_STRUCT(daefcn) *dae = ida->ufcn;
 	int ret;
 	
 	/* calculate jacobian */
-	if ((ret = fcn->dae.jac(fcn->dae.param, t, y, jac, ldjac)) < 0) {
+	if ((ret = dae->jac.fcn(dae->jac.par, t, y, jac, ldjac)) < 0) {
 		return ret;
 	}
 	/* Jac -= cj*B */
-	if (!fcn->dae.mas) {
+	if (!dae->mas.fcn) {
 		int i;
 		for (i = 0; i < n; i++, jac += ldjac) {
 			jac[i] -= cj;
@@ -43,11 +43,11 @@ static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double
 			*idrow = max;
 			*idcol = i;
 			
-			if ((nz = fcn->dae.mas(fcn->dae.param, t, y, mas, idrow, idcol)) < 0) {
+			if ((nz = dae->mas.fcn(dae->mas.par, t, y, mas, idrow, idcol)) < 0) {
 				return nz;
 			}
 			for (j = 0 ; j < nz ; j++) {
-				jac[(i*neqs+idcol[j])*ldjac+idrow[j]] -= cj * mas[j];
+				jac[(i * neqs + idcol[j]) * ldjac + idrow[j]] -= cj * mas[j];
 			}
 			y += neqs;
 		}

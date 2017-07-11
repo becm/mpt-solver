@@ -11,7 +11,7 @@
 extern int sundials_ewtfcn(N_Vector vy, N_Vector ve, void *data)
 {
 	struct {
-		MPT_SOLVER_IVP_STRUCT(parameters) ivp;
+		MPT_IVP_STRUCT(parameters) ivp;
 		MPT_SOLVER_TYPE(dvecpar) rtol, atol;
 	} *d = data;
 	double *ewt, *y, *tol;

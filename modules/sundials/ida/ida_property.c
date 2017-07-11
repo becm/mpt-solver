@@ -15,12 +15,19 @@
 
 #include "sundials.h"
 
-static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(metatype) *src)
+#include "module_functions.h"
+
+static int setYP(MPT_SOLVER_STRUCT(ida) *ida, const MPT_INTERFACE(metatype) *src)
 {
+	MPT_INTERFACE(iterator) *it;
 	N_Vector yprime;
-	double *yp;
+	realtype *yp;
 	long pos, len;
 	
+	it = 0;
+	if (src && (pos = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0) {
+		return pos;
+	}
 	if ((len = ida->ivp.neqs * (ida->ivp.pint + 1)) < 0) {
 		return MPT_ERROR(BadArgument);
 	}
@@ -32,24 +39,10 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(metatype) *src)
 	}
 	yp = N_VGetArrayPointer(yprime);
 	
-	pos = 0;
-	if (src) {
-		while (pos < len) {
-			int ret;
-			if ((ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), yp+pos)) < 0) {
-				N_VDestroy(yprime);
-				return MPT_ERROR(BadType);
-			}
-			if (!ret) {
-				break;
-			}
-			++pos;
-		}
+	if ((len = ida->ivp.pint)) {
+		++len;
 	}
-	while (pos < len) {
-		yp[pos++] = 0.0;
-	}
-	return pos;
+	return MPT_SOLVER_MODULE_FCN(data_set)(yp, ida->ivp.neqs, len, it);
 }
 
 /*!
@@ -65,7 +58,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(metatype) *src)
  * \retval <0   failure
  * \retval >=0  used values
  */
-extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_INTERFACE(metatype) *src)
+extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, const MPT_INTERFACE(metatype) *src)
 {
 	IDAMem ida_mem;
 	int ret = 0;
@@ -74,35 +67,20 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_I
 		return MPT_ERROR(BadArgument);
 	}
 	if (!name) {
-		realtype t = 0;
-		long required = ida->ivp.pint + 1;
-		if (src && (ret = src->_vptr->conv(src, 'd' | MPT_ENUM(ValueConsume), &t) <= 0)) {
-			if (ret < 0) {
-				return ret;
-			}
-			src = 0;
-		}
-		if ((ret = sundials_vector_set(&ida->sd.y, required * ida->ivp.neqs, src)) < 0) {
-			return ret;
-		}
-		if (src) {
-			++ret;
-		}
-		ida->t = t;
-		return ret;
+		return MPT_SOLVER_MODULE_FCN(ivp_state)(&ida->ivp, &ida->t, &ida->sd.y, src);
 	}
 	if (!*name) {
-		if (src && (ret = mpt_ivppar_set(&ida->ivp, src)) < 0) {
+		if (src && (ret = mpt_solver_ivpset(&ida->ivp, src)) < 0) {
 			return ret;
 		}
 		sundials_ida_reset(ida);
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_vecpar_settol(&ida->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_tol_set(&ida->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_vecpar_settol(&ida->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_tol_set(&ida->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return sundials_jacobian(&ida->sd, ida->ivp.neqs, src);
@@ -195,13 +173,13 @@ extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(proper
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : (pos == id++)) {
 		if (!ida) { prop->val.fmt = dblfmt; prop->val.ptr = &ida->atol.d.val; }
-		else { id = mpt_vecpar_get(&ida->atol, &prop->val); }
+		else { id = mpt_solver_tol_get(&ida->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == id++)) {
 		if (!ida) { prop->val.fmt = dblfmt; prop->val.ptr = &ida->rtol.d.val; }
-		else { id = mpt_vecpar_get(&ida->rtol, &prop->val); }
+		else { id = mpt_solver_tol_get(&ida->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

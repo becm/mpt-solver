@@ -18,11 +18,11 @@ LDLIBS += -lm
 LINK   = ${CC}
 #
 # objects
-sundials_sources = ewtfcn.c nvector.c jacobian.c report.c vector_set.c
+sundials_sources = ewtfcn.c nvector.c jacobian.c report.c data_new.c
 cvode_sources    = $(wildcard cvode/cvode_*.c)
 ida_sources      = $(wildcard ida/ida_*.c)
 
-SRCS := ${sundials_sources} ${cvode_sources} ${ida_sources}
+SRCS := ${sundials_sources} ${cvode_sources} ${ida_sources} sundials_modfcn.c
 
 MATH_OBJS_STATIC != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=static ./sundials_collect.sh ${sundials_elements}
 MATH_OBJS_SHARED != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=shared ./sundials_collect.sh ${sundials_elements}
@@ -37,4 +37,4 @@ include ../mpt.solver.mk
 #
 # object dependencies
 ${OBJS} : sundials.h
-ida/ida_property.o cvode/cvode_property.o : ${DIR_BASE}version.h
+ida/ida_property.o cvode/cvode_property.o libinfo.o : ${DIR_BASE}version.h

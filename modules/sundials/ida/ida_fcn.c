@@ -17,25 +17,27 @@
  */
 extern int sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT_SOLVER_STRUCT(ida) *ida)
 {
-	const MPT_SOLVER_IVP_STRUCT(functions) *fcn;
+	const MPT_IVP_STRUCT(daefcn) *dae;
+	const MPT_IVP_STRUCT(pdefcn) *pde;
 	double *df, *dyp, *dy;
 	long neqs;
 	int ret, nint;
 	
-	if (!ida || !(fcn = ida->ufcn) || !fcn->dae.fcn) {
+	if (!ida || !(dae = ida->ufcn) || !dae->rside.fcn) {
 		return IDA_MEM_NULL;
 	}
 	df  = N_VGetArrayPointer(f);
 	dyp = N_VGetArrayPointer(yp);
 	dy  = N_VGetArrayPointer(y);
 	
-	if ((ret = ((const MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, t, dy, df, &ida->ivp, fcn->grid, fcn->rside)) < 0) {
+	pde = (void *) dae;
+	if ((ret = pde->fcn(pde->par, t, dy, df, &ida->ivp)) < 0) {
 		return ret;
 	}
 	neqs = ida->ivp.neqs;
 	nint = ida->ivp.pint;
 	
-	if (!fcn->dae.mas) {
+	if (!dae->mas.fcn) {
 		long i;
 		neqs *= nint + 1;
 		/* f -= E*yp */
@@ -61,7 +63,7 @@ extern int sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT
 			idrow[0] = max;
 			idcol[0] = i;
 			
-			if ((nz = fcn->dae.mas(fcn->dae.param, t, dy, mas, idrow, idcol)) < 0) {
+			if ((nz = dae->mas.fcn(dae->mas.par, t, dy, mas, idrow, idcol)) < 0) {
 				return nz;
 			}
 			/* f -= B*yp */

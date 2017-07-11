@@ -22,8 +22,8 @@ extern void sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
 	}
 	memset(&data->sd, 0, sizeof(data->sd));
 	
-	mpt_vecpar_cktol(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_vecpar_cktol(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
 }
 
 /*!
@@ -56,10 +56,11 @@ extern void sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
  */
 extern int sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *data)
 {
+	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	if (!(data->mem = CVodeCreate(CV_ADAMS, CV_NEWTON))) {
 		return CV_MEM_NULL;
 	}
-	MPT_IVPPAR_INIT(&data->ivp);
+	data->ivp = par;
 	
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);

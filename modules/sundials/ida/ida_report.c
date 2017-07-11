@@ -10,6 +10,8 @@
 
 #include "sundials.h"
 
+#include "module_functions.h"
+
 /*!
  * \ingroup mptSundialsIda
  * \brief IDA solver report
@@ -55,28 +57,10 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	out(usr, &pr);
 	++line;
 	}
+	
 	if (show & MPT_SOLVER_ENUM(Values)) {
-		static const char fmt[] = {
-			MPT_SOLVER_ENUM(SundialsRealtype),
-			MPT_value_toVector(MPT_SOLVER_ENUM(SundialsRealtype)),
-			0
-		};
-		struct {
-			double t;
-			struct iovec s;
-		} val;
-		size_t pts = ida->ivp.pint + 1;
-		
-		val.t = ida->t;
-		val.s.iov_base = ida->sd.y ? N_VGetArrayPointer(ida->sd.y) : 0;
-		val.s.iov_len  = pts * ida->ivp.neqs * sizeof(realtype);
-		
-		pr.name = 0;
-		pr.desc = MPT_tr("IDA solver state");
-		pr.val.fmt = fmt;
-		pr.val.ptr = &val;
-		
-		out(usr, &pr);
+	realtype *val = ida->sd.y ? N_VGetArrayPointer(ida->sd.y) : 0;
+	MPT_SOLVER_MODULE_FCN(ivp_values)(&ida->ivp, ida->t, val, MPT_tr("IDA solver state"), out, usr);
 	}
 	
 	if ((show & MPT_SOLVER_ENUM(Status))

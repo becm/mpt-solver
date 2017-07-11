@@ -17,13 +17,13 @@
  */
 extern int sundials_cvode_fcn(realtype t, N_Vector y, N_Vector f, const MPT_SOLVER_STRUCT(cvode) *cv)
 {
-	const MPT_SOLVER_IVP_STRUCT(functions) *fcn;
+	const MPT_IVP_STRUCT(pdefcn) *pde;
 	double *fd, *yd;
-	if (!cv || !(fcn = cv->ufcn) || !fcn->dae.fcn) {
+	if (!cv || !(pde = (void *) cv->ufcn) || !pde->fcn) {
 		return CV_MEM_NULL;
 	}
 	yd = N_VGetArrayPointer(y);
 	fd = N_VGetArrayPointer(f);
 	
-	return ((const MPT_SOLVER_STRUCT(pdefcn) *) fcn)->fcn(fcn->dae.param, t, yd, fd, &cv->ivp, fcn->grid, fcn->rside);
+	return pde->fcn(pde->par, t, yd, fd, &cv->ivp);
 }
