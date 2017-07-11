@@ -43,7 +43,7 @@ extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE
 				}
 				return ret;
 			}
-			if (!ret || (ret = it->_vptr->advance(it)) <= 0) {
+			if (!ret || (ret = it->_vptr->advance(it)) < 0) {
 				break;
 			}
 			if (len >= reserved) {
@@ -64,12 +64,19 @@ extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE
 			}
 		}
 		if (len < 2) {
-			mpt_solver_tol_set(vec, 0, len ? d : def);
+			if (len) {
+				def = d;
+				if (tol) {
+					free(tol);
+				}
+			}
+			return mpt_solver_tol_set(vec, 0, def);
 		}
 		if (vec->base) {
 			free(vec->base);
 		}
 		vec->base = tol;
+		vec->d.len = len * sizeof(*tol);
 		return len;
 	}
 	if ((ret = src->_vptr->conv(src, MPT_value_toVector('d'), &tmp)) < 0) {
@@ -77,7 +84,11 @@ extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE
 		len = 0;
 		/* values from value content */
 		if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeValue), &val)) < 0) {
-			return ret;
+			double d;
+			if ((ret = src->_vptr->conv(src, 'd', &d)) < 0) {
+				return ret;
+			}
+			return mpt_solver_tol_set(vec, 0, ret ? def : d);
 		}
 		else if (ret) {
 			if (!val.fmt) {
