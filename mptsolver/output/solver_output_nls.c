@@ -102,7 +102,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	}
 	/* output parameters */
 	if (par &&
-	    (state & (MPT_ENUM(DataStateInit) | MPT_ENUM(DataStateStep) | MPT_ENUM(DataStateFini)))) {
+	    (state & (MPT_DATASTATE(Init) | MPT_DATASTATE(Step) | MPT_DATASTATE(Fini)))) {
 		if (dat) {
 			outputParam(dat, par, np);
 		}
@@ -123,18 +123,18 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	}
 	/* output residuals */
 	if (grf
-	    && state & MPT_ENUM(DataStateStep)) {
+	    && state & MPT_DATASTATE(Step)) {
 		if (!pass || (passlen && (pass[0] & state))) {
 			outputValues(grf, 0, state, nr, res, 1);
 		}
 	}
 	if (dat
-	    && state & MPT_ENUM(DataStateFini)) {
+	    && state & MPT_DATASTATE(Fini)) {
 		mpt_output_solver_history(dat, res, nr, 0, 0);
 	}
 	/* output user data */
 	if (grf
-	    && (state & MPT_ENUM(DataStateInit))
+	    && (state & MPT_DATASTATE(Init))
 	    && sd
 	    && (buf = sd->val._buf)
 	    && (np = buf->_used / sizeof(double))) {

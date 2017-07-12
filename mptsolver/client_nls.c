@@ -190,7 +190,7 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		}
 		ctx.out = &nls->out;
 		ctx.dat = dat;
-		ctx.state = MPT_ENUM(DataStateInit);
+		ctx.state = MPT_DATASTATE(Init);
 		
 		mpt_solver_status((void *) sol, info, outNLS, &ctx);
 		
@@ -381,11 +381,11 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	
 	/* select output state */
 	if (res < 0) {
-		ctx.state = MPT_ENUM(DataStateFail);
+		ctx.state = MPT_DATASTATE(Fail);
 	} else if (res) {
-		ctx.state = MPT_ENUM(DataStateStep);
+		ctx.state = MPT_DATASTATE(Step);
 	} else {
-		ctx.state = MPT_ENUM(DataStateFini) | MPT_ENUM(DataStateStep);
+		ctx.state = MPT_DATASTATE(Fini) | MPT_DATASTATE(Step);
 	}
 	mpt_solver_status((void *) sol, info, outNLS, &ctx);
 	

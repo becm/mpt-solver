@@ -257,7 +257,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			struct _clientPdeOut ctx;
 			ctx.out = &ivp->out;
 			ctx.dat = ivp->sd;
-			ctx.state = MPT_ENUM(DataStateInit);
+			ctx.state = MPT_DATASTATE(Init);
 			mpt_solver_status(sol, info, outPDE, &ctx);
 			ivp->t = getTime(sol, 0);
 		}
@@ -554,7 +554,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	}
 	/* execute ODE steps */
 	if (!ivp->pdim) {
-		int state = MPT_ENUM(DataStateStep);
+		int state = MPT_DATASTATE(Step);
 		
 		/* current time data */
 		getrusage(RUSAGE_SELF, &pre);
@@ -566,10 +566,10 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
 		
 		if (!ret) {
-			state |= MPT_ENUM(DataStateFini);
+			state |= MPT_DATASTATE(Fini);
 		}
 		else if (ret < 0) {
-			state |= MPT_ENUM(DataStateFail);
+			state |= MPT_DATASTATE(Fail);
 		}
 		mpt_solver_output_ode(&ivp->out, state, ivp->sd);
 		
@@ -585,7 +585,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	}
 	/* execute solver step(s) for time nodes */
 	while (1) {
-		ctx.state = MPT_ENUM(DataStateStep);
+		ctx.state = MPT_DATASTATE(Step);
 		ret = 1;
 		
 		getrusage(RUSAGE_SELF, &pre);
@@ -604,7 +604,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		/* get end time */
 		ivp->t = getTime(sol, end);
 		if (ret < 0) {
-			ctx.state |= MPT_ENUM(DataStateFail);
+			ctx.state |= MPT_DATASTATE(Fail);
 			mpt_log(info, _func, MPT_LOG(Error), "%s (t = %g)",
 			        MPT_tr("solver step failed"), end);
 			break;
@@ -624,7 +624,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		}
 		/* regular iteration termination */
 		else if (!ret) {
-			ctx.state |= MPT_ENUM(DataStateFini);
+			ctx.state |= MPT_DATASTATE(Fini);
 		}
 		mpt_solver_status(sol, info, outPDE, &ctx);
 		
