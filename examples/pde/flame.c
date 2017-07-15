@@ -4,7 +4,7 @@
 
 #include <math.h>
 
-#include "solver_ivp.h"
+#include "solver_run.h"
 
 static double *param, damkohler, L = 1, a = 1, de = 20, R = 5;
 

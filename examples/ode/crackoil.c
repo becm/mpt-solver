@@ -2,7 +2,7 @@
  * ODE example: Crackoil
  */
 
-#include "solver_ivp.h"
+#include "solver_run.h"
 
 static double theta[3] = { 11.948, 7.993, 2.024 };
 

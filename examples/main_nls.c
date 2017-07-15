@@ -2,7 +2,6 @@
  *  define user init parameters
  */
 
-#include "solver_nls.h"
 #include "solver_run.h"
 
 #include MPT_INCLUDE(output.h)

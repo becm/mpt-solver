@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "solver_ivp.h"
+#include "solver_run.h"
 
 static const int neqs = 6;
 static double

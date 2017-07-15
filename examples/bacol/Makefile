@@ -9,10 +9,9 @@ STATIC =
 # general targets and definitions
 include ../solver.example.mk
 
-${PROGS} : ../main_ivp.o ../solver_run.o
+${PROGS} : ${DIR_EXAMPLES}main_ivp.o ${DIR_EXAMPLES}solver_run.o
 
-../solver_run.o : ../solver_run.h
-*.o : ../solver_ivp.h
+${DIR_EXAMPLES}*.o *.o : ${DIR_EXAMPLES}solver_run.h
 
 sys4 : sys4.o sys4_fcn.o
 sys4 : LDLIBS+=-lmptcore

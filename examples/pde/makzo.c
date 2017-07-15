@@ -2,7 +2,7 @@
  * medical AKZO problem
  */
 
-#include "solver_ivp.h"
+#include "solver_run.h"
 
 static const int N_PDE = 2;
 

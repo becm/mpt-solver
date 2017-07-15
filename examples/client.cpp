@@ -18,7 +18,7 @@ public:
 	void unref() __MPT_OVERRIDE
 	{ delete this; }
 	
-	int assign(const mpt::path *p, const mpt::value *v);
+	int assign(const mpt::path *p, const mpt::value *v) __MPT_OVERRIDE;
 	
 	int step(mpt::iterator *) __MPT_OVERRIDE
 	{ return 0; }

@@ -4,7 +4,7 @@
 
 #include <math.h>
 
-#include "solver_nls.h"
+#include "solver_run.h"
 
 /*  model for p1 * exp(p2 * x) by Neter (1983) */
 static double model(double x, const double *p)

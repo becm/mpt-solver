@@ -2,7 +2,7 @@
  * PDE example with single equotation
  */
 
-#include "solver_ivp.h"
+#include "solver_run.h"
 
 static int rfcn(void *udata, double t, const double *u, double *f, double x, double *d, double *v)
 {

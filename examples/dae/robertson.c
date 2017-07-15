@@ -2,7 +2,7 @@
  * DAE example: Robertson Problem
  */
 
-#include "solver_ivp.h"
+#include "solver_run.h"
 
 /* DY(i)/DY(j) */
 int rh_side(void *udata, double t, const double *y, double *f)

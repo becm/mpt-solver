@@ -6,10 +6,9 @@ OBJS  = main.o $(PROGS:%=%.o)
 # general targets and definitions
 include ../solver.example.mk
 
-${PROGS} ${STATIC} : ../main_nls.o ../solver_run.o
+${PROGS} ${STATIC} : ${DIR_EXAMPLES}main_nls.o ${DIR_EXAMPLES}solver_run.o
 
-../solver_run.o : ../solver_run.h
-*.o : ../solver_ivp.h
+${DIR_EXAMPLES}*.o *.o : ${DIR_EXAMPLES}solver_run.h
 
 neter : neter.o
 neter neter_static : LDLIBS+=-lm
