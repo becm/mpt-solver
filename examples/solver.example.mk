@@ -14,5 +14,5 @@ CLEAN_FILES += ${CLEAR_FILES}
 #
 # default libraries for static/shared builds
 ${STATIC} : libs=mptsolver mpt dl
-${PROGS} : libs=mptsolver mptio
+${PROGS} : libs=mptsolver mptio mptcore
 LDLIBS ?= $(libs:%=-l%)

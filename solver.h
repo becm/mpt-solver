@@ -448,7 +448,7 @@ struct vecpar
 	}
 	struct value value() const
 	{
-		::mpt::value v;
+		struct value v;
 		if (base) {
 			static const char fmt[2] = { static_cast<char>(vectorIdentifier<T>()), 0 };
 			v.fmt = fmt;

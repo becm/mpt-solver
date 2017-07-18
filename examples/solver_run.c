@@ -33,7 +33,7 @@ extern int client_init(int argc, char * const argv[])
 	
 	/* environment and connection setup */
 	if ((pos = mpt_init(&no, argc, argv)) < 0) {
-		fputs("client init failed\n", stderr);
+		mpt_log(0, __func__, MPT_LOG(Error), "%s", "client init failed");
 		return -1;
 	}
 	/* non-mpt arguments */
@@ -46,28 +46,35 @@ extern int client_init(int argc, char * const argv[])
 
 extern int solver_run(MPT_INTERFACE(client) *c)
 {
-	MPT_STRUCT(dispatch) disp = MPT_DISPATCH_INIT;
+	MPT_STRUCT(dispatch) *disp;
 	MPT_STRUCT(value) val = MPT_VALUE_INIT;
 	
 	/* set client config root */
 	val.ptr = "mpt.client";
 	c->_vptr->cfg.assign((void *) c, 0, &val);
 	
+	if (!(disp = mpt_notify_dispatch(&no))) {
+		mpt_log(0, __func__, MPT_LOG(Error), "%s", "failed to create dispatcher");
+		return MPT_ERROR(BadOperation);
+	}
 	/* setup dispatcher for solver client */
-	if (mpt_solver_events(&disp, c) < 0) {
-		fputs("event setup failed\n", stderr);
-		return 2;
+	if (mpt_solver_events(disp, c) < 0) {
+		mpt_log(0, __func__, MPT_LOG(Error), "%s", "event setup failed");
+		return MPT_ERROR(BadValue);
+	}
+	/* default event for detached run */
+	if (!no._fdused) {
+		disp->_def = mpt_hash("start", 5);
 	}
 	/* set solver client arguments */
 	if (cfg) {
 		int take = mpt_solver_args((void *) c, cfg, -1);
 		if (take < 0) {
-			return 3;
+			return 1;
 		}
 		cfg += take;
 	}
 	/* start event loop */
-	mpt_notify_setdispatch(&no, &disp);
 	mpt_loop(&no);
 	
 	mpt_notify_fini(&no);
