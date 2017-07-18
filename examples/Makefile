@@ -16,7 +16,7 @@ vecpar.o : CPPFLAGS+=-std=c++11
 
 client : CC=${CXX}
 client : client.o solver_run.o
-client : LDLIBS=-lmptsolver -lmpt++ -lmptio
+client : LDLIBS=-lmptsolver -lmpt++ -lmptio -lmptcore
 test_client : ARGS=client.conf
 
 solvers : CC=${CXX}
