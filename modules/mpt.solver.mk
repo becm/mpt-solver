@@ -14,7 +14,7 @@ DIR_BASE ?= ${DIR_SOLVER_MODULES}../base/
 INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and other shared operations
-src_gen = solver_valloc.c solver_vecpar.c solver_value.c
+src_gen = solver_valloc.c solver_value.c
 src_ivp = solver_ivpset.c solver_tol_check.c solver_tol_set.c solver_tol_get.c
 src_nls = solver_nlsset.c
 src_mod = \
