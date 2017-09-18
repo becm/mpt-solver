@@ -9,7 +9,7 @@
 #include "node.h"
 #include "meta.h"
 
-#include "config.h"
+#include "client.h"
 
 #include "solver.h"
 
@@ -25,9 +25,11 @@
  */
 extern const char *mpt_solver_alias(const char *descr)
 {
-	static const char sub[] = "mpt.solver.alias\0";
+	static const char sub[] = "mpt.loader.alias\0";
 	MPT_STRUCT(path) p = MPT_PATH_INIT;
 	MPT_STRUCT(node) *conf;
+	const char *id;
+	int type;
 	
 	mpt_path_set(&p, sub, -1);
 	if (!(conf = mpt_config_node(&p))
@@ -40,12 +42,17 @@ extern const char *mpt_solver_alias(const char *descr)
 		if (!(mt = conf->_meta)) {
 			return 0;
 		}
-		return mpt_meta_data(mt, 0);
+		if (!(id = mpt_meta_data(mt, 0))) {
+			return 0;
+		}
+		if ((type = mpt_proxy_type(id, &id)) != MPT_ENUM(TypeSolver)) {
+			return 0;
+		}
+		return id;
 	}
 	/* compare non-space blocks */
 	while (1) {
 		MPT_STRUCT(node) *curr;
-		const char *id;
 		size_t vis = 0;
 		
 		/* start/length of alias element */
@@ -57,8 +64,9 @@ extern const char *mpt_solver_alias(const char *descr)
 			return 0;
 		}
 		/* get symbol for alias element */
-		if ((curr = mpt_node_locate(conf, 1, descr, vis))
-		    && (id = mpt_node_data(curr, 0))) {
+		if ((curr = mpt_node_locate(conf, 1, descr, vis, -1))
+		    && (id = mpt_node_data(curr, 0))
+		    && (type = mpt_proxy_type(id, &id)) == MPT_ENUM(TypeSolver)) {
 			return id;
 		}
 		/* advance alias alement */

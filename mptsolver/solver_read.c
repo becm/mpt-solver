@@ -48,6 +48,7 @@ static int parseNode(MPT_STRUCT(node) *conf, const char *fname, MPT_INTERFACE(it
 
 extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, MPT_INTERFACE(logger) *log)
 {
+	static const char sc[] = "solconf";
 	MPT_STRUCT(node) *sol, cfg = MPT_NODE_INIT;
 	int ret, err;
 	
@@ -58,12 +59,13 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 	ret = err ? 1 : 0;
 
 	if ((sol = cfg.children)
-	    && !(sol = mpt_node_next(sol, "solconf"))) {
-		if (!(sol = mpt_node_new(8, 0))) {
+	    && !(sol = mpt_node_next(sol, sc))) {
+		if (!(sol = mpt_node_new(8))) {
 			if (log) mpt_log(log, __func__, MPT_LOG(Critical), "%s", MPT_tr("failed to create solver config node"));
 			mpt_node_clear(&cfg);
 			return MPT_ERROR(BadOperation);
 		}
+		mpt_identifier_set(&sol->ident, sc, -1);
 		mpt_gnode_insert(&cfg, 0, sol);
 	}
 	/* require successful advance */
