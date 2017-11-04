@@ -95,14 +95,14 @@ inline mebdfi::~mebdfi()
 
 class Mebdfi : public IVP, mebdfi
 {
-    public:
+public:
 	inline Mebdfi() : _fcn(0)
 	{ }
 	~Mebdfi() __MPT_OVERRIDE
 	{ }
-	void unref() __MPT_OVERRIDE
+	int step(double t) __MPT_OVERRIDE
 	{
-		delete this;
+		return mpt_mebdfi_step(this, t);
 	}
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{

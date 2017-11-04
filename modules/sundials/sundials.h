@@ -234,13 +234,9 @@ public:
 	}
 	~CVode() __MPT_OVERRIDE
 	{ }
-	void unref() __MPT_OVERRIDE
+	int step(double t) __MPT_OVERRIDE
 	{
-		delete this;
-	}
-	uintptr_t addref() __MPT_OVERRIDE
-	{
-		return 0;
+		return sundials_cvode_step(this, t);
 	}
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
@@ -278,13 +274,9 @@ public:
 	}
 	~IDA() __MPT_OVERRIDE
 	{ }
-	void unref() __MPT_OVERRIDE
+	int step(double t) __MPT_OVERRIDE
 	{
-		delete this;
-	}
-	uintptr_t addref() __MPT_OVERRIDE
-	{
-		return 0;
+		return sundials_ida_step(this, t);
 	}
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{

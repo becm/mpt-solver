@@ -121,19 +121,12 @@ inline portn2::~portn2()
 
 class PortN2 : public NLS, portn2
 {
-    public:
+public:
 	PortN2() : _fcn(0)
 	{ }
-	virtual ~PortN2()
+	~PortN2() __MPT_OVERRIDE
 	{ }
-	uintptr_t addref()
-	{
-		return 0;
-	}
-	void unref() __MPT_OVERRIDE
-	{
-		delete this;
-	}
+	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_portn2_get(this, pr);
@@ -142,17 +135,21 @@ class PortN2 : public NLS, portn2
 	{
 		return _mpt_portn2_set(this, pr, src);
 	}
-	
+	/* nonlinear solver implementation */
+	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
+	{
+		return mpt_portn2_ufcn(this, &_fcn, what, ptr);
+	}
+	int solve() __MPT_OVERRIDE
+	{
+		return mpt_portn2_solve(this);
+	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
 		if (!what && !out && !opar) {
 			return NlsUser | NlsOverdet;
 		}
 		return mpt_portn2_report(this, what, out, opar);
-	}
-	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
-	{
-		return mpt_portn2_ufcn(this, &_fcn, what, ptr);
 	}
     protected:
 	struct functions _fcn;

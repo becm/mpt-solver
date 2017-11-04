@@ -124,19 +124,12 @@ inline minpack::~minpack()
 
 class MinPack : public NLS, minpack
 {
-    public:
+public:
 	MinPack() : _fcn(0)
-	{ ufcn = &_fcn; }
-	virtual ~MinPack()
 	{ }
-	uintptr_t addref()
-	{
-		return 0;
-	}
-	void unref() __MPT_OVERRIDE
-	{
-		delete this;
-	}
+	~MinPack() __MPT_OVERRIDE
+	{ }
+	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_minpack_get(this, pr);
@@ -145,7 +138,11 @@ class MinPack : public NLS, minpack
 	{
 		return _mpt_minpack_set(this, pr, src);
 	}
-	
+	/* nonlinear solver implementation */
+	int solve() __MPT_OVERRIDE
+	{
+		return mpt_minpack_solve(this);
+	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
 		if (!what && !out && !opar) {
@@ -157,7 +154,7 @@ class MinPack : public NLS, minpack
 	{
 		return mpt_minpack_ufcn(this, &_fcn, what, ptr);
 	}
-    protected:
+protected:
 	struct functions _fcn;
 };
 #endif

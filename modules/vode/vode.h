@@ -90,10 +90,7 @@ public:
 	{ }
 	~Vode() __MPT_OVERRIDE
 	{ }
-	void unref() __MPT_OVERRIDE
-	{
-		delete this;
-	}
+	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_vode_get(this, pr);
@@ -101,6 +98,11 @@ public:
 	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
 		return _mpt_vode_set(this, pr, src);
+	}
+	/* IVP solver implementation */
+	int step(double t) __MPT_OVERRIDE
+	{
+		return mpt_vode_step(this, t);
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{

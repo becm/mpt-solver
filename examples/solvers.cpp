@@ -49,14 +49,17 @@ static int val(void *, const property *pr)
 static void info(generic &s)
 {
 	property pr("");
+	const char *name = "";
+	const char *type = "";
+	const char *ver  = "";
 	s.property(&pr);
-	const char *name = pr.name ? pr.name : "";
-	const char *type = pr.desc ? pr.desc : "";
-	
+	if (pr.name) name = pr.name;
+	if (pr.desc) type = pr.desc;
 	pr.name = "version";
 	s.property(&pr);
-	const char *ver = pr.val.fmt || !pr.val.ptr ? "" : reinterpret_cast<const char *>(pr.val.ptr);
-	
+	if (!pr.val.fmt && pr.val.ptr) {
+		ver = reinterpret_cast<const char *>(pr.val.ptr);
+	}
 	int types = s.report(0, 0, 0);
 	println("<%s> [0x%x] %s (%s)", name, types, ver, type);
 	
@@ -76,12 +79,20 @@ static void pde(class IVP &s)
 	s.prepare();
 	s.step(1);
 }
+template <class T>
+class NL : public Solver<T>
+{
+	int solve() __MPT_OVERRIDE
+	{
+		return T::solve();
+	}
+};
 
 int main()
 {
 	mtrace();
 #ifdef with_vode
-	Vode v;     pde(v); info(v);
+	Vode v;  pde(v); info(v);
 #endif
 #ifdef with_daesolv
 	Dassl d;    pde(d); info(d);
@@ -96,7 +107,7 @@ int main()
 	IDA ida;    pde(ida); info(ida);
 #endif
 #ifdef with_nlsolv
-	MinPack mp; info(mp);
+	NL<MinPack> mp; info(mp);
 	PortN2 n2;  info(n2);
 #endif
 }

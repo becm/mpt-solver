@@ -111,17 +111,17 @@ public:
 	{
 		if (_lx) mpt_limex_fini(_lx);
 	}
-	void unref() __MPT_OVERRIDE
+	int step(double t) __MPT_OVERRIDE
 	{
-		delete this;
+		return _lx ? mpt_limex_step(_lx, t) : BadOperation;
 	}
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
-		return _lx ? mpt_limex_get(_lx, pr) : MPT_ERROR(BadOperation);
+		return _lx ? mpt_limex_get(_lx, pr) : BadOperation;
 	}
 	int setProperty(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
-		return _lx ? _mpt_limex_set(_lx, pr, src) : MPT_ERROR(BadOperation);
+		return _lx ? _mpt_limex_set(_lx, pr, src) : BadOperation;
 	}
 	
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
@@ -129,7 +129,7 @@ public:
 		if (!what && !out && !opar) {
 			return DAE | PDE;
 		}
-		return _lx ? mpt_limex_report(_lx, what, out, opar) : MPT_ERROR(BadOperation);
+		return _lx ? mpt_limex_report(_lx, what, out, opar) : BadOperation;
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
 	{
