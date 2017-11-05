@@ -7,7 +7,7 @@
 #include <ctype.h>
 
 #include "node.h"
-#include "meta.h"
+#include "config.h"
 
 #include "client.h"
 
@@ -29,11 +29,14 @@ extern const char *mpt_solver_alias(const char *descr)
 	MPT_STRUCT(path) p = MPT_PATH_INIT;
 	MPT_STRUCT(node) *conf;
 	const char *id;
-	int type;
+	int type, sol;
 	
 	mpt_path_set(&p, sub, -1);
 	if (!(conf = mpt_config_node(&p))
 	    || !(conf = conf->children)) {
+		return 0;
+	}
+	if ((sol = mpt_solver_typeid()) < 0) {
 		return 0;
 	}
 	if (!descr) {
@@ -45,7 +48,7 @@ extern const char *mpt_solver_alias(const char *descr)
 		if (!(id = mpt_meta_data(mt, 0))) {
 			return 0;
 		}
-		if ((type = mpt_proxy_type(id, &id)) != MPT_ENUM(TypeSolver)) {
+		if ((type = mpt_proxy_typeid(id, 0)) != sol) {
 			return 0;
 		}
 		return id;
@@ -66,7 +69,7 @@ extern const char *mpt_solver_alias(const char *descr)
 		/* get symbol for alias element */
 		if ((curr = mpt_node_locate(conf, 1, descr, vis, -1))
 		    && (id = mpt_node_data(curr, 0))
-		    && (type = mpt_proxy_type(id, &id)) == MPT_ENUM(TypeSolver)) {
+		    && (type = mpt_proxy_typeid(id, 0)) == sol) {
 			return id;
 		}
 		/* advance alias alement */

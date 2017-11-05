@@ -12,6 +12,7 @@
 #include "output.h"
 #include "client.h"
 
+#include "config.h"
 #include "meta.h"
 
 #include "solver.h"
@@ -33,6 +34,7 @@ static int solevtClear(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 }
 static int solevtPrepare(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 {
+	MPT_INTERFACE(config) *cfg;
 	int err;
 	if (!ev) {
 		return 0;
@@ -47,8 +49,14 @@ static int solevtPrepare(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 			return MPT_event_fail(ev, MPT_ERROR(MissingData), MPT_tr("missing message header"));
 		}
 	}
-	if ((err = cl->_vptr->cfg.assign((void *) cl, 0, 0)) < 0) {
-		return MPT_event_fail(ev, err, MPT_tr("failed to prepare solver"));
+	cfg = 0;
+	if ((err = cl->_vptr->meta.conv((void *) cl, MPT_ENUM(TypeConfig), &cfg)) >= 0) {
+		if (!cfg) {
+			return MPT_event_fail(ev, err, MPT_tr("failed to get solver config"));
+		}
+		if ((err = cfg->_vptr->assign(cfg, 0, 0)) < 0) {
+			return MPT_event_fail(ev, err, MPT_tr("failed to prepare solver"));
+		}
 	}
 	return MPT_event_good(ev, MPT_tr("solver client configured"));
 }
@@ -81,21 +89,20 @@ cmdsolv[] = {
  */
 extern int mpt_solver_events(MPT_STRUCT(dispatch) *dsp, MPT_INTERFACE(client) *cl)
 {
-	MPT_INTERFACE(logger) *log = 0;
-	const MPT_INTERFACE(metatype) *mt;
-	uintptr_t id;
+	MPT_INTERFACE(logger) *log;
 	size_t i;
 	int err;
 	
 	if ((err = mpt_client_events(dsp, cl)) < 0) {
 		return err;
 	}
-	if ((mt = cl->_vptr->cfg.query((void *) cl, 0))) {
-		mt->_vptr->conv(mt, MPT_ENUM(TypeLogger), &log);
-	}
+	log = 0;
+	cl->_vptr->meta.conv((void *) cl, MPT_ENUM(TypeLogger), &log);
+	
 	/* register solver command handler */
 	for (i = 0; i < MPT_arrsize(cmdsolv); i++) {
 		MPT_STRUCT(command) *cmd;
+		uintptr_t id;
 		
 		id = mpt_hash(cmdsolv[i].name, strlen(cmdsolv[i].name));
 		

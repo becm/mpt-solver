@@ -15,33 +15,20 @@
 
 #include "solver.h"
 
-struct iterProfile
-{
+MPT_STRUCT(iterProfile) {
+	MPT_INTERFACE(metatype) _mt;
 	MPT_INTERFACE(iterator) _it;
 	double t;
 	long pos;
 	long len;
 	int neqs;
 };
-
-static void iterProfileUnref(MPT_INTERFACE(unrefable) *ref)
-{
-	const struct iterProfile *p = (void *) ref;
-	MPT_INTERFACE(iterator) **iptr = (void *) (p + 1);
-	int i;
-	
-	for (i = 0; i < p->neqs; ++i) {
-		MPT_INTERFACE(iterator) *it;
-		if ((it = iptr[i])) {
-			it->_vptr->ref.unref((void *) it);
-		}
-	}
-	free(ref);
-}
+/* iterator interface */
 static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 {
-	const struct iterProfile *p = (void *) it;
-	MPT_INTERFACE(iterator) **iptr = (void *) (p + 1);
+	MPT_STRUCT(iterProfile) *p = MPT_baseaddr(iterProfile, it, _it);
+	MPT_INTERFACE(metatype) **mptr = (void *) (p + 1);
+	MPT_INTERFACE(iterator) **iptr = (void *) (mptr + p->neqs);
 	double *tmp = (void *) (iptr + p->neqs);
 	struct iovec *vec;
 	int i;
@@ -65,12 +52,13 @@ static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 		return MPT_value_toVector('d');
 	}
 	for (i = 0; i < p->neqs; ++i) {
+		MPT_INTERFACE(iterator) *curr;
 		int ret;
 		
-		if (!(it = iptr[i])) {
+		if (!(curr = iptr[i])) {
 			continue;
 		}
-		if ((ret = it->_vptr->get(it, 'd', tmp + i)) < 0) {
+		if ((ret = curr->_vptr->get(curr, 'd', tmp + i)) < 0) {
 			return ret;
 		}
 		if (!ret) {
@@ -84,8 +72,9 @@ static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 }
 static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 {
-	struct iterProfile *p = (void *) it;
-	MPT_INTERFACE(iterator) **iptr = (void *) (p + 1);
+	MPT_STRUCT(iterProfile) *p = MPT_baseaddr(iterProfile, it, _it);
+	MPT_INTERFACE(metatype) **mptr = (void *) (p + 1);
+	MPT_INTERFACE(iterator) **iptr = (void *) (mptr + p->neqs);
 	long i;
 	
 	if (p->pos < 0) {
@@ -109,8 +98,9 @@ static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 }
 static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 {
-	struct iterProfile *p = (void *) it;
-	MPT_INTERFACE(iterator) **iptr = (void *) (p + 1);
+	MPT_STRUCT(iterProfile) *p = MPT_baseaddr(iterProfile, it, _it);
+	MPT_INTERFACE(iterator) **mptr = (void *) (p + 1);
+	MPT_INTERFACE(iterator) **iptr = (void *) (mptr + p->neqs);
 	long i;
 	
 	for (i = 0; i < p->neqs; ++i) {
@@ -123,12 +113,54 @@ static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 	p->pos = -1;
 	return p->len + 1;
 }
-static const MPT_INTERFACE_VPTR(iterator) iterProfileCtl = {
-	{ iterProfileUnref },
-	iterProfileGet,
-	iterProfileAdvance,
-	iterProfileReset
-};
+/* reference interface */
+static void iterProfileUnref(MPT_INTERFACE(reference) *ref)
+{
+	const MPT_STRUCT(iterProfile) *p = (void *) ref;
+	MPT_INTERFACE(metatype) **mptr = (void *) (p + 1);
+	int i;
+	
+	for (i = 0; i < p->neqs; ++i) {
+		MPT_INTERFACE(metatype) *mt;
+		if ((mt = mptr[i])) {
+			mt->_vptr->ref.unref((void *) mt);
+		}
+	}
+	free(ref);
+}
+static uintptr_t iterProfileRef(MPT_INTERFACE(reference) *ref)
+{
+	(void) ref;
+	return 0;
+}
+/* metatype interface */
+static int iterProfileConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+{
+	const MPT_STRUCT(iterProfile) *p = (void *) mt;
+	
+	if (!type) {
+		static const char fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeIterator), 0 };
+		if (ptr) *((const char **) ptr) = fmt;
+	}
+	if (type == 'd') {
+		if (ptr) *((double *) ptr) = p->t;
+		return MPT_ENUM(TypeIterator);
+	}
+	if (type == MPT_ENUM(TypeMeta)) {
+		if (ptr) *((const void **) ptr) = &p->_mt;
+		return MPT_ENUM(TypeIterator);
+	}
+	if (type == MPT_ENUM(TypeIterator)) {
+		if (ptr) *((const void **) ptr) = &p->_it;
+		return MPT_ENUM(TypeMeta);
+	}
+	return MPT_ERROR(BadType);
+}
+static MPT_INTERFACE(metatype) *iterProfileClone(const MPT_INTERFACE(metatype) *mt)
+{
+	(void) mt;
+	return 0;
+}
 
 /*!
  * \ingroup mptValues
@@ -144,9 +176,16 @@ static const MPT_INTERFACE_VPTR(iterator) iterProfileCtl = {
  * 
  * \return iterator containing profile segments
  */
-extern MPT_INTERFACE(iterator) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *dat, double t, const MPT_STRUCT(node) *conf, int neqs, MPT_INTERFACE(logger) *out)
+extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *dat, double t, const MPT_STRUCT(node) *conf, int neqs, MPT_INTERFACE(logger) *out)
 {
-	struct iterProfile *ip;
+	static const MPT_INTERFACE_VPTR(iterator) iterProfileIter = {
+		iterProfileGet, iterProfileAdvance, iterProfileReset
+	};
+	static const MPT_INTERFACE_VPTR(metatype) iterProfileMeta = {
+		{ iterProfileUnref, iterProfileRef }, iterProfileConv, iterProfileClone
+	};
+	MPT_STRUCT(iterProfile) *ip;
+	MPT_INTERFACE(metatype) **mptr;
 	MPT_INTERFACE(iterator) **iptr;
 	const MPT_STRUCT(node) *prof;
 	const char *desc;
@@ -167,15 +206,18 @@ extern MPT_INTERFACE(iterator) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 			}
 		}
 	}
-	if (!(ip = malloc(sizeof(*ip) + neqs * (sizeof(*iptr) + sizeof(double))))) {
+	i = sizeof(*mptr) + sizeof(*iptr) + sizeof(*val);
+	if (!(ip = malloc(sizeof(*ip) + neqs * i))) {
 		mpt_log(out, __func__, MPT_LOG(Error), "%s: (len = %i)",
 		        MPT_tr("failed to create iterator"), neqs);
 		return 0;
 	}
-	iptr = (void *) (ip + 1);
-	val  = (void *) (iptr + neqs);
+	mptr = memset(ip + 1,      0, neqs * sizeof(*mptr));
+	iptr = memset(mptr + neqs, 0, neqs * sizeof(*iptr));
+	val  = memset(iptr + neqs, 0, neqs * sizeof(*val));
 	
-	ip->_it._vptr = &iterProfileCtl;
+	ip->_mt._vptr = &iterProfileMeta;
+	ip->_it._vptr = &iterProfileIter;
 	ip->t = t;
 	ip->pos = -1;
 	ip->len = dat->nval;
@@ -205,22 +247,30 @@ extern MPT_INTERFACE(iterator) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 				desc += len;
 			}
 		}
-		return &ip->_it;
+		return &ip->_mt;
 	}
-	i = 0;
-	while (prof && i < neqs) {
+	while (prof && neqs--) {
+		MPT_INTERFACE(metatype) *mt;
 		if (!(desc = mpt_node_data(prof, 0))) {
 			if (out) mpt_log(out, __func__, MPT_LOG(Info), "%s: %d",
 			                 MPT_tr("no profile description"), i);
 			continue;
 		}
-		if (!(iptr[i++] = mpt_iterator_profile(&dat->val, desc))
-		 && out) {
+		if (!(mt = mpt_iterator_profile(&dat->val, desc))
+		    && out) {
 			mpt_log(out, __func__, MPT_LOG(Warning), "%s (%d): %s",
 			        MPT_tr("bad profile"), i, desc);
 		}
+		*mptr++ = mt;
+		*iptr = 0;
+		if (mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), iptr++) < 0) {
+			if (out) {
+				mpt_log(out, __func__, MPT_LOG(Warning), "%s (%d): %s",
+				        MPT_tr("bad profile"), i, desc);
+			}
+		}
 		prof = prof->next;
 	}
-	return &ip->_it;
+	return &ip->_mt;
 }
 

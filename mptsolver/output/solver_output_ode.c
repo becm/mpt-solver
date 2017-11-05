@@ -22,8 +22,9 @@
  */
 extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *so, int state, const MPT_STRUCT(solver_data) *sd)
 {
+	const MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(output) *out;
 	MPT_STRUCT(buffer) *buf;
-	MPT_STRUCT(output) *out;
 	const double *val;
 	int ld, len;
 	
@@ -40,11 +41,17 @@ extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *so, int state,
 	}
 	val = (void *) (buf + 1);
 	
-	if ((out = so->_data)) {
+	out = 0;
+	if ((mt = so->_data)
+	    && mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &out) >= 0
+	    && out) {
 		mpt_output_ivp_header(out, len, ld, 0);
 		mpt_output_solver_history(out, 0, len, val, ld);
 	}
-	if ((out = so->_graphic)) {
+	out = 0;
+	if ((mt = so->_graphic)
+	    && mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &out) >= 0
+	    && out) {
 		const uint8_t *pass;
 		size_t passlen;
 		int i, nout = 0;

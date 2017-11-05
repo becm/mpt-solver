@@ -51,6 +51,7 @@ static void outputTime(MPT_STRUCT(output) *out, int state, double t)
 extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_STRUCT(solver_data) *sd)
 {
 	MPT_INTERFACE(output) *dat, *grf;
+	const MPT_INTERFACE(metatype) *mt;
 	const MPT_STRUCT(buffer) *buf;
 	const struct iovec *vec;
 	const char *fmt;
@@ -61,8 +62,14 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 	if (!val || !(fmt = val->fmt) || !(vec = val->ptr)) {
 		return MPT_ERROR(BadArgument);
 	}
-	dat = out->_data;
-	grf = out->_graphic;
+	dat = 0;
+	if ((mt = out->_data)) {
+		mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &dat);
+	}
+	grf = 0;
+	if ((mt = out->_graphic)) {
+		mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &grf);
+	}
 	
 	if (!dat && !out) {
 		return 0;

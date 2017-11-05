@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "client.h"
+#include "config.h"
 
 #include "meta.h"
 
@@ -20,15 +21,23 @@
  * \return untracked solver interface instance
  */
 /* load solver of specific type */
-extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, const char *conf, MPT_INTERFACE(logger) *log)
+extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, const char *conf, MPT_INTERFACE(logger) *log)
 {
-	MPT_SOLVER(generic) *sol;
+	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(metatype) *mt;
 	const char *name;
 	uintptr_t h;
-	int mode;
+	int mode, me;
 	
+	if ((me = mpt_solver_typeid()) < 0) {
+		if (log) {
+			mpt_log(log, __func__, MPT_LOG(Critical), "%s",
+		                MPT_tr("no registration for solver interface"));
+		}
+		return 0;
+	}
 	if (!conf) {
+		MPT_INTERFACE(object) *obj;
 		if (!(mt = pr->_ref)) {
 			if (log) {
 				mpt_log(log, __func__, MPT_LOG(Error), "%s",
@@ -36,16 +45,22 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 			}
 			return 0;
 		}
-		if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0) {
+		sol = 0;
+		if (mt->_vptr->conv(mt, me, &sol) < 0
+		    || !sol) {
 			if (log) {
 				mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
 			                MPT_tr("no solver in proxy instance"), conf);
 			}
 			return 0;
 		}
-		name = mpt_object_typename((void *) sol);
-		mode = sol->_vptr->obj.property((void *) sol, 0);
-		if (mode < 0) {
+		obj = 0;
+		name = 0;
+		if ((mode = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) >= 0
+		    && obj) {
+			name = mpt_object_typename(obj);
+		}
+		if ((mode = sol->_vptr->report(sol, 0, 0, 0)) < 0) {
 			if (log) {
 				mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
 			                MPT_tr("no valid solver"), name ? name : "");
@@ -54,8 +69,8 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 		}
 		if (match && !(mode & match)) {
 			if (log) {
-				mpt_log(log, __func__, MPT_LOG(Error), "%s: 0x%02x",
-			                MPT_tr("solver no IVP type"), mode);
+				mpt_log(log, __func__, MPT_LOG(Error), "%s: 0x%02x <> 0x%02x",
+			                MPT_tr("solver has invalid type"), mode, match);
 			}
 			return 0;
 		}
@@ -91,11 +106,11 @@ extern MPT_SOLVER(generic) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, co
 		if ((cfg = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
 			cfg->_vptr->conv(cfg, 's', &lpath);
 		}
-		if (!(mt = mpt_library_bind(MPT_ENUM(TypeSolver), conf, lpath, log))) {
+		if (!(mt = mpt_library_bind(conf, lpath, log))) {
 			return 0;
 		}
 	}
-	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0) {
+	if (mt->_vptr->conv(mt, me, &sol) < 0) {
 		if (log) {
 			mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
 		                MPT_tr("no solver in proxy instance"), conf);

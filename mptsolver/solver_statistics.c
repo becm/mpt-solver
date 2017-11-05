@@ -16,7 +16,7 @@
  * \param usr  time spent in solver (userspace)
  * \param sys  time spent in solver (system)
  */
-extern void mpt_solver_statistics(MPT_SOLVER(generic) *gen, MPT_INTERFACE(logger) *out, const struct timeval *usr, const struct timeval *sys)
+extern void mpt_solver_statistics(MPT_SOLVER(interface) *gen, MPT_INTERFACE(logger) *out, const struct timeval *usr, const struct timeval *sys)
 {
 	static const char *units[] = { "sec", "msec", "µsec" };
 	int unit = 0;

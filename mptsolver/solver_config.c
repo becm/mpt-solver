@@ -13,6 +13,7 @@
 #include "event.h"
 #include "client.h"
 
+#include "config.h"
 #include "meta.h"
 
 #include "solver.h"
@@ -38,7 +39,8 @@ extern int mpt_solver_config(MPT_INTERFACE(config) *solv, MPT_STRUCT(event) *ev)
 		}
 	}
 	else {
-		MPT_INTERFACE(iterator) *src;
+		MPT_INTERFACE(metatype) *src;
+		MPT_INTERFACE(iterator) *args;
 		const char *cmd, *cfg, *sol;
 		int ret;
 		
@@ -46,16 +48,22 @@ extern int mpt_solver_config(MPT_INTERFACE(config) *solv, MPT_STRUCT(event) *ev)
 			ev->id = 0;
 			return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 		}
+		args = 0;
 		cmd = cfg = sol = 0;
-		/* consume command, client and solver config */
-		if ((ret = src->_vptr->get(src, 's', &cmd)) < 0
-		    || ((ret = src->_vptr->advance(src)) > 0
-		        && (ret = src->_vptr->get(src, 's', &cfg)) < 0)
-		    || ((ret = src->_vptr->advance(src)) > 0
-		        && (ret = src->_vptr->get(src, 's', &sol)) < 0)) {
+		if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &args)) < 0
+		    || !args) {
+			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument source"), ret);
+		}
+		else if ((ret = src->_vptr->conv(src, 's', &cmd)) < 0) {
+			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad command type"), ret);
+		}
+		/* get client and solver config */
+		else if ((ret = args->_vptr->get(args, 's', &cfg)) < 0
+		         || ((ret = args->_vptr->advance(args)) > 0
+		             && (ret = args->_vptr->get(args, 's', &sol)) < 0)) {
 			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument type"), ret);
 		}
-		else if ((ret = src->_vptr->advance(src)) > 0) {
+		else if ((ret = args->_vptr->advance(args)) > 0) {
 			mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s (%d)", MPT_tr("bad argument count"), ret);
 			ret = -1;
 		}

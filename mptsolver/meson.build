@@ -11,6 +11,7 @@ solv_src = files(
   'solver_param.c', 'solver_print.c', 'solver_pset.c',
   'solver_read.c',
   'solver_start.c', 'solver_statistics.c',
+  'solver_typeid.c',
   'steps_ode.c',
   'timeradd.c'
 )

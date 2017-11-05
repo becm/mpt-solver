@@ -14,6 +14,7 @@
 #include "event.h"
 #include "client.h"
 
+#include "config.h"
 #include "meta.h"
 
 #include "solver.h"
@@ -47,30 +48,36 @@ static char *stripFilename(char *base)
  */
 extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 {
+	MPT_INTERFACE(config) *cfg;
 	int ret;
 	
 	if (!ev) return 0;
 	
+	cfg = 0;
+	if (solv->_vptr->meta.conv((void *) solv, MPT_ENUM(TypeConfig), &cfg) < 0
+	    || !cfg) {
+		return MPT_event_fail(ev, MPT_ERROR(BadType), "no config for solver");
+	}
 	/* running in remote-input mode */
 	if (ev->msg) {
-		if ((ret = mpt_solver_config((void *) solv, ev))) {
+		if ((ret = mpt_solver_config(cfg, ev))) {
 			return ret;
 		}
 	}
 	/* problem config filename from configuration/terminal */
 	else {
 		static const char defExt[] = "conf\0";
-		const MPT_INTERFACE(metatype) *cfg;
+		const MPT_INTERFACE(metatype) *mt;
 		const char *fname, *cname;
 		char *rname, buf[128];
 		
 		/* check for existing config file */
-		cfg = mpt_config_get((void *) solv, 0, 0, 0);
-		fname = cfg ? mpt_meta_data(cfg, 0) : 0;
+		mt = mpt_config_get(cfg, 0, 0, 0);
+		fname = mt ? mpt_meta_data(mt, 0) : 0;
 		
 		cname = 0;
-		if ((cfg = mpt_config_get(0, "mpt", 0, 0))
-		    && cfg->_vptr->conv(cfg, 's', &cname) > 0
+		if ((mt = mpt_config_get(0, "mpt", 0, 0))
+		    && mt->_vptr->conv(mt, 's', &cname) > 0
 		    && cname) {
 			const char *sep = strrchr(cname, '/');
 			if (sep) cname = sep + 1;
@@ -97,7 +104,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 				ev->id = 0;
 				return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 			}
-			if (mpt_config_set((void *) solv, 0, fname, 0, 0) < 0) {
+			if (mpt_config_set(cfg, 0, fname, 0, 0) < 0) {
 				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
 				                  MPT_tr("failed to set client config"), fname);
 				if (*rname) {
@@ -111,9 +118,9 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 			}
 		}
 		/* config file has solver settings */
-		cfg = mpt_config_get((void *) solv, "solconf", 0, 0);
+		mt = mpt_config_get(cfg, "solconf", 0, 0);
 		
-		if (!cfg) {
+		if (!mt) {
 			static const char defName[] = "solver\0", defPost[] = "sol\0";
 			const char *sol = cname ? cname : defName;
 			snprintf(buf, sizeof(buf), "%s [%s_%s.%s]: ",
@@ -134,7 +141,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 				ev->id = 0;
 				return MPT_ENUM(EventFail) | MPT_ENUM(EventDefault);
 			}
-			if ((ret = mpt_config_set((void *) solv, "solconf", fname, 0, 0)) < 0) {
+			if ((ret = mpt_config_set(cfg, "solconf", fname, 0, 0)) < 0) {
 				mpt_context_reply(ev->reply, MPT_ERROR(BadValue), "%s: %s",
 				                  MPT_tr("failed to set solver config filename"), fname);
 				if (*rname) {
@@ -154,7 +161,7 @@ extern int mpt_solver_start(MPT_INTERFACE(client) *solv, MPT_STRUCT(event) *ev)
 		return MPT_event_fail(ev, MPT_ERROR(BadValue), "failed to initialize client");
 	}
 	/* prepare solver for run */
-	if ((ret = solv->_vptr->cfg.assign((void *) solv, 0, 0)) < 0) {
+	if ((ret = cfg->_vptr->assign(cfg, 0, 0)) < 0) {
 		return MPT_event_fail(ev, ret, MPT_tr("solver preparation failed"));
 	}
 	

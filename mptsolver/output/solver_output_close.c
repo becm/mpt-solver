@@ -17,7 +17,7 @@
  */
 extern void mpt_solver_output_close(MPT_STRUCT(solver_output) *so)
 {
-	MPT_INTERFACE(unrefable) *ref;
+	MPT_INTERFACE(reference) *ref;
 	
 	if ((ref = (void*) so->_data)) {
 		ref->_vptr->unref(ref);

@@ -18,9 +18,10 @@
  * 
  * \return pointer to nonlinear user funtions
  */
-extern int mpt_init_pde(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(pdefcn) *fcn, int neqs, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
+extern int mpt_init_pde(MPT_SOLVER(interface) *sol, const MPT_IVP_STRUCT(pdefcn) *fcn, int neqs, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
 {
 	static const char fmt[] = { 'i', MPT_value_toVector('d'), 0 };
+	MPT_INTERFACE(object) *obj;
 	MPT_STRUCT(buffer) *buf;
 	struct iovec vec;
 	uint64_t len;
@@ -43,9 +44,15 @@ extern int mpt_init_pde(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(pdefcn) *
 		                 MPT_tr("bad grid size"), len);
 		return MPT_ERROR(BadValue);
 	}
+	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
+	    || !obj) {
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s [%d, " PRIu64 "]",
+		                 MPT_tr("failed to get object interface"), neqs, len);
+		return ret;
+	}
 	vec.iov_base = buf + 1;
 	vec.iov_len  = len * sizeof(double);
-	if ((ret = mpt_object_set((void *) sol, "", fmt, neqs, vec)) < 0) {
+	if ((ret = mpt_object_set(obj, "", fmt, neqs, vec)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s [%d, " PRIu64 "]",
 		                 MPT_tr("failed to set PDE size"), neqs, len);
 		return ret;

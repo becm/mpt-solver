@@ -15,12 +15,13 @@
  * 
  * \param out   output descriptor
  * \param conf  configuration list
+ * \param log   error log target
  * 
  * \retval 0  success
  * \retval -2 error in layout open operation
  * \retval -3 error in bind operation
  */
-extern int mpt_conf_graphic(MPT_INTERFACE(output) *out, const MPT_STRUCT(node) *conf)
+extern int mpt_conf_graphic(MPT_INTERFACE(output) *out, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *log)
 {
 	MPT_STRUCT(node) *tmp;
 	const char *data;
@@ -71,12 +72,12 @@ extern int mpt_conf_graphic(MPT_INTERFACE(output) *out, const MPT_STRUCT(node) *
 		return 0;
 	}
 	if (err < 0) {
-		(void) mpt_output_log(out, __func__, MPT_LOG(Warning), "%s",
-		                      MPT_tr("unable to apply graphic binding"));
-		return -2;
+		mpt_log(log, __func__, MPT_LOG(Warning), "%s",
+		        MPT_tr("unable to apply graphic binding"));
+		return err;
 	}
-	(void) mpt_output_log(out, __func__, MPT_LOG(Error), "%s %i",
-	                      MPT_tr("error processing graphic binding"), err);
-	return -3;
+	mpt_log(log, __func__, MPT_LOG(Error), "%s %i",
+	        MPT_tr("error processing graphic binding"), err);
+	return MPT_ERROR(BadValue);
 }
 

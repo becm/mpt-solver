@@ -51,15 +51,18 @@ MPT_STRUCT(solver_data)
 MPT_STRUCT(solver_output)
 {
 #ifdef __cplusplus
-	inline solver_output() : _data(0), _graphic(0), _info(0)
+	inline solver_output()
 	{ }
+	Reference<metatype> data;
+	Reference<metatype> graphic;
+	Reference<metatype> info;
 protected:
 #else
 # define MPT_SOLVER_OUTPUT_INIT { 0, 0, 0, MPT_ARRAY_INIT }
+	MPT_INTERFACE(metatype) *_data;
+	MPT_INTERFACE(metatype) *_graphic;
+	MPT_INTERFACE(metatype) *_info;
 #endif
-	MPT_INTERFACE(output) *_data;
-	MPT_INTERFACE(output) *_graphic;
-	MPT_INTERFACE(logger) *_info;
 	_MPT_ARRAY_TYPE(uint8_t) _pass;  /*  process flags for data dimensions */
 };
 
@@ -516,12 +519,12 @@ __MPT_EXTDECL_BEGIN
 
 
 /* create interface to solver */
-extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(output) *, int (*)(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
-extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(output) *, int (*)(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
+extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(metatype) *, int (*)(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
+extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(metatype) *, int (*)(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
 
 
 /* initialize IVP solver states */
-extern int mpt_init_ivp(MPT_INTERFACE(object) *, const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_ivp(MPT_SOLVER(interface) *, const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 extern int mpt_init_dae(MPT_SOLVER(interface) *, const MPT_IVP_STRUCT(daefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern int mpt_init_ode(MPT_SOLVER(interface) *, const MPT_IVP_STRUCT(odefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
@@ -562,12 +565,12 @@ extern int mpt_conf_pde(MPT_STRUCT(solver_data) *, const MPT_STRUCT(node) *, MPT
 extern int mpt_conf_ode(MPT_STRUCT(solver_data) *, double , const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* configure graphic output and bindings */
-extern int mpt_conf_graphic(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *);
+extern int mpt_conf_graphic(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *);
 /* configure history output and format */
-extern int mpt_conf_history(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *);
+extern int mpt_conf_history(MPT_INTERFACE(object) *, const MPT_STRUCT(node) *);
 
 /* create profile data */
-extern MPT_INTERFACE(iterator) *mpt_conf_profiles(const MPT_STRUCT(solver_data) * , double , const MPT_STRUCT(node) *, int, MPT_INTERFACE(logger) *);
+extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *, double , const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *);
 
 /* append user data */
 extern int mpt_conf_param(MPT_STRUCT(array) *, const MPT_STRUCT(node) *, int);
@@ -607,6 +610,10 @@ extern void mpt_solver_output_close(MPT_STRUCT(solver_output) *);
 extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
 extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
 extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(solver_data) *);
+/* select solver log target */
+extern MPT_INTERFACE(logger) *mpt_solver_output_logger(const MPT_STRUCT(solver_output) *);
+
+/* push data to output */
 extern int mpt_output_solver_data(MPT_INTERFACE(output) *, int , int , int , const double *, int);
 extern int mpt_output_ivp_header(MPT_INTERFACE(output) *, int , int , const double *);
 extern int mpt_output_solver_history(MPT_INTERFACE(output) *, const double *, int , const double *, int);

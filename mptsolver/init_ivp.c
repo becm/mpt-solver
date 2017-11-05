@@ -20,11 +20,15 @@
  * 
  * \return pointer to nonlinear user funtions
  */
-extern int mpt_init_ivp(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
+extern int mpt_init_ivp(MPT_SOLVER(interface) *sol, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
 {
 	static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
 	const MPT_STRUCT(buffer) *buf;
-	struct iovec vec;
+	MPT_STRUCT(value) val;
+	struct {
+		double t;
+		struct iovec y;
+	} data;
 	double *src;
 	size_t len;
 	int ret;
@@ -41,25 +45,40 @@ extern int mpt_init_ivp(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double
 	}
 	/* initial value setup */
 	src = (void *) (buf + 1);
-	vec.iov_base = src + 1;
-	vec.iov_len  = (len - 1) * sizeof(double);
+	data.t = *src;
+	data.y.iov_base = src + 1;
+	data.y.iov_len  = (len - 1) * sizeof(double);
+	val.fmt = fmt;
+	val.ptr = &data;
 	
-	if ((ret = mpt_object_set(sol, 0, fmt, *src, vec)) < 0) {
+	if ((ret = sol->_vptr->setValues(sol, val)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("failed to set initial values"));
 	}
 	return len;
 }
 
-static int initIvpData(MPT_SOLVER(generic) *sol, const void *fcn, int neqs, MPT_INTERFACE(logger) *log, int type, const char *_func)
+static int initIvpData(MPT_SOLVER(interface) *sol, const void *fcn, int neqs, MPT_INTERFACE(logger) *log, int type, const char *_func)
 {
+	MPT_INTERFACE(object) *obj;
 	int ret;
 	
-	/* set equotation count */
-	if ((ret = mpt_object_set((void *) sol, "", "i", (int32_t) neqs)) < 0) {
-		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
-		                 MPT_tr("unable to save problem parameter to solver"));
-		return ret;
+	/* use object for initial setup */
+	obj = 0;
+	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) >= 0) {
+		if (!obj) {
+			if (log) {
+				mpt_log(log, _func, MPT_LOG(Error), "%s",
+				        MPT_tr("no object interface for solver"));
+			}
+			return MPT_ERROR(BadValue);
+		}
+		/* set equotation count */
+		if ((ret = mpt_object_set(obj, "", "i", (int32_t) neqs)) < 0) {
+			if (log) mpt_log(log, _func, MPT_LOG(Error), "%s",
+			                 MPT_tr("unable to save problem parameter to solver"));
+			return ret;
+		}
 	}
 	/* set user funtions according to type */
 	if (fcn && (ret = sol->_vptr->setFunctions(sol, type, fcn)) < 0) {
@@ -69,7 +88,7 @@ static int initIvpData(MPT_SOLVER(generic) *sol, const void *fcn, int neqs, MPT_
 	return ret;
 }
 
-extern int mpt_init_dae(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(daefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
+extern int mpt_init_dae(MPT_SOLVER(interface) *sol, const MPT_IVP_STRUCT(daefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
 {
 	if (fcn && !fcn->rside.fcn) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
@@ -77,7 +96,7 @@ extern int mpt_init_dae(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(daefcn) *
 	}
 	return initIvpData(sol, fcn, neqs, log, MPT_SOLVER_ENUM(DAE), __func__);
 }
-extern int mpt_init_ode(MPT_SOLVER(generic) *sol, const MPT_IVP_STRUCT(odefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
+extern int mpt_init_ode(MPT_SOLVER(interface) *sol, const MPT_IVP_STRUCT(odefcn) *fcn, int neqs, MPT_INTERFACE(logger) *log)
 {
 	if (fcn && !fcn->rside.fcn) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",

@@ -24,7 +24,7 @@
  * 
  * \return combined result of history configuration
  */
-extern int mpt_conf_history(MPT_INTERFACE(output) *out, const MPT_STRUCT(node) *conf)
+extern int mpt_conf_history(MPT_INTERFACE(object) *out, const MPT_STRUCT(node) *conf)
 {
 	static const char data_def[] = "";
 	MPT_STRUCT(node) *tmp;

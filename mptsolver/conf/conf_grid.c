@@ -22,7 +22,8 @@
  */
 extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) *conf)
 {
-	MPT_INTERFACE(iterator) *it, *nit;
+	MPT_INTERFACE(iterator) *it;
+	MPT_INTERFACE(metatype) *mt;
 	MPT_STRUCT(buffer) *buf;
 	double *dest;
 	const char *desc;
@@ -34,21 +35,33 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 	} else {
 		old = 0;
 	}
-	if (!conf) {
-		nit = it = mpt_iterator_linear(10, 0, 1);
+	it = 0;
+	mt = 0;
+	if (conf) {
+		/* use existing iterator */
+		if ((ret = conf->_vptr->conv(conf, MPT_ENUM(TypeIterator), &it)) > 0) {
+			if (!it) {
+				return MPT_ERROR(BadValue);
+			}
+		}
+		/* use default grid settings */
+		else if (!(desc = mpt_meta_data(conf, 0))) {
+			if (!(mt = mpt_iterator_linear(10, 0, 1))) {
+				return MPT_ERROR(BadOperation);
+			}
+			return MPT_ERROR(BadType);
+		}
+		/* make iterator from description */
+		else if (!(mt = mpt_iterator_create(desc))) {
+			return MPT_ERROR(BadValue);
+		}
 	}
-	/* use existing iterator */
-	else if ((ret = conf->_vptr->conv(conf, MPT_ENUM(TypeIterator), &it)) > 0 && it) {
-		nit = 0;
-	}
-	/* use default grid settings */
-	else if (!(desc = mpt_meta_data(conf, 0))) {
-		nit = it = mpt_iterator_linear(10, 0, 1);
-	}else {
-		nit = it = mpt_iterator_create(desc);
-	}
-	if (!it) {
-		return MPT_ERROR(BadValue);
+	if (mt) {
+		if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &it)) < 0
+		    || !it) {
+			mt->_vptr->ref.unref((void *) mt);
+			return MPT_ERROR(BadType);
+		}
 	}
 	pts = 0;
 	len = 0;
@@ -64,8 +77,8 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		}
 		/* get iterator data */
 		if ((ret = it->_vptr->get(it, 'd', dest)) < 0) {
-			if (nit) {
-				nit->_vptr->ref.unref((void *) it);
+			if (mt) {
+				mt->_vptr->ref.unref((void *) mt);
 			}
 			buf->_used = old;
 			return ret;
@@ -78,8 +91,8 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		++pts;
 		++dest;
 		if ((ret = it->_vptr->advance(it)) < 0) {
-			if (nit) {
-				nit->_vptr->ref.unref((void *) it);
+			if (mt) {
+				mt->_vptr->ref.unref((void *) mt);
 			}
 			buf->_used = old;
 			return ret;
@@ -88,8 +101,10 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 			break;
 		}
 	}
-	if (nit) {
-		nit->_vptr->ref.unref((void *) it);
+	if (mt) {
+		mt->_vptr->ref.unref((void *) mt);
+	} else {
+		it->_vptr->reset(it);
 	}
 	/* crop unused trailing buffer data */
 	if (buf && len) {

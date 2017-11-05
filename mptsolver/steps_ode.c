@@ -22,7 +22,7 @@ static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 	return 1;
 }
 
-static double getTime(MPT_SOLVER(generic) *sol)
+static double getTime(MPT_SOLVER(interface) *sol)
 {
 	double t;
 	sol->_vptr->report(sol, MPT_SOLVER_ENUM(Values), setTime, &t);
@@ -85,7 +85,7 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  * 
  * \return step operation result
  */
-extern int mpt_steps_ode(MPT_SOLVER(generic) *sol, MPT_INTERFACE(iterator) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+extern int mpt_steps_ode(MPT_SOLVER(interface) *sol, MPT_INTERFACE(iterator) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	double curr, end, *data;
 	int ret;
