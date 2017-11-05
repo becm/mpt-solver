@@ -474,7 +474,7 @@ struct vecpar
 		if (base) {
 			static const char fmt[2] = { static_cast<char>(vectorIdentifier<T>()), 0 };
 			v.fmt = fmt;
-			v.ptr = &d;
+			v.ptr = this;
 		} else {
 			static const char fmt[2] = { static_cast<char>(typeIdentifier<T>()), 0 };
 			v.fmt = fmt;
@@ -594,6 +594,8 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *, int , const c
 /* set solver parameter */
 extern void mpt_solver_pset (MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern void mpt_solver_param(MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+/* set solver parameter to value */
+extern int mpt_solver_setvalue(MPT_INTERFACE(object) *, const char *, double);
 
 /* generic solver output */
 extern int mpt_solver_info  (MPT_SOLVER(interface) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));

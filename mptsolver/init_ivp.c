@@ -12,7 +12,7 @@
  * Set initial values for ODE and DAE problems
  * for IVP solver form arguments.
  * 
- * \param sol   solver descriptor
+ * \param sol   solver object
  * \param t     initial time
  * \param len   number of equotations
  * \param ptr   initial state data
@@ -20,7 +20,7 @@
  * 
  * \return pointer to nonlinear user funtions
  */
-extern int mpt_init_ivp(MPT_SOLVER(interface) *sol, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
+extern int mpt_init_ivp(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
 {
 	static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
 	const MPT_STRUCT(buffer) *buf;
@@ -33,6 +33,9 @@ extern int mpt_init_ivp(MPT_SOLVER(interface) *sol, const _MPT_ARRAY_TYPE(double
 	size_t len;
 	int ret;
 	
+	if (!sol) {
+		return MPT_ERROR(BadArgument);
+	}
 	if (!arr || !(buf = arr->_buf) || !(len = buf->_used / sizeof(*src))) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("missing initial value data"));
@@ -51,7 +54,7 @@ extern int mpt_init_ivp(MPT_SOLVER(interface) *sol, const _MPT_ARRAY_TYPE(double
 	val.fmt = fmt;
 	val.ptr = &data;
 	
-	if ((ret = sol->_vptr->setValues(sol, val)) < 0) {
+	if ((ret = mpt_object_set_value(sol, 0, &val)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("failed to set initial values"));
 	}

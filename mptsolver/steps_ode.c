@@ -1,5 +1,6 @@
 
 #include <string.h>
+#include <inttypes.h>
 
 #include <sys/uio.h>
 
@@ -87,6 +88,7 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  */
 extern int mpt_steps_ode(MPT_SOLVER(interface) *sol, MPT_INTERFACE(iterator) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
+	MPT_INTERFACE(object) *obj;
 	double curr, end, *data;
 	int ret;
 	
@@ -102,14 +104,25 @@ extern int mpt_steps_ode(MPT_SOLVER(interface) *sol, MPT_INTERFACE(iterator) *sr
 	if (sd->nval < 1 || !(data = mpt_solver_data_grid(sd))) {
 		return MPT_ERROR(BadArgument);
 	}
+	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
+	    || !obj) {
+		mpt_log(out, __func__, MPT_LOG(Error), "%s (" PRIxPTR ")",
+		        MPT_tr("solver has no object interface"), sol);
+		return MPT_ERROR(BadArgument);
+	}
 	curr = getTime(sol);
 	/* try to complete full run */
 	while(1) {
 		mpt_log(out, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
 		        MPT_tr("attempt solver step"), curr, end);
 		
-		/* call ODE/DAE solver with current/target time and in/out-data */
-		ret = mpt_object_set((void *) sol, "t", "d", end);
+		/* set ODE/DAE solver target time */
+		if ((ret = mpt_solver_setvalue(obj, "t", end)) < 0) {
+			mpt_log(out, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
+			        MPT_tr("failed to set target time"), curr, end);
+			return ret;
+		}
+		ret = sol->_vptr->solve(sol);
 		curr = getTime(sol);
 		if (ret < 0) {
 			if (out) {

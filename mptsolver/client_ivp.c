@@ -5,6 +5,7 @@
 #define _POSIX_C_SOURCE 200809L /* need for strdup() */
 
 #include <stdlib.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -182,7 +183,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	if (!porg) {
 		MPT_STRUCT(solver_data) *dat;
 		MPT_INTERFACE(metatype) *mt;
-		MPT_INTERFACE(object) *obj;
+		MPT_INTERFACE(object) *obj, *out;
 		MPT_SOLVER(interface) *sol;
 		int ret;
 		
@@ -216,25 +217,30 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			        MPT_tr("missing solver descriptor"));
 			return MPT_ERROR(BadOperation);
 		}
-		/* setup history */
+		/* require object interface to solver */
+		obj = 0;
+		if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
+		    || !obj) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s (" PRIxPTR ")",
+			        MPT_tr("solver without object interface"), sol);
+			return MPT_ERROR(BadValue);
+		}
+		/* history assignment */
+		out = 0;
 		if ((mt = ivp->out._data)
-		    && mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) >= 0
-		    && obj
-		    && (ret = mpt_conf_history(obj, conf->children)) < 0) {
+		    && mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &out) >= 0
+		    && out
+		    && (ret = mpt_conf_history(out, conf->children)) < 0) {
 			return ret;
 		}
 		/* set solver parameters */
-		mpt_solver_param((void *) sol, conf->children, info);
+		mpt_solver_param(obj, conf->children, info);
 		
 		/* prepare solver */
-		obj = 0;
-		if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) >= 0) {
-			ret = MPT_ERROR(BadValue);
-			if (!obj || (ret = obj->_vptr->setProperty(obj, 0, 0)) < 0) {
-				mpt_log(info, _func, MPT_LOG(Error), "%s",
-				        MPT_tr("solver backend prepare failed"));
-				return ret;
-			}
+		if ((ret = obj->_vptr->setProperty(obj, 0, 0)) < 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+			        MPT_tr("solver backend prepare failed"));
+			return ret;
 		}
 		if (info) {
 			mpt_solver_info(sol, info);
@@ -384,6 +390,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	MPT_STRUCT(node) *conf, *curr;
 	MPT_STRUCT(solver_data) *dat;
 	MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(object) *obj;
 	MPT_INTERFACE(logger) *info;
 	const char *val;
 	int ret;
@@ -533,10 +540,13 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	val = curr ? mpt_node_data(curr, 0) : 0;
 	ivp->sol = mpt_solver_load(&ivp->pr, MPT_SOLVER_ENUM(CapableIvp), val, info);
 	
-	if (!ivp->sol) {
+	obj = 0;
+	if (!(mt = (void *) ivp->sol)
+	    || mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) < 0
+	    || !obj) {
 		return MPT_ERROR(BadValue);
 	}
-	val = mpt_object_typename((void *) ivp->sol);
+	val = mpt_object_typename(obj);
 	if (val) {
 		mpt_log(info, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
@@ -551,20 +561,10 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	/* setup PDE time and profile data */
 	if (ivp->pdim) {
 		MPT_STRUCT(node) *pcfg = mpt_node_next(conf->children, "profile");
-		MPT_STRUCT(value) val;
-		MPT_SOLVER(interface) *sol = ivp->sol;
-		struct {
-			double t;
-			MPT_INTERFACE(iterator) *it;
-		} data;
 		int err;
-		data.t = ivp->t;
-		data.it = 0;
-		val.ptr = &data;
 		/* no profile data requested or available */
 		if (!ret || !pcfg) {
-			val.fmt = "d";
-			if ((err = sol->_vptr->setValues(sol, val)) < 0) {
+			if ((err = mpt_object_set(obj, 0, "d", &ivp->t)) < 0) {
 				mpt_log(info, 0, MPT_LOG(Error), "%s: %s",
 				        MPT_tr("solver"), MPT_tr("failed to set initial time"));
 				return err;
@@ -575,15 +575,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 			return MPT_ERROR(BadOperation);
 		}
 		else {
-			const char fmt[] = { 'd', MPT_ENUM(TypeIterator) , 0 };
-			val.fmt = fmt;
-			if ((err = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &data.it)) < 0) {
-				mpt_log(info, _func, MPT_LOG(Error), "%s",
-				        MPT_tr("profile iterator query failed"));
-				mt->_vptr->ref.unref((void *) mt);
-				return err;
-			}
-			err = sol->_vptr->setValues(sol, val);
+			err = obj->_vptr->setProperty(obj, 0, mt);
 			mt->_vptr->ref.unref((void *) mt);
 			if (err < 0) {
 				mpt_log(info, _func, MPT_LOG(Error), "%s",
@@ -601,7 +593,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		else if (!(post = mpt_values_prepare(&dat->val, dat->nval - ret))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if ((ret = mpt_init_ivp(ivp->sol, &dat->val, info)) < 0) {
+		if ((ret = mpt_init_ivp(obj, &dat->val, info)) < 0) {
 			return ret;
 		}
 	}
@@ -616,7 +608,9 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	static const char _func[] = "mpt::client<IVP>::step";
 	
 	MPT_STRUCT(IVP) *ivp = (void *) cl;
+	MPT_INTERFACE(iterator) *steps;
 	MPT_INTERFACE(logger) *info;
+	MPT_INTERFACE(object) *obj;
 	MPT_SOLVER(interface) *sol;
 	struct _clientPdeOut ctx;
 	struct rusage pre, post;
@@ -633,11 +627,11 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("client not prepared for step operation"));
 		return MPT_ERROR(BadOperation);
 	}
-	if (!args) {
+	if (!(steps = args)) {
 		MPT_INTERFACE(metatype) *src;
 		if (!(src = ivp->steps)
-		    || (ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &args)) < 0
-		    || !args) {
+		    || (ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &steps)) < 0
+		    || !steps) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("no time step source"));
 			return MPT_ERROR(BadArgument);
@@ -650,7 +644,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		/* current time data */
 		getrusage(RUSAGE_SELF, &pre);
 		/* execute possible steps */
-		ret = mpt_steps_ode(sol, args, ivp->sd, info);
+		ret = mpt_steps_ode(sol, steps, ivp->sd, info);
 		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
 		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
@@ -669,9 +663,16 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		}
 		return ret;
 	}
+	obj = 0;
+	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
+	    || !obj) {
+		mpt_log(info, _func, MPT_LOG(Error), "%s (" PRIxPTR ")",
+		        MPT_tr("no object interface for solver"), sol);
+		return ret;
+	}
 	/* advance time source */
 	end = ivp->t;
-	if ((ret = nextTime(args, &end, _func, args, info)) <= 0) {
+	if ((ret = nextTime(steps, &end, _func, args, info)) <= 0) {
 		return ret;
 	}
 	/* execute solver step(s) for time nodes */
@@ -685,7 +686,12 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("attempt solver step"), ivp->t, end);
 		
 		/* assign solver step end time */
-		ret = mpt_object_set((void *) sol, "t", "d", end);
+		if ((ret = mpt_solver_setvalue(obj, "t", end)) < 0) {
+			mpt_log(info, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
+			        MPT_tr("failed to set target time"), ivp->t, end);
+			return ret;
+		}
+		ret = sol->_vptr->solve(sol);
 		
 		/* collect time difference */
 		getrusage(RUSAGE_SELF, &post);
@@ -698,7 +704,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 			ctx.state |= MPT_DATASTATE(Fail);
 			mpt_log(info, _func, MPT_LOG(Error), "%s (t = %g)",
 			        MPT_tr("solver step failed"), end);
-			break;
+			return ret;
 		}
 		/* end time not reached, retry */
 		if (ivp->t < end) {
@@ -706,7 +712,7 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 			continue;
 		}
 		end = ivp->t;
-		if ((ret = args->_vptr->advance(args)) < 0) {
+		if ((ret = steps->_vptr->advance(steps)) < 0) {
 			/* interrupt iteration */
 			mpt_log(info, _func, MPT_LOG(Error), "%s (t = %g, %d, %s)",
 			        MPT_tr("time source in bad state"), end, ret,
@@ -723,10 +729,12 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 			mpt_solver_statistics(sol, info, &ivp->ru_usr, &ivp->ru_sys);
 		}
 		if (!args || ret < 1) {
-			break;
+			return ret;
+		}
+		if ((ret = nextTime(steps, &end, _func, args, info)) <= 0) {
+			return ret;
 		}
 	}
-	return ret;
 }
 
 /*!
