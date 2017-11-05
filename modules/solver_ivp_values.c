@@ -8,7 +8,7 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_values)(const MPT_IVP_STRUCT(parameters) *i
 {
 	MPT_STRUCT(property) pr;
 	struct iovec *vec;
-	uint8_t buf[sizeof(t) + 2*sizeof(*vec)];
+	uint8_t buf[sizeof(t) + 2 * sizeof(*vec)];
 	size_t len;
 	
 	pr.name = 0;

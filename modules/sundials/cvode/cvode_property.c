@@ -142,7 +142,7 @@ extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(pro
 	CVodeMem cv_mem = cv ? cv->mem : 0;
 	
 	if (!prop) {
-		return MPT_ENUM(TypeSolver);
+		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {

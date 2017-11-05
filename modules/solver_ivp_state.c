@@ -15,94 +15,119 @@
 extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *ivp, MPT_SOLVER_MODULE_DATA_TYPE *t, MPT_SOLVER_MODULE_DATA_CONTAINER *y, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_INTERFACE(iterator) *it;
-	struct iovec vec;
+	MPT_STRUCT(value) val = MPT_VALUE_INIT;
 	MPT_SOLVER_MODULE_DATA_TYPE *dest, tmp;
-	size_t size;
-	uint32_t neqs, len;
-	int ret;
+	struct iovec vec;
+	size_t size, neqs;
+	int ret, done;
 	
-	if ((ret = ivp->neqs) < 1) {
+	if (ivp->neqs < 1) {
 		return MPT_ERROR(BadArgument);
 	}
-	neqs = ret;
-	/* no iterator, need distinct conversion */
-	if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0) {
+	vec.iov_base = 0;
+	vec.iov_len = 0;
+	it = 0;
+	if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeValue), &val)) >= 0) {
+		const double *ptr;
+		if (!val.fmt || !(ptr = val.ptr)) {
+			return MPT_ERROR(BadValue);
+		}
+		/* require base time value */
+		if (val.fmt[0] != MPT_SOLVER_MODULE_DATA_ID) {
+			return MPT_ERROR(BadType);
+		}
+		tmp = *ptr++;
+		/* allow data or iterator for state */
+		if (val.fmt[1] == MPT_ENUM(TypeIterator)) {
+			if (!(it = *((void **) ptr))) {
+				return MPT_ERROR(BadValue);
+			}
+		}
+		else if (val.fmt[1] == MPT_value_toVector(MPT_SOLVER_MODULE_DATA_ID)) {
+			vec = *((const struct iovec *) ptr);
+		}
+		else {
+			return MPT_ERROR(BadType);
+		}
+		ret = 2;
+	}
+	/* require state content */
+	else if ((ret = src->_vptr->conv(src, MPT_value_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
+		if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0
+		    || !it) {
+			return MPT_ERROR(BadType);
+		}
+		ret = 0;
+		/* require time value */
+		if (t) {
+			tmp = *t;
+			if ((ret = src->_vptr->conv(src, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
+				/* get time value from iterator */
+				if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
+					return MPT_ERROR(BadType);
+				}
+				if ((ret = it->_vptr->advance(it)) <= 0) {
+					return MPT_ERROR(MissingData);
+				}
+				ret = 1;
+			}
+		}
+	}
+	neqs = ivp->neqs;
+	/* copy existing compatible data */
+	if (!it) {
+		const MPT_SOLVER_MODULE_DATA_TYPE *src;
 		size_t part;
-		if (t && (ret = src->_vptr->conv(src, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
-			return MPT_ERROR(BadType);
-		}
-		if ((ret = src->_vptr->conv(src, MPT_value_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
-			return MPT_ERROR(BadType);
-		}
-		if (!ret) {
-			vec.iov_base = 0;
+		
+		if (ret < 2) {
+			src  = 0;
 			part = 0;
 		} else {
+			src  = vec.iov_base;
 			part = vec.iov_len / sizeof(double);
 		}
+		/* require full init size */
 		if (ivp->pint) {
 			size = ivp->pint + 1;
 			if ((part /= neqs) < size) {
 				return MPT_ERROR(BadValue);
 			}
-			if (!(dest = MPT_SOLVER_MODULE_FCN(data_new)(y, size * neqs, vec.iov_base))) {
+			if (!(dest = MPT_SOLVER_MODULE_FCN(data_new)(y, size * neqs, src))) {
 				return MPT_ERROR(BadOperation);
 			}
 		}
+		/* use zero values for unset data */
 		else if (!(dest = MPT_SOLVER_MODULE_FCN(data_new)(y, neqs, 0))) {
 			return MPT_ERROR(BadOperation);
 		}
-		else {
-			const MPT_SOLVER_MODULE_DATA_TYPE *src;
+		else if (src && part) {
 			size_t i = 0;
-			if ((src = vec.iov_base)) {
-				while (i < part) {
-					dest[i] = src[i];
-					++i;
-				}
+			if (part > neqs) {
+				part = neqs;
+			}
+			while (i < part) {
+				dest[i] = src[i];
+				++i;
 			}
 		}
 		if (t) {
 			*t = tmp;
 		}
-		return 0;
-	}
-	/* require real iterator */
-	if (!ret || !it) {
-		return MPT_ERROR(BadValue);
-	}
-	/* consume time value */
-	if (!t) {
-		len = 0;
-		tmp = 0;
-	} else {
-		if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
-			return ret;
-		}
-		len = ret ? 1 : 0;
-		if (len && (ret = it->_vptr->advance(it)) < 0) {
-			return ret;
-		}
+		return ret;
 	}
 	/* reserve total state size */
 	size = ivp->pint + 1;
 	if (!(dest = MPT_SOLVER_MODULE_FCN(data_new)(y, size * neqs, 0))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!len) {
-		if (t) {
-			*t = tmp;
-		}
-		return len;
-	}
 	/* get segment content */
-	ret = MPT_SOLVER_MODULE_FCN(data_set)(dest, neqs, size, it);
+	done = MPT_SOLVER_MODULE_FCN(data_set)(dest, neqs, ivp->pint ? size : 0, it);
 	
-	if (ret < 0) {
-		return ret;
+	if (done < 0) {
+		return done;
 	}
 	if (t) {
 		*t = tmp;
 	}
-	return 1 + ret;
+	return ret + done;
 }

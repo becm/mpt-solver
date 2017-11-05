@@ -13,89 +13,134 @@
 
 #include "module_functions.h"
 
-static void cVodeUnref(MPT_INTERFACE(unrefable) *ref)
+MPT_STRUCT(SundialsCVode) {
+	MPT_SOLVER(interface)   _sol;
+	MPT_INTERFACE(object)   _obj;
+	MPT_SOLVER_STRUCT(cvode) d;
+	MPT_IVP_STRUCT(odefcn)   uf;
+	double                   next;
+};
+/* reference interface */
+static void cVodeUnref(MPT_INTERFACE(reference) *ref)
 {
-	sundials_cvode_fini((MPT_SOLVER_STRUCT(cvode) *) (ref + 1));
-	free(ref);
+	MPT_STRUCT(SundialsCVode) *cv = (void *) ref;
+	sundials_cvode_fini(&cv->d);
+	free(cv);
 }
-static uintptr_t cVodeRef(MPT_INTERFACE(object) *obj)
+static uintptr_t cVodeRef(MPT_INTERFACE(reference) *ref)
 {
-	(void) obj;
+	(void) ref;
 	return 0;
 }
+/* metatype interface */
+static int cVodeConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+{
+	const MPT_STRUCT(SundialsCVode) *cv = (void *) mt;
+	if (!type) {
+		static const char fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeObject), 0 };
+		if (ptr) *((const char **) ptr) = fmt;
+		return MPT_ENUM(TypeObject);
+	}
+	if (type == MPT_ENUM(TypeObject)) {
+		if (ptr) *((const void **) ptr) = &cv->_obj;
+		return MPT_ENUM(TypeMeta);
+	}
+	if (type == MPT_ENUM(TypeMeta)) {
+		if (ptr) *((const void **) ptr) = &cv->_sol;
+		return MPT_ENUM(TypeObject);
+	}
+	return MPT_ERROR(BadType);
+}
+static MPT_INTERFACE(metatype) *cVodeClone(const MPT_INTERFACE(metatype) *mt)
+{
+	(void) mt;
+	return 0;
+}
+/* solver interface */
+static int cVodeReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+{
+	MPT_STRUCT(SundialsCVode) *cv = (void *) sol;
+	if (!what && !out && !data) {
+		return sundials_cvode_get(&cv->d, 0);
+	}
+	return sundials_cvode_report(&cv->d, what, out, data);
+}
+static int cVodeFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
+{
+	MPT_STRUCT(SundialsCVode) *cv = (void *) sol;
+	int ret;
+	
+	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_ode)(cv->d.ivp.pint, &cv->uf, type, ptr)) < 0) {
+		return ret;
+	}
+	cv->d.ufcn = &cv->uf;
+	return ret;
+}
+static int cVodeSolve(MPT_SOLVER(interface) *sol)
+{
+	MPT_STRUCT(SundialsCVode) *cv = (void *) sol;
+	return sundials_cvode_step(&cv->d, cv->next);
+}
+/* object interface */
 static int cVodeGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	return sundials_cvode_get((MPT_SOLVER_STRUCT(cvode) *) (obj + 1), pr);
+	const MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _obj);
+	return sundials_cvode_get(&cv->d, pr);
 }
 static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	return _sundials_cvode_set((MPT_SOLVER_STRUCT(cvode) *) (obj + 1), pr, src);
-}
-
-static int cVodeReport(MPT_SOLVER(generic) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{
-	if (!what && !out && !data) {
-		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
-	}
-	return sundials_cvode_report((MPT_SOLVER_STRUCT(cvode) *) (sol + 1), what, out, data);
-}
-static int cVodeFcn(MPT_SOLVER(generic) *sol, int type, const void *ptr)
-{
-	MPT_SOLVER_STRUCT(cvode) *cv = (void *) (sol + 1);
-	MPT_IVP_STRUCT(odefcn) *uf = (void *) (cv + 1);
+	MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _obj);
 	int ret;
 	
-	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_ode)(cv->ivp.pint, uf, type, ptr)) < 0) {
-		return ret;
-	}
-	cv->ufcn = uf;
-	return ret;
-}
-static const MPT_INTERFACE_VPTR(solver) cVodeCtl = {
-	{ { cVodeUnref }, cVodeRef, cVodeGet, cVodeSet },
-	cVodeReport,
-	cVodeFcn
-};
-
-extern int _sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *pr, const MPT_INTERFACE(metatype) *src)
-{
 	if (!pr) {
 		if (!src) {
-			return sundials_cvode_prepare(cv);
+			ret = sundials_cvode_prepare(&cv->d);
+			if (ret >= 0) {
+				cv->next = cv->d.t;
+			}
+			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		double end;
-		int ret;
-		
-		if (!src) return MPT_ERROR(BadValue);
-		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
-		if (!ret) return MPT_ERROR(BadValue);
-		return sundials_cvode_step(cv, end);
+		double end = cv->next;
+		ret = 0;
+		if (src && (ret = src->_vptr->conv(src, 'd', &end)) < 0) {
+			return MPT_ERROR(BadValue);
+		}
+		if (end < cv->d.t) {
+			return MPT_ERROR(BadValue);
+		}
+		cv->next = end;
+		return 0;
 	}
-	return sundials_cvode_set(cv, pr, src);
+	return sundials_cvode_set(&cv->d, pr, src);
 }
 
-extern MPT_SOLVER(generic) *sundials_cvode_create()
+extern MPT_SOLVER(interface) *sundials_cvode_create()
 {
-	MPT_SOLVER(generic) *sol;
-	MPT_SOLVER_STRUCT(cvode) *cv;
-	MPT_IVP_STRUCT(odefcn) *uf;
+	static const MPT_INTERFACE_VPTR(solver) cVodeSol = {
+		{ { cVodeUnref, cVodeRef }, cVodeConv, cVodeClone },
+		cVodeReport,
+		cVodeFcn,
+		cVodeSolve
+	};
+	static const MPT_INTERFACE_VPTR(object) cVodeObj = {
+		cVodeGet, cVodeSet
+	};
+	MPT_STRUCT(SundialsCVode) *cv;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*cv) + sizeof(*uf)))) {
+	if (!(cv = malloc(sizeof(*cv)))) {
 		return 0;
 	}
-	cv = (MPT_SOLVER_STRUCT(cvode) *) (sol + 1);
-	
-	if (sundials_cvode_init(cv) < 0) {
-		free(sol);
+	if (sundials_cvode_init(&cv->d) < 0) {
+		free(cv);
 		return 0;
 	}
-	uf = memset(cv + 1, 0, sizeof(*cv->ufcn));
+	memset(&cv->uf, 0, sizeof(cv->uf));
+	CVodeSetUserData(cv->d.mem, &cv->d);
+	cv->next = 0.0;
 	
-	cv->ufcn = uf;
-	CVodeSetUserData(cv->mem, cv);
+	cv->_sol._vptr = &cVodeSol;
+	cv->_obj._vptr = &cVodeObj;
 	
-	sol->_vptr = &cVodeCtl;
-	
-	return sol;
+	return &cv->_sol;
 }

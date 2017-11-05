@@ -138,11 +138,9 @@ extern int sundials_vector_set(N_Vector *, long , long , MPT_INTERFACE(iterator)
 /* set CVode parameter */
 extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *, MPT_STRUCT(property) *);
 extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *, const char *, const MPT_INTERFACE(metatype) *);
-extern int _sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *, const char *, const MPT_INTERFACE(metatype) *);
 /* set IDA solver parameter */
 extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *, MPT_STRUCT(property) *);
 extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *, const char *, const MPT_INTERFACE(metatype) *);
-extern int _sundials_ida_set(MPT_SOLVER_STRUCT(ida) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* initialize/finalize Sundials CVode solver */
 extern int  sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *);
@@ -174,8 +172,8 @@ extern int sundials_ida_step(MPT_SOLVER_STRUCT(ida) *, realtype);
 #endif
 
 #ifndef __cplusplus
-extern MPT_SOLVER(generic) *sundials_cvode_create(void);
-extern MPT_SOLVER(generic) *sundials_ida_create(void);
+extern MPT_SOLVER(interface) *sundials_cvode_create(void);
+extern MPT_SOLVER(interface) *sundials_ida_create(void);
 #else
 /* declare local module functions for C++ interface */
 extern int mpt_sundials_ufcn_dae(long, MPT_IVP_STRUCT(daefcn) *, int , const void *);
@@ -244,13 +242,13 @@ public:
 	}
 	int setProperty(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
-		return _sundials_cvode_set(this, pr, src);
+		if (!pr && !src) {
+			return sundials_cvode_prepare(this);
+		}
+		return sundials_cvode_set(this, pr, src);
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
-		if (!what && !out && !opar) {
-			return ODE | PDE;
-		}
 		return sundials_cvode_report(this, what, out, opar);
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
@@ -284,13 +282,13 @@ public:
 	}
 	int setProperty(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
-		return _sundials_ida_set(this, pr, src);
+		if (!pr && !src) {
+			return sundials_ida_prepare(this);
+		}
+		return sundials_ida_set(this, pr, src);
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
-		if (!what && !out && !opar) {
-			return DAE | PDE;
-		}
 		return sundials_ida_report(this, what, out, opar);
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE

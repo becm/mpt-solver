@@ -151,7 +151,7 @@ extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(proper
 	IDAMem ida_mem = ida->mem;
 	
 	if (!prop) {
-		return MPT_ENUM(TypeSolver);
+		return MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {

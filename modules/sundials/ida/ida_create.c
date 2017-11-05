@@ -13,66 +13,104 @@
 
 #include "module_functions.h"
 
-static void idaUnref(MPT_INTERFACE(unrefable) *ref)
+
+MPT_STRUCT(SundialsIDA) {
+	MPT_SOLVER(interface)  _sol;
+	MPT_INTERFACE(object)  _obj;
+	MPT_SOLVER_STRUCT(ida)  d;
+	MPT_IVP_STRUCT(daefcn)  uf;
+	double                  next;
+};
+/* reference interface */
+static void idaUnref(MPT_INTERFACE(reference) *ref)
 {
-	  sundials_ida_fini((MPT_SOLVER_STRUCT(ida) *) (ref + 1));
-	  free(ref);
+	MPT_STRUCT(SundialsIDA) *ida = (void *) ref;
+	sundials_ida_fini(&ida->d);
+	free(ref);
 }
 static uintptr_t idaRef()
 {
 	return 0;
 }
+/* metatype interface */
+static int idaConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+{
+	const MPT_STRUCT(SundialsIDA) *cv = (void *) mt;
+	if (!type) {
+		static const char fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeObject), 0 };
+		if (ptr) *((const char **) ptr) = fmt;
+		return MPT_ENUM(TypeObject);
+	}
+	if (type == MPT_ENUM(TypeObject)) {
+		if (ptr) *((const void **) ptr) = &cv->_obj;
+		return MPT_ENUM(TypeMeta);
+	}
+	if (type == MPT_ENUM(TypeMeta)) {
+		if (ptr) *((const void **) ptr) = &cv->_sol;
+		return MPT_ENUM(TypeObject);
+	}
+	return MPT_ERROR(BadType);
+}
+static MPT_INTERFACE(metatype) *idaClone()
+{
+	return 0;
+}
+/* solver interface */
+static int idaReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+{
+	MPT_STRUCT(SundialsIDA) *ida = (void *) sol;
+	if (!what && !out && !data) {
+		return sundials_ida_get(&ida->d, 0);
+	}
+	return sundials_ida_report(&ida->d, what, out, data);
+}
+static int idaFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
+{
+	MPT_STRUCT(SundialsIDA) *ida = (void *) sol;
+	int ret;
+	
+	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_dae)(ida->d.ivp.pint, &ida->uf, type, ptr)) < 0) {
+		return ret;
+	}
+	ida->d.ufcn = &ida->uf;
+	return ret;
+}
+static int idaSolve(MPT_SOLVER(interface) *sol)
+{
+	MPT_STRUCT(SundialsIDA) *ida = (void *) sol;
+	return sundials_ida_step(&ida->d, ida->next);
+}
+/* object interface */
 static int idaGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	return sundials_ida_get((MPT_SOLVER_STRUCT(ida) *) (obj + 1), pr);
+	const MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _obj);
+	return sundials_ida_get(&ida->d, pr);
 }
 static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	return _sundials_ida_set((MPT_SOLVER_STRUCT(ida) *) (obj + 1), pr, src);
-}
-
-static int idaReport(MPT_SOLVER(generic) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{
-	if (!what && !out && !data) {
-		return MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
-	}
-	return sundials_ida_report((MPT_SOLVER_STRUCT(ida) *) (sol + 1), what, out, data);
-}
-static int idaFcn(MPT_SOLVER(generic) *sol, int type, const void *ptr)
-{
-	MPT_SOLVER_STRUCT(ida) *ida = (void *) (sol + 1);
-	MPT_IVP_STRUCT(daefcn) *uf = (void *) (ida + 1);
+	MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _obj);
 	int ret;
 	
-	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_dae)(ida->ivp.pint, uf, type, ptr)) < 0) {
-		return ret;
-	}
-	ida->ufcn = uf;
-	return ret;
-}
-
-static const MPT_INTERFACE_VPTR(solver) idaCtl = {
-	{ { idaUnref }, idaRef, idaGet, idaSet },
-	idaReport,
-	idaFcn
-};
-
-extern int _sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *pr, const MPT_INTERFACE(metatype) *src)
-{
 	if (!pr) {
 		if (!src) {
-			return sundials_ida_prepare(ida);
+			ret = sundials_ida_prepare(&ida->d);
+			if (ret >= 0) {
+				ida->next = ida->d.t;
+			}
+			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		double end;
-		int ret;
-		
-		if (!src) return MPT_ERROR(BadValue);
-		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
-		if (!ret) return MPT_ERROR(BadValue);
-		return sundials_ida_step(ida, end);
+		double end = ida->next;
+		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
+			return MPT_ERROR(BadValue);
+		}
+		if (end < ida->d.t) {
+			return MPT_ERROR(BadValue);
+		}
+		ida->next = end;
+		return 0;
 	}
-	return sundials_ida_set(ida, pr, src);
+	return sundials_ida_set(&ida->d, pr, src);
 }
 
 /*!
@@ -83,27 +121,32 @@ extern int _sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *pr, const 
  * 
  * \return IDA solver instance
  */
-extern MPT_SOLVER(generic) *sundials_ida_create()
+extern MPT_SOLVER(interface) *sundials_ida_create()
 {
-	MPT_SOLVER(generic) *sol;
-	MPT_SOLVER_STRUCT(ida) *ida;
-	MPT_IVP_STRUCT(daefcn) *uf;
+	static const MPT_INTERFACE_VPTR(solver) idaSol = {
+		{ { idaUnref, idaRef }, idaConv, idaClone },
+		idaReport,
+		idaFcn,
+		idaSolve
+	};
+	static const MPT_INTERFACE_VPTR(object) idaObj = {
+		idaGet, idaSet
+	};
+	MPT_STRUCT(SundialsIDA) *ida;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*ida) + sizeof(*uf)))) {
+	if (!(ida = malloc(sizeof(*ida)))) {
 		return 0;
 	}
-	ida = (void *) (sol + 1);
-	
-	if (sundials_ida_init(ida) < 0) {
+	if (sundials_ida_init(&ida->d) < 0) {
 		free(ida);
 		return 0;
 	}
-	uf = memset(ida + 1, 0, sizeof(*uf));
+	memset(&ida->uf, 0, sizeof(ida->uf));
+	IDASetUserData(ida->d.mem, &ida->d);
+	ida->next = 0.0;
 	
-	ida->ufcn = uf;
-	IDASetUserData(ida->mem, ida);
+	ida->_sol._vptr = &idaSol;
+	ida->_obj._vptr = &idaObj;
 	
-	sol->_vptr = &idaCtl;
-	
-	return sol;
+	return &ida->_sol;
 }

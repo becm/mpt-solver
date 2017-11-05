@@ -148,7 +148,6 @@ protected:
 public:
 	virtual int report(int , PropertyHandler , void *) = 0;
 	virtual int setFunctions(int , const void *) = 0;
-	virtual int setValues(struct value) = 0;
 	virtual int solve() = 0;
 }; /* generic solver end */
 #else
@@ -160,7 +159,6 @@ MPT_INTERFACE_VPTR(solver)
 	/* call output function with data to report for type */
 	int (*report)(MPT_SOLVER(interface) *, int , MPT_TYPE(PropertyHandler) , void *);
 	int (*setFunctions)(MPT_SOLVER(interface) *, int , const void *);
-	int (*setValues)(MPT_SOLVER(interface) *, MPT_STRUCT(value));
 	int (*solve)(MPT_SOLVER(interface) *);
 };
 MPT_SOLVER(interface)
@@ -176,7 +174,7 @@ public:
 	{}
 	virtual int report(int , PropertyHandler , void *) = 0;
 	
-	inline bool prepare()
+	virtual bool prepare()
 	{
 		return setProperty(0, 0) >= 0;
 	}
@@ -524,7 +522,7 @@ extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(metatype) *, int (*)(
 
 
 /* initialize IVP solver states */
-extern int mpt_init_ivp(MPT_SOLVER(interface) *, const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_ivp(MPT_INTERFACE(object) *, const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 extern int mpt_init_dae(MPT_SOLVER(interface) *, const MPT_IVP_STRUCT(daefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 extern int mpt_init_ode(MPT_SOLVER(interface) *, const MPT_IVP_STRUCT(odefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
@@ -682,6 +680,9 @@ public:
 	}
 	int report(int what, PropertyHandler prop, void *ptr) __MPT_OVERRIDE
 	{
+		if (!what && !prop && !ptr) {
+			return T::property(0);
+		}
 		return T::report(what, prop, ptr);
 	}
 	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
