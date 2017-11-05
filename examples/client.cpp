@@ -9,6 +9,7 @@
 #endif
 
 #include MPT_INCLUDE(client.h)
+#include MPT_INCLUDE(config.h)
 
 class MyClient : public mpt::client
 {
@@ -18,33 +19,18 @@ public:
 	void unref() __MPT_OVERRIDE
 	{ delete this; }
 	
-	int assign(const mpt::path *p, const mpt::value *v) __MPT_OVERRIDE;
-	
 	int step(mpt::iterator *) __MPT_OVERRIDE
 	{ return 0; }
 	int init(mpt::iterator *) __MPT_OVERRIDE
 	{ return 0; }
 };
-int MyClient::assign(const mpt::path *p, const mpt::value *v)
-{
-	int ret;
-	
-	if (!p) {
-		return v ? mpt::BadArgument : 0;
-	}
-	ret = mpt::client::assign(p, v);
-	
-	// simulate solver config existance
-	if (p->empty()) {
-		set("solconf", "");
-	}
-	return ret;
-}
 
 int main(int argc, char * const argv[])
 {
 	if (mpt::client_init(argc, argv) < 0) {
 		return 1;
 	}
+	mpt::mpt_config_set(0, "mpt.client", "", '.');
+	mpt::mpt_config_set(0, "mpt.client.solconf", "", '.');
 	return mpt::solver_run(new MyClient);
 }

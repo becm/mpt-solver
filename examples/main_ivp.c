@@ -8,7 +8,7 @@
 
 int main(int argc, char * const argv[])
 {
-	MPT_INTERFACE(output) *out;
+	MPT_INTERFACE(metatype) *out;
 	MPT_INTERFACE(client) *cl;
 	if (client_init(argc, argv) < 0) {
 		return 1;

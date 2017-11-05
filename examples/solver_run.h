@@ -14,7 +14,7 @@ __MPT_EXTDECL_END
 __MPT_NAMESPACE_END
 
 #ifdef __cplusplus
-extern int user_init(mpt::solver::generic *, mpt::solver_data *, mpt::logger *);
+extern int user_init(mpt::solver::interface *, mpt::solver_data *, mpt::logger *);
 #else
-extern int user_init(MPT_SOLVER(generic) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
+extern int user_init(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
 #endif

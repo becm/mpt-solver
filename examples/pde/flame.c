@@ -58,7 +58,7 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_I
 }
 
 /* setup solver for PDE run */
-extern int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+extern int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(pdefcn) pde = MPT_IVP_PDE_INIT;
 	int ret, npde = 2;

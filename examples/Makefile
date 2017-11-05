@@ -12,6 +12,7 @@ solvers = nlsolv sundials vode limex daesolv
 aliases = ida limex bacol
 
 vecpar : CC=${CXX}
+vecpar : LDLIBS=-lmpt++
 vecpar.o : CPPFLAGS+=-std=c++11
 
 client : CC=${CXX}

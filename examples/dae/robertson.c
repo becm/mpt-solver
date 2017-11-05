@@ -55,7 +55,7 @@ int jac_eval(void *udata, double t, const double *y, double *jac, int ljac)
 	return 0;
 }
 
-int user_init(MPT_SOLVER(generic) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(daefcn) usr = MPT_IVP_DAE_INIT;
 	double *param;

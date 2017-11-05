@@ -2,6 +2,8 @@
  * check solver interfaces
  */
 
+#include <iostream>
+
 #ifndef MPT_INCLUDE
 # define MPT_INCLUDE(h) <mpt/solver/h>
 #endif
@@ -40,9 +42,10 @@ using namespace mpt::solver;
 
 static int val(void *, const property *pr)
 {
-	if (!pr || pr->name) {
+	if (!pr || !pr->name) {
 		return BadArgument;
 	}
+	std::cout << pr->name << " = " << pr->val << std::endl;
 	return 0;
 }
 
@@ -60,12 +63,10 @@ static void info(generic &s)
 	if (!pr.val.fmt && pr.val.ptr) {
 		ver = reinterpret_cast<const char *>(pr.val.ptr);
 	}
-	int types = s.report(0, 0, 0);
+	int types = s.property(0);
 	println("<%s> [0x%x] %s (%s)", name, types, ver, type);
 	
-	s.report(s.Values, val, 0);
-	mpt_solver_info(&s, 0);
-	mpt_solver_report(&s, 0);
+	s.report(s.Header | s.Status | s.Report, val, 0);
 	println(0);
 }
 static void pde(class IVP &s)
@@ -77,7 +78,6 @@ static void pde(class IVP &s)
 	
 	s.set(IVP::rside(0));
 	s.prepare();
-	s.step(1);
 }
 template <class T>
 class NL : public Solver<T>
