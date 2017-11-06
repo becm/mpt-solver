@@ -168,32 +168,42 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			return MPT_ERROR(BadOperation);
 		}
 		/* set solver parameters from config */
-		mpt_solver_param((void *) sol, conf->children, info);
-		
 		obj = 0;
-		if ((mt = nls->out._data)
-		    && mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) >= 0
+		if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) >= 0
 		    && obj) {
-			if ((ret = mpt_conf_history(obj, conf->children)) < 0) {
+			mpt_solver_param(obj, conf->children, info);
+		}
+		if ((mt = nls->out._data)) {
+			MPT_INTERFACE(object) *out = 0;
+			if (mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &out) >= 0
+			    && out
+			    && (ret = mpt_conf_history(out, conf->children)) < 0) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s",
+				        MPT_tr("failed to assign history"));
 				return ret;
 			}
 		}
+		if (obj && (ret = obj->_vptr->setProperty(obj, 0, 0)) < 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+			        MPT_tr("unable to prepare nonlinear solver"));
+			return ret;
+		}
 		if (info) {
-			mpt_solver_info((void *) sol, info);
+			mpt_solver_info(sol, info);
 			mpt_log(info, 0, MPT_LOG(Message), "");
 		}
 		ctx.out = &nls->out;
 		ctx.dat = dat;
 		ctx.state = MPT_DATASTATE(Init);
 		
-		mpt_solver_status((void *) sol, info, outNLS, &ctx);
+		mpt_solver_status(sol, info, outNLS, &ctx);
 		
 		return 0;
 	}
 	if (!porg->len) {
 		int ret = mpt_node_parse(conf, val, info);
 		if (ret >= 0) {
-			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
+			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
 			        MPT_tr("loaded NLS client config file"));
 		}
 		return ret;
@@ -388,7 +398,14 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	    && !(nls->sol = (void *) mpt_solver_load(&nls->pr, MPT_SOLVER_ENUM(CapableNls), val, info))) {
 		return MPT_ERROR(BadValue);
 	}
-	val = mpt_object_typename((void *) nls->sol);
+	val = 0;
+	if ((mt = (void *) nls->sol)) {
+		MPT_INTERFACE(object) *obj;
+		if (mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) > 0
+		    && obj) {
+			val = mpt_object_typename(obj);
+		}
+	}
 	if (val) {
 		mpt_log(info, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
@@ -446,7 +463,7 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	} else {
 		ctx.state = MPT_DATASTATE(Fini) | MPT_DATASTATE(Step);
 	}
-	mpt_solver_status((void *) sol, info, outNLS, &ctx);
+	mpt_solver_status(sol, info, outNLS, &ctx);
 	
 	/* no final output for state */
 	if (res > 0) {
@@ -477,7 +494,7 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 			        desc, i+1, par[i]);
 		}
 	}
-	mpt_solver_statistics((void *) sol, info, &nls->ru_usr, &nls->ru_sys);
+	mpt_solver_statistics(sol, info, &nls->ru_usr, &nls->ru_sys);
 	
 	return res;
 }

@@ -7,70 +7,111 @@
 
 #include "minpack.h"
 
-static void mpUnref(MPT_INTERFACE(unrefable) *ref)
+MPT_STRUCT(MinpackData) {
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
+	MPT_SOLVER_STRUCT(minpack) d;
+	MPT_NLS_STRUCT(functions)  uf;
+};
+/* reference interface */
+static void mpUnref(MPT_INTERFACE(reference) *ref)
 {
-	mpt_minpack_fini((MPT_SOLVER_STRUCT(minpack) *) (ref + 1));
+	MPT_STRUCT(MinpackData) *mp = (void *) ref;
+	mpt_minpack_fini(&mp->d);
 	free(ref);
 }
 static uintptr_t mpRef()
 {
 	return 0;
 }
+/* metatype interface */
+static int mpConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+{
+	MPT_STRUCT(MinpackData) *mp = (void *) mt;
+	if (!type) {
+		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
+		if (ptr) *((const char **) ptr) = fmt;
+		return MPT_ENUM(TypeMeta);
+	}
+	if (type == MPT_ENUM(TypeObject)) {
+		if (ptr) *((const void **) ptr) = &mp->_obj;
+		return MPT_ENUM(TypeMeta);
+	}
+	if (type == MPT_ENUM(TypeMeta)) {
+		if (ptr) *((const void **) ptr) = &mp->_sol;
+		return MPT_ENUM(TypeObject);
+	}
+	return MPT_ERROR(BadType);
+}
+static MPT_INTERFACE(metatype) *mpClone(const MPT_INTERFACE(metatype) *mt)
+{
+	(void) mt;
+	return 0;
+}
+/* solver interface */
+static int mpReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+{
+	MPT_STRUCT(MinpackData) *mp = (void *) sol;
+	if (!what && !out && !data) {
+		return mpt_minpack_get(&mp->d, 0);
+	}
+	return mpt_minpack_report(&mp->d, what, out, data);
+}
+static int mpFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
+{
+	MPT_STRUCT(MinpackData) *mp = (void *) sol;
+	return mpt_minpack_ufcn(&mp->d, &mp->uf, type, ptr);
+}
+static int mpSolve(MPT_SOLVER(interface) *sol)
+{
+	MPT_STRUCT(MinpackData) *mp = (void *) sol;
+	return mpt_minpack_solve(&mp->d);
+}
+/* object interface */
 static int mpGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	return mpt_minpack_get((MPT_SOLVER_STRUCT(minpack) *) (obj + 1), pr);
+	const MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, obj, _obj);
+	return mpt_minpack_get(&mp->d, pr);
 }
 static int mpSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_SOLVER_STRUCT(minpack) *mp = (void *) (obj + 1);
-	return _mpt_minpack_set(mp, pr, src);
-}
-
-static int mpReport(MPT_SOLVER(generic) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{
-	if (!what && !out && !data) {
-		return MPT_SOLVER_ENUM(NlsUser) | MPT_SOLVER_ENUM(NlsOverdet);
-	}
-	return mpt_minpack_report((MPT_SOLVER_STRUCT(minpack) *) (sol + 1), what, out, data);
-}
-static int mpFcn(MPT_SOLVER(generic) *sol, int type, const void *ptr)
-{
-	MPT_SOLVER_STRUCT(minpack) *mp = (void *) (sol + 1);
-	return mpt_minpack_ufcn(mp, (void *) (mp + 1), type, ptr);
-}
-static const MPT_INTERFACE_VPTR(solver) mpCtl = {
-	{ { mpUnref }, mpRef, mpGet, mpSet },
-	mpReport,
-	mpFcn
-};
-
-extern int _mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *pr, const MPT_INTERFACE(metatype) *src)
-{
+	MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, obj, _obj);
 	if (!pr && !src) {
-		int ret;
-		if (mp->info < 0 && (ret = mpt_minpack_prepare(mp))) {
-			return ret;
-		}
-		return mpt_minpack_solve(mp);
+		return mpt_minpack_prepare(&mp->d);
 	}
-	return mpt_minpack_set(mp, pr, src);
+	return mpt_minpack_set(&mp->d, pr, src);
 }
 
-extern MPT_SOLVER(generic) *mpt_minpack_create()
+/*!
+ * \ingroup mptNlSolvMinpack
+ * \brief create MINPACK solver
+ * 
+ * Create MINPACK solver instance with MPT interface.
+ * 
+ * \return MINPACK solver instance
+ */
+extern MPT_SOLVER(interface) *mpt_minpack_create()
 {
-	MPT_SOLVER(generic) *sol;
-	MPT_SOLVER_STRUCT(minpack) *mp;
+	static const MPT_INTERFACE_VPTR(object) mpObj = {
+		mpGet, mpSet
+	};
+	static const MPT_INTERFACE_VPTR(solver) mpSol = {
+		{ { mpUnref, mpRef }, mpConv, mpClone },
+		mpReport,
+		mpFcn,
+		mpSolve
+	};
+	MPT_STRUCT(MinpackData) *mp;
 	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*mp) + sizeof(*mp->ufcn)))) {
+	if (!(mp = malloc(sizeof(*mp)))) {
 		return 0;
 	}
-	mp = (MPT_SOLVER_STRUCT(minpack) *) (sol + 1);
-	mpt_minpack_init(mp);
+	mpt_minpack_init(&mp->d);
+	memset(&mp->uf, 0, sizeof(mp->uf));
 	
-	mp->ufcn = memset(mp + 1, 0, sizeof(*mp->ufcn));
+	mp->_sol._vptr = &mpSol;
+	mp->_obj._vptr = &mpObj;
 	
-	sol->_vptr = &mpCtl;
-	
-	return sol;
+	return &mp->_sol;
 }
 

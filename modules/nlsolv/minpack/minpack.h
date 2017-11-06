@@ -89,7 +89,6 @@ extern int lmstr1(lmstr_fcn_t *fcn, int m, int n, double *x, double *fvec,
 /* set hybrd parameter */
 extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *, MPT_STRUCT(property) *);
 extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *, const MPT_INTERFACE(metatype) *);
-extern int _mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* call minpack solver routine */
 extern int mpt_minpack_solve(MPT_SOLVER_STRUCT(minpack) *);
@@ -111,7 +110,7 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *, int , MPT_TYPE
 
 /* assign minpack solver to interface */
 #ifndef __cplusplus
-extern MPT_SOLVER(generic) *mpt_minpack_create(void);
+extern MPT_SOLVER(interface) *mpt_minpack_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -136,7 +135,10 @@ public:
 	}
 	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
-		return _mpt_minpack_set(this, pr, src);
+		if (!pr && !src) {
+			return mpt_minpack_prepare(this);
+		}
+		return mpt_minpack_set(this, pr, src);
 	}
 	/* nonlinear solver implementation */
 	int solve() __MPT_OVERRIDE

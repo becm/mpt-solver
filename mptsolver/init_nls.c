@@ -1,5 +1,6 @@
 
 #include <sys/uio.h>
+#include <inttypes.h>
 
 #include "array.h"
 
@@ -20,6 +21,7 @@
 extern int mpt_init_nls(MPT_SOLVER(interface) *sol, const MPT_NLS_STRUCT(functions) *fcn, const MPT_STRUCT(solver_data) *dat, MPT_INTERFACE(logger) *log)
 {
 	static const char fmt[] = { MPT_value_toVector('d'), 0 };
+	MPT_INTERFACE(object) *obj;
 	struct iovec vec;
 	int32_t npar, nres;
 	int ret;
@@ -27,6 +29,13 @@ extern int mpt_init_nls(MPT_SOLVER(interface) *sol, const MPT_NLS_STRUCT(functio
 	if (fcn && !fcn->res.fcn) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("missing residual function pointer"));
+		return MPT_ERROR(BadArgument);
+	}
+	obj = 0;
+	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
+	    || !obj) {
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (" PRIxPTR ")",
+		                 MPT_tr("solver without object interface"), sol);
 		return MPT_ERROR(BadArgument);
 	}
 	if ((npar = dat->npar) < 1) {
@@ -48,7 +57,7 @@ extern int mpt_init_nls(MPT_SOLVER(interface) *sol, const MPT_NLS_STRUCT(functio
 		                 MPT_tr("bad number of residuals for parameters"), nres, npar);
 		return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_object_set((void *) sol, "", nres ? "ii" : "i", npar, nres)) < 0) {
+	if ((ret = mpt_object_set(obj, "", nres ? "ii" : "i", npar, nres)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (npar = %d, nres = %d)",
 		                 MPT_tr("failed to set problem dimensions"), npar, nres);
 		return ret;
@@ -58,7 +67,7 @@ extern int mpt_init_nls(MPT_SOLVER(interface) *sol, const MPT_NLS_STRUCT(functio
 		                 MPT_tr("unable to set user functions"));
 		return ret;
 	}
-	if ((ret = mpt_object_set((void *) sol, 0, fmt, vec)) < 0) {
+	if ((ret = mpt_object_set(obj, 0, fmt, vec)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (%d)",
 		                 MPT_tr("failed to set initial parameters"), npar);
 		return ret;

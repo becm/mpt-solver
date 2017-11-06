@@ -108,7 +108,7 @@ extern const double *mpt_portn2_residuals(const MPT_SOLVER_STRUCT(portn2) *);
 
 /* assign portdn2 solver to interface */
 #ifndef __cplusplus
-extern MPT_SOLVER(generic) *mpt_portn2_create(void);
+extern MPT_SOLVER(interface) *mpt_portn2_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -133,7 +133,10 @@ public:
 	}
 	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
-		return _mpt_portn2_set(this, pr, src);
+		if (!pr && !src) {
+			return mpt_portn2_prepare(this);
+		}
+		return mpt_portn2_set(this, pr, src);
 	}
 	/* nonlinear solver implementation */
 	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
@@ -146,9 +149,6 @@ public:
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
-		if (!what && !out && !opar) {
-			return NlsUser | NlsOverdet;
-		}
 		return mpt_portn2_report(this, what, out, opar);
 	}
     protected:
