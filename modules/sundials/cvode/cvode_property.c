@@ -151,7 +151,7 @@ extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(pro
 	}
 	else if (!*name) {
 		prop->name = "cvode"; prop->desc = "ODE solver from Sundials Library";
-		prop->val.fmt = "ii"; prop->val.ptr = &cv->ivp;
+		prop->val.fmt = "iu"; prop->val.ptr = &cv->ivp;
 		return (cv->ivp.pint || cv->ivp.neqs != 1) ? 1 : 0;
 	}
 	else if (!strcasecmp(name, "version")) {

@@ -11,9 +11,9 @@
 extern void uinit_(const double *, double *, const int *);
 
 MPT_STRUCT(BacolData) {
-	MPT_SOLVER(interface)   _sol;
-	MPT_INTERFACE(object)   _obj;
-	MPT_SOLVER_STRUCT(bacol) d;
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
+	MPT_SOLVER_STRUCT(bacol)     d;
 	MPT_SOLVER_STRUCT(bacol_out) out;
 	double next;
 };

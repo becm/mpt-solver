@@ -85,7 +85,6 @@ extern int dn2pb_(const int *n, const int *nd, const int *p, double *x, const do
 /* set solver parameter */
 extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *, MPT_STRUCT(property) *);
 extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *, const char *, const MPT_INTERFACE(metatype) *);
-extern int _mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* call solver routine */
 extern int mpt_portn2_solve(MPT_SOLVER_STRUCT(portn2) *);
@@ -97,7 +96,7 @@ extern void mpt_portn2_fini(MPT_SOLVER_STRUCT(portn2) *);
 /* set wrapper for user functions */
 extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *, MPT_NLS_STRUCT(functions) *, int , const void *);
 
-/* set wrapper for user functions */
+/* prepare solver for run */
 extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *);
 
 /* portdn2 status information */

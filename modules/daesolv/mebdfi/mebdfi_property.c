@@ -197,7 +197,7 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 	intptr_t pos = -1, id;
 	
 	if (!prop) {
-		return MPT_ENUM(TypeSolver);
+		return MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {
@@ -206,8 +206,8 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 	}
 	else if (!*name) {
 		prop->name = "mebdfi"; prop->desc = "implicit DAE solver with BDF";
-		prop->val.fmt = "iid"; prop->val.ptr = &me->ivp;
-		return me->ivp.neqs == 1 && !me->ivp.pint ? 0 : 1;
+		prop->val.fmt = "iu"; prop->val.ptr = &me->ivp;
+		return (me->ivp.neqs == 1 && !me->ivp.pint) ? 0 : 1;
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";

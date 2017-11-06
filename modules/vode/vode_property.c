@@ -268,7 +268,7 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 	intptr_t pos = -1, id;
 	
 	if (!prop) {
-		return MPT_ENUM(TypeSolver);
+		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {
@@ -277,7 +277,7 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 	}
 	else if (!*name) {
 		prop->name = "vode"; prop->desc = "implicit ODE solver with BDF";
-		prop->val.fmt  = "iid"; prop->val.ptr = &vd->ivp;
+		prop->val.fmt  = "iu"; prop->val.ptr = &vd->ivp;
 		return vd->ivp.neqs == 1 && !vd->ivp.pint ? 0 : 1;
 	}
 	else if (!strcasecmp(name, "version")) {

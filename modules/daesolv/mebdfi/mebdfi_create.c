@@ -10,77 +10,128 @@
 
 #include "mebdfi.h"
 
-static void meFini(MPT_INTERFACE(unrefable) *ref)
+MPT_STRUCT(MebdfiData) {
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
+	MPT_SOLVER_STRUCT(mebdfi) d;
+	MPT_IVP_STRUCT(daefcn)    uf;
+	double next;
+};
+/* reference interface */
+static void meFini(MPT_INTERFACE(reference) *ref)
 {
-	mpt_mebdfi_fini((MPT_SOLVER_STRUCT(mebdfi *)) (ref + 1));
-	free(ref);
+	MPT_STRUCT(MebdfiData) *md = (void *) ref;
+	mpt_mebdfi_fini(&md->d);
+	free(md);
 }
 static uintptr_t meAddref()
 {
 	return 0;
 }
+/* metatype interface */
+static int meConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+{
+	const MPT_STRUCT(MebdfiData) *md = (void *) mt;
+	if (!type) {
+		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
+		if (ptr) *((const char **) ptr) = fmt;
+		return MPT_ENUM(TypeMeta);
+	}
+	if (type == MPT_ENUM(TypeObject)) {
+		if (ptr) *((const void **) ptr) = &md->_obj;
+		return MPT_ENUM(TypeMeta);
+	}
+	if (type == MPT_ENUM(TypeMeta)) {
+		if (ptr) *((const void **) ptr) = &md->_sol;
+		return MPT_ENUM(TypeObject);
+	}
+	return MPT_ERROR(BadType);
+}
+static MPT_INTERFACE(metatype) *meClone(const MPT_INTERFACE(metatype) *mt)
+{
+	(void) mt;
+	return 0;
+}
+/* solver interface */
+static int meReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+{
+	const MPT_STRUCT(MebdfiData) *md = (void *) sol;
+	if (!what && !out && !data) {
+		return mpt_mebdfi_get(&md->d, 0);
+	}
+	return mpt_mebdfi_report(&md->d, what, out, data);
+}
+static int meFcn(MPT_SOLVER(interface) *sol, int type, const void *par)
+{
+	MPT_STRUCT(MebdfiData) *md = (void *) sol;
+	return mpt_mebdfi_ufcn(&md->d, &md->uf, type, par);
+}
+static int meSolve(MPT_SOLVER(interface) *sol)
+{
+	MPT_STRUCT(MebdfiData) *md = (void *) sol;
+	return mpt_mebdfi_step(&md->d, md->next);
+}
+/* object interface */
 static int meGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	return mpt_mebdfi_get((MPT_SOLVER_STRUCT(mebdfi *)) (obj + 1), pr);
+	const MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _obj);
+	return mpt_mebdfi_get(&md->d, pr);
 }
 static int meSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	return _mpt_mebdfi_set((MPT_SOLVER_STRUCT(mebdfi *)) (obj + 1), pr, src);
-}
-
-static int meReport(MPT_SOLVER(generic) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{
-	if (!what && !out && !data) {
-		return MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
-	}
-	return mpt_mebdfi_report((MPT_SOLVER_STRUCT(mebdfi *)) (sol + 1), what, out, data);
-}
-static int meFcn(MPT_SOLVER(generic) *sol, int type, const void *par)
-{
-	MPT_SOLVER_STRUCT(mebdfi) *me = (void *) (sol + 1);
-	return mpt_mebdfi_ufcn(me, (void *) (me + 1), type, par);
-}
-
-static const MPT_INTERFACE_VPTR(solver) mebdfiCtl = {
-	{ { meFini }, meAddref, meGet, meSet },
-	meReport,
-	meFcn
-};
-
-extern int _mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *pr, const MPT_INTERFACE(metatype) *src)
-{
+	MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _obj);
 	if (!pr) {
 		if (!src) {
-			return mpt_mebdfi_prepare(me);
+			int ret = mpt_mebdfi_prepare(&md->d);
+			if (ret >= 0) {
+				md->next = md->d.t;
+			}
+			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		double end;
-		int ret;
-		
-		if (!src) return MPT_ERROR(BadValue);
-		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
-		if (!ret) return MPT_ERROR(BadValue);
-		return mpt_mebdfi_step(me, end);
-	}
-	return mpt_mebdfi_set(me, pr, src);
-}
-
-extern MPT_SOLVER(generic) *mpt_mebdfi_create()
-{
-	MPT_SOLVER(generic) *sol;
-	MPT_SOLVER_STRUCT(mebdfi) *md;
-	MPT_IVP_STRUCT(daefcn) *fcn;
-	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*md) + sizeof(*fcn)))) {
+		double end = md->next;
+		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
+			return MPT_ERROR(BadValue);
+		}
+		if (end < md->d.t) {
+			return MPT_ERROR(BadValue);
+		}
+		md->next = end;
 		return 0;
 	}
-	md = (MPT_SOLVER_STRUCT(mebdfi) *) (sol + 1);
-	mpt_mebdfi_init(md);
+	return mpt_mebdfi_set(&md->d, pr, src);
+}
+
+/*!
+ * \ingroup mptDaesolvMebdfi
+ * \brief create MEBDFI solver
+ * 
+ * Create MEBDFI solver instance with MPT interface.
+ * 
+ * \return MEBDFI solver instance
+ */
+extern MPT_SOLVER(interface) *mpt_mebdfi_create()
+{
+	static const MPT_INTERFACE_VPTR(object) mebdfiObj = {
+		meGet, meSet
+	};
+	static const MPT_INTERFACE_VPTR(solver) mebdfiSol = {
+		{ { meFini, meAddref }, meConv, meClone },
+		meReport,
+		meFcn,
+		meSolve
+	};
+	MPT_STRUCT(MebdfiData) *md;
 	
-	md->ipar = memset(md + 1, 0, sizeof(*fcn));
+	if (!(md = malloc(sizeof(*md)))) {
+		return 0;
+	}
+	mpt_mebdfi_init(&md->d);
+	md->d.ipar = memset(&md->uf, 0, sizeof(md->uf));
 	
-	sol->_vptr = &mebdfiCtl;
+	md->_sol._vptr = &mebdfiSol;
+	md->_obj._vptr = &mebdfiObj;
 	
-	return sol;
+	return &md->_sol;
 }
 

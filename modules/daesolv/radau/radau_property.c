@@ -160,7 +160,7 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 	intptr_t pos = -1, id;
 	
 	if (!prop) {
-		return MPT_ENUM(TypeSolver);
+		return MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {
@@ -169,8 +169,8 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 	}
 	else if (!*name) {
 		prop->name = "radau"; prop->desc = "implicit Runge-Kutta DAE solver";
-		prop->val.fmt  = "ii"; prop->val.ptr = &rd->ivp;
-		return rd->ivp.neqs == 1 && !rd->ivp.pint ? 0 : 1;
+		prop->val.fmt  = "iu"; prop->val.ptr = &rd->ivp;
+		return (rd->ivp.neqs == 1 && !rd->ivp.pint) ? 0 : 1;
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";

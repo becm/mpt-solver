@@ -56,7 +56,6 @@ extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *, double);
 /* set vode parameter */
 extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *, MPT_STRUCT(property) *);
 extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *, const char *, const MPT_INTERFACE(metatype) *);
-extern int _mpt_vode_set(MPT_SOLVER_STRUCT(vode) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* validate settings and working space for use */
 extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *);
@@ -72,7 +71,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(Prope
 
 /* setup generic solver to use vode */
 #ifndef __cplusplus
-extern MPT_SOLVER(generic) *mpt_vode_create();
+extern MPT_SOLVER(interface) *mpt_vode_create();
 #endif
 
 __MPT_EXTDECL_END
@@ -97,7 +96,10 @@ public:
 	}
 	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
-		return _mpt_vode_set(this, pr, src);
+		if (!pr && !src) {
+			return mpt_vode_prepare(this);
+		}
+		return mpt_vode_set(this, pr, src);
 	}
 	/* IVP solver implementation */
 	int step(double t) __MPT_OVERRIDE
@@ -106,9 +108,6 @@ public:
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
-		if (!what && !out && !opar) {
-			return ODE | PDE;
-		}
 		return mpt_vode_report(this, what, out, opar);
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE

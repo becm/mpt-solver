@@ -160,7 +160,7 @@ extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(proper
 	}
 	else if (!*name) {
 		prop->name = "ida"; prop->desc = "DAE solver from Sundials Library";
-		prop->val.fmt = "ii"; prop->val.ptr = &ida->ivp;
+		prop->val.fmt = "iu"; prop->val.ptr = &ida->ivp;
 		return (ida->ivp.pint || ida->ivp.neqs != 1) ? 1 : 0;
 	}
 	else if (!strcasecmp(name, "version")) {

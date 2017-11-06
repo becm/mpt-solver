@@ -61,8 +61,11 @@ int main(void)
 		buf[len-1] = '\0';
 		
 		if ((s = mpt_solver_load(&p, 0, buf, log))) {
+			MPT_INTERFACE(object) *obj = 0;
 			const char *n;
-			if ((n = mpt_object_typename((void *) s))) {
+			if (s->_vptr->meta.conv((void *) s, MPT_ENUM(TypeObject), &obj) > 0
+			    && obj
+			    && (n = mpt_object_typename(obj))) {
 				puts(n);
 			}
 			s->_vptr->report(s, -1, wrap_fw, stdout);

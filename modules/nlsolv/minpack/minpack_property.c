@@ -229,7 +229,7 @@ extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *mp, MPT_STRUCT(prop
 	else if (!*name) {
 		prop->name = "minpack"; prop->desc = "solver for (overdetermined) nonlinear equotations";
 		prop->val.fmt = "ii"; prop->val.ptr = &mp->nls;
-		return MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverdet);
+		return (mp->nls.nval != 1 || mp->nls.nres) ? 1 : 0;
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";

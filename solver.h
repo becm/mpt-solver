@@ -138,6 +138,12 @@ enum MPT_SOLVER_ENUM(Flags)
 	MPT_SOLVER_ENUM(NlsOut)     = 0x400,
 	MPT_SOLVER_ENUM(NlsOverdet) = 0x800
 };
+enum MPT_SOLVER_ENUM(Report) {
+	MPT_SOLVER_ENUM(Header)     = 0x1,
+	MPT_SOLVER_ENUM(Status)     = 0x2,
+	MPT_SOLVER_ENUM(Report)     = 0x4,
+	MPT_SOLVER_ENUM(Values)     = 0x8
+};
 
 /*! generic solver interface */
 #ifdef __cplusplus
@@ -178,17 +184,6 @@ public:
 	{
 		return setProperty(0, 0) >= 0;
 	}
-	
-	enum Report {
-#else
-enum MPT_SOLVER_ENUM(Report) {
-#endif
-	MPT_SOLVER_ENUM(Header)     = 0x1,
-	MPT_SOLVER_ENUM(Status)     = 0x2,
-	MPT_SOLVER_ENUM(Report)     = 0x4,
-	MPT_SOLVER_ENUM(Values)     = 0x8
-};
-#ifdef __cplusplus
 protected:
 	virtual int setFunctions(int , const void *) = 0;
 };
@@ -212,7 +207,7 @@ public:
 	template <typename T>
 	inline bool set(const T &fcn)
 	{
-		return setFunctions(T::Type, &fcn) >= 0;
+		return setFunctions(functionType(fcn), &fcn) >= 0;
 	}
 #else
 MPT_IVP_STRUCT(parameters);
@@ -249,7 +244,7 @@ public:
 	template <typename T>
 	inline bool set(const T &fcn)
 	{
-		return setFunctions(T::Type, &fcn) >= 0;
+		return setFunctions(functionType(fcn), &fcn) >= 0;
 	}
 #endif
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Fcn))(void *rpar, const double *p, double *res, const int *lres);
@@ -279,7 +274,6 @@ MPT_IVP_STRUCT(rside)
 #ifdef __cplusplus
 	inline rside(Fcn f, void *p = 0) : fcn(f), par(p)
 	{ }
-	enum { Type = IvpRside };
 #else
 # define MPT_IVP_RSIDE_INIT { 0, 0 }
 #endif
@@ -292,7 +286,6 @@ MPT_IVP_STRUCT(jacobian)
 #ifdef __cplusplus
 	inline jacobian(Jac f, void *p = 0) : fcn(f), par(p)
 	{ }
-	enum { Type = IvpJac };
 #else
 # define MPT_IVP_JAC_INIT { 0, 0 }
 #endif
@@ -305,7 +298,6 @@ MPT_IVP_STRUCT(odefcn)
 #ifdef __cplusplus
 	inline odefcn(Fcn f, void *p = 0, Jac j = 0) : rside(f, p), jac(j, p)
 	{ }
-	enum { Type = ODE };
 #else
 # define MPT_IVP_ODE_INIT  { MPT_IVP_RSIDE_INIT, MPT_IVP_JAC_INIT }
 #endif
@@ -318,7 +310,6 @@ MPT_IVP_STRUCT(daefcn) : public IVP::odefcn
 {
 	inline daefcn(Fcn f, void *p = 0, Jac j = 0) : IVP::odefcn(f, p, j)
 	{ mas.fcn = 0; mas.par = 0; }
-	enum { Type = DAE };
 #else
 MPT_IVP_STRUCT(daefcn)
 {
@@ -408,6 +399,18 @@ MPT_NLS_STRUCT(output)
 };
 
 #ifdef __cplusplus
+inline __MPT_CONST_EXPR int functionType(const IVP::rside &)    { return IvpRside; }
+inline __MPT_CONST_EXPR int functionType(const IVP::jacobian &) { return IvpJac; }
+inline __MPT_CONST_EXPR int functionType(const IVP::odefcn &)   { return ODE; }
+inline __MPT_CONST_EXPR int functionType(const IVP::daefcn &)   { return DAE; }
+inline __MPT_CONST_EXPR int functionType(const IVP::pdefcn &)   { return IvpRside | PDE; }
+
+inline __MPT_CONST_EXPR int functionType(const NLS::residuals &) { return NlsVector; }
+inline __MPT_CONST_EXPR int functionType(const NLS::jacobian &)  { return NlsJac; }
+inline __MPT_CONST_EXPR int functionType(const NLS::functions &) { return NlsUser; }
+inline __MPT_CONST_EXPR int functionType(const NLS::output &)    { return NlsOut; }
+
+
 template <typename T>
 struct vecpar
 {
@@ -690,10 +693,6 @@ public:
 	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
 	{
 		return T::setFunctions(what, ptr);
-	}
-	int setValues(struct value val) __MPT_OVERRIDE
-	{
-		return mpt_object_set_value(this, 0, &val);
 	}
 };
 } /* namespace solver */

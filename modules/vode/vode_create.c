@@ -9,79 +9,127 @@
 
 #include "vode.h"
 
-static void vdFini(MPT_INTERFACE(unrefable) *gen)
+MPT_STRUCT(VodeData) {
+	MPT_SOLVER(interface)  _sol;
+	MPT_INTERFACE(object)  _obj;
+	MPT_SOLVER_STRUCT(vode)  d;
+	MPT_IVP_STRUCT(odefcn)   uf;
+	double next;
+};
+/* reference interface */
+static void vdFini(MPT_INTERFACE(reference) *ref)
 {
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen + 1);
-	mpt_vode_fini(vd);
-	free(gen);
+	MPT_STRUCT(VodeData) *vd = (void *) ref;
+	mpt_vode_fini(&vd->d);
+	free(ref);
 }
 static uintptr_t vdAddref()
 {
 	return 0;
 }
-static int vdGet(const MPT_INTERFACE(object) *gen, MPT_STRUCT(property) *pr)
+/* metatype interface */
+static int vdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen + 1);
-	return mpt_vode_get(vd, pr);
-}
-static int vdSet(MPT_INTERFACE(object) *gen, const char *pr, const MPT_INTERFACE(metatype) *src)
-{
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen + 1);
-	return _mpt_vode_set(vd, pr, src);
-}
-
-static int vdReport(MPT_SOLVER(generic) *gen, int what, MPT_TYPE(PropertyHandler) out, void *data)
-{
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen + 1);
-	if (!what && !out && !data) {
-		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
+	const MPT_STRUCT(VodeData) *vd = (void *) mt;
+	if (!type) {
+		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
+		if (ptr) *((const char **) ptr) = fmt;
+		return MPT_ENUM(TypeMeta);
 	}
-	return mpt_vode_report(vd, what, out, data);
+	if (type == MPT_ENUM(TypeObject)) {
+		if (ptr) *((const void **) ptr) = &vd->_obj;
+		return MPT_ENUM(TypeMeta);
+	}
+	if (type == MPT_ENUM(TypeMeta)) {
+		if (ptr) *((const void **) ptr) = &vd->_sol;
+		return MPT_ENUM(TypeObject);
+	}
+	return MPT_ERROR(BadType);
 }
-static int vdFcn(MPT_SOLVER(generic) *gen, int type, const void *ptr)
+MPT_INTERFACE(metatype) *vdClone(const MPT_INTERFACE(metatype) *mt)
 {
-	MPT_SOLVER_STRUCT(vode) *vd = (void *) (gen + 1);
-	return mpt_vode_ufcn(vd, (void *) (vd + 1), type, ptr);
+	(void) mt;
+	return 0;
 }
-static const MPT_INTERFACE_VPTR(solver) vodeCtl = {
-	{ { vdFini }, vdAddref, vdGet, vdSet },
-	vdReport,
-	vdFcn
-};
-
-extern int _mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *pr, const MPT_INTERFACE(metatype) *src)
+/* solver interface */
+static int vdReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
+	const MPT_STRUCT(VodeData) *vd = (void *) sol;
+	if (!what && !out && !data) {
+		return mpt_vode_get(&vd->d, 0);
+	}
+	return mpt_vode_report(&vd->d, what, out, data);
+}
+static int vdFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
+{
+	MPT_STRUCT(VodeData) *vd = (void *) sol;
+	return mpt_vode_ufcn(&vd->d, &vd->uf, type, ptr);
+}
+static int vdSolve(MPT_SOLVER(interface) *sol)
+{
+	MPT_STRUCT(VodeData) *vd = (void *) sol;
+	return mpt_vode_step(&vd->d, vd->next);
+}
+/* object interface */
+static int vdGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
+{
+	const MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, obj, _obj);
+	return mpt_vode_get(&vd->d, pr);
+}
+static int vdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+{
+	MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, obj, _obj);
 	if (!pr) {
 		if (!src) {
-			return mpt_vode_prepare(vd);
+			int ret = mpt_vode_prepare(&vd->d);
+			if (ret >= 0) {
+				vd->next = vd->d.t;
+			}
+			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		double end;
-		int ret;
-		
-		if (!src) return MPT_ERROR(BadValue);
-		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
-		if (!ret) return MPT_ERROR(BadValue);
-		return mpt_vode_step(vd, end);
-	}
-	return mpt_vode_set(vd, pr, src);
-}
-extern MPT_SOLVER(generic) *mpt_vode_create()
-{
-	MPT_SOLVER(generic) *sol;
-	MPT_SOLVER_STRUCT(vode) *vd;
-	MPT_IVP_STRUCT(odefcn) *fcn;
-	
-	if (!(sol = malloc(sizeof(*sol) + sizeof(*vd) + sizeof(*fcn)))) {
+		double end = vd->next;
+		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
+			return MPT_ERROR(BadValue);
+		}
+		if (end < vd->d.t) {
+			return MPT_ERROR(BadValue);
+		}
+		vd->next = end;
 		return 0;
 	}
-	vd = (void *) (sol + 1);
-	mpt_vode_init(vd);
-	
-	memset(vd + 1, 0, sizeof(*fcn));
-	
-	sol->_vptr = &vodeCtl;
-	
-	return sol;
+	return mpt_vode_set(&vd->d, pr, src);
 }
 
+/*!
+ * \ingroup mptSolverVode
+ * \brief create VODE solver
+ * 
+ * Create dVODE solver instance with MPT interface.
+ * 
+ * \return VODE solver instance
+ */
+extern MPT_SOLVER(interface) *mpt_vode_create()
+{
+	static const MPT_INTERFACE_VPTR(object) vodeObj = {
+		vdGet, vdSet
+	};
+	static const MPT_INTERFACE_VPTR(solver) vodeSol = {
+		{ { vdFini, vdAddref }, vdConv, vdClone },
+		vdReport,
+		vdFcn,
+		vdSolve
+	};
+	MPT_STRUCT(VodeData) *vd;
+	
+	if (!(vd = malloc(sizeof(*vd)))) {
+		return 0;
+	}
+	mpt_vode_init(&vd->d);
+	memset(&vd->uf, 0, sizeof(vd->uf));
+	
+	vd->_sol._vptr = &vodeSol;
+	vd->_obj._vptr = &vodeObj;
+	
+	return &vd->_sol;
+}

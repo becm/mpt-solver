@@ -66,7 +66,6 @@ extern int mpt_mebdfi_step(MPT_SOLVER_STRUCT(mebdfi) *, double);
 /* set mebdfi parameter */
 extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *, MPT_STRUCT(property) *);
 extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *, const char *, const MPT_INTERFACE(metatype) *);
-extern int _mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* validate settings and working space for use */
 extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *);
@@ -82,7 +81,7 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *, int , MPT_TYPE(P
 
 /* setup generic solver to use mebfi */
 #ifndef __cplusplus
-extern MPT_SOLVER(generic) *mpt_mebdfi_create(void);
+extern MPT_SOLVER(interface) *mpt_mebdfi_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -100,24 +99,24 @@ public:
 	{ }
 	~Mebdfi() __MPT_OVERRIDE
 	{ }
-	int step(double t) __MPT_OVERRIDE
-	{
-		return mpt_mebdfi_step(this, t);
-	}
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_mebdfi_get(this, pr);
 	}
 	int setProperty(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
-		return _mpt_mebdfi_set(this, pr, src);
+		if (!pr && !src) {
+			return mpt_mebdfi_prepare(this);
+		}
+		return mpt_mebdfi_set(this, pr, src);
 	}
 	
+	int step(double t) __MPT_OVERRIDE
+	{
+		return mpt_mebdfi_step(this, t);
+	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
-		if (!what && !out && !opar) {
-			return DAE | PDE;
-		}
 		return mpt_mebdfi_report(this, what, out, opar);
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE

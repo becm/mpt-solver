@@ -66,9 +66,10 @@ static void info(generic &s)
 	int types = s.property(0);
 	println("<%s> [0x%x] %s (%s)", name, types, ver, type);
 	
-	s.report(s.Header | s.Status | s.Report, val, 0);
+	s.report(Header | Status | Report, val, 0);
 	println(0);
 }
+
 static void pde(class IVP &s)
 {
 	// PDE equotations and intervals
@@ -77,6 +78,8 @@ static void pde(class IVP &s)
 	mpt_object_set(&s, 0, "dddd", 0.5, 1.1, 1.2, 1.3);
 	
 	s.set(IVP::rside(0));
+	s.set(IVP::pdefcn(0));
+	
 	s.prepare();
 }
 template <class T>

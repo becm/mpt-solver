@@ -15,11 +15,11 @@
 
 
 MPT_STRUCT(SundialsIDA) {
-	MPT_SOLVER(interface)  _sol;
-	MPT_INTERFACE(object)  _obj;
-	MPT_SOLVER_STRUCT(ida)  d;
-	MPT_IVP_STRUCT(daefcn)  uf;
-	double                  next;
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
+	MPT_SOLVER_STRUCT(ida) d;
+	MPT_IVP_STRUCT(daefcn) uf;
+	double next;
 };
 /* reference interface */
 static void idaUnref(MPT_INTERFACE(reference) *ref)
@@ -37,9 +37,9 @@ static int idaConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(SundialsIDA) *cv = (void *) mt;
 	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeObject), 0 };
+		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
 		if (ptr) *((const char **) ptr) = fmt;
-		return MPT_ENUM(TypeObject);
+		return MPT_ENUM(TypeMeta);
 	}
 	if (type == MPT_ENUM(TypeObject)) {
 		if (ptr) *((const void **) ptr) = &cv->_obj;

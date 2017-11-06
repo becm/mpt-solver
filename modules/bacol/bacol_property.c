@@ -196,7 +196,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	}
 	else if (!*name) {
 		prop->name = "bacol"; prop->desc = "SPline PDE solver";
-		prop->val.fmt = "ii"; prop->val.ptr = &bac->ivp;
+		prop->val.fmt = "iu"; prop->val.ptr = &bac->ivp;
 		return (bac->ivp.pint || bac->ivp.neqs != 1) ? 1 : 0;
 	}
 	else if (!strcasecmp(name, "version")) {

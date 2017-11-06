@@ -238,7 +238,7 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 	}
 	else if (!*name) {
 		prop->name = "limex"; prop->desc = "extrapolation integrator for linearly-implicit DAE";
-		prop->val.fmt = "ii"; prop->val.ptr = &lx->ivp;
+		prop->val.fmt = "iu"; prop->val.ptr = &lx->ivp;
 		return (lx->ivp.pint || lx->ivp.neqs != 1) ? 1 : 0;
 	}
 	else if (!strcasecmp(name, "version")) {

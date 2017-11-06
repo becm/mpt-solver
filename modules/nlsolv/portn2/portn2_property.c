@@ -81,13 +81,13 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const
  * \retval <0  failure
  * \retval >0  changed property
  */
-extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *data, MPT_STRUCT(property) *prop)
+extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *n2, MPT_STRUCT(property) *prop)
 {
 	const char *name;
-	intptr_t pos = -1, id;
+	intptr_t pos = -1;
 	
 	if (!prop) {
-		return MPT_SOLVER_ENUM(NlsUser) | MPT_SOLVER_ENUM(NlsOverdet);
+		return MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverdet);
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {
@@ -96,8 +96,8 @@ extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *data, MPT_STRUCT(prop
 	}
 	else if (!*name) {
 		prop->name = "portn2"; prop->desc = "solver for overdetermined nonlinear equotations";
-		prop->val.fmt = "ii"; prop->val.ptr = &data->nls;
-		return MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverdet);
+		prop->val.fmt = "ii"; prop->val.ptr = &n2->nls;
+		return (n2->nls.nval != 1 || n2->nls.nres) ? 1 : 0;
 	}
 	
 	if (name && !strcasecmp(name, "version")) {
@@ -106,6 +106,5 @@ extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *data, MPT_STRUCT(prop
 		prop->val.fmt = 0; prop->val.ptr = version;
 		return 0;
 	}
-	(void) id;
 	return MPT_ERROR(BadArgument);
 }

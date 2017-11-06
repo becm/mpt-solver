@@ -79,7 +79,6 @@ extern int mpt_radau_step(MPT_SOLVER_STRUCT(radau) *, double);
 /* set bacol functions/parameters */
 extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *, MPT_STRUCT(property) *);
 extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *, const char *, const MPT_INTERFACE(metatype) *);
-extern int _mpt_radau_set(MPT_SOLVER_STRUCT(radau) *, const char *, const MPT_INTERFACE(metatype) *);
 
 /* validate settings and working space for use */
 extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *);
@@ -95,7 +94,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *, int , MPT_TYPE(Pro
 
 /* setup generic solver to use radau */
 #ifndef __cplusplus
-extern MPT_SOLVER(generic) *mpt_radau_create(void);
+extern MPT_SOLVER(interface) *mpt_radau_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -116,24 +115,24 @@ public:
 	{ }
 	~Radau() __MPT_OVERRIDE
 	{ }
-	int step(double t) __MPT_OVERRIDE
-	{
-		return mpt_radau_step(this, t);
-	}
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_radau_get(this, pr);
 	}
 	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
-		return _mpt_radau_set(this, pr, src);
+		if (!pr && !src) {
+			return mpt_radau_prepare(this);
+		}
+		return mpt_radau_set(this, pr, src);
 	}
 	
+	int step(double t) __MPT_OVERRIDE
+	{
+		return mpt_radau_step(this, t);
+	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
-		if (!what && !out && !opar) {
-			return DAE | PDE;
-		}
 		return mpt_radau_report(this, what, out, opar);
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
