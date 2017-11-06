@@ -8,7 +8,7 @@ if with_cxx
     executable('vecpar', 'vecpar.cpp',
       include_directories : solv_inc,
       cpp_args: test_defines,
-      dependencies: solv))
+      dependencies: cxx))
 
   if is_variable('mod_sundials')
     test('solver status output',

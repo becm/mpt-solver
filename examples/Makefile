@@ -21,7 +21,7 @@ client : LDLIBS=-lmptsolver -lmpt++ -lmptio -lmptcore
 test_client : ARGS=client.conf
 
 solvers : CC=${CXX}
-solvers : LDLIBS=-lmptsolver -lmpt++ -lmptcore $(solvers:%=-lmpt_%)
+solvers : LDLIBS=-lmpt++ -lmptcore $(solvers:%=-lmpt_%)
 solvers.o : CPPFLAGS+=-std=c++11 $(solvers:%=-Dwith_%)
 
 loadsol :  LDLIBS=-lmptsolver -lmptloader -lmptcore

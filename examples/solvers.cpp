@@ -70,7 +70,7 @@ static void info(generic &s)
 	println(0);
 }
 
-static void pde(class IVP &s)
+static void pde(IVP &s)
 {
 	// PDE equotations and intervals
 	mpt_object_set(&s, "", "iu", 3, 10);
@@ -82,14 +82,6 @@ static void pde(class IVP &s)
 	
 	s.prepare();
 }
-template <class T>
-class NL : public Solver<T>
-{
-	int solve() __MPT_OVERRIDE
-	{
-		return T::solve();
-	}
-};
 
 int main()
 {
@@ -110,7 +102,7 @@ int main()
 	IDA ida;    pde(ida); info(ida);
 #endif
 #ifdef with_nlsolv
-	NL<MinPack> mp; info(mp);
+	MinPack mp; info(mp);
 	PortN2 n2;  info(n2);
 #endif
 }
