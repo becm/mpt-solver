@@ -86,6 +86,7 @@ static int ddSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			if (ret >= 0) {
 				da->next = da->d.t;
 			}
+			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
 		double end = da->next;

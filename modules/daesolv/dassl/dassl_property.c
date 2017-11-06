@@ -233,7 +233,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 		da->info[8] = 1;
 		return 1;
 	}
-	if (!strcasecmp(name, "info10") || strncasecmp(name, "nonnegative", 6)) {
+	if (!strcasecmp(name, "info10") || !strncasecmp(name, "nonnegative", 6)) {
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
 			return ret;
