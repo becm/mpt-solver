@@ -11,6 +11,7 @@
 
 static MPT_SOLVER_STRUCT(limex) lxGlob;
 static MPT_IVP_STRUCT(daefcn) lxGlobFcn;
+static double lxNext = 0.0;
 static int lxReserved = 0;
 
 extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global()
@@ -22,16 +23,7 @@ extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global()
 	lxReserved = 1;
 	return &lxGlob;
 }
-
-static void lxFini(MPT_INTERFACE(unrefable) *ref)
-{
-	(void) ref;
-	mpt_limex_fini(&lxGlob);
-}
-static uintptr_t lxAddref()
-{
-	return 0;
-}
+/* objet interface */
 static int lxGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
 	(void) obj;
@@ -40,51 +32,99 @@ static int lxGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 static int lxSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
 	(void) obj;
-	return _mpt_limex_set(&lxGlob, pr, src);
+	if (!pr) {
+		if (!src) {
+			return mpt_limex_prepare(&lxGlob);
+		}
+	} else if (pr[0] == 't' && !pr[1]) {
+		double end = lxNext;
+		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
+			return MPT_ERROR(BadValue);
+		}
+		if (end < lxGlob.t) {
+			return MPT_ERROR(BadValue);
+		}
+		lxNext = end;
+		return 0;
+	}
+	return mpt_limex_set(&lxGlob, pr, src);
 }
-
-static int lxReport(MPT_SOLVER(generic) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static const MPT_INTERFACE_VPTR(object) limexObj = {
+	lxGet, lxSet
+};
+/* reference interface */
+static void lxFini()
+{
+	mpt_limex_fini(&lxGlob);
+}
+static uintptr_t lxAddref()
+{
+	return 0;
+}
+/* metatype interface */
+static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr);
+static MPT_INTERFACE(metatype) *lxClone()
+{
+	return 0;
+}
+/* solver interface */
+static int lxReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
 	(void) sol;
 	if (!what && !out && !data) {
-		return MPT_SOLVER_ENUM(DAE) | MPT_SOLVER_ENUM(PDE);
+		return mpt_limex_get(&lxGlob, 0);
 	}
 	return mpt_limex_report(&lxGlob, what, out, data);
 }
-static int lxFcn(MPT_SOLVER(generic) *sol, int type, const void *par)
+static int lxFcn(MPT_SOLVER(interface) *sol, int type, const void *par)
 {
 	(void) sol;
 	return mpt_limex_ufcn(&lxGlob, &lxGlobFcn, type, par);
 }
-
-extern int _mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int lxSolve(MPT_SOLVER(interface) *sol)
 {
-	if (!pr) {
-		if (!src) {
-			return mpt_limex_prepare(lx);
-		}
-	} else if (pr[0] == 't' && !pr[1]) {
-		double end;
-		int ret;
-		
-		if (!src) return MPT_ERROR(BadValue);
-		if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) return ret;
-		if (!ret) return MPT_ERROR(BadValue);
-		return mpt_limex_step(lx, end);
+	(void) sol;
+	return mpt_limex_step(&lxGlob, lxNext);
+}
+static const MPT_INTERFACE_VPTR(solver) limexSol = {
+	{ { lxFini, lxAddref }, lxConv, lxClone },
+	lxReport,
+	lxFcn,
+	lxSolve
+};
+static MPT_SOLVER(interface) lxGlobSolver = { &limexSol };
+
+static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+{
+	(void) mt;
+	if (!type) {
+		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
+		if (ptr) *((const char **) ptr) = fmt;
+		return MPT_ENUM(TypeMeta);
 	}
-	return mpt_limex_set(lx, pr, src);
+	if (type == MPT_ENUM(TypeObject)) {
+		static MPT_INTERFACE(object) obj = { &limexObj };
+		if (ptr) *((const void **) ptr) = &obj;
+		return MPT_ENUM(TypeMeta);
+	}
+	if (type == MPT_ENUM(TypeMeta)) {
+		if (ptr) *((const void **) ptr) = &lxGlobSolver;
+		return MPT_ENUM(TypeObject);
+	}
+	return MPT_ERROR(BadType);
 }
 
-static const MPT_INTERFACE_VPTR(solver) limexCtl = {
-	{ { lxFini }, lxAddref, lxGet, lxSet },
-	lxReport,
-	lxFcn
-};
-
-extern MPT_SOLVER(generic) *mpt_limex_create()
+/*!
+ * \ingroup mptLimex
+ * \brief create LIMEX solver
+ * 
+ * Create LIMEX solver instance with MPT interface.
+ * 
+ * \return LIMEX solver instance
+ */
+extern MPT_SOLVER(interface) *mpt_limex_create()
 {
-	static const MPT_SOLVER(generic) lxGlobControl = { &limexCtl };
 	if (lxReserved) return 0;
 	mpt_limex_global();
-	return (MPT_SOLVER(generic) *) &lxGlobControl;
+	return &lxGlobSolver;
 }

@@ -199,9 +199,6 @@ public:
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
-		if (!what && !out && !opar) {
-			return PDE;
-		}
 		if (what & Values) {
 			update();
 			if (out) {
