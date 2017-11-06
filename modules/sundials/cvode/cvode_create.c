@@ -90,11 +90,10 @@ static int cVodeGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _obj);
-	int ret;
 	
 	if (!pr) {
 		if (!src) {
-			ret = sundials_cvode_prepare(&cv->d);
+			int ret = sundials_cvode_prepare(&cv->d);
 			if (ret >= 0) {
 				cv->next = cv->d.t;
 			}
@@ -102,8 +101,7 @@ static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERF
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
 		double end = cv->next;
-		ret = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &end)) < 0) {
+		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
 			return MPT_ERROR(BadValue);
 		}
 		if (end < cv->d.t) {
@@ -115,6 +113,14 @@ static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERF
 	return sundials_cvode_set(&cv->d, pr, src);
 }
 
+/*!
+ * \ingroup mptSundialsCvode
+ * \brief create CVode solver
+ * 
+ * Create Sundials CVode solver instance with MPT interface.
+ * 
+ * \return CVode solver instance
+ */
 extern MPT_SOLVER(interface) *sundials_cvode_create()
 {
 	static const MPT_INTERFACE_VPTR(solver) cVodeSol = {

@@ -564,7 +564,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		int err;
 		/* no profile data requested or available */
 		if (!ret || !pcfg) {
-			if ((err = mpt_object_set(obj, 0, "d", &ivp->t)) < 0) {
+			if ((err = mpt_solver_setvalue(obj, 0, ivp->t)) < 0) {
 				mpt_log(info, 0, MPT_LOG(Error), "%s: %s",
 				        MPT_tr("solver"), MPT_tr("failed to set initial time"));
 				return err;

@@ -135,7 +135,6 @@ extern int mpt_bacol_backend(MPT_SOLVER_STRUCT(bacol) *, const char *);
 /* get/set bacol parameter */
 extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *, MPT_STRUCT(property) *);
 extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *, const char *, const MPT_INTERFACE(metatype) *);
-extern int _mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *, const char *, const MPT_INTERFACE(metatype) *);
 /* validate settings and working space for use */
 extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *);
 
@@ -146,8 +145,8 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *, int , MPT_TYPE(Pro
 extern int mpt_bacol_grid_init(int , const double *, int , double *);
 
 #ifndef __cplusplus
-/* open/close handler for generic solver type */
-extern MPT_SOLVER(generic) *mpt_bacol_create(void);
+/* create generic solver type */
+extern MPT_SOLVER(interface) *mpt_bacol_create(void);
 #endif
 
 /* init bacol output data */
@@ -182,13 +181,9 @@ public:
 	}
 	~Bacol() __MPT_OVERRIDE
 	{ }
-	void unref() __MPT_OVERRIDE
+	int step(double t) __MPT_OVERRIDE
 	{
-		delete this;
-	}
-	uintptr_t addref() __MPT_OVERRIDE
-	{
-		return 0;
+		return mpt_bacol_step(this, t);
 	}
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
@@ -196,10 +191,12 @@ public:
 	}
 	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
+		if (!pr && !src) {
+			return mpt_bacol_prepare(this);
+		}
 		_values.invalidate();
-		return _mpt_bacol_set(this, pr, src);
+		return mpt_bacol_set(this, pr, src);
 	}
-	
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
 		if (!what && !out && !opar) {

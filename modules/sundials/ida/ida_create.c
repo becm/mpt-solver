@@ -89,11 +89,10 @@ static int idaGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _obj);
-	int ret;
 	
 	if (!pr) {
 		if (!src) {
-			ret = sundials_ida_prepare(&ida->d);
+			int ret = sundials_ida_prepare(&ida->d);
 			if (ret >= 0) {
 				ida->next = ida->d.t;
 			}
@@ -117,7 +116,7 @@ static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFAC
  * \ingroup mptSundialsIda
  * \brief create IDA solver
  * 
- * Create solver interface to Sundials IDA solver.
+ * Create Sundials IDA solver instance with MPT interface.
  * 
  * \return IDA solver instance
  */
