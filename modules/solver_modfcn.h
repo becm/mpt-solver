@@ -16,7 +16,7 @@ __MPT_SOLVER_BEGIN
 #endif
 
 #ifndef MPT_SOLVER_MODULE_FCN
-# define MPT_SOLVER_MODULE_FCN(x) _mpt_solver_module_##x
+# error: solver module function name creator required
 #endif
 
 __MPT_EXTDECL_BEGIN

@@ -57,18 +57,20 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 			}
 			return ret;
 		}
-		parts = 0;
+		len = 0;
 		/* get single elements */
 		while (parts < elem) {
-			if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, dest)) <= 0) {
+			if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, dest + parts)) <= 0) {
 				break;
 			}
-			if ((ret = it->_vptr->advance(it)) <= 0) {
+			++parts;
+			if ((ret = it->_vptr->advance(it)) < 0) {
 				break;
 			}
 			++len;
-			++dest;
-			++parts;
+			if (!ret) {
+				break;
+			}
 		}
 		while (parts < elem) {
 			dest[parts++] = 0;
