@@ -26,6 +26,7 @@ OBJS = \
 	$(portn2_wrapper:%=portn2/%) \
 	$(minpack_wrapper:%=minpack/%) \
 	$(direct_wrapper:%=direct/%) \
+	../mod_ufcn_nls.o \
 	nlsolv_modfcn.o
 
 HEADER = minpack/minpack.h portn2/portn2.h

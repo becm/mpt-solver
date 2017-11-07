@@ -17,7 +17,7 @@ extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *mp, MPT_NLS_STRUCT(funct
 	if ((len = mp->nls.nres) && len == mp->nls.nval) {
 		len = 0;
 	}
-	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_nls)(len, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_solver_module_ufcn_nls(len, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	if (!(mp->ufcn = ufcn) || !ufcn->res.fcn) {

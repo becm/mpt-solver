@@ -3,9 +3,9 @@
  *   assign ODE functions according to parameter
  */
 
-#include "solver_modfcn.h"
+#include "../solver.h"
 
-extern int MPT_SOLVER_MODULE_FCN(ufcn_ode)(long pint, MPT_IVP_STRUCT(odefcn) *ufcn, int type, const void *ptr)
+extern int mpt_solver_module_ufcn_ode(long pint, MPT_IVP_STRUCT(odefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	

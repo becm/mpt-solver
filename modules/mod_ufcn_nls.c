@@ -3,9 +3,9 @@
  *   assign nonlinear solver functions according to parameter
  */
 
-#include "solver_modfcn.h"
+#include "../solver.h"
 
-extern int MPT_SOLVER_MODULE_FCN(ufcn_nls)(long nres, MPT_NLS_STRUCT(functions) *ufcn, int type, const void *ptr)
+extern int mpt_solver_module_ufcn_nls(long nres, MPT_NLS_STRUCT(functions) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	

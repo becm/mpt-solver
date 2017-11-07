@@ -645,6 +645,11 @@ extern int mpt_solver_module_generic_conv(const MPT_SOLVER(generic) *, int , voi
 /* solver module generic type conversion */
 extern int mpt_solver_module_nextval(double *, double , const MPT_INTERFACE(metatype) *);
 
+/* assign user functions */
+extern int mpt_solver_module_ufcn_ode(long , MPT_IVP_STRUCT(odefcn) *,    int , const void *);
+extern int mpt_solver_module_ufcn_dae(long , MPT_IVP_STRUCT(daefcn) *,    int , const void *);
+extern int mpt_solver_module_ufcn_nls(long , MPT_NLS_STRUCT(functions) *, int , const void *);
+
 /* get value and advance source */
 extern int mpt_solver_module_value(MPT_STRUCT(solver_value) *, const MPT_INTERFACE(metatype) *);
 extern int mpt_solver_module_value_double(MPT_STRUCT(solver_value) *, double *);

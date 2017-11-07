@@ -21,8 +21,11 @@ LINK   = ${CC}
 sundials_sources = ewtfcn.c nvector.c jacobian.c report.c data_new.c
 cvode_sources    = $(wildcard cvode/cvode_*.c)
 ida_sources      = $(wildcard ida/ida_*.c)
+ufcn_sources     = mod_ufcn_dae.c mod_ufcn_ode.c
 
-SRCS := ${sundials_sources} ${cvode_sources} ${ida_sources} sundials_modfcn.c
+SRCS := sundials_modfcn.c \
+	$(ufcn_sources:%=../%) \
+	${sundials_sources} ${cvode_sources} ${ida_sources}
 
 MATH_OBJS_STATIC != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=static ./sundials_collect.sh ${sundials_elements}
 MATH_OBJS_SHARED != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=shared ./sundials_collect.sh ${sundials_elements}

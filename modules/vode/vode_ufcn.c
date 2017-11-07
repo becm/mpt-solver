@@ -48,7 +48,7 @@ extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_IVP_STRUCT(odefcn) *uf
 {
 	int ret;
 	
-	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_ode)(vd->ivp.pint, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_solver_module_ufcn_ode(vd->ivp.pint, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	vd->fcn = 0;

@@ -92,7 +92,7 @@ extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *lx, MPT_IVP_STRUCT(daefcn) *
 {
 	int ret;
 	
-	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_dae)(lx->ivp.pint, ufcn, type, par)) < 0) {
+	if ((ret = mpt_solver_module_ufcn_dae(lx->ivp.pint, ufcn, type, par)) < 0) {
 		return ret;
 	}
 	lx->fcn = 0;

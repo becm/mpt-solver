@@ -3,7 +3,9 @@
  *   assign DAE functions according to parameter
  */
 
-extern int MPT_SOLVER_MODULE_FCN(ufcn_dae)(long pint, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
+#include "../solver.h"
+
+extern int mpt_solver_module_ufcn_dae(long pint, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
 {
 	int ret;
 	

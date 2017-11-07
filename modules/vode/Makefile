@@ -13,7 +13,7 @@ LINK   = ${FC}
 #
 # sources and math objects
 MATH = vode.o dgbsl.o dgesl.o dgbfa.o dgefa.o
-SRCS = $(wildcard vode_*.c)
+SRCS = $(wildcard vode_*.c) ../mod_ufcn_ode.c
 #
 # headers to export
 HEADER = vode.h

@@ -22,6 +22,7 @@ SRCS = \
 	${dassl_sources} \
 	${radau_sources} \
 	${mebdfi_sources} \
+	../mod_ufcn_dae.c \
 	daesolv_modfcn.c
 MATH = \
 	mebdfi.o \

@@ -81,7 +81,7 @@ extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, MPT_IVP_STRUCT(daefcn) *
 {
 	int ret;
 	
-	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_dae)(rd->ivp.pint, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_solver_module_ufcn_dae(rd->ivp.pint, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	rd->fcn = 0;

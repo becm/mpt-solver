@@ -54,7 +54,7 @@ static int idaFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 	MPT_STRUCT(SundialsIDA) *ida = (void *) sol;
 	int ret;
 	
-	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_dae)(ida->d.ivp.pint, &ida->uf, type, ptr)) < 0) {
+	if ((ret = mpt_solver_module_ufcn_dae(ida->d.ivp.pint, &ida->uf, type, ptr)) < 0) {
 		return ret;
 	}
 	ida->d.ufcn = &ida->uf;

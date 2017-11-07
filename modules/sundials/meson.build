@@ -18,8 +18,11 @@ if not (sundials_dir == '')
   sundials_src = files(
     'data_new.c', 'ewtfcn.c', 'jacobian.c', 'nvector.c', 'report.c',
     'sundials_modfcn.c',
-    '../solver_ivpset.c',
-    '../solver_tol_set.c', '../solver_tol_get.c', '../solver_tol_check.c'
+    '../mod_generic_conv.c',
+    '../mod_ivpset.c',
+    '../mod_nextval.c',
+    '../mod_tol_set.c', '../mod_tol_get.c', '../mod_tol_check.c',
+    '../mod_ufcn_dae.c', '../mod_ufcn_ode.c'
   )
   
   if sundials_ida.found()

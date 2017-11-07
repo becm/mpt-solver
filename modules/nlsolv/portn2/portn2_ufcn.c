@@ -50,7 +50,7 @@ extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *n2, MPT_NLS_STRUCT(functio
 	if ((len = n2->nls.nres) && len == n2->nls.nval) {
 		len = 0;
 	}
-	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_nls)(len, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_solver_module_ufcn_nls(len, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	if (!(n2->ui = (void *) ufcn)) {

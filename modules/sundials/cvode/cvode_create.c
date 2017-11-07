@@ -56,7 +56,7 @@ static int cVodeFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 	MPT_STRUCT(SundialsCVode) *cv = (void *) sol;
 	int ret;
 	
-	if ((ret = MPT_SOLVER_MODULE_FCN(ufcn_ode)(cv->d.ivp.pint, &cv->uf, type, ptr)) < 0) {
+	if ((ret = mpt_solver_module_ufcn_ode(cv->d.ivp.pint, &cv->uf, type, ptr)) < 0) {
 		return ret;
 	}
 	cv->d.ufcn = &cv->uf;

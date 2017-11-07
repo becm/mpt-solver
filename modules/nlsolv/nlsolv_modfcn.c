@@ -5,6 +5,4 @@
 
 #include "module_functions.h"
 
-#include "solver_data_set.c"
-
-#include "solver_ufcn_nls.c"
+#include "modfcn_data_set.c"

@@ -14,16 +14,17 @@ DIR_BASE ?= ${DIR_SOLVER_MODULES}../base/
 INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and other shared operations
-src_gen = solver_valloc.c solver_value.c solver_generic_conv.c
+src_gen = mod_valloc.c mod_value.c mod_generic_conv.c
 src_ivp = \
-	solver_ivpset.c solver_ivp_settime.c \
-	solver_tol_check.c solver_tol_set.c solver_tol_get.c
-src_nls = solver_nlsset.c
+	mod_ivpset.c \
+	mod_nextval.c \
+	mod_tol_check.c mod_tol_set.c mod_tol_get.c
+src_nls = mod_nlsset.c
+src_ufcn = solver_ufcn_dae.c solver_ufcn_ode.c solver_ufcn_nls.c
 src_mod = \
-	solver_data_new.c solver_data_set.c \
-	solver_ivp_state.c solver_ivp_vecset.c \
-	solver_ivp_values.c \
-	solver_ufcn_dae.c solver_ufcn_ode.c
+	modfcn_data_new.c modfcn_data_set.c \
+	modfcn_ivp_state.c modfcn_ivp_vecset.c \
+	modfcn_ivp_values.c
 #
 # additional objects for solver
 ifeq (${SOL}, ivp)
