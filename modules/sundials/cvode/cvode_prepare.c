@@ -117,10 +117,10 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	if (!cv->atol.base && !cv->rtol.base) {
 		err = CVodeSStolerances(cv_mem, cv->rtol.d.val, cv->atol.d.val);
 	} else {
-		if (mpt_solver_tol_check(&cv->rtol, cv->ivp.neqs, 1, __MPT_IVP_RTOL) < 0) {
+		if (mpt_solver_module_tol_check(&cv->rtol, cv->ivp.neqs, 1, __MPT_IVP_RTOL) < 0) {
 			return -21;
 		}
-		if (mpt_solver_tol_check(&cv->atol, cv->ivp.neqs, 1, __MPT_IVP_ATOL) < 0) {
+		if (mpt_solver_module_tol_check(&cv->atol, cv->ivp.neqs, 1, __MPT_IVP_ATOL) < 0) {
 			return -22;
 		}
 		err = CVodeWFtolerances(cv_mem, sundials_ewtfcn);

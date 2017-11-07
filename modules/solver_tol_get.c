@@ -11,7 +11,7 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_tol_get(const MPT_SOLVER_TYPE(dvecpar) *tol, MPT_STRUCT(value) *val)
+extern int mpt_solver_module_tol_get(const MPT_SOLVER_TYPE(dvecpar) *tol, MPT_STRUCT(value) *val)
 {
 	int len = tol->base ? tol->d.len/sizeof(double) : 0;
 	

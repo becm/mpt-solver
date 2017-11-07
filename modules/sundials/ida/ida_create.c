@@ -34,7 +34,7 @@ static uintptr_t idaRef()
 static int idaConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(SundialsIDA) *ida = (void *) mt;
-	return mpt_solver_generic_conv(&ida->_gen, type, ptr);
+	return mpt_solver_module_generic_conv(&ida->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *idaClone()
 {
@@ -84,7 +84,7 @@ static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFAC
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		return mpt_solver_ivp_settime(&ida->next, ida->d.t, src);
+		return mpt_solver_module_nextval(&ida->next, ida->d.t, src);
 	}
 	return sundials_ida_set(&ida->d, pr, src);
 }

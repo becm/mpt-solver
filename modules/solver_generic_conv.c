@@ -5,7 +5,7 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_generic_conv(const MPT_SOLVER(generic) *gen, int type, void *ptr)
+extern int mpt_solver_module_generic_conv(const MPT_SOLVER(generic) *gen, int type, void *ptr)
 {
 	if (!type) {
 		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };

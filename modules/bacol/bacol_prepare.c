@@ -30,10 +30,10 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	/* use vector tolerances if one is set */
 	odim = (npde > 1 && (bac->rtol.base || bac->atol.base)) ? 1 : 0;
 	
-	if (mpt_solver_tol_check(&bac->rtol, bac->ivp.neqs, odim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_module_tol_check(&bac->rtol, bac->ivp.neqs, odim, __MPT_IVP_RTOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (mpt_solver_tol_check(&bac->atol, bac->ivp.neqs, odim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_module_tol_check(&bac->atol, bac->ivp.neqs, odim, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	/* choose default backend */
@@ -83,13 +83,13 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	}
 	bac->xy = tmp;
 	
-	if (!mpt_solver_valloc(&bac->ipar, lip, sizeof(int))) {
+	if (!mpt_solver_module_valloc(&bac->ipar, lip, sizeof(int))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_solver_valloc(&bac->rpar, lrp, sizeof(double))) {
+	if (!mpt_solver_module_valloc(&bac->rpar, lrp, sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (lcp && !mpt_solver_valloc(&bac->bd.cpar, lcp, 2*sizeof(double))) {
+	if (lcp && !mpt_solver_module_valloc(&bac->bd.cpar, lcp, 2*sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
 	((double *) bac->rpar.iov_base)[0] = bac->bd.tstop;

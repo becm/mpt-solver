@@ -6,9 +6,9 @@
 
 extern void mpt_minpack_fini(MPT_SOLVER_STRUCT(minpack) *mpack)
 {
-	mpt_solver_valloc(&mpack->val,  0, 0);
-	mpt_solver_valloc(&mpack->work, 0, 0);
-	mpt_solver_valloc(&mpack->diag, 0, 0);
+	mpt_solver_module_valloc(&mpack->val,  0, 0);
+	mpt_solver_module_valloc(&mpack->work, 0, 0);
+	mpt_solver_module_valloc(&mpack->diag, 0, 0);
 }
 
 extern void mpt_minpack_init(MPT_SOLVER_STRUCT(minpack) *mpack)

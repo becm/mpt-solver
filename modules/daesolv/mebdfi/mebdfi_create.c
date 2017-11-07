@@ -31,7 +31,7 @@ static uintptr_t meAddref()
 static int meConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(MebdfiData) *md = (void *) mt;
-	return mpt_solver_generic_conv(&md->_gen, type, ptr);
+	return mpt_solver_module_generic_conv(&md->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *meClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -75,7 +75,7 @@ static int meSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		return mpt_solver_ivp_settime(&md->next, md->d.t, src);
+		return mpt_solver_module_nextval(&md->next, md->d.t, src);
 	}
 	return mpt_mebdfi_set(&md->d, pr, src);
 }

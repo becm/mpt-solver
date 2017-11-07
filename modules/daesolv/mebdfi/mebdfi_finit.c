@@ -22,11 +22,11 @@ extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *me)
 		free(me->dmas);
 		me->dmas = 0;
 	}
-	mpt_solver_valloc(&me->rwork, 0, 0);
-	mpt_solver_valloc(&me->iwork, 0, 0);
+	mpt_solver_module_valloc(&me->rwork, 0, 0);
+	mpt_solver_module_valloc(&me->iwork, 0, 0);
 	
-	mpt_solver_tol_check(&me->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_solver_tol_check(&me->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_module_tol_check(&me->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_module_tol_check(&me->atol, 0, 0, __MPT_IVP_ATOL);
 	
 	me->state = -1;
 }

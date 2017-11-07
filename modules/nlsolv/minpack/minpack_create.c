@@ -7,8 +7,6 @@
 
 #include "minpack.h"
 
-#include "module_functions.h"
-
 MPT_STRUCT(MinpackData) {
 	MPT_SOLVER(generic) _gen;
 	MPT_SOLVER_STRUCT(minpack) d;
@@ -29,7 +27,7 @@ static uintptr_t mpRef()
 static int mpConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	MPT_STRUCT(MinpackData) *mp = (void *) mt;
-	return mpt_solver_generic_conv(&mp->_gen, type, ptr);
+	return mpt_solver_module_generic_conv(&mp->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *mpClone(const MPT_INTERFACE(metatype) *mt)
 {

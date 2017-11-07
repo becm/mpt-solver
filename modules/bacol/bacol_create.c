@@ -33,7 +33,7 @@ static uintptr_t bacAddref(MPT_INTERFACE(reference) *ref)
 static int bacConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	MPT_STRUCT(BacolData) *bac = (void *) mt;
-	return mpt_solver_generic_conv(&bac->_gen, type, ptr);
+	return mpt_solver_module_generic_conv(&bac->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *bacClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -106,7 +106,7 @@ static int bacSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFAC
 		}
 	}
 	else if (pr[0] == 't' && pr[1] == 0) {
-		return mpt_solver_ivp_settime(&bac->next, bac->d.t, src);
+		return mpt_solver_module_nextval(&bac->next, bac->d.t, src);
 	}
 	return mpt_bacol_set(&bac->d, pr, src);
 }

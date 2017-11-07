@@ -13,7 +13,7 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_INTERFACE(metatype) *src)
+extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_INTERFACE(iterator) *it;
 	struct iovec grid;

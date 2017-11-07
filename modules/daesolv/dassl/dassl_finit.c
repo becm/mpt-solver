@@ -10,8 +10,8 @@
 
 extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *data)
 {
-	mpt_solver_valloc(&data->rwork, 0, 0);
-	mpt_solver_valloc(&data->iwork, 0, 0);
+	mpt_solver_module_valloc(&data->rwork, 0, 0);
+	mpt_solver_module_valloc(&data->iwork, 0, 0);
 	
 	if (data->y) {
 		free(data->y);
@@ -25,8 +25,8 @@ extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *data)
 		free(data->dmas);
 		data->dmas = 0;
 	}
-	mpt_solver_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_solver_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_module_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_module_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
 }
 
 extern void mpt_dassl_init(MPT_SOLVER_STRUCT(dassl) *data)

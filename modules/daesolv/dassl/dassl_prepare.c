@@ -21,10 +21,10 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data)
 	if (data->ivp.neqs < 2 || (!data->rtol.base && !data->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_solver_tol_check(&data->atol, data->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_module_tol_check(&data->atol, data->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return -1;
 	}
-	if (mpt_solver_tol_check(&data->rtol, data->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_module_tol_check(&data->rtol, data->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
 		return -1;
 	}
 	iwork = data->iwork.iov_base;
@@ -44,11 +44,11 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data)
 		}
 	}
 	
-	if (!(iwork = mpt_solver_valloc(&data->iwork, liw, sizeof(int)))) {
-		return -1;
+	if (!(iwork = mpt_solver_module_valloc(&data->iwork, liw, sizeof(int)))) {
+		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_solver_valloc(&data->rwork, lrw, sizeof(double))) {
-		return -1;
+	if (!mpt_solver_module_valloc(&data->rwork, lrw, sizeof(double))) {
+		return MPT_ERROR(BadOperation);
 	}
 	len = neqs * sizeof(double);
 	if (!(v = data->y)) {

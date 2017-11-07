@@ -8,7 +8,7 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_tol_check(MPT_SOLVER_TYPE(dvecpar) *tol, long neqs, long post, double def)
+extern int mpt_solver_module_tol_check(MPT_SOLVER_TYPE(dvecpar) *tol, long neqs, long post, double def)
 {
 	double *tmp, val;
 	long  i, len;

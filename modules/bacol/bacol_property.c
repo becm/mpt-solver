@@ -56,7 +56,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 	if (!*name) {
 		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		
-		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
+		if (src && (ret =  mpt_solver_module_ivpset(&ivp, src)) < 0) {
 			return ret;
 		}
 		mpt_bacol_fini(bac);
@@ -66,10 +66,10 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_tol_set(&bac->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_module_tol_set(&bac->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_tol_set(&bac->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_module_tol_set(&bac->rtol, src, __MPT_IVP_RTOL);
 	}
 	/* no interaction after prepare */
 	if (bac->mflag.noinit >= 0) {
@@ -208,20 +208,16 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
+		if (!bac) { prop->val.fmt = "d"; prop->val.ptr = &bac->atol.d.val; }
+		else { id = mpt_solver_module_tol_get(&bac->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
-		if (!bac) {
-			prop->val.fmt = 0; prop->val.ptr = &bac->atol;
-			return id;
-		}
-		return mpt_solver_tol_get(&bac->atol, &prop->val);
+		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
+		if (!bac) { prop->val.fmt = "d"; prop->val.ptr = &bac->rtol.d.val; }
+		else { id = mpt_solver_module_tol_get(&bac->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
-		if (!bac) {
-			prop->val.fmt = 0; prop->val.ptr = &bac->rtol;
-			return id;
-		}
-		return mpt_solver_tol_get(&bac->rtol, &prop->val);
+		return id;
 	}
 	/* bacol parameters */
 	if (name ? !strcasecmp(name, "kcol") : pos == ++id) {

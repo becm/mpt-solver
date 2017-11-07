@@ -41,7 +41,7 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const
 		}
 		len = n2->bnd ? 3 * n2->nls.nval : n2->nls.nval;
 		
-		if (!(dst = mpt_solver_valloc(&n2->pv, len, sizeof(double)))) {
+		if (!(dst = mpt_solver_module_valloc(&n2->pv, len, sizeof(double)))) {
 			return MPT_ERROR(BadOperation);
 		}
 		if (!src) {
@@ -56,7 +56,7 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const
 	if (!*name) {
 		MPT_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;
 		int ret = 0;
-		if (src && (ret = mpt_solver_nlsset(&nls, src)) < 0) {
+		if (src && (ret = mpt_solver_module_nlsset(&nls, src)) < 0) {
 			return ret;
 		}
 		mpt_portn2_fini(n2);

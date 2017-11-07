@@ -31,7 +31,7 @@ static uintptr_t ddAddref()
 static int ddConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(DasslData) *da = (void *) mt;
-	return mpt_solver_generic_conv(&da->_gen, type, ptr);
+	return mpt_solver_module_generic_conv(&da->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *ddClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -75,7 +75,7 @@ static int ddSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		return mpt_solver_ivp_settime(&da->next, da->d.t, src);
+		return mpt_solver_module_nextval(&da->next, da->d.t, src);
 	}
 	return mpt_dassl_set(&da->d, pr, src);
 }

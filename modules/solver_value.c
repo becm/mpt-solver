@@ -22,7 +22,7 @@
  * 
  * \return conversion result
  */
-extern int mpt_solver_value_set(MPT_STRUCT(solver_value) *val, const MPT_INTERFACE(metatype) *mt)
+extern int mpt_solver_module_value(MPT_STRUCT(solver_value) *val, const MPT_INTERFACE(metatype) *mt)
 {
 	MPT_STRUCT(value) tmp;
 	int ret;
@@ -111,7 +111,7 @@ static int solverNext(MPT_STRUCT(solver_value) *val, void *dest, int type, size_
  * 
  * \return conversion result
  */
-extern int mpt_solver_next_double(MPT_STRUCT(solver_value) *val, double *d)
+extern int mpt_solver_module_value_double(MPT_STRUCT(solver_value) *val, double *d)
 {
 	return solverNext(val, d, 'd', sizeof(*d));
 }
@@ -126,7 +126,7 @@ extern int mpt_solver_next_double(MPT_STRUCT(solver_value) *val, double *d)
  * 
  * \return conversion result
  */
-extern int mpt_solver_next_key(MPT_STRUCT(solver_value) *val)
+extern int mpt_solver_module_value_key(MPT_STRUCT(solver_value) *val)
 {
 	int ret;
 	const char *tmp;
@@ -147,7 +147,7 @@ extern int mpt_solver_next_key(MPT_STRUCT(solver_value) *val)
  * 
  * \return conversion result
  */
-extern int mpt_solver_next_uint(MPT_STRUCT(solver_value) *val, uint32_t *u)
+extern int mpt_solver_module_value_uint(MPT_STRUCT(solver_value) *val, uint32_t *u)
 {
 	return solverNext(val, u, 'u', sizeof(*u));
 }
@@ -162,7 +162,7 @@ extern int mpt_solver_next_uint(MPT_STRUCT(solver_value) *val, uint32_t *u)
  * 
  * \return conversion result
  */
-extern int mpt_solver_next_int(MPT_STRUCT(solver_value) *val, int32_t *i)
+extern int mpt_solver_module_value_int(MPT_STRUCT(solver_value) *val, int32_t *i)
 {
 	return solverNext(val, i, 'i', sizeof(*i));
 }

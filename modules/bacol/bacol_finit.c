@@ -27,8 +27,8 @@ extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *bac)
 	}
 	bac->rpar.iov_len  = 0;
 	
-	mpt_solver_tol_check(&bac->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_solver_tol_check(&bac->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_module_tol_check(&bac->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_module_tol_check(&bac->atol, 0, 0, __MPT_IVP_ATOL);
 	
 	bac->mflag.noinit = -1;
 	

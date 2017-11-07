@@ -27,7 +27,7 @@ static uintptr_t n2Ref()
 static int n2Conv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(PortN2Data) *n2 = (void *) mt;
-	return mpt_solver_generic_conv(&n2->_gen, type, ptr);
+	return mpt_solver_module_generic_conv(&n2->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *n2Clone(const MPT_INTERFACE(metatype) *mt)
 {

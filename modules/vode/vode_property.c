@@ -21,7 +21,7 @@ static int setInt(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, int val)
 		if (!val) {
 			return 0;
 		}
-		if (!(iwk = mpt_solver_valloc(&vd->iwork, pos + 1, sizeof(int)))) {
+		if (!(iwk = mpt_solver_module_valloc(&vd->iwork, pos + 1, sizeof(int)))) {
 			return MPT_ERROR(BadOperation);
 		}
 	}
@@ -36,7 +36,7 @@ static int setReal(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, double val)
 		if (!val) {
 			return 0;
 		}
-		if (!(rwk = mpt_solver_valloc(&vd->rwork, pos + 1, sizeof(double)))) {
+		if (!(rwk = mpt_solver_module_valloc(&vd->rwork, pos + 1, sizeof(double)))) {
 			return MPT_ERROR(BadOperation);
 		}
 	}
@@ -55,7 +55,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		return 0;
 	}
 	ret = 1;
-	if ((key = mpt_solver_value_set(&val, src)) < 0) {
+	if ((key = mpt_solver_module_value(&val, src)) < 0) {
 		const char *ptr;
 		if ((key = src->_vptr->conv(src, 'k', &ptr)) < 0) {
 			return key;
@@ -63,7 +63,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		key = ptr ? *ptr : 0;
 		ret = 0;
 	}
-	if ((key = mpt_solver_next_key(&val)) < 0) {
+	if ((key = mpt_solver_module_value_key(&val)) < 0) {
 		return key;
 	}
 	if (!key) {
@@ -79,14 +79,14 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_next_int(&val, &ml)) < 0) {
+	if ((ret = mpt_solver_module_value_int(&val, &ml)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
 		ml = mu = vd->ivp.neqs;
 		ret = 1;
 	}
-	else if ((ret = mpt_solver_next_int(&val, &mu)) < 0) {
+	else if ((ret = mpt_solver_module_value_int(&val, &mu)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
@@ -122,7 +122,7 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		return 0;
 	}
 	ret = 1;
-	if ((ret = mpt_solver_value_set(&val, src)) < 0) {
+	if ((ret = mpt_solver_module_value(&val, src)) < 0) {
 		const char *ptr = 0;
 		if ((ret = src->_vptr->conv(src, 'k', &ptr)) < 0) {
 			return ret;
@@ -130,7 +130,7 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		key = ptr ? *ptr : 0;
 		ret = 0;
 	}
-	else if ((key = mpt_solver_next_key(&val)) < 0) {
+	else if ((key = mpt_solver_module_value_key(&val)) < 0) {
 		return key;
 	}
 	if (!key) {
@@ -150,7 +150,7 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if (!ret || !(ret = mpt_solver_next_double(&val, &tcrit))) {
+	if (!ret || !(ret = mpt_solver_module_value_double(&val, &tcrit))) {
 		return MPT_ERROR(MissingData);
 	}
 	if (ret < 0) {
@@ -198,7 +198,7 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT
 	else if (!*name) {
 		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		ret = 0;
-		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
+		if (src && (ret =  mpt_solver_module_ivpset(&ivp, src)) < 0) {
 			return ret;
 		}
 		mpt_vode_fini(vd);
@@ -208,10 +208,10 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_tol_set(&vd->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_module_tol_set(&vd->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_tol_set(&vd->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_module_tol_set(&vd->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return setJacobian(vd, src);
@@ -290,13 +290,13 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : (pos == ++id)) {
 		if (!vd) { prop->val.fmt = "d"; prop->val.ptr = &vd->atol.d.val; }
-		else { id = mpt_solver_tol_get(&vd->atol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&vd->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == ++id)) {
 		if (!vd) { prop->val.fmt = "d"; prop->val.ptr = &vd->rtol.d.val; }
-		else { id = mpt_solver_tol_get(&vd->rtol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&vd->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

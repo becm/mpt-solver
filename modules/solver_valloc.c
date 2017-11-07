@@ -12,7 +12,7 @@
 
 #include "../solver.h"
 
-extern void *mpt_solver_valloc(struct iovec *vec, size_t need, size_t esize)
+extern void *mpt_solver_module_valloc(struct iovec *vec, size_t need, size_t esize)
 {
 	void *ptr;
 	

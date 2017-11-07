@@ -35,7 +35,7 @@ static uintptr_t cVodeRef(MPT_INTERFACE(reference) *ref)
 static int cVodeConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(SundialsCVode) *cv = (void *) mt;
-	return mpt_solver_generic_conv(&cv->_gen, type, ptr);
+	return mpt_solver_module_generic_conv(&cv->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *cVodeClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -86,7 +86,7 @@ static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERF
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		return mpt_solver_ivp_settime(&cv->next, cv->d.t, src);
+		return mpt_solver_module_nextval(&cv->next, cv->d.t, src);
 	}
 	return sundials_cvode_set(&cv->d, pr, src);
 }

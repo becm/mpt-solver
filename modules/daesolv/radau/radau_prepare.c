@@ -26,10 +26,10 @@ extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *rd)
 	if (neqs < 2 || (!rd->rtol.base && !rd->atol.base)) {
 		pdim = 0;
 	}
-	if (mpt_solver_tol_check(&rd->rtol, rd->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
+	if (mpt_solver_module_tol_check(&rd->rtol, rd->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (mpt_solver_tol_check(&rd->atol, rd->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
+	if (mpt_solver_module_tol_check(&rd->atol, rd->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
 	/* (2 + (NSMAX - 1) / 2) * N + 20 */
@@ -40,10 +40,10 @@ extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *rd)
 	/* N * (LJAC + LMAS + NSMAX*LE + 3*NSMAX + 3) + 20 */
 	lrw = neqs * (lrw + 3 * nsmax + 3) + 20;
 	
-	if (!mpt_solver_valloc(&rd->iwork, liw, sizeof(int))) {
+	if (!mpt_solver_module_valloc(&rd->iwork, liw, sizeof(int))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_solver_valloc(&rd->rwork, lrw, sizeof(double))) {
+	if (!mpt_solver_module_valloc(&rd->rwork, lrw, sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
 	(void) memset(&rd->count, 0, sizeof(rd->count));

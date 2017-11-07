@@ -27,10 +27,10 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metat
 		mp->mu = mp->ml = 0;
 		return 0;
 	}
-	if ((ret = mpt_solver_value_set(&val, src)) < 0) {
+	if ((ret = mpt_solver_module_value(&val, src)) < 0) {
 		return ret;
 	}
-	if ((key = mpt_solver_next_key(&val)) < 0) {
+	if ((key = mpt_solver_module_value_key(&val)) < 0) {
 		return key;
 	}
 	if (!key) {
@@ -44,7 +44,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metat
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_next_int(&val, &ml)) < 0) {
+	if ((ret = mpt_solver_module_value_int(&val, &ml)) < 0) {
 		return ret;
 	}
 	if (!ret) {
@@ -54,7 +54,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metat
 	if (ml < 0 || ml >= mp->nls.nres) {
 		return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_next_int(&val, &mu)) < 0) {
+	if ((ret = mpt_solver_module_value_int(&val, &mu)) < 0) {
 		return ret;
 	}
 	if (!ret) {
@@ -130,7 +130,7 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, con
 		} else {
 			all *= 2;
 		}
-		if (!(par = mpt_solver_valloc(&mp->val, all, sizeof(*par)))) {
+		if (!(par = mpt_solver_module_valloc(&mp->val, all, sizeof(*par)))) {
 			return MPT_ERROR(BadOperation);
 		}
 		if ((ret = MPT_SOLVER_MODULE_FCN(data_set)(par, mp->nls.nval, 0, ret ? it : 0)) < 0) {
@@ -141,7 +141,7 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, con
 	if (!*name) {
 		MPT_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;
 		
-		if (src && (ret =  mpt_solver_nlsset(&nls, src)) < 0) {
+		if (src && (ret =  mpt_solver_module_nlsset(&nls, src)) < 0) {
 			return ret;
 		}
 		mpt_minpack_fini(mp);

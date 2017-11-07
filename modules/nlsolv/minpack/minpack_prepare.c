@@ -21,13 +21,13 @@ extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *mpack)
 	}
 	/* prepare parameters and residuals */
 	lw = npar + nres;
-	if (!mpt_solver_valloc(&mpack->val, lw, sizeof(double))) {
+	if (!mpt_solver_module_valloc(&mpack->val, lw, sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
 	/* set diagonal matrix internally */
 	if ((lw = mpack->diag.iov_len/sizeof(double)) < nres) {
 		mpack->mode = 1;
-		if (!mpt_solver_valloc(&mpack->diag, nres, sizeof(double))) {
+		if (!mpt_solver_module_valloc(&mpack->diag, nres, sizeof(double))) {
 			return MPT_ERROR(BadOperation);
 		}
 	}
@@ -37,7 +37,7 @@ extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *mpack)
 	lw += npar * nres;     /* jacobian */
 	lw += npar*(npar+1)/2; /* r for hybrid or ipvt for lmderv */
 	
-	if (!mpt_solver_valloc(&mpack->work, lw, sizeof(double))) {
+	if (!mpt_solver_module_valloc(&mpack->work, lw, sizeof(double))) {
 		return MPT_ERROR(BadOperation);
 	}
 	if (mpack->ml < 0) mpack->ml = npar;

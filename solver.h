@@ -628,29 +628,29 @@ extern int mpt_output_solver_history(MPT_INTERFACE(output) *, const double *, in
 
 
 /* solver module tolerance handling */
-extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *, const MPT_INTERFACE(metatype) *, double);
-extern int mpt_solver_tol_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);
-extern int mpt_solver_tol_check(MPT_SOLVER_TYPE(dvecpar) *, long , long , double);
+extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *, const MPT_INTERFACE(metatype) *, double);
+extern int mpt_solver_module_tol_get(const MPT_SOLVER_TYPE(dvecpar) *, MPT_STRUCT(value) *);
+extern int mpt_solver_module_tol_check(MPT_SOLVER_TYPE(dvecpar) *, long , long , double);
 
 /* solver module memory management */
-extern void *mpt_solver_valloc(struct iovec *, size_t len, size_t size);
+extern void *mpt_solver_module_valloc(struct iovec *, size_t len, size_t size);
 
 /* solver module parameter assignment */
-extern int mpt_solver_ivpset(MPT_IVP_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
-extern int mpt_solver_nlsset(MPT_NLS_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
+extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
+extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
 
 /* solver module generic type conversion */
-extern int mpt_solver_generic_conv(const MPT_SOLVER(generic) *, int , void *);
+extern int mpt_solver_module_generic_conv(const MPT_SOLVER(generic) *, int , void *);
 
 /* solver module generic type conversion */
-extern int mpt_solver_ivp_settime(double *, double , const MPT_INTERFACE(metatype) *);
+extern int mpt_solver_module_nextval(double *, double , const MPT_INTERFACE(metatype) *);
 
 /* get value and advance source */
-extern int mpt_solver_value_set(MPT_STRUCT(solver_value) *, const MPT_INTERFACE(metatype) *);
-extern int mpt_solver_next_double(MPT_STRUCT(solver_value) *, double *);
-extern int mpt_solver_next_uint(MPT_STRUCT(solver_value) *, uint32_t *);
-extern int mpt_solver_next_int(MPT_STRUCT(solver_value) *, int32_t *);
-extern int mpt_solver_next_key(MPT_STRUCT(solver_value) *);
+extern int mpt_solver_module_value(MPT_STRUCT(solver_value) *, const MPT_INTERFACE(metatype) *);
+extern int mpt_solver_module_value_double(MPT_STRUCT(solver_value) *, double *);
+extern int mpt_solver_module_value_uint(MPT_STRUCT(solver_value) *, uint32_t *);
+extern int mpt_solver_module_value_int(MPT_STRUCT(solver_value) *, int32_t *);
+extern int mpt_solver_module_value_key(MPT_STRUCT(solver_value) *);
 
 
 /* id for registered input metatype */

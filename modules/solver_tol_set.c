@@ -12,7 +12,7 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE(metatype) *src, double def)
+extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE(metatype) *src, double def)
 {
 	MPT_INTERFACE(iterator) *it;
 	struct iovec tmp;
@@ -33,7 +33,7 @@ extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE
 		double d;
 		long reserved = 0;
 		if (!ret || !it) {
-			return mpt_solver_tol_set(vec, 0, def);
+			return mpt_solver_module_tol_set(vec, 0, def);
 		}
 		tol = 0;
 		len = 0;
@@ -71,7 +71,7 @@ extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE
 					free(tol);
 				}
 			}
-			return mpt_solver_tol_set(vec, 0, def);
+			return mpt_solver_module_tol_set(vec, 0, def);
 		}
 		if (vec->base) {
 			free(vec->base);
@@ -89,7 +89,7 @@ extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE
 			if ((ret = src->_vptr->conv(src, 'd', &d)) < 0) {
 				return ret;
 			}
-			return mpt_solver_tol_set(vec, 0, ret ? def : d);
+			return mpt_solver_module_tol_set(vec, 0, ret ? def : d);
 		}
 		else if (ret) {
 			if (!val.fmt) {
@@ -106,7 +106,7 @@ extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE
 			if (len && val.ptr) {
 				def = *((double *) val.ptr);
 			}
-			mpt_solver_tol_set(vec, 0, def);
+			mpt_solver_module_tol_set(vec, 0, def);
 			return ret;
 		}
 	}
@@ -117,7 +117,7 @@ extern int mpt_solver_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE
 			if (len && tmp.iov_base) {
 				def = *((double *) tmp.iov_base);
 			}
-			return mpt_solver_tol_set(vec, 0, def);
+			return mpt_solver_module_tol_set(vec, 0, def);
 		}
 		ret = 0;
 	}

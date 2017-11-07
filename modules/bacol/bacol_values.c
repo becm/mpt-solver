@@ -29,13 +29,13 @@ extern const double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacol_out) *out, const M
 	wlen = (kcol * MPT_BACOL_NCONTI) * (1 + deriv);
 	wlen += kcol * (bac->nint + 1) + 2 * MPT_BACOL_NCONTI;
 	
-	if (!(wrk = mpt_solver_valloc(&out->_wrk, wlen, sizeof(double)))) {
+	if (!(wrk = mpt_solver_module_valloc(&out->_wrk, wlen, sizeof(double)))) {
 		return 0;
 	}
 	npts = nint + 1;
 	wlen = npts + npts * (deriv + 1) * neqs;
 	
-	if (!(val = mpt_solver_valloc(&out->_val, wlen, sizeof(double)))) {
+	if (!(val = mpt_solver_module_valloc(&out->_val, wlen, sizeof(double)))) {
 		return 0;
 	}
 	if (out->update && bac->xy) {

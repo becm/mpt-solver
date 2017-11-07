@@ -31,7 +31,7 @@ static uintptr_t rdAddref()
 static int rdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(RadauData) *rd = (void *) mt;
-	return mpt_solver_generic_conv(&rd->_gen, type, ptr);
+	return mpt_solver_module_generic_conv(&rd->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *rdClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -75,7 +75,7 @@ static int rdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		return mpt_solver_ivp_settime(&rd->next, rd->d.t, src);
+		return mpt_solver_module_nextval(&rd->next, rd->d.t, src);
 	}
 	return mpt_radau_set(&rd->d, pr, src);
 }

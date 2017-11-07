@@ -16,7 +16,7 @@
 static int setInt(MPT_SOLVER_STRUCT(mebdfi) *me, size_t pos, int val)
 {
 	int *d;
-	if (!(d = mpt_solver_valloc(&me->iwork, pos + 1, sizeof(int)))) {
+	if (!(d = mpt_solver_module_valloc(&me->iwork, pos + 1, sizeof(int)))) {
 		return MPT_ERROR(BadOperation);
 	}
 	d[pos] = val;
@@ -35,7 +35,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_INTERFACE(metaty
 		return 0;
 	}
 	ret = 1;
-	if ((key = mpt_solver_value_set(&val, src)) < 0) {
+	if ((key = mpt_solver_module_value(&val, src)) < 0) {
 		const char *par;
 		if ((key = src->_vptr->conv(src, 'k', &par)) < 0) {
 			return key;
@@ -54,14 +54,14 @@ static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_INTERFACE(metaty
 		case 'b': jnum = 1; break;
 		default: return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_next_int(&val, &ld)) < 0) {
+	if ((ret = mpt_solver_module_value_int(&val, &ld)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
 		ld = ud = me->ivp.neqs;
 		ret = 1;
 	}
-	else if ((ret = mpt_solver_next_int(&val, &ud)) < 0) {
+	else if ((ret = mpt_solver_module_value_int(&val, &ud)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
@@ -102,7 +102,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 	if (!*name) {
 		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		
-		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
+		if (src && (ret =  mpt_solver_module_ivpset(&ivp, src)) < 0) {
 			return ret;
 		}
 		mpt_mebdfi_fini(me);
@@ -113,10 +113,10 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 	}
 	
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_tol_set(&me->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_module_tol_set(&me->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_tol_set(&me->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_module_tol_set(&me->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jacobian", 3)) {
 		return setJacobian(me, src);
@@ -219,13 +219,13 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
 		if (!me) { prop->val.fmt = "d"; prop->val.ptr = &me->atol.d.val; }
-		else { id = mpt_solver_tol_get(&me->atol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&me->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		if (!me) { prop->val.fmt = "d"; prop->val.ptr = &me->rtol.d.val; }
-		else { id = mpt_solver_tol_get(&me->rtol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&me->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

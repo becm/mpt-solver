@@ -25,7 +25,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatyp
 		return 0;
 	}
 	ret = 1;
-	if ((key = mpt_solver_value_set(&val, src)) < 0) {
+	if ((key = mpt_solver_module_value(&val, src)) < 0) {
 		const char *ptr;
 		if ((key = src->_vptr->conv(src, 'k', &ptr)) < 0) {
 			return key;
@@ -33,7 +33,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatyp
 		key = ptr ? *ptr : 0;
 		ret = 0;
 	}
-	else if ((key = mpt_solver_next_key(&val)) < 0) {
+	else if ((key = mpt_solver_module_value_key(&val)) < 0) {
 		return key;
 	}
 	if (!key) {
@@ -52,14 +52,14 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatyp
 		case 'b':
 			rd->ijac = 0;
 		case 'B':
-			if ((ret = mpt_solver_next_int(&val, &ld)) < 0) {
+			if ((ret = mpt_solver_module_value_int(&val, &ld)) < 0) {
 				return ret;
 			}
 			if (!ret) {
 				ld = ud = rd->ivp.neqs;
 				ret = 1;
 			}
-			else if ((ret = mpt_solver_next_int(&val, &ud)) < 0) {
+			else if ((ret = mpt_solver_module_value_int(&val, &ud)) < 0) {
 				return ret;
 			}
 			else if (!ret) {
@@ -99,7 +99,7 @@ extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *name, const M
 	if (!*name) {
 		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		
-		if (src && (ret =  mpt_solver_ivpset(&ivp, src)) < 0) {
+		if (src && (ret =  mpt_solver_module_ivpset(&ivp, src)) < 0) {
 			return ret;
 		}
 		mpt_radau_fini(rd);
@@ -109,10 +109,10 @@ extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *name, const M
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_tol_set(&rd->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_module_tol_set(&rd->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_tol_set(&rd->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_module_tol_set(&rd->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jacobian", 3)) {
 		return setJacobian(rd, src);
@@ -182,13 +182,13 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
 		if (!rd) { prop->val.fmt = "d"; prop->val.ptr = &rd->atol.d.val; }
-		else { id = mpt_solver_tol_get(&rd->atol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&rd->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		if (!rd) { prop->val.fmt = "d"; prop->val.ptr = &rd->rtol.d.val; }
-		else { id = mpt_solver_tol_get(&rd->rtol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&rd->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

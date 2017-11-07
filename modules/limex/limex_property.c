@@ -27,7 +27,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 		return 0;
 	}
 	ret = 1;
-	if ((key = mpt_solver_value_set(&val, src)) < 0) {
+	if ((key = mpt_solver_module_value(&val, src)) < 0) {
 		const char *par = 0;
 		if ((key = src->_vptr->conv(src, 'k', &par)) < 0) {
 			return key;
@@ -35,7 +35,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 		key = (ret && par) ? *par : 0;
 		ret = 0;
 	}
-	else if ((key = mpt_solver_next_key(&val)) < 0) {
+	else if ((key = mpt_solver_module_value_key(&val)) < 0) {
 		return key;
 	}
 	if (!key) {
@@ -57,7 +57,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 			if (!ret) {
 				lb = ub = lx->ivp.neqs;
 			}
-			else if ((ret = mpt_solver_next_int(&val, &lb)) < 0) {
+			else if ((ret = mpt_solver_module_value_int(&val, &lb)) < 0) {
 				return ret;
 			}
 			else if (!ret) {
@@ -65,7 +65,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 				ret = 1;
 				break;
 			}
-			else if ((ret = mpt_solver_next_int(&val, &ub)) < 0) {
+			else if ((ret = mpt_solver_module_value_int(&val, &ub)) < 0) {
 				return ret;
 			}
 			else if (!ret) {
@@ -104,7 +104,7 @@ extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, const M
 	if (!*name) {
 		MPT_IVP_STRUCT(parameters) ivp = MPT_IVPPAR_INIT;
 		
-		if (src && (ret = mpt_solver_ivpset(&ivp, src)) < 0) {
+		if (src && (ret = mpt_solver_module_ivpset(&ivp, src)) < 0) {
 			return ret;
 		}
 		mpt_limex_fini(lx);
@@ -113,10 +113,10 @@ extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, const M
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_tol_set(&lx->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_module_tol_set(&lx->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_tol_set(&lx->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_module_tol_set(&lx->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return setJacobian(lx, src);
@@ -251,13 +251,13 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 	id = 0;
 	if (name ? !strcasecmp(name, "atol") : pos == id++) {
 		if (!lx) { prop->val.fmt = "d"; prop->val.ptr = &lx->atol.d.val; }
-		else { id = mpt_solver_tol_get(&lx->atol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&lx->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == id++) {
 		if (!lx) { prop->val.fmt = "d"; prop->val.ptr = &lx->rtol.d.val; }
-		else { id = mpt_solver_tol_get(&lx->rtol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&lx->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

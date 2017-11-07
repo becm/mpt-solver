@@ -6,9 +6,9 @@
 
 extern void mpt_portn2_fini(MPT_SOLVER_STRUCT(portn2) *n2)
 {
-/* 	mpt_vecpar_alloc(&n2->pv, 0, 0);*/
-	mpt_solver_valloc(&n2->rv, 0, 0);
-	mpt_solver_valloc(&n2->iv, 0, 0);
+	mpt_solver_module_valloc(&n2->pv, 0, 0);
+	mpt_solver_module_valloc(&n2->rv, 0, 0);
+	mpt_solver_module_valloc(&n2->iv, 0, 0);
 }
 
 extern int mpt_portn2_init(MPT_SOLVER_STRUCT(portn2) *n2)
@@ -20,12 +20,12 @@ extern int mpt_portn2_init(MPT_SOLVER_STRUCT(portn2) *n2)
 	n2->pv.iov_len  = 0;
 	
 	n2->iv.iov_base = 0;
-	if (!mpt_solver_valloc(&n2->iv, 82, sizeof(int))) {
+	if (!mpt_solver_module_valloc(&n2->iv, 82, sizeof(int))) {
 		return -1;
 	}
 	n2->rv.iov_base = 0;
-	if (!mpt_solver_valloc(&n2->rv, 105, sizeof(double))) {
-		mpt_solver_valloc(&n2->iv, 0, 0);
+	if (!mpt_solver_module_valloc(&n2->rv, 105, sizeof(double))) {
+		mpt_solver_module_valloc(&n2->iv, 0, 0);
 		return -1;
 	}
 	

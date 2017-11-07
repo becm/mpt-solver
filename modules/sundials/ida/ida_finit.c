@@ -29,8 +29,8 @@ extern void sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
 		N_VDestroy(data->yp);
 		data->yp = 0;
 	}
-	mpt_solver_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_solver_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	mpt_solver_module_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_module_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
 	
 	if (data->tmp.size && data->tmp.base) {
 		free(data->tmp.base);

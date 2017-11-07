@@ -110,10 +110,10 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	if (!ida->atol.base && !ida->rtol.base) {
 		err = IDASStolerances(ida_mem, ida->rtol.d.val, ida->atol.d.val);
 	} else {
-		if (mpt_solver_tol_check(&ida->rtol, ida->ivp.neqs, 1, __MPT_IVP_RTOL) < 0) {
+		if (mpt_solver_module_tol_check(&ida->rtol, ida->ivp.neqs, 1, __MPT_IVP_RTOL) < 0) {
 			return -21;
 		}
-		if (mpt_solver_tol_check(&ida->atol, ida->ivp.neqs, 1, __MPT_IVP_ATOL) < 0) {
+		if (mpt_solver_module_tol_check(&ida->atol, ida->ivp.neqs, 1, __MPT_IVP_ATOL) < 0) {
 			return -22;
 		}
 		err = IDAWFtolerances(ida_mem, sundials_ewtfcn);

@@ -30,7 +30,7 @@ static uintptr_t vdAddref()
 static int vdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(VodeData) *vd = (void *) mt;
-	return mpt_solver_generic_conv(&vd->_gen, type, ptr);
+	return mpt_solver_module_generic_conv(&vd->_gen, type, ptr);
 }
 MPT_INTERFACE(metatype) *vdClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -74,7 +74,7 @@ static int vdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		return mpt_solver_ivp_settime(&vd->next, vd->d.t, src);
+		return mpt_solver_module_nextval(&vd->next, vd->d.t, src);
 	}
 	return mpt_vode_set(&vd->d, pr, src);
 }

@@ -70,17 +70,17 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, const
 		return MPT_SOLVER_MODULE_FCN(ivp_state)(&ida->ivp, &ida->t, &ida->sd.y, src);
 	}
 	if (!*name) {
-		if (src && (ret = mpt_solver_ivpset(&ida->ivp, src)) < 0) {
+		if (src && (ret = mpt_solver_module_ivpset(&ida->ivp, src)) < 0) {
 			return ret;
 		}
 		sundials_ida_reset(ida);
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
-		return mpt_solver_tol_set(&ida->atol, src, __MPT_IVP_ATOL);
+		return mpt_solver_module_tol_set(&ida->atol, src, __MPT_IVP_ATOL);
 	}
 	if (!strcasecmp(name, "rtol")) {
-		return mpt_solver_tol_set(&ida->rtol, src, __MPT_IVP_RTOL);
+		return mpt_solver_module_tol_set(&ida->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
 		return sundials_jacobian(&ida->sd, ida->ivp.neqs, src);
@@ -173,13 +173,13 @@ extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(proper
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : (pos == id++)) {
 		if (!ida) { prop->val.fmt = dblfmt; prop->val.ptr = &ida->atol.d.val; }
-		else { id = mpt_solver_tol_get(&ida->atol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&ida->atol, &prop->val); }
 		prop->name = "atol"; prop->desc = "absolute tolerances";
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == id++)) {
 		if (!ida) { prop->val.fmt = dblfmt; prop->val.ptr = &ida->rtol.d.val; }
-		else { id = mpt_solver_tol_get(&ida->rtol, &prop->val); }
+		else { id = mpt_solver_module_tol_get(&ida->rtol, &prop->val); }
 		prop->name = "rtol"; prop->desc = "relative tolerances";
 		return id;
 	}

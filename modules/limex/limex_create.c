@@ -37,7 +37,7 @@ static int lxSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return mpt_limex_prepare(&lxGlob);
 		}
 	} else if (pr[0] == 't' && !pr[1]) {
-		return mpt_solver_ivp_settime(&lxNext, lxGlob.t, src);
+		return mpt_solver_module_nextval(&lxNext, lxGlob.t, src);
 	}
 	return mpt_limex_set(&lxGlob, pr, src);
 }
@@ -89,7 +89,7 @@ static MPT_SOLVER(generic) lxGlobSolver = { { &limexSol}, { &limexObj} };
 static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	(void) mt;
-	return mpt_solver_generic_conv(&lxGlobSolver, type, ptr);
+	return mpt_solver_module_generic_conv(&lxGlobSolver, type, ptr);
 }
 
 /*!
