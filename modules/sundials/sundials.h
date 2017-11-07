@@ -176,8 +176,8 @@ extern MPT_SOLVER(interface) *sundials_cvode_create(void);
 extern MPT_SOLVER(interface) *sundials_ida_create(void);
 #else
 /* declare local module functions for C++ interface */
-extern int mpt_sundials_ufcn_dae(long, MPT_IVP_STRUCT(daefcn) *, int , const void *);
-extern int mpt_sundials_ufcn_ode(long, MPT_IVP_STRUCT(odefcn) *, int , const void *);
+extern int _mpt_sundials_ufcn_dae(long, MPT_IVP_STRUCT(daefcn) *, int , const void *);
+extern int _mpt_sundials_ufcn_ode(long, MPT_IVP_STRUCT(odefcn) *, int , const void *);
 #endif
 
 /* setup Sundials jacobian parameters */
@@ -253,7 +253,7 @@ public:
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
 	{
-		return mpt_sundials_ufcn_ode(ivp.pint, &_fcn, type, ptr);
+		return _mpt_sundials_ufcn_ode(ivp.pint, &_fcn, type, ptr);
 	}
 protected:
 	struct odefcn _fcn;
@@ -293,7 +293,7 @@ public:
 	}
 	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
 	{
-		return mpt_sundials_ufcn_dae(ivp.pint, &_fcn, type, ptr);
+		return _mpt_sundials_ufcn_dae(ivp.pint, &_fcn, type, ptr);
 	}
 protected:
 	struct daefcn _fcn;

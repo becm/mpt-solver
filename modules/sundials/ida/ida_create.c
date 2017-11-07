@@ -13,10 +13,8 @@
 
 #include "module_functions.h"
 
-
 MPT_STRUCT(SundialsIDA) {
-	MPT_SOLVER(interface) _sol;
-	MPT_INTERFACE(object) _obj;
+	MPT_SOLVER(generic) _gen;
 	MPT_SOLVER_STRUCT(ida) d;
 	MPT_IVP_STRUCT(daefcn) uf;
 	double next;
@@ -35,21 +33,8 @@ static uintptr_t idaRef()
 /* metatype interface */
 static int idaConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
-	const MPT_STRUCT(SundialsIDA) *cv = (void *) mt;
-	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
-		if (ptr) *((const char **) ptr) = fmt;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeObject)) {
-		if (ptr) *((const void **) ptr) = &cv->_obj;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeMeta)) {
-		if (ptr) *((const void **) ptr) = &cv->_sol;
-		return MPT_ENUM(TypeObject);
-	}
-	return MPT_ERROR(BadType);
+	const MPT_STRUCT(SundialsIDA) *ida = (void *) mt;
+	return mpt_solver_generic_conv(&ida->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *idaClone()
 {
@@ -83,12 +68,12 @@ static int idaSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int idaGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _obj);
+	const MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _gen._obj);
 	return sundials_ida_get(&ida->d, pr);
 }
 static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _obj);
+	MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _gen._obj);
 	
 	if (!pr) {
 		if (!src) {
@@ -99,15 +84,7 @@ static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFAC
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		double end = ida->next;
-		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
-			return MPT_ERROR(BadValue);
-		}
-		if (end < ida->d.t) {
-			return MPT_ERROR(BadValue);
-		}
-		ida->next = end;
-		return 0;
+		return mpt_solver_ivp_settime(&ida->next, ida->d.t, src);
 	}
 	return sundials_ida_set(&ida->d, pr, src);
 }
@@ -144,8 +121,8 @@ extern MPT_SOLVER(interface) *sundials_ida_create()
 	IDASetUserData(ida->d.mem, &ida->d);
 	ida->next = 0.0;
 	
-	ida->_sol._vptr = &idaSol;
-	ida->_obj._vptr = &idaObj;
+	ida->_gen._sol._vptr = &idaSol;
+	ida->_gen._obj._vptr = &idaObj;
 	
-	return &ida->_sol;
+	return &ida->_gen._sol;
 }

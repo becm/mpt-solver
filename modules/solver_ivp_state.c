@@ -1,5 +1,6 @@
 /*!
- * set double values on vector
+ * MPT solver module helper function
+ *   set initial IVP state
  */
 
 #include <limits.h>

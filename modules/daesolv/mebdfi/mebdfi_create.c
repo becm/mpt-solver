@@ -11,8 +11,7 @@
 #include "mebdfi.h"
 
 MPT_STRUCT(MebdfiData) {
-	MPT_SOLVER(interface) _sol;
-	MPT_INTERFACE(object) _obj;
+	MPT_SOLVER(generic) _gen;
 	MPT_SOLVER_STRUCT(mebdfi) d;
 	MPT_IVP_STRUCT(daefcn)    uf;
 	double next;
@@ -32,20 +31,7 @@ static uintptr_t meAddref()
 static int meConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(MebdfiData) *md = (void *) mt;
-	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
-		if (ptr) *((const char **) ptr) = fmt;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeObject)) {
-		if (ptr) *((const void **) ptr) = &md->_obj;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeMeta)) {
-		if (ptr) *((const void **) ptr) = &md->_sol;
-		return MPT_ENUM(TypeObject);
-	}
-	return MPT_ERROR(BadType);
+	return mpt_solver_generic_conv(&md->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *meClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -74,12 +60,12 @@ static int meSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int meGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _obj);
+	const MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _gen._obj);
 	return mpt_mebdfi_get(&md->d, pr);
 }
 static int meSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _obj);
+	MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _gen._obj);
 	if (!pr) {
 		if (!src) {
 			int ret = mpt_mebdfi_prepare(&md->d);
@@ -89,15 +75,7 @@ static int meSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		double end = md->next;
-		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
-			return MPT_ERROR(BadValue);
-		}
-		if (end < md->d.t) {
-			return MPT_ERROR(BadValue);
-		}
-		md->next = end;
-		return 0;
+		return mpt_solver_ivp_settime(&md->next, md->d.t, src);
 	}
 	return mpt_mebdfi_set(&md->d, pr, src);
 }
@@ -129,9 +107,9 @@ extern MPT_SOLVER(interface) *mpt_mebdfi_create()
 	mpt_mebdfi_init(&md->d);
 	md->d.ipar = memset(&md->uf, 0, sizeof(md->uf));
 	
-	md->_sol._vptr = &mebdfiSol;
-	md->_obj._vptr = &mebdfiObj;
+	md->_gen._sol._vptr = &mebdfiSol;
+	md->_gen._obj._vptr = &mebdfiObj;
 	
-	return &md->_sol;
+	return &md->_gen._sol;
 }
 

@@ -11,8 +11,7 @@
 extern void uinit_(const double *, double *, const int *);
 
 MPT_STRUCT(BacolData) {
-	MPT_SOLVER(interface) _sol;
-	MPT_INTERFACE(object) _obj;
+	MPT_SOLVER(generic) _gen;
 	MPT_SOLVER_STRUCT(bacol)     d;
 	MPT_SOLVER_STRUCT(bacol_out) out;
 	double next;
@@ -34,21 +33,7 @@ static uintptr_t bacAddref(MPT_INTERFACE(reference) *ref)
 static int bacConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	MPT_STRUCT(BacolData) *bac = (void *) mt;
-	
-	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeObject), 0 };
-		if (ptr) *((const char **) ptr) = fmt;
-		return MPT_ENUM(TypeObject);
-	}
-	if (type == MPT_ENUM(TypeObject)) {
-		if (ptr) *((const void **) ptr) = &bac->_obj;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeMeta)) {
-		if (ptr) *((const void **) ptr) = &bac->_sol;
-		return MPT_ENUM(TypeObject);
-	}
-	return MPT_ERROR(BadType);
+	return mpt_solver_generic_conv(&bac->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *bacClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -108,12 +93,12 @@ static int bacSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int bacGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _obj);
+	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _gen._obj);
 	return mpt_bacol_get(&bac->d, pr);
 }
 static int bacSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _obj);
+	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _gen._obj);
 	if (!pr) {
 		if (!src) {
 			bac->out.nint = 0;
@@ -121,15 +106,7 @@ static int bacSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFAC
 		}
 	}
 	else if (pr[0] == 't' && pr[1] == 0) {
-		double end = bac->next;
-		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
-			return MPT_ERROR(BadValue);
-		}
-		if (end < bac->d.t) {
-			return MPT_ERROR(BadValue);
-		}
-		bac->next = end;
-		return 0;
+		return mpt_solver_ivp_settime(&bac->next, bac->d.t, src);
 	}
 	return mpt_bacol_set(&bac->d, pr, src);
 }
@@ -162,8 +139,8 @@ extern MPT_SOLVER(interface) *mpt_bacol_create()
 	mpt_bacol_output_init(&bac->out);
 	bac->next = 0;
 	
-	bac->_sol._vptr = &bacolSol;
-	bac->_obj._vptr = &bacolObj;
+	bac->_gen._sol._vptr = &bacolSol;
+	bac->_gen._obj._vptr = &bacolObj;
 	
-	return &bac->_sol;
+	return &bac->_gen._sol;
 }

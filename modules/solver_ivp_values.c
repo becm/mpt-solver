@@ -1,5 +1,6 @@
 /*!
- * generic user functions dDASSL solver instance
+ * MPT solver module helper function
+ *   dispatch IVP state data via property handler
  */
 
 #include "solver_modfcn.h"

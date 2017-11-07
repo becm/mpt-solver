@@ -1,5 +1,6 @@
 /*!
- * create double vectors of specified length
+ * MPT solver module helper function
+ *   prepare tolerance data for required dimensions
  */
 
 #include <stdlib.h>

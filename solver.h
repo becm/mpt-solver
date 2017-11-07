@@ -210,6 +210,11 @@ public:
 		return setFunctions(functionType(fcn), &fcn) >= 0;
 	}
 #else
+MPT_SOLVER(generic)
+{
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
+};
 MPT_IVP_STRUCT(parameters);
 #endif
 /* right side function */
@@ -633,6 +638,12 @@ extern void *mpt_solver_valloc(struct iovec *, size_t len, size_t size);
 /* solver module parameter assignment */
 extern int mpt_solver_ivpset(MPT_IVP_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
 extern int mpt_solver_nlsset(MPT_NLS_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
+
+/* solver module generic type conversion */
+extern int mpt_solver_generic_conv(const MPT_SOLVER(generic) *, int , void *);
+
+/* solver module generic type conversion */
+extern int mpt_solver_ivp_settime(double *, double , const MPT_INTERFACE(metatype) *);
 
 /* get value and advance source */
 extern int mpt_solver_value_set(MPT_STRUCT(solver_value) *, const MPT_INTERFACE(metatype) *);

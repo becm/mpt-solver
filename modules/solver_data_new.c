@@ -1,5 +1,6 @@
 /*!
- * set double values on vector
+ * MPT solver module helper function
+ *   create new content on vector container
  */
 
 #include <limits.h>

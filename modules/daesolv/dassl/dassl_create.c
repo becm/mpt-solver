@@ -11,8 +11,7 @@
 #include "dassl.h"
 
 MPT_STRUCT(DasslData) {
-	MPT_SOLVER(interface) _sol;
-	MPT_INTERFACE(object) _obj;
+	MPT_SOLVER(generic) _gen;
 	MPT_SOLVER_STRUCT(dassl) d;
 	MPT_IVP_STRUCT(daefcn)   uf;
 	double next;
@@ -32,20 +31,7 @@ static uintptr_t ddAddref()
 static int ddConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(DasslData) *da = (void *) mt;
-	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
-		if (ptr) *((const char **) ptr) = fmt;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeObject)) {
-		if (ptr) *((const void **) ptr) = &da->_obj;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeMeta)) {
-		if (ptr) *((const void **) ptr) = &da->_sol;
-		return MPT_ENUM(TypeObject);
-	}
-	return MPT_ERROR(BadType);
+	return mpt_solver_generic_conv(&da->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *ddClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -74,12 +60,12 @@ static int ddSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int ddGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _obj);
+	const MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _gen._obj);
 	return mpt_dassl_get(&da->d, pr);
 }
 static int ddSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _obj);
+	MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _gen._obj);
 	if (!pr) {
 		if (!src) {
 			int ret = mpt_dassl_prepare(&da->d);
@@ -89,15 +75,7 @@ static int ddSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		double end = da->next;
-		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
-			return MPT_ERROR(BadValue);
-		}
-		if (end < da->d.t) {
-			return MPT_ERROR(BadValue);
-		}
-		da->next = end;
-		return 0;
+		return mpt_solver_ivp_settime(&da->next, da->d.t, src);
 	}
 	return mpt_dassl_set(&da->d, pr, src);
 }
@@ -130,8 +108,8 @@ extern MPT_SOLVER(interface) *mpt_dassl_create()
 	da->d.ipar = memset(&da->uf, 0, sizeof(da->uf));
 	da->d.rpar = (void *) &da->d;
 	
-	da->_sol._vptr = &dasslSol;
-	da->_obj._vptr = &dasslObj;
+	da->_gen._sol._vptr = &dasslSol;
+	da->_gen._obj._vptr = &dasslObj;
 	
-	return &da->_sol;
+	return &da->_gen._sol;
 }

@@ -1,5 +1,6 @@
 /*!
- * generic user functions dDASSL solver instance
+ * MPT solver module helper function
+ *   replace solver data matching IVP dimensions
  */
 
 #include <stdlib.h>

@@ -14,8 +14,10 @@ DIR_BASE ?= ${DIR_SOLVER_MODULES}../base/
 INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and other shared operations
-src_gen = solver_valloc.c solver_value.c
-src_ivp = solver_ivpset.c solver_tol_check.c solver_tol_set.c solver_tol_get.c
+src_gen = solver_valloc.c solver_value.c solver_generic_conv.c
+src_ivp = \
+	solver_ivpset.c solver_ivp_settime.c \
+	solver_tol_check.c solver_tol_set.c solver_tol_get.c
 src_nls = solver_nlsset.c
 src_mod = \
 	solver_data_new.c solver_data_set.c \
@@ -59,7 +61,7 @@ install : module_config
 module_config : ${CONFIG}; $(call install_files,${DIR_TOP}/etc/mpt.conf.d,${CONFIG})
 CLEAR_FILES += $(CONFIG:%=${DIR_TOP}/etc/mpt.conf.d/%) libinfo.o
 #
-# module file dependencies
+# module helper dependencies
 *_modfcn.o : $(src_mod:%=${DIR_SOLVER_MODULES}%)
 #
 # additional service targets

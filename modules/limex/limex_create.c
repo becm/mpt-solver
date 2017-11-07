@@ -37,15 +37,7 @@ static int lxSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return mpt_limex_prepare(&lxGlob);
 		}
 	} else if (pr[0] == 't' && !pr[1]) {
-		double end = lxNext;
-		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
-			return MPT_ERROR(BadValue);
-		}
-		if (end < lxGlob.t) {
-			return MPT_ERROR(BadValue);
-		}
-		lxNext = end;
-		return 0;
+		return mpt_solver_ivp_settime(&lxNext, lxGlob.t, src);
 	}
 	return mpt_limex_set(&lxGlob, pr, src);
 }
@@ -92,26 +84,12 @@ static const MPT_INTERFACE_VPTR(solver) limexSol = {
 	lxFcn,
 	lxSolve
 };
-static MPT_SOLVER(interface) lxGlobSolver = { &limexSol };
+static MPT_SOLVER(generic) lxGlobSolver = { { &limexSol}, { &limexObj} };
 
 static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	(void) mt;
-	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
-		if (ptr) *((const char **) ptr) = fmt;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeObject)) {
-		static MPT_INTERFACE(object) obj = { &limexObj };
-		if (ptr) *((const void **) ptr) = &obj;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeMeta)) {
-		if (ptr) *((const void **) ptr) = &lxGlobSolver;
-		return MPT_ENUM(TypeObject);
-	}
-	return MPT_ERROR(BadType);
+	return mpt_solver_generic_conv(&lxGlobSolver, type, ptr);
 }
 
 /*!
@@ -126,5 +104,5 @@ extern MPT_SOLVER(interface) *mpt_limex_create()
 {
 	if (lxReserved) return 0;
 	mpt_limex_global();
-	return &lxGlobSolver;
+	return &lxGlobSolver._sol;
 }

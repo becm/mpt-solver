@@ -1,5 +1,6 @@
 /*!
- * get vecpar properties
+ * MPT solver module helper function
+ *   assign segments or elements on solver data
  */
 
 #include <string.h>

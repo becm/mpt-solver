@@ -1,5 +1,6 @@
 /*!
- * generic user function wrapper for nonlinear functions
+ * MPT solver module helper function
+ *   assign nonlinear solver functions according to parameter
  */
 
 #include "solver_modfcn.h"

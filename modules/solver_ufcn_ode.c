@@ -1,5 +1,6 @@
 /*!
- * generic user functions dDASSL solver instance
+ * MPT solver module helper function
+ *   assign ODE functions according to parameter
  */
 
 #include "solver_modfcn.h"

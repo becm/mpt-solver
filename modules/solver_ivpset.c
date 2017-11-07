@@ -1,5 +1,6 @@
 /*!
- * set double values on vector
+ * MPT solver module helper function
+ *   set IVP exuotation count and grid size/data
  */
 
 #include <limits.h>

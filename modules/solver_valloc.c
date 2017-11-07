@@ -1,5 +1,6 @@
 /*!
- * enshure vector size requirements
+ * MPT solver module helper function
+ *   enshure vector size requirements
  */
 
 #include <stdint.h>

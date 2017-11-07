@@ -1,5 +1,6 @@
 /*!
- * create double vectors of specified length
+ * MPT solver module helper function
+ *   set vecpar data
  */
 
 #include <stdlib.h>

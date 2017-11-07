@@ -11,8 +11,7 @@
 #include "radau.h"
 
 MPT_STRUCT(RadauData) {
-	MPT_SOLVER(interface) _sol;
-	MPT_INTERFACE(object) _obj;
+	MPT_SOLVER(generic) _gen;
 	MPT_SOLVER_STRUCT(radau) d;
 	MPT_IVP_STRUCT(daefcn)   uf;
 	double next;
@@ -32,20 +31,7 @@ static uintptr_t rdAddref()
 static int rdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(RadauData) *rd = (void *) mt;
-	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeObject), 0 };
-		if (ptr) *((const char **) ptr) = fmt;
-		return MPT_ENUM(TypeObject);
-	}
-	if (type == MPT_ENUM(TypeObject)) {
-		if (ptr) *((const void **) ptr) = &rd->_obj;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeMeta)) {
-		if (ptr) *((const void **) ptr) = &rd->_sol;
-		return MPT_ENUM(TypeObject);
-	}
-	return MPT_ERROR(BadType);
+	return mpt_solver_generic_conv(&rd->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *rdClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -74,12 +60,12 @@ static int rdSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int rdGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _obj);
+	const MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _gen._obj);
 	return mpt_radau_get(&rd->d, pr);
 }
 static int rdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _obj);
+	MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _gen._obj);
 	if (!pr) {
 		if (!src) {
 			int ret = mpt_radau_prepare(&rd->d);
@@ -89,15 +75,7 @@ static int rdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		double end = rd->next;
-		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
-			return MPT_ERROR(BadValue);
-		}
-		if (end < rd->d.t) {
-			return MPT_ERROR(BadValue);
-		}
-		rd->next = end;
-		return 0;
+		return mpt_solver_ivp_settime(&rd->next, rd->d.t, src);
 	}
 	return mpt_radau_set(&rd->d, pr, src);
 }
@@ -129,9 +107,9 @@ extern MPT_SOLVER(interface) *mpt_radau_create()
 	mpt_radau_init(&rd->d);
 	rd->d.ipar = memset(&rd->uf, 0, sizeof(rd->uf));
 	
-	rd->_sol._vptr = &radauSol;
-	rd->_obj._vptr = &radauObj;
+	rd->_gen._sol._vptr = &radauSol;
+	rd->_gen._obj._vptr = &radauObj;
 	
-	return &rd->_sol;
+	return &rd->_gen._sol;
 }
 

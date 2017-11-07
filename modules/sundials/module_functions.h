@@ -1,10 +1,10 @@
 /*!
- * define DAE solver module namespace
+ * define SUNDIALS solver module namespace
  */
 
 #include <sundials/sundials_nvector.h>
 
-#define MPT_SOLVER_MODULE_FCN(x) mpt_sundials_##x
+#define MPT_SOLVER_MODULE_FCN(x) _mpt_sundials_##x
 #include "sundials.h"
 
 #define MPT_SOLVER_MODULE_DATA_TYPE      realtype

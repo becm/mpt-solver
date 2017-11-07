@@ -1,5 +1,6 @@
 /*!
- * create double vectors of specified length
+ * MPT solver module helper function
+ *   unify value/iterator value conversion/advance
  */
 
 #include <string.h>

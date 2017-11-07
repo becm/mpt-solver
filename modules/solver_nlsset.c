@@ -1,5 +1,6 @@
 /*!
- * set NLS parameter
+ * MPT solver module helper function
+ *   set NLS parameter
  */
 
 #include <stdlib.h>

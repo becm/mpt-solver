@@ -10,8 +10,7 @@
 #include "vode.h"
 
 MPT_STRUCT(VodeData) {
-	MPT_SOLVER(interface)  _sol;
-	MPT_INTERFACE(object)  _obj;
+	MPT_SOLVER(generic) _gen;
 	MPT_SOLVER_STRUCT(vode)  d;
 	MPT_IVP_STRUCT(odefcn)   uf;
 	double next;
@@ -31,20 +30,7 @@ static uintptr_t vdAddref()
 static int vdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(VodeData) *vd = (void *) mt;
-	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeObject), 0 };
-		if (ptr) *((const char **) ptr) = fmt;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeObject)) {
-		if (ptr) *((const void **) ptr) = &vd->_obj;
-		return MPT_ENUM(TypeMeta);
-	}
-	if (type == MPT_ENUM(TypeMeta)) {
-		if (ptr) *((const void **) ptr) = &vd->_sol;
-		return MPT_ENUM(TypeObject);
-	}
-	return MPT_ERROR(BadType);
+	return mpt_solver_generic_conv(&vd->_gen, type, ptr);
 }
 MPT_INTERFACE(metatype) *vdClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -73,12 +59,12 @@ static int vdSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int vdGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, obj, _obj);
+	const MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, obj, _gen._obj);
 	return mpt_vode_get(&vd->d, pr);
 }
 static int vdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, obj, _obj);
+	MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, obj, _gen._obj);
 	if (!pr) {
 		if (!src) {
 			int ret = mpt_vode_prepare(&vd->d);
@@ -88,15 +74,7 @@ static int vdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 			return ret;
 		}
 	} else if (pr[0] == 't' && pr[1] == 0) {
-		double end = vd->next;
-		if (src && src->_vptr->conv(src, 'd', &end) < 0) {
-			return MPT_ERROR(BadValue);
-		}
-		if (end < vd->d.t) {
-			return MPT_ERROR(BadValue);
-		}
-		vd->next = end;
-		return 0;
+		return mpt_solver_ivp_settime(&vd->next, vd->d.t, src);
 	}
 	return mpt_vode_set(&vd->d, pr, src);
 }
@@ -128,8 +106,8 @@ extern MPT_SOLVER(interface) *mpt_vode_create()
 	mpt_vode_init(&vd->d);
 	memset(&vd->uf, 0, sizeof(vd->uf));
 	
-	vd->_sol._vptr = &vodeSol;
-	vd->_obj._vptr = &vodeObj;
+	vd->_gen._sol._vptr = &vodeSol;
+	vd->_gen._obj._vptr = &vodeObj;
 	
-	return &vd->_sol;
+	return &vd->_gen._sol;
 }

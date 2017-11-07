@@ -1,5 +1,6 @@
 /*!
- * generic user functions dDASSL solver instance
+ * MPT solver module helper function
+ *   assign DAE functions according to parameter
  */
 
 extern int MPT_SOLVER_MODULE_FCN(ufcn_dae)(long pint, MPT_IVP_STRUCT(daefcn) *ufcn, int type, const void *ptr)
