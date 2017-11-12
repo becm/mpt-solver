@@ -1,6 +1,5 @@
 # Makefile: BACOL solver library
 LIB ?= mpt_bacol
-SOL ?= ivp
 #
 # additional build flags
 DEF = MPT_BACOL_DASSL MPT_BACOL_RADAU
@@ -12,6 +11,9 @@ SHLIB_TEENY = 0
 # linker settings
 LDLIBS = -lblas
 LINK   = ${FC}
+#
+# module helpers
+mod_require = ${mod_ivp}
 #
 # sources and math objects
 SRCS = $(wildcard bacol_*.c)

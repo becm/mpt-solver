@@ -1,6 +1,5 @@
 # Makefile: DAE solver library
 LIB ?= mpt_daesolv
-SOL ?= ivp
 #
 # add local directory to search path
 INC = .
@@ -14,7 +13,10 @@ SHLIB_TEENY = 0
 LDLIBS = -lblas
 LINK   = ${FC}
 #
-# sources and objects
+# module helpers
+mod_require = ${mod_ivp} ufcn_dae
+#
+# module components
 dassl_sources := $(wildcard dassl/dassl_*.c)
 radau_sources := $(wildcard radau/radau_*.c)
 mebdfi_sources := $(wildcard mebdfi/mebdfi_*.c)
@@ -22,7 +24,6 @@ SRCS = \
 	${dassl_sources} \
 	${radau_sources} \
 	${mebdfi_sources} \
-	../mod_ufcn_dae.c \
 	daesolv_modfcn.c
 MATH = \
 	mebdfi.o \
@@ -42,11 +43,9 @@ include ../mpt.solver.mk
 ${DIR_MATH}/mebdfi.o : FFLAGS=-O0 -fpic -Wall
 #
 # object dependencies
-libinfo.o : ${HEADER}
+${OBJS} : module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
+libinfo.o : ${HEADER} ${DIR_BASE}version.h
+*/*_property.o : ${DIR_BASE}version.h
 dassl/*.o : dassl.h
 radau/*.o : radau.h
 mebdfi/*.o : mebdfi.h
-${OBJS} : module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h ${DIR_BASE}version.h
-daesolv_ufcn.o : ${DIR_SOLVER_MODULES}solver_daefcn.c
-daesolv_values.o : ${DIR_SOLVER_MODULES}solver_ivp_values.c
-daesolv_vecset.o : ${DIR_SOLVER_MODULES}solver_ivp_vecset.c

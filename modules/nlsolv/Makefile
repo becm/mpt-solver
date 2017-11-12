@@ -1,6 +1,5 @@
 # Makefile: collection of standalone nonlinear Solvers
 LIB ?= mpt_nlsolv
-SOL ?= nls
 #
 # add local directory to search path
 INC = .
@@ -11,6 +10,9 @@ SHLIB_MINOR = 0
 SHLIB_TEENY = 0
 # linker settings
 LINK = ${FC}
+#
+# shared components
+mod_require = ${mod_nls} ufcn_nls
 #
 # import solver settings
 include portn2/portdn2.mk
@@ -26,7 +28,6 @@ OBJS = \
 	$(portn2_wrapper:%=portn2/%) \
 	$(minpack_wrapper:%=minpack/%) \
 	$(direct_wrapper:%=direct/%) \
-	../mod_ufcn_nls.o \
 	nlsolv_modfcn.o
 
 HEADER = minpack/minpack.h portn2/portn2.h
@@ -36,6 +37,7 @@ CONFIG = nlsolv.conf
 include ../mpt.solver.mk
 #
 # local object dependencies
-$(portn2_wrapper:%=portn2/%)   : portn2/portn2.h module_functions.h
-$(minpack_wrapper:%=minpack/%) : minpack/minpack.h module_functions.h
+${OBJS} : module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
+$(portn2_wrapper:%=portn2/%)   : portn2/portn2.h
+$(minpack_wrapper:%=minpack/%) : minpack/minpack.h
 minpack/minpack_property.o portn2/portn2_property.o  : ${DIR_BASE}version.h

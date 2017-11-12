@@ -1,6 +1,5 @@
 # Makefile: SUNDIALS interface library
 LIB ?= mpt_sundials
-SOL ?= both
 #
 # additional build flags
 # DEFINES += SUNDIALS_WITH_LAPACK=1
@@ -17,15 +16,20 @@ SHLIB_TEENY = 0
 LDLIBS += -lm
 LINK   = ${CC}
 #
-# objects
-sundials_sources = ewtfcn.c nvector.c jacobian.c report.c data_new.c
-cvode_sources    = $(wildcard cvode/cvode_*.c)
-ida_sources      = $(wildcard ida/ida_*.c)
-ufcn_sources     = mod_ufcn_dae.c mod_ufcn_ode.c
+# shared components
+mod_require = ${mod_ivp} ufcn_dae ufcn_ode
+#
+# module components
+cvode_sources = $(wildcard cvode/cvode_*.c)
+ida_sources   = $(wildcard ida/ida_*.c)
+sundials_sources = \
+	sundials_ewtfcn.c \
+	sundials_nvector.c \
+	sundials_jacobian.c \
+	sundials_report.c \
+	sundials_data_new.c
 
-SRCS := sundials_modfcn.c \
-	$(ufcn_sources:%=../%) \
-	${sundials_sources} ${cvode_sources} ${ida_sources}
+SRCS := sundials_modfcn.c ${sundials_sources} ${cvode_sources} ${ida_sources}
 
 MATH_OBJS_STATIC != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=static ./sundials_collect.sh ${sundials_elements}
 MATH_OBJS_SHARED != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=shared ./sundials_collect.sh ${sundials_elements}
@@ -39,5 +43,5 @@ CONFIG = sundials.conf
 include ../mpt.solver.mk
 #
 # object dependencies
-${OBJS} : sundials.h
+${OBJS} : sundials.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
 ida/ida_property.o cvode/cvode_property.o libinfo.o : ${DIR_BASE}version.h

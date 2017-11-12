@@ -5,22 +5,30 @@ test('diffusion PDE test',
   executable('diff', 'diff.c',
     c_args: test_defines,
     dependencies: [ runtime_ivp ]),
-  args: files('diff.conf', 'diff_sol.conf'))
+  args: files('diff.conf', 'diff_sol.conf'),
+  env : [ 'LD_LIBRARY_PATH=' + examples_ld ]
+)
 
 test('flame PDE test',
   executable('flame', 'flame.c',
     c_args: test_defines,
     dependencies: [ runtime_ivp, libm ]),
-  args: files('flame.conf', 'flame_sol.conf'))
+  args: files('flame.conf', 'flame_sol.conf'),
+  env : [ 'LD_LIBRARY_PATH=' + examples_ld ]
+)
 
 test('medical akzo PDE test',
   executable('makzo', 'makzo.c',
     c_args: test_defines,
     dependencies: [ runtime_ivp ]),
-  args: files('makzo.conf'))
+  args: files('makzo.conf'),
+  env : [ 'LD_LIBRARY_PATH=' + examples_ld ]
+)
 
 test('two equotation PDE test',
   executable('twoeq', 'twoeq.c',
     c_args: test_defines,
     dependencies: [ runtime_ivp, libm ]),
-  args: files('twoeq.conf', 'twoeq_sol.conf'))
+  args: files('twoeq.conf', 'twoeq_sol.conf'),
+  env : [ 'LD_LIBRARY_PATH=' + examples_ld ]
+)

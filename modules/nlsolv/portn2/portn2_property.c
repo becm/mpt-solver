@@ -87,7 +87,7 @@ extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *n2, MPT_STRUCT(proper
 	intptr_t pos = -1;
 	
 	if (!prop) {
-		return MPT_SOLVER_ENUM(NlsVector) | MPT_SOLVER_ENUM(NlsOverdet);
+		return MPT_SOLVER_ENUM(NlsUser) | MPT_SOLVER_ENUM(NlsOverdet);
 	}
 	if (!(name = prop->name)) {
 		if ((pos = (intptr_t) prop->desc) < 0) {

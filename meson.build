@@ -133,14 +133,16 @@ endif
 if not meson.is_subproject()
   install_headers('solver.h', subdir : 'mpt')
 endif
-
-# solver library creation
-solv_inc = include_directories('.', 'base')
-subdir('mptsolver')
+solv_inc = include_directories('.', 'base', join_paths('base', 'mptcore'))
 
 # solver modules creation
 libm = cc.find_library('m')
-solv_mod_inc = [ solv_inc, include_directories(join_paths('base', 'mptcore'), 'modules') ]
-subdir(join_paths('modules', 'sundials'))
+solv_mod_inc = [ include_directories('modules'), solv_inc ]
+solv_mod_lib = []
+subdir('modules')
 
+# solver library creation
+subdir('mptsolver')
+
+# example creation
 subdir('examples')

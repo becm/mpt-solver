@@ -1,6 +1,5 @@
 # Makefile: dVODE solver library
 LIB ?= mpt_vode
-SOL ?= ivp
 #
 # shared library version
 SHLIB_MAJOR = 1
@@ -11,9 +10,12 @@ SHLIB_TEENY = 0
 LDLIBS = -lblas
 LINK   = ${FC}
 #
-# sources and math objects
+# shared components
+mod_require = ${mod_ivp} ufcn_ode
+#
+# module components
 MATH = vode.o dgbsl.o dgesl.o dgbfa.o dgefa.o
-SRCS = $(wildcard vode_*.c) ../mod_ufcn_ode.c
+SRCS = $(wildcard vode_*.c)
 #
 # headers to export
 HEADER = vode.h

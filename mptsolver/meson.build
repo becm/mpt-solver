@@ -32,7 +32,7 @@ if with_shared
 endif
 
 if with_static
-  solv_lib_static = static_library('mptsolver', solv_src,
+  solv_lib_static = static_library('mptsolver', solv_src, modules_src,
     include_directories : solv_inc,
     dependencies : solv_dep,
     install : true)

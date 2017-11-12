@@ -14,37 +14,25 @@ DIR_BASE ?= ${DIR_SOLVER_MODULES}../base/
 INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and other shared operations
-src_gen = mod_valloc.c mod_value.c mod_generic_conv.c
-src_ivp = \
-	mod_ivpset.c \
-	mod_nextval.c \
-	mod_tol_check.c mod_tol_set.c mod_tol_get.c
-src_nls = mod_nlsset.c
-src_ufcn = solver_ufcn_dae.c solver_ufcn_ode.c solver_ufcn_nls.c
-src_mod = \
+mod_gen = valloc value generic_conv
+mod_tol = tol_check tol_set tol_get
+mod_ivp = ivpset nextval ${mod_tol} ${mod_gen}
+mod_nls = nlsset ${mod_gen}
+mod_sol = nlsset ${mod_ivp}
+#
+# module function templates
+src_modfcn = \
 	modfcn_data_new.c modfcn_data_set.c \
 	modfcn_ivp_state.c modfcn_ivp_vecset.c \
 	modfcn_ivp_values.c
-#
-# additional objects for solver
-ifeq (${SOL}, ivp)
-  src_solver = ${src_ivp} ${src_gen}
-endif
-ifeq (${SOL}, nls)
-  src_solver = ${src_nls} ${src_gen}
-endif
-ifeq (${SOL}, both)
-  src_solver = ${src_nls} ${src_ivp} ${src_gen}
-endif
 #
 # math objects in different location
 MATH_OBJS ?= $(MATH:%=${DIR_MATH}/%)
 MATH_OBJS_STATIC ?= ${MATH_OBJS}
 MATH_OBJS_SHARED ?= ${MATH_OBJS}
 # object collections
-default_objects = ${OBJS} $(src_solver:%.c=${DIR_SOLVER_MODULES}%.o)
-STATIC_OBJS ?= ${default_objects} ${MATH_OBJS_STATIC}
-SHLIB_OBJS ?= libinfo.o ${default_objects} ${MATH_OBJS_SHARED}
+STATIC_OBJS ?= ${OBJS} ${MATH_OBJS_STATIC}
+SHLIB_OBJS ?= libinfo.o ${OBJS} ${MATH_OBJS_SHARED} $(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o)
 #
 # import library creation
 include ${DIR_BASE}/mpt.lib.mk
@@ -63,7 +51,8 @@ module_config : ${CONFIG}; $(call install_files,${DIR_TOP}/etc/mpt.conf.d,${CONF
 CLEAR_FILES += $(CONFIG:%=${DIR_TOP}/etc/mpt.conf.d/%) libinfo.o
 #
 # module helper dependencies
-*_modfcn.o : $(src_mod:%=${DIR_SOLVER_MODULES}%)
+*_modfcn.o : $(src_modfcn:%=${DIR_SOLVER_MODULES}%)
+module_function.h : ${DIR_SOLVER_MODULES}solver_modfcn.h
 #
 # additional service targets
 .PHONY : clean_math

@@ -13,13 +13,14 @@ SHLIB_TEENY = 0
 LDLIBS = -lblas
 LINK   = ${FC}
 #
+# shared components
+# mod_require = ${mod_nls} ufcn_nls
+#
 # objects
 include imsl/imsl.mk
 
 MATH = ${imsl_objects}
 OBJS = $(imsl_wrapper:%=imsl/%)
-
-ADD_OBJECTS = $(nls_objects:%=../%) $(gen_objects:%=../%)
 #
 # general solver build settings
 include ../mpt.solver.mk

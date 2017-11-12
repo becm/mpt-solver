@@ -12,16 +12,6 @@ include ${DIR_BASE}mpt.config.mk
 SOLIVP = vode daesolv limex bacol
 SOLVER = ${SOLIVP} nlsolv nlblas sundials
 #
-# headers to export
-HEADER = solver.h
-#
-# vecpar and share objects
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:%.c=%.o)
-#
-# compiler options
-CPPFLAGS += -I ${DIR_BASE}/mptcore
-#
 # general library rules
 .PHONY : static clear_static
 install :
@@ -29,18 +19,16 @@ clear : clear_static
 clean : clean_objects
 
 clean_objects :
-	${RM} ${OBJS}
+	${RM} mod_*.o
 
 clear_static :
 	${RM} "${DIR_LIB}/lib${LIB}.a"
 
 static :
 	@for s in ${SOLVER}; do \
-		if ! ${MAKE} -C "$${s}" "${DIR_LIB}/lib${LIB}.a" LIB=${LIB} SOL=both; then break ; fi ; \
+		if ! ${MAKE} -C "$${s}" "${DIR_LIB}/lib${LIB}.a" LIB=${LIB}; then break ; fi ; \
 	done
 	${AR} s "${DIR_LIB}/lib${LIB}.a"
-
-${OBJS} : ${HEADER}
 #
 # pass target to solver makefiles
 .PHONY : install header clear clean
