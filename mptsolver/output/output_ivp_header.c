@@ -27,7 +27,7 @@ extern int mpt_output_ivp_header(MPT_STRUCT(output) *out, int row, int col, cons
 	uint8_t fmt;
 	int len;
 	
-	hdr.cmd = MPT_ENUM(MessageValFmt);
+	hdr.cmd = MPT_MESGTYPE(ValueFmt);
 	hdr.arg = 0;
 	
 	/* push parameter data */

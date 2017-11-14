@@ -316,7 +316,7 @@ static MPT_INTERFACE(metatype) *cloneNLS(const MPT_INTERFACE(metatype) *mt)
 	(void) mt;
 	return 0;
 }
-/* client interface */
+/* init operation for solver */
 static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 {
 	static const char _func[] = "mpt::client<NLS>::init";
@@ -414,6 +414,7 @@ static int initNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	}
 	return 0;
 }
+/* step operation for solver */
 static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 {
 	MPT_STRUCT(NLS) *nls = (void *) cl;
@@ -498,7 +499,50 @@ static int stepNLS(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	
 	return res;
 }
-
+/* client interface */
+static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(iterator) *it)
+{
+	MPT_STRUCT(NLS) *nls = (void *) cl;
+	MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(logger) *info = 0;
+	int ret;
+	
+	if (!(mt = nls->out._info)
+	    || mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &info) < 0
+	    || !info) {
+		info = mpt_log_default();
+	}
+	if (!id) {
+		return 0;
+	}
+	if (id == mpt_hash("init", 4)) {
+		ret = initNLS(cl, it);
+	}
+	else if (id == mpt_hash("step", 4)) {
+		ret = stepNLS(cl, it);
+	}
+	else if (id == mpt_hash("set", 3)) {
+		ret = mpt_config_args(&nls->_cfg, it, info);
+	}
+	else if (id == mpt_hash("unset", 5) || id == mpt_hash("del", 3)) {
+		ret = mpt_config_clear(&nls->_cfg, it, info);
+	}
+	else {
+		return MPT_ERROR(BadArgument);
+	}
+	if (ret < 0) {
+		return MPT_EVENTFLAG(Fail) | MPT_EVENTFLAG(Default);
+	} else {
+		return MPT_EVENTFLAG(None);
+	}
+}
+static int dispatchNLS(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
+{
+	if (!ev) {
+		return 0;
+	}
+	return mpt_solver_dispatch(cl, ev);
+}
 /*!
  * \ingroup mptSolver
  * \brief NLS client creation
@@ -517,7 +561,8 @@ extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(metatype) *out, int (
 	};
 	static MPT_INTERFACE_VPTR(client) clientNLS = {
 		{ { deleteNLS, addrefNLS }, convNLS, cloneNLS },
-		initNLS, stepNLS
+		dispatchNLS,
+		processNLS
 	};
 	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	MPT_STRUCT(NLS) *nls;

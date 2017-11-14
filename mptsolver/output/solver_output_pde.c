@@ -21,7 +21,7 @@ static void outputTime(MPT_STRUCT(output) *out, int state, double t)
 		MPT_STRUCT(msgbind) bnd;
 	} hdr;
 	
-	hdr.mt.cmd = MPT_ENUM(MessageValRaw);
+	hdr.mt.cmd = MPT_MESGTYPE(ValueRaw);
 	hdr.mt.arg = (int8_t) MPT_message_value(Float, t);
 	
 	/* indicate special data */

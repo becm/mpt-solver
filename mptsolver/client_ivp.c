@@ -381,7 +381,7 @@ static MPT_INTERFACE(metatype) *cloneIVP(const MPT_INTERFACE(metatype) *mt)
 	(void) mt;
 	return 0;
 }
-/* client interface */
+/* init operation for solver */
 static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 {
 	static const char _func[] = "mpt::client<IVP>::init";
@@ -736,6 +736,74 @@ static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		}
 	}
 }
+/* client interface */
+static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(iterator) *it)
+{
+	static const char _func[] = "mpt::client<IVP>::process";
+	
+	MPT_STRUCT(IVP) *ivp = (void *) cl;
+	MPT_INTERFACE(logger) *info;
+	int ret;
+	
+	if (!(info = mpt_solver_output_logger(&ivp->out))) {
+		info = mpt_log_default();
+	}
+	
+	if (!id) {
+		if (!ivp->sol) {
+			MPT_SOLVER(interface) *sol;
+			MPT_INTERFACE(object) *obj;
+			if ((ret = initIVP(cl, it)) < 0) {
+				return MPT_EVENTFLAG(Fail) | MPT_EVENTFLAG(Default);
+			}
+			obj = 0;
+			if ((sol = ivp->sol)
+			    && (ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) >= 0
+			    && obj
+			    && (ret = obj->_vptr->setProperty(obj, 0, 0)) < 0) {
+				mpt_log(info, _func, MPT_LOG(Error), "%s (" PRIxPTR ")",
+				        MPT_tr("unable to prepare solver"), sol);
+				return MPT_ERROR(BadValue);
+			}
+		}
+		ret = stepIVP(cl, 0);
+	}
+	else if (id == mpt_hash("init", 4)) {
+		ret = initIVP(cl, it);
+	}
+	else if (id == mpt_hash("step", 4)) {
+		ret = stepIVP(cl, it);
+	}
+	else if (id == mpt_hash("set", 3)) {
+		ret = mpt_config_args(&ivp->_cfg, it, info);
+	}
+	else if (id == mpt_hash("unset", 5) || id == mpt_hash("del", 3)) {
+		ret = mpt_config_clear(&ivp->_cfg, it, info);
+	}
+	else {
+		return MPT_ERROR(BadArgument);
+	}
+	if (ret < 0) {
+		return MPT_EVENTFLAG(Fail) | MPT_EVENTFLAG(Default);
+	} else {
+		return MPT_EVENTFLAG(None);
+	}
+}
+static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
+{
+	MPT_STRUCT(IVP) *ivp = (void *) cl;
+	if (!ev) {
+		return 0;
+	}
+	if (!ev->msg) {
+		int ret;
+		if (!ivp->sol && (ret = mpt_solver_require(&ivp->_cfg, ev->reply)) < 0) {
+			return ret;
+		}
+		return processIVP(cl, 0, 0);
+	}
+	return mpt_solver_dispatch(cl, ev);
+}
 
 /*!
  * \ingroup mptSolver
@@ -755,7 +823,8 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(metatype) *out, int (
 	};
 	static const MPT_INTERFACE_VPTR(client) clientIVP = {
 		{ { deleteIVP, addrefIVP }, convIVP, cloneIVP },
-		initIVP, stepIVP
+		dispatchIVP,
+		processIVP
 	};
 	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	MPT_STRUCT(IVP) *ivp;

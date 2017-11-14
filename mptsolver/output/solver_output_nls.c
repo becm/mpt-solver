@@ -16,7 +16,7 @@ static void outputParam(MPT_STRUCT(output) *out, const double *par, int np)
 {
 	MPT_STRUCT(msgtype) mt;
 	
-	mt.cmd = MPT_ENUM(MessageValRaw);
+	mt.cmd = MPT_MESGTYPE(ValueRaw);
 	mt.arg = 0;
 	
 	/* push parameter data */
@@ -37,7 +37,7 @@ static void outputValues(MPT_STRUCT(output) *out, int state, int dim, int len, c
 		MPT_STRUCT(msgbind) bnd;
 	} hdr;
 	
-	hdr.mt.cmd = MPT_ENUM(MessageValRaw);
+	hdr.mt.cmd = MPT_MESGTYPE(ValueRaw);
 	hdr.mt.arg = (int8_t) MPT_message_value(Float, *val);
 	
 	hdr.bnd.dim = dim & 0xff;

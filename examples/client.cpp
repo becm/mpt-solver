@@ -9,7 +9,9 @@
 #endif
 
 #include MPT_INCLUDE(client.h)
+#include MPT_INCLUDE(event.h)
 #include MPT_INCLUDE(config.h)
+#include MPT_INCLUDE(solver.h)
 
 class MyClient : public mpt::client
 {
@@ -19,10 +21,11 @@ public:
 	void unref() __MPT_OVERRIDE
 	{ delete this; }
 	
-	int step(mpt::iterator *) __MPT_OVERRIDE
-	{ return 0; }
-	int init(mpt::iterator *) __MPT_OVERRIDE
-	{ return 0; }
+	int dispatch(mpt::event *ev) __MPT_OVERRIDE
+	{ return mpt::solver::mpt_solver_dispatch(this, ev); }
+	
+	int process(uintptr_t , mpt::iterator *) __MPT_OVERRIDE
+	{ return mpt::event::Terminate; }
 };
 
 int main(int argc, char * const argv[])

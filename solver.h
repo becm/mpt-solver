@@ -24,11 +24,9 @@ __MPT_NAMESPACE_BEGIN
 MPT_INTERFACE(config);
 MPT_INTERFACE(client);
 MPT_INTERFACE(output);
-MPT_INTERFACE(metatype);
 MPT_INTERFACE(iterator);
+MPT_INTERFACE(reply_context);
 
-MPT_STRUCT(dispatch);
-MPT_STRUCT(array);
 MPT_STRUCT(event);
 MPT_STRUCT(proxy);
 MPT_STRUCT(node);
@@ -541,10 +539,13 @@ extern int mpt_init_nls(MPT_SOLVER(interface) *, const MPT_NLS_STRUCT(functions)
 
 
 /* register events on notifier */
-extern int mpt_solver_events(MPT_STRUCT(dispatch) *, MPT_INTERFACE(client) *);
+extern int mpt_solver_dispatch(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
+
+/* get input for required config elements */
+extern int mpt_solver_require(MPT_INTERFACE(config) *, MPT_INTERFACE(reply_context) *);
 
 /* set solver (user data and solver parameter) config files */
-extern int mpt_solver_config(MPT_INTERFACE(config) *, MPT_STRUCT(event) *);
+extern int mpt_solver_config(MPT_INTERFACE(object) *, MPT_INTERFACE(iterator) *, MPT_INTERFACE(logger) *);
 /* read files, initialize and prepare solver, set default handler */
 extern int mpt_solver_start(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
 /* set solver command line arguments */

@@ -10,6 +10,7 @@
 
 #include MPT_INCLUDE(event.h)
 #include MPT_INCLUDE(client.h)
+#include MPT_INCLUDE(message.h)
 #include MPT_INCLUDE(config.h)
 
 #include MPT_INCLUDE(notify.h)
@@ -63,13 +64,13 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		return MPT_ERROR(BadOperation);
 	}
 	/* setup dispatcher for solver client */
-	if (mpt_solver_events(disp, c) < 0) {
+	if (mpt_meta_events(disp, (void *) c) < 0) {
 		mpt_log(0, __func__, MPT_LOG(Error), "%s", "event setup failed");
 		return MPT_ERROR(BadValue);
 	}
 	/* default event for detached run */
 	if (!no._fdused) {
-		disp->_def = mpt_hash("start", 5);
+		disp->_def = MPT_MESGTYPE(Command);
 	}
 	/* set solver client arguments */
 	if (cfg && args) {

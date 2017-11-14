@@ -44,7 +44,7 @@ extern int mpt_output_solver_history(MPT_INTERFACE(output) *out, const double *r
 		plen += vlen;
 	}
 	/* header setup for data output */
-	hdr.cmd = MPT_ENUM(MessageValFmt);
+	hdr.cmd = MPT_MESGTYPE(ValueFmt);
 	hdr.arg = plen;
 	fmt = MPT_message_value(Float, *ref);
 	
