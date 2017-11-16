@@ -519,12 +519,15 @@ typedef struct
 } MPT_SOLVER_TYPE(ivecpar);
 #endif
 
+typedef int (MPT_SOLVER_TYPE(UserInit))(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
+
+
 __MPT_EXTDECL_BEGIN
 
 
 /* create interface to solver */
-extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(metatype) *, int (*)(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
-extern MPT_INTERFACE(client) *mpt_client_nls(MPT_INTERFACE(metatype) *, int (*)(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *));
+extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) *, MPT_INTERFACE(metatype) *);
+extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) *, MPT_INTERFACE(metatype) *);
 
 
 /* initialize IVP solver states */
@@ -546,10 +549,6 @@ extern int mpt_solver_require(MPT_INTERFACE(config) *, MPT_INTERFACE(reply_conte
 
 /* set solver (user data and solver parameter) config files */
 extern int mpt_solver_config(MPT_INTERFACE(object) *, MPT_INTERFACE(iterator) *, MPT_INTERFACE(logger) *);
-/* read files, initialize and prepare solver, set default handler */
-extern int mpt_solver_start(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
-/* set solver command line arguments */
-extern int mpt_solver_args(MPT_INTERFACE(config) *, char * const [], int __MPT_DEFPAR(-1));
 
 /* read files to configuration */
 extern int mpt_solver_read(MPT_STRUCT(node) *, MPT_INTERFACE(iterator) *, MPT_INTERFACE(logger) *);

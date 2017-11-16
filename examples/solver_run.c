@@ -2,7 +2,7 @@
  * main routine for MPT solver examples
  */
 
-#include <stdio.h>
+#include <stdlib.h>
 
 #ifndef MPT_INCLUDE
 # define MPT_INCLUDE(h) <mpt/h>
@@ -25,60 +25,49 @@
 # define mtrace()
 #endif
 
-static MPT_STRUCT(notify) no = MPT_NOTIFY_INIT;
-static char * const *args = 0;
-
-extern int client_init(int argc, char * const argv[])
-{
-	int pos;
-	mtrace();
-	
-	/* environment and connection setup */
-	if ((pos = mpt_init(&no, argc, argv)) < 0) {
-		mpt_log(0, __func__, MPT_LOG(Error), "%s", "client init failed");
-		return -1;
-	}
-	/* non-mpt arguments */
-	if (pos < argc) {
-		args = argv + pos;
-		return argc - pos;
-	}
-	return 0;
-}
-
 extern int solver_run(MPT_INTERFACE(client) *c)
 {
+	MPT_STRUCT(notify) no = MPT_NOTIFY_INIT;
+	MPT_INTERFACE(logger) *info;
 	MPT_INTERFACE(config) *cfg;
 	MPT_STRUCT(dispatch) *disp;
+	int ret;
 	
-	/* set client config root */
+	/* prefer solver client log output */
+	info = 0;
+	ret = c->_vptr->meta.conv((void *) c, MPT_ENUM(TypeLogger), &info);
+	
+	/* set sovler client config */
 	cfg = 0;
-	if (c->_vptr->meta.conv((void *) c, MPT_ENUM(TypeConfig), &cfg) > 0
+	if ((ret = c->_vptr->meta.conv((void *) c, MPT_ENUM(TypeConfig), &cfg)) > 0
 	    && cfg) {
 		MPT_STRUCT(value) val = MPT_VALUE_INIT;
+		
+		/* set global config root */
 		val.ptr = "mpt.client";
 		cfg->_vptr->assign(cfg, 0, &val);
+		
+		/* set solver client arguments */
+		if ((ret = mpt_client_config(cfg)) < 0) {
+			c->_vptr->meta.ref.unref((void *) c);
+			return EXIT_FAILURE;
+		}
 	}
+	/* register message dispatcher for notifier */
 	if (!(disp = mpt_notify_dispatch(&no))) {
-		mpt_log(0, __func__, MPT_LOG(Error), "%s", "failed to create dispatcher");
-		return MPT_ERROR(BadOperation);
+		c->_vptr->meta.ref.unref((void *) c);
+		mpt_log(info, __func__, MPT_LOG(Error), "%s", "failed to create dispatcher");
+		return 2;
 	}
 	/* setup dispatcher for solver client */
 	if (mpt_meta_events(disp, (void *) c) < 0) {
-		mpt_log(0, __func__, MPT_LOG(Error), "%s", "event setup failed");
-		return MPT_ERROR(BadValue);
+		c->_vptr->meta.ref.unref((void *) c);
+		mpt_log(info, __func__, MPT_LOG(Error), "%s", "event setup failed");
+		return 3;
 	}
 	/* default event for detached run */
 	if (!no._fdused) {
 		disp->_def = MPT_MESGTYPE(Command);
-	}
-	/* set solver client arguments */
-	if (cfg && args) {
-		int take = mpt_solver_args(cfg, args, -1);
-		if (take < 0) {
-			return 1;
-		}
-		args += take;
 	}
 	/* start event loop */
 	mpt_loop(&no);

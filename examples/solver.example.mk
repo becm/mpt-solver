@@ -16,3 +16,9 @@ CLEAN_FILES += ${CLEAR_FILES}
 ${STATIC} : libs=mptsolver mpt dl
 ${PROGS} : libs=mptsolver mptio mptcore
 LDLIBS ?= $(libs:%=-l%)
+#
+# use C++ linker for relevant targets
+${CXXTARGETS}:
+	${CXX} ${LDFLAGS} ${^} ${LDLIBS} -o ${@}
+$(CXXTARGETS:%=%_static):
+	${CXX} -static ${LDFLAGS} ${^} ${LDLIBS} -o ${@}

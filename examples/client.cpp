@@ -11,11 +11,14 @@
 #include MPT_INCLUDE(client.h)
 #include MPT_INCLUDE(event.h)
 #include MPT_INCLUDE(config.h)
+#include MPT_INCLUDE(notify.h)
 #include MPT_INCLUDE(solver.h)
 
 class MyClient : public mpt::client
 {
 public:
+	MyClient(mpt::solver::UserInit * = 0)
+	{ }
 	virtual ~MyClient()
 	{ }
 	void unref() __MPT_OVERRIDE
@@ -30,7 +33,7 @@ public:
 
 int main(int argc, char * const argv[])
 {
-	if (mpt::client_init(argc, argv) < 0) {
+	if (mpt::mpt_init(argc, argv) < 0) {
 		return 1;
 	}
 	mpt::mpt_config_set(0, "mpt.client", "", '.');

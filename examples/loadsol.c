@@ -19,7 +19,7 @@
 
 #include MPT_INCLUDE(convert.h)
 #include MPT_INCLUDE(client.h)
-#include MPT_INCLUDE(parse.h)
+#include MPT_INCLUDE(config.h)
 #include MPT_INCLUDE(meta.h)
 
 #include MPT_INCLUDE(solver.h)
@@ -50,7 +50,7 @@ int main(void)
 	MPT_INTERFACE(logger) *log;
 	mtrace();
 	
-	mpt_config_load(getenv("MPT_PREFIX"), 0, 0);
+	mpt_config_load(0, getenv("MPT_PREFIX"), 0);
 	log = mpt_log_default();
 	
 	fputs(txt, stdout);

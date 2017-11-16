@@ -37,10 +37,13 @@ MPT_STRUCT(IVP) {
 	MPT_INTERFACE(metatype) *steps;
 	
 	MPT_STRUCT(solver_data) *sd;
-	char *cfg;
+	
+	MPT_INTERFACE(metatype) *cfg;
 	
 	MPT_SOLVER(interface) *sol;
-	int (*uinit)(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
+	
+	MPT_SOLVER_TYPE(UserInit) *uinit;
+	
 	struct timeval ru_usr,   /* user time in solver backend */
 	               ru_sys;   /* system time in solver backend */
 	double t;
@@ -119,32 +122,32 @@ static int outPDE(void *ptr, const MPT_STRUCT(value) *val)
 	return mpt_solver_output_pde(ctx->out, ctx->state, val, ctx->dat);
 }
 /* config interface */
-static MPT_STRUCT(node) *configIVP(const char *base)
+static MPT_STRUCT(node) *configIVP(MPT_STRUCT(IVP) *ivp)
 {
-	if (!base) {
-		return mpt_config_node(0);
-	}
-	else {
+	MPT_INTERFACE(metatype) *cfg;
+	MPT_STRUCT(node) *n;
+	
+	if (!(cfg = ivp->cfg)) {
 		MPT_STRUCT(path) p = MPT_PATH_INIT;
-		MPT_STRUCT(node) *conf;
-		
-		mpt_path_set(&p, base, -1);
-		if ((conf = mpt_config_node(&p))) {
-			return conf;
-		}
-		if (mpt_config_set(0, base, 0, '.', 0) < 0) {
+		mpt_path_set(&p, "mpt.config", -1);
+		if (!(cfg = mpt_config_global(&p))) {
 			return 0;
 		}
-		return mpt_config_node(base ? &p : 0);
+		ivp->cfg = cfg;
 	}
+	n = 0;
+	if (cfg->_vptr->conv(cfg, MPT_ENUM(TypeNode), &n) < 0) {
+		return 0;
+	}
+	return n;
 }
 static const MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 {
-	const MPT_STRUCT(IVP) *ivp = MPT_baseaddr(IVP, gen, _cfg);
+	MPT_STRUCT(IVP) *ivp = MPT_baseaddr(IVP, gen, _cfg);
 	MPT_STRUCT(node) *conf;
 	MPT_STRUCT(path) p;
 	
-	if (!(conf = configIVP(ivp->cfg))) {
+	if (!(conf = configIVP(ivp))) {
 		return 0;
 	}
 	if (!porg) {
@@ -174,92 +177,31 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	MPT_INTERFACE(logger) *info;
 	MPT_STRUCT(node) *conf;
 	
-	if (!(conf = configIVP(ivp->cfg))) {
-		return MPT_ERROR(BadOperation);
-	}
 	if (!(info = mpt_solver_output_logger(&ivp->out))) {
 		info = mpt_log_default();
 	}
 	if (!porg) {
-		MPT_STRUCT(solver_data) *dat;
-		MPT_INTERFACE(metatype) *mt;
-		MPT_INTERFACE(object) *obj, *out;
-		MPT_SOLVER(interface) *sol;
-		int ret;
-		
-		/* set (new) config base */
-		if (val) {
-			char *base;
-			if (val->fmt || !val->ptr) {
-				return MPT_ERROR(BadValue);
-			}
-			/* query config base */
-			if (!configIVP(val->ptr)) {
-				return MPT_ERROR(BadValue);
-			}
-			if (!(base = strdup(val->ptr))) {
-				return MPT_ERROR(BadOperation);
-			}
-			if (ivp->cfg) {
-				free(ivp->cfg);
-			}
-			ivp->cfg = base;
-			
-			return strlen(base);
-		}
-		if (!(dat = ivp->sd)) {
-			mpt_log(info, _func, MPT_LOG(Error), "%s",
-			        MPT_tr("missing data descriptor"));
+		MPT_STRUCT(path) p = MPT_PATH_INIT;
+		if (ivp->cfg) {
 			return MPT_ERROR(BadOperation);
 		}
-		if (!(sol = ivp->sol)) {
-			mpt_log(info, _func, MPT_LOG(Error), "%s",
-			        MPT_tr("missing solver descriptor"));
-			return MPT_ERROR(BadOperation);
+		if (!val) {
+			return configIVP(ivp) ? 0 : MPT_ERROR(BadOperation);
 		}
-		/* require object interface to solver */
-		obj = 0;
-		if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
-		    || !obj) {
-			mpt_log(info, _func, MPT_LOG(Error), "%s (" PRIxPTR ")",
-			        MPT_tr("solver without object interface"), sol);
+		if (val->fmt) {
+			return MPT_ERROR(BadType);
+		}
+		if (!val->ptr
+		    || !mpt_path_set(&p, val->ptr, -1)) {
 			return MPT_ERROR(BadValue);
 		}
-		/* history assignment */
-		out = 0;
-		if ((mt = ivp->out._data)
-		    && mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &out) >= 0
-		    && out
-		    && (ret = mpt_conf_history(out, conf->children)) < 0) {
-			return ret;
+		if (!(ivp->cfg = mpt_config_global(&p))) {
+			return MPT_ERROR(MissingData);
 		}
-		/* set solver parameters */
-		mpt_solver_param(obj, conf->children, info);
-		
-		/* prepare solver */
-		if ((ret = obj->_vptr->setProperty(obj, 0, 0)) < 0) {
-			mpt_log(info, _func, MPT_LOG(Error), "%s",
-			        MPT_tr("solver backend prepare failed"));
-			return ret;
-		}
-		if (info) {
-			mpt_solver_info(sol, info);
-			mpt_log(info, 0, MPT_LOG(Message), "");
-		}
-		if (!ivp->pdim) {
-			mpt_solver_status(sol, info, 0, 0);
-		}
-		else {
-			struct _clientPdeOut ctx;
-			ctx.out = &ivp->out;
-			ctx.dat = ivp->sd;
-			ctx.state = MPT_DATASTATE(Init);
-			mpt_solver_status(sol, info, outPDE, &ctx);
-			ivp->t = getTime(sol, 0);
-		}
-		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
-		        MPT_tr("IVP client preparation finished"));
 		return 0;
+	}
+	if (!(conf = configIVP(ivp))) {
+		return MPT_ERROR(BadOperation);
 	}
 	if (!porg->len) {
 		int ret = mpt_node_parse(conf, val, info);
@@ -310,7 +252,7 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 		}
 		return 0;
 	}
-	if (!(conf = configIVP(ivp->cfg))) {
+	if (!(conf = configIVP(ivp))) {
 		return MPT_ERROR(BadOperation);
 	}
 	if (!porg->len) {
@@ -399,7 +341,7 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 		info = mpt_log_default();
 	}
 	
-	if (!(conf = configIVP(ivp->cfg))) {
+	if (!(conf = configIVP(ivp))) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
 		        MPT_tr("failed to query"), MPT_tr("client configuration"));
 		return MPT_ERROR(BadOperation);
@@ -750,23 +692,15 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 	}
 	
 	if (!id) {
-		if (!ivp->sol) {
-			MPT_SOLVER(interface) *sol;
-			MPT_INTERFACE(object) *obj;
-			if ((ret = initIVP(cl, it)) < 0) {
-				return MPT_EVENTFLAG(Fail) | MPT_EVENTFLAG(Default);
-			}
-			obj = 0;
-			if ((sol = ivp->sol)
-			    && (ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) >= 0
-			    && obj
-			    && (ret = obj->_vptr->setProperty(obj, 0, 0)) < 0) {
-				mpt_log(info, _func, MPT_LOG(Error), "%s (" PRIxPTR ")",
-				        MPT_tr("unable to prepare solver"), sol);
-				return MPT_ERROR(BadValue);
-			}
+		const MPT_INTERFACE(metatype) *mt;
+		MPT_INTERFACE(object) *obj = 0;
+		if (!(mt = ivp->pr._ref)
+		    || mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) < 0
+		    || !obj) {
+			return MPT_EVENTFLAG(Fail);
 		}
-		ret = stepIVP(cl, 0);
+		/* TODO: set solver parameters from args */
+		ret = obj->_vptr->setProperty(obj, 0, 0);
 	}
 	else if (id == mpt_hash("init", 4)) {
 		ret = initIVP(cl, it);
@@ -775,7 +709,16 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		ret = stepIVP(cl, it);
 	}
 	else if (id == mpt_hash("set", 3)) {
-		ret = mpt_config_args(&ivp->_cfg, it, info);
+		ret = mpt_config_args(&ivp->_cfg, it);
+		if (ret > 0) {
+			const char *val = "";
+			if (it) {
+				it->_vptr->get(it, 's', &val);
+			}
+			mpt_log(info, _func, MPT_LOG(Error), "%s (%d): %s",
+			        MPT_tr("bad assign argument"), ret, val);
+			return MPT_EVENTFLAG(Fail);
+		}
 	}
 	else if (id == mpt_hash("unset", 5) || id == mpt_hash("del", 3)) {
 		ret = mpt_config_clear(&ivp->_cfg, it, info);
@@ -791,16 +734,11 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 }
 static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 {
-	MPT_STRUCT(IVP) *ivp = (void *) cl;
 	if (!ev) {
 		return 0;
 	}
 	if (!ev->msg) {
-		int ret;
-		if (!ivp->sol && (ret = mpt_solver_require(&ivp->_cfg, ev->reply)) < 0) {
-			return ret;
-		}
-		return processIVP(cl, 0, 0);
+		return stepIVP(cl, 0);
 	}
 	return mpt_solver_dispatch(cl, ev);
 }
@@ -816,7 +754,7 @@ static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
  * 
  * \return IVP client
  */
-extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_INTERFACE(metatype) *out, int (*uinit)(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *))
+extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit, MPT_INTERFACE(metatype) *out)
 {
 	static const MPT_INTERFACE_VPTR(config) configIVP = {
 		queryIVP, assignIVP, removeIVP

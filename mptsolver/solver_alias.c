@@ -4,11 +4,9 @@
 
 #include <string.h>
 #include <strings.h>
-#include <ctype.h>
+#include <errno.h>
 
-#include "node.h"
 #include "config.h"
-
 #include "client.h"
 
 #include "solver.h"
@@ -25,56 +23,45 @@
  */
 extern const char *mpt_solver_alias(const char *descr)
 {
-	static const char sub[] = "mpt.loader.alias\0";
-	MPT_STRUCT(path) p = MPT_PATH_INIT;
-	MPT_STRUCT(node) *conf;
+	static const char base[] = "mpt.loader.alias\0";
+	const MPT_INTERFACE(metatype) *mt;
 	const char *id;
 	int type, sol;
 	
-	mpt_path_set(&p, sub, -1);
-	if (!(conf = mpt_config_node(&p))
-	    || !(conf = conf->children)) {
-		return 0;
-	}
 	if ((sol = mpt_solver_typeid()) < 0) {
+		errno = EINVAL;
 		return 0;
 	}
 	if (!descr) {
-		MPT_INTERFACE(metatype) *mt;
+		mt = mpt_config_get(0, base, '.', 0);
+	} else {
+		char where[128];
+		size_t blen, dlen;
 		
-		if (!(mt = conf->_meta)) {
+		blen = strlen(base);
+		dlen = strlen(descr);
+		
+		if ((blen + dlen + 2) > sizeof(where)) {
+			errno = ENAMETOOLONG;
 			return 0;
 		}
-		if (!(id = mpt_meta_data(mt, 0))) {
-			return 0;
-		}
-		if ((type = mpt_proxy_typeid(id, 0)) != sol) {
-			return 0;
-		}
-		return id;
+		memcpy(where, base, blen);
+		where[blen] = '.';
+		memcpy(where + blen + 1, descr, dlen + 1);
+		
+		mt = mpt_config_get(0, where, '.', 0);
 	}
-	/* compare non-space blocks */
-	while (1) {
-		MPT_STRUCT(node) *curr;
-		size_t vis = 0;
-		
-		/* start/length of alias element */
-		while (*descr && isspace(*descr)) descr++;
-		while (descr[vis] && !isspace(descr[vis])) vis++;
-		
-		/* alias string terminated */
-		if (!vis) {
-			return 0;
-		}
-		/* get symbol for alias element */
-		if ((curr = mpt_node_locate(conf, 1, descr, vis, -1))
-		    && (id = mpt_node_data(curr, 0))
-		    && (type = mpt_proxy_typeid(id, 0)) == sol) {
-			return id;
-		}
-		/* advance alias alement */
-		descr += vis;
+	if (!mt) {
+		errno = ENOENT;
+		return 0;
 	}
-	return 0;
+	if (!(id = mpt_meta_data(mt, 0))) {
+		return 0;
+	}
+	if ((type = mpt_proxy_typeid(id, 0)) != sol) {
+		errno = EINVAL;
+		return 0;
+	}
+	return id;
 }
 
