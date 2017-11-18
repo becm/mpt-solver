@@ -5,6 +5,7 @@
 #define _POSIX_C_SOURCE 200809L /* need for strdup() */
 
 #include <stdlib.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -18,10 +19,10 @@
 
 #include "values.h"
 #include "output.h"
-#include "config.h"
 #include "parse.h"
 
 #include "client.h"
+#include "config.h"
 
 #include "solver.h"
 
@@ -219,6 +220,7 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 static void deleteNLS(MPT_INTERFACE(reference) *gen)
 {
 	MPT_STRUCT(NLS) *nls = (void *) gen;
+	MPT_INTERFACE(metatype) *mt;
 	
 	mpt_proxy_fini(&nls->pr);
 	mpt_solver_output_close(&nls->out);
@@ -227,8 +229,8 @@ static void deleteNLS(MPT_INTERFACE(reference) *gen)
 		mpt_solver_data_fini(nls->sd);
 		free(nls->sd);
 	}
-	if (nls->cfg) {
-		free(nls->cfg);
+	if ((mt = nls->cfg)) {
+		mt->_vptr->ref.unref((void *) mt);
 	}
 	free(nls);
 }
@@ -501,6 +503,18 @@ static int dispatchNLS(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 {
 	if (!ev) {
 		return 0;
+	}
+	if (!ev->msg) {
+		int err;
+		if ((err = stepNLS(cl, 0)) < 0) {
+			return MPT_event_fail(ev, err, MPT_tr("bad step operation"));
+		}
+		if (err & MPT_EVENTFLAG(Fail)) {
+			mpt_context_reply(ev->reply, err, "%s (" PRIxPTR ")",
+			                  MPT_tr("step operation error"), ev->id);
+			ev->id = 0;
+			return err | MPT_EVENTFLAG(Default);
+		}
 	}
 	return mpt_solver_dispatch(cl, ev);
 }

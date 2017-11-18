@@ -272,20 +272,20 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 static void deleteIVP(MPT_INTERFACE(reference) *gen)
 {
 	MPT_STRUCT(IVP) *ivp = (void *) gen;
-	MPT_INTERFACE(metatype) *it;
+	MPT_INTERFACE(metatype) *mt;
 	
 	mpt_proxy_fini(&ivp->pr);
 	mpt_solver_output_close(&ivp->out);
 	
-	if ((it = ivp->steps)) {
-		it->_vptr->ref.unref((void *) it);
+	if ((mt = ivp->steps)) {
+		mt->_vptr->ref.unref((void *) mt);
 	}
 	if (ivp->sd) {
 		mpt_solver_data_fini(ivp->sd);
 		free(ivp->sd);
 	}
-	if (ivp->cfg) {
-		free(ivp->cfg);
+	if ((mt = ivp->cfg)) {
+		mt->_vptr->ref.unref((void *) mt);
 	}
 	free(ivp);
 }
@@ -738,7 +738,16 @@ static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 		return 0;
 	}
 	if (!ev->msg) {
-		return stepIVP(cl, 0);
+		int err;
+		if ((err = stepIVP(cl, 0)) < 0) {
+			return MPT_event_fail(ev, err, MPT_tr("bad step operation"));
+		}
+		if (err & MPT_EVENTFLAG(Fail)) {
+			mpt_context_reply(ev->reply, err, "%s (" PRIxPTR ")",
+			                  MPT_tr("step operation error"), ev->id);
+			ev->id = 0;
+			return err | MPT_EVENTFLAG(Default);
+		}
 	}
 	return mpt_solver_dispatch(cl, ev);
 }

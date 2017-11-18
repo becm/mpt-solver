@@ -25,6 +25,16 @@
 # define mtrace()
 #endif
 
+static int dispatchClient(void *ptr, MPT_STRUCT(event) *ev)
+{
+	MPT_INTERFACE(client) *cl = ptr;
+	if (!ev) {
+		cl->_vptr->meta.ref.unref((void *) cl);
+		return 0;
+	}
+	return cl->_vptr->dispatch(cl, ev);
+}
+
 extern int solver_run(MPT_INTERFACE(client) *c)
 {
 	MPT_STRUCT(notify) no = MPT_NOTIFY_INIT;
@@ -60,8 +70,8 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		return 2;
 	}
 	/* setup dispatcher for solver client */
-	if (mpt_meta_events(disp, (void *) c) < 0) {
-		c->_vptr->meta.ref.unref((void *) c);
+	if (mpt_dispatch_set(disp, MPT_MESGTYPE(Command), dispatchClient, c) < 0) {
+		dispatchClient(c, 0);
 		mpt_log(info, __func__, MPT_LOG(Error), "%s", "event setup failed");
 		return 3;
 	}
