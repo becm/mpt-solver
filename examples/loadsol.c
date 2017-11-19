@@ -42,7 +42,7 @@ static int wrap_fw(void *out, const MPT_STRUCT(property) *pr)
 	return 0;
 }
 
-int main(void)
+int main(int argc, char * const argv[])
 {
 	const char txt[] = "load: ";
 	char buf[128];
@@ -50,7 +50,7 @@ int main(void)
 	MPT_INTERFACE(logger) *log;
 	mtrace();
 	
-	mpt_config_load(0, getenv("MPT_PREFIX"), 0);
+	mpt_init(argc, argv);
 	log = mpt_log_default();
 	
 	fputs(txt, stdout);

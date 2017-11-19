@@ -63,13 +63,15 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		
 		/* register message dispatcher for notifier */
 		if (!(disp = mpt_notify_dispatch(&no))) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s", "failed to create dispatcher");
+			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			        "failed to create dispatcher");
 			dispatchClient(c, 0);
 			ret = 2;
 		}
 		/* setup dispatcher for solver client */
 		else if ((ret = mpt_dispatch_set(disp, MPT_MESGTYPE(Command), dispatchClient, c)) < 0) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s", "event setup failed");
+			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			        "event setup failed");
 			dispatchClient(c, 0);
 			ret = 3;
 		}
@@ -81,18 +83,21 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 	else {
 		/* setup standalone operation */
 		if ((ret = c->_vptr->process(c, mpt_hash("start", 5), 0)) < 0) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s", "failed start solver client");
+			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			        "failed start solver client");
 			ret = 2;
 		}
 		/* execute standalone run */
-		else while ((ret = c->_vptr->dispatch(c, 0))) {
-			if (ret < 0) {
-				ret = 3;
-				break;
-			}
-			if (ret & MPT_EVENTFLAG(Terminate)) {
-				ret = 0;
-				break;
+		else if (ret & MPT_EVENTFLAG(Default)) {
+			while ((ret = c->_vptr->dispatch(c, 0))) {
+				if (ret < 0) {
+					ret = 3;
+					break;
+				}
+				if (ret & MPT_EVENTFLAG(Terminate)) {
+					ret = 0;
+					break;
+				}
 			}
 		}
 		dispatchClient(c, 0);
