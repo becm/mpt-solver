@@ -18,7 +18,7 @@ static int rh_side(void *udata, double t, const double *y, double *f)
 	return 0;
 }
 
-extern int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+static int crackoil_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(odefcn) usr = MPT_IVP_ODE_INIT;
 	double *param;
@@ -38,3 +38,12 @@ extern int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MP
 	return 2;
 }
 
+int main(int argc, char * const argv[])
+{
+	MPT_INTERFACE(client) *cl;
+	if (mpt_init(argc, argv) < 0) {
+		return 1;
+	}
+	cl  = mpt_client_ivp(crackoil_init);
+	return solver_run(cl);
+}

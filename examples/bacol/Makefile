@@ -9,7 +9,7 @@ STATIC =
 # general targets and definitions
 include ../solver.example.mk
 
-${PROGS} : ${DIR_EXAMPLES}main_ivp.o ${DIR_EXAMPLES}solver_run.o
+${PROGS} ${STATIC} : ${DIR_EXAMPLES}solver_run.o
 
 ${DIR_EXAMPLES}*.o *.o : ${DIR_EXAMPLES}solver_run.h
 

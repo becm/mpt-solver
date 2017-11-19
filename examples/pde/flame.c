@@ -26,7 +26,6 @@ static int rfcn(void *udata, double t, const double *u, double *f, double x, dou
 	
 	return 0;
 }
-
 /* solver right side calculation */
 static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_IVP_STRUCT(parameters) *ivp)
 {
@@ -56,9 +55,8 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_I
 	
 	return 0;
 }
-
 /* setup solver for PDE run */
-extern int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+static int flame_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(pdefcn) pde = MPT_IVP_PDE_INIT;
 	int ret, npde = 2;
@@ -80,5 +78,14 @@ extern int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MP
 	damkohler = R * exp(de) / (a * de);
 	
 	return npde;
+}
+int main(int argc, char * const argv[])
+{
+	MPT_INTERFACE(client) *cl;
+	if (mpt_init(argc, argv) < 0) {
+		return 1;
+	}
+	cl  = mpt_client_ivp(flame_init);
+	return solver_run(cl);
 }
 

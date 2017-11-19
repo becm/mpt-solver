@@ -58,9 +58,8 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_I
 	
 	return 0;
 }
-
 /* setup solver for PDE run */
-extern int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+static int makzo_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(pdefcn) usr = MPT_IVP_PDE_INIT;
 	int ret;
@@ -71,4 +70,12 @@ extern int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MP
 	}
 	return N_PDE;
 }
-
+int main(int argc, char * const argv[])
+{
+	MPT_INTERFACE(client) *cl;
+	if (mpt_init(argc, argv) < 0) {
+		return 1;
+	}
+	cl  = mpt_client_ivp(makzo_init);
+	return solver_run(cl);
+}

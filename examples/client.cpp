@@ -36,7 +36,5 @@ int main(int argc, char * const argv[])
 	if (mpt::mpt_init(argc, argv) < 0) {
 		return 1;
 	}
-	mpt::mpt_config_set(0, "mpt.client", "", '.');
-	mpt::mpt_config_set(0, "mpt.client.solconf", "", '.');
 	return mpt::solver_run(new MyClient);
 }

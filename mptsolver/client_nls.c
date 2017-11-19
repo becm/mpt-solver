@@ -529,7 +529,7 @@ static int dispatchNLS(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
  * 
  * \return NLS client
  */
-extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) uinit, MPT_INTERFACE(metatype) *out)
+extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) uinit)
 {
 	static MPT_INTERFACE_VPTR(config) configNLS = {
 		queryNLS, assignNLS, removeNLS
@@ -542,7 +542,7 @@ extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) uinit, MP
 	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	MPT_STRUCT(NLS) *nls;
 	
-	if (!uinit || !out) {
+	if (!uinit) {
 		return 0;
 	}
 	if (!(nls = malloc(sizeof(*nls)))) {
@@ -556,7 +556,6 @@ extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) uinit, MP
 	nls->cfg = 0;
 	
 	nls->out = def;
-	nls->out._data = out;
 	
 	nls->sol = 0;
 	nls->uinit = uinit;

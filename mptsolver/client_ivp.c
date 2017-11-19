@@ -763,7 +763,7 @@ static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
  * 
  * \return IVP client
  */
-extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit, MPT_INTERFACE(metatype) *out)
+extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit)
 {
 	static const MPT_INTERFACE_VPTR(config) configIVP = {
 		queryIVP, assignIVP, removeIVP
@@ -776,7 +776,7 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit, MP
 	const MPT_STRUCT(solver_output) def = MPT_SOLVER_OUTPUT_INIT;
 	MPT_STRUCT(IVP) *ivp;
 	
-	if (!uinit || !out) {
+	if (!uinit) {
 		return 0;
 	}
 	if (!(ivp = malloc(sizeof(*ivp)))) {
@@ -791,7 +791,6 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit, MP
 	ivp->steps = 0;
 	
 	ivp->out = def;
-	ivp->out._data = out;
 	
 	ivp->sol = 0;
 	ivp->uinit = uinit;

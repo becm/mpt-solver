@@ -5,7 +5,7 @@
 #include "solver_run.h"
 
 /* map functions to bacol parameters */
-extern int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
+static int bacol_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
 {
 	int ret, npde = 4;
 	
@@ -15,4 +15,14 @@ extern int user_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MP
 	}
 	/* no profile operation */
 	return 0;
+}
+
+int main(int argc, char * const argv[])
+{
+	MPT_INTERFACE(client) *cl;
+	if (mpt_init(argc, argv) < 0) {
+		return 1;
+	}
+	cl  = mpt_client_ivp(bacol_init);
+	return solver_run(cl);
 }

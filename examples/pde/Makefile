@@ -6,7 +6,7 @@ OBJS  = main.o $(PROGS:%=%.o)
 # general targets and definitions
 include ../solver.example.mk
 
-${PROGS} ${STATIC} : ${DIR_EXAMPLES}main_ivp.o ${DIR_EXAMPLES}solver_run.o
+${PROGS} ${STATIC} : ${DIR_EXAMPLES}solver_run.o
 
 ${DIR_EXAMPLES}*.o *.o : ../solver_run.h
 

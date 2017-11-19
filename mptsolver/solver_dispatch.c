@@ -37,6 +37,9 @@ extern int mpt_solver_dispatch(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 	MPT_STRUCT(msgtype) mt;
 	int ret;
 	
+	if (!ev) {
+		return 0;
+	}
 	if (!ev->msg) {
 		mpt_context_reply(ev->reply, MPT_ERROR(BadArgument), "%s",
 		                  MPT_tr("unable to dispatch default action"));
