@@ -17,16 +17,28 @@
 
 #include "solver.h"
 
+static MPT_INTERFACE(config) *getConfig(MPT_INTERFACE(client) *cl, MPT_INTERFACE(reply_context) *rc)
+{
+	MPT_INTERFACE(config) *cfg = 0;
+	if (cl->_vptr->meta.conv((void *) cl, MPT_ENUM(TypeConfig), &cfg) > 0
+	    && cfg) {
+		return cfg;
+	}
+	mpt_context_reply(rc, MPT_ERROR(BadType), "%s",
+	                  MPT_tr("client without config interface"));
+	return cfg;
+}
 /*!
  * \ingroup mptSolver
- * \brief register client events
+ * \brief process command event
  * 
- * Set event handlers for solver client in dispatch descriptor.
- * Try to register dispatch output as solver client output
- * and dispatch graphic commands to output descriptor.
+ * Call client command process function with
+ * content in event message data.
+ * Set command as default event type if client requests
+ * default operation.
  * 
  * \param dsp dispatch descriptor
- * \param cl  client descriptor
+ * \param ev  client descriptor
  * 
  * \retval 0  success
  * \retval -1 missing descriptor pointer
@@ -48,10 +60,46 @@ extern int mpt_solver_dispatch(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 	}
 	tmp = *ev->msg;
 	
+	mt.arg = 0;
 	if (!(ret = mpt_message_read(&tmp, sizeof(mt), &mt))) {
 		mpt_context_reply(ev->reply, MPT_ERROR(MissingData), "%s",
 		                  MPT_tr("empty message"));
 		return MPT_ERROR(MissingData);
+	}
+	if (mt.cmd == MPT_MESGTYPE(ParamGet)) {
+		MPT_INTERFACE(config) *cfg;
+		if (!(cfg = getConfig(cl, ev->reply))) {
+			return MPT_EVENTFLAG(Fail);
+		}
+		return MPT_ERROR(MissingData);
+		/* TODO:
+		return mpt_config_getpar(cfg, &tmp, mt.arg, ev->reply)
+		*/
+	}
+	else if (mt.cmd == MPT_MESGTYPE(ParamSet)) {
+		MPT_INTERFACE(config) *cfg;
+		if (!(cfg = getConfig(cl, ev->reply))) {
+			return MPT_EVENTFLAG(Fail);
+		}
+		return MPT_ERROR(MissingData);
+		/* TODO:
+		return mpt_config_setpar(cfg, &tmp, ev->reply);
+		*/
+	}
+	else if (mt.cmd == MPT_MESGTYPE(ParamCond)) {
+		MPT_INTERFACE(config) *cfg;
+		if (!(cfg = getConfig(cl, ev->reply))) {
+			return MPT_EVENTFLAG(Fail);
+		}
+		return MPT_ERROR(MissingData);
+		/* TODO:
+		if ((err = mpt_config_getpar(cfg, &tmp, mt.arg, 0)) >= 0) {
+			mpt_context_reply(ev->reply, MPT_ERROR(MissingData), "%s",
+			                  MPT_tr("empty message"));
+			return MPT_EVENTFLAG(Fail);
+		}
+		return mpt_config_setpar(cfg, &tmp, ev->reply);
+		*/
 	}
 	if (mt.cmd != MPT_MESGTYPE(Command)) {
 		mpt_context_reply(ev->reply, MPT_ERROR(BadArgument), "%s (%02x != %02x)",

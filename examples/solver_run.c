@@ -82,9 +82,9 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 	}
 	else {
 		/* setup standalone operation */
-		if ((ret = c->_vptr->process(c, mpt_hash("start", 5), 0)) < 0) {
+		if ((ret = c->_vptr->process(c, 0, 0)) < 0) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
-			        "failed start solver client");
+			        "solver client start failed");
 			ret = 2;
 		}
 		/* execute standalone run */

@@ -1,5 +1,6 @@
 
 #include <string.h>
+#include <ctype.h>
 
 #include "client.h"
 #include "config.h"
@@ -78,7 +79,6 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, 
 {
 	MPT_INTERFACE(metatype) *mt;
 	MPT_SOLVER(interface) *sol;
-	const char *name;
 	uintptr_t h;
 	int mode, me;
 	
@@ -109,21 +109,65 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, 
 		return validSolver(sol, match, log, __func__) < 0 ? 0 : sol;
 	}
 	if (!*conf) {
-		if (log) {
-			mpt_log(log, __func__, MPT_LOG(Error), "%s",
-		                MPT_tr("no solver description"));
-		}
-		return 0;
-	}
-	if (!strchr(conf, '@')) {
-		if (!(name = mpt_solver_alias(conf))) {
+		if (!(conf = mpt_solver_alias(0))) {
 			if (log) {
-				mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
-			                MPT_tr("bad solver description"), conf);
+				mpt_log(log, __func__, MPT_LOG(Error), "%s",
+				        MPT_tr("no solver description"));
 			}
 			return 0;
 		}
-		conf = name;
+	}
+	else if (!strchr(conf, '@')) {
+		const char *name = conf;
+		char tmp[256];
+		size_t pos = 0;
+		
+		conf = 0;
+		while (1) {
+			const char *sym;
+			int val;
+			if (!(val = name[pos])) {
+				if (!(sym = mpt_solver_alias(name))) {
+					mpt_log(log, __func__, MPT_LOG(Error), "%s (%d)",
+					        MPT_tr("no valid solver alias"), conf);
+					return 0;
+				}
+				conf = sym;
+				break;
+			}
+			if (!isspace(val)) {
+				if (pos < sizeof(tmp)) {
+					tmp[pos++] = val;
+					continue;
+				}
+				++pos;
+				while ((val = name[pos])) {
+					if (isspace(val)) {
+						break;
+					}
+					++pos;
+				}
+				val = pos;
+				mpt_log(log, __func__, MPT_LOG(Error), "%s (%d)",
+				        MPT_tr("solver description element exceeds buffer"), val);
+				name += pos;
+				pos = 0;
+			}
+			if (!pos) {
+				++name;
+				continue;
+			}
+			tmp[pos++] = 0;
+			if ((sym = mpt_solver_alias(tmp))) {
+				conf = sym;
+				break;
+			}
+			mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("loader alias unknown"), tmp);
+			
+			name += pos;
+			pos = 0;
+		}
 	}
 	/* identical to current instance */
 	h = mpt_hash(conf, strlen(conf));

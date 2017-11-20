@@ -324,11 +324,10 @@ static MPT_INTERFACE(metatype) *cloneIVP(const MPT_INTERFACE(metatype) *mt)
 	return 0;
 }
 /* init operation for solver */
-static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
+static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 {
 	static const char _func[] = "mpt::client<IVP>::init";
 	
-	MPT_STRUCT(IVP) *ivp = (void *) cl;
 	MPT_STRUCT(node) *conf, *curr;
 	MPT_STRUCT(solver_data) *dat;
 	MPT_INTERFACE(metatype) *mt;
@@ -544,12 +543,43 @@ static int initIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
 	
 	return 0;
 }
+/* prepare operation on solver */
+static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
+{
+	const MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(logger) *info;
+	MPT_INTERFACE(object) *obj;
+	MPT_STRUCT(node) *cfg;
+	int err;
+	
+	if (!(info = mpt_solver_output_logger(&ivp->out))) {
+		info = mpt_log_default();
+	}
+	obj = 0;
+	if (!(mt = ivp->pr._ref)
+	    || mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) < 0
+	    || !obj) {
+		err = mt->_vptr->conv(mt, 0, 0);
+		mpt_log(info, __func__, MPT_LOG(Warning), "%s (%s = %d)",
+		        MPT_tr("solver without object interface"), MPT_tr("type"), err);
+		return MPT_ERROR(BadOperation);
+	}
+	/* set solver parameters from config */
+	if ((cfg = configIVP(ivp))
+	    && (cfg = cfg->children)) {
+		mpt_solver_param(obj, cfg, info);
+	}
+	/* set solver parameters from args */
+	if (args && (err = mpt_object_args(obj, args)) < 0) {
+		return err;
+	}
+	return obj->_vptr->setProperty(obj, 0, 0);
+}
 /* step operation on solver */
-static int stepIVP(MPT_INTERFACE(client) *cl, MPT_INTERFACE(iterator) *args)
+static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 {
 	static const char _func[] = "mpt::client<IVP>::step";
 	
-	MPT_STRUCT(IVP) *ivp = (void *) cl;
 	MPT_INTERFACE(iterator) *steps;
 	MPT_INTERFACE(logger) *info;
 	MPT_INTERFACE(object) *obj;
@@ -690,23 +720,40 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 	if (!(info = mpt_solver_output_logger(&ivp->out))) {
 		info = mpt_log_default();
 	}
-	
-	if (!id) {
-		const MPT_INTERFACE(metatype) *mt;
-		MPT_INTERFACE(object) *obj = 0;
-		if (!(mt = ivp->pr._ref)
-		    || mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) < 0
-		    || !obj) {
-			return MPT_EVENTFLAG(Fail);
+	if (!id || id == mpt_hash("start", 5)) {
+		MPT_STRUCT(node) *cfg;
+		if (!(cfg = configIVP(ivp))) {
+			return MPT_ERROR(BadOperation);
 		}
-		/* TODO: set solver parameters from args */
-		ret = obj->_vptr->setProperty(obj, 0, 0);
+		if (!id && (ret = mpt_solver_require(&ivp->_cfg, 0)) < 0) {
+			return ret;
+		}
+		if ((ret = mpt_solver_read(cfg, id ? it : 0, info)) < 0) {
+			return ret;
+		}
+		if ((ret = initIVP(ivp, id ? 0 : it)) < 0) {
+			return ret;
+		}
+		if ((ret = prepIVP(ivp, 0)) < 0) {
+			return ret;
+		}
+		return MPT_EVENTFLAG(Default);
+	}
+	else if (id == mpt_hash("read", 4)) {
+		MPT_STRUCT(node) *cfg;
+		if (!(cfg = configIVP(ivp))) {
+			return MPT_ERROR(BadOperation);
+		}
+		ret = mpt_solver_read(cfg, it, info);
 	}
 	else if (id == mpt_hash("init", 4)) {
-		ret = initIVP(cl, it);
+		ret = initIVP(ivp, it);
+	}
+	else if (id == mpt_hash("prep", 4)) {
+		ret = prepIVP(ivp, it);
 	}
 	else if (id == mpt_hash("step", 4)) {
-		ret = stepIVP(cl, it);
+		ret = stepIVP(ivp, it);
 	}
 	else if (id == mpt_hash("set", 3)) {
 		ret = mpt_config_args(&ivp->_cfg, it);
@@ -727,27 +774,34 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		return MPT_ERROR(BadArgument);
 	}
 	if (ret < 0) {
-		return MPT_EVENTFLAG(Fail) | MPT_EVENTFLAG(Default);
-	} else {
-		return MPT_EVENTFLAG(None);
+		return ret;
 	}
+	return MPT_EVENTFLAG(None);
 }
 static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 {
+	MPT_STRUCT(IVP) *ivp = (void *) cl;
+	int err;
+	
 	if (!ev) {
-		return 0;
+		if ((err = stepIVP(ivp, 0)) < 0) {
+			return err;
+		}
+		return err ? MPT_EVENTFLAG(Default) : MPT_EVENTFLAG(Terminate);
 	}
 	if (!ev->msg) {
-		int err;
-		if ((err = stepIVP(cl, 0)) < 0) {
+		if ((err = stepIVP(ivp, 0)) < 0) {
 			return MPT_event_fail(ev, err, MPT_tr("bad step operation"));
 		}
-		if (err & MPT_EVENTFLAG(Fail)) {
+		if (err) {
 			mpt_context_reply(ev->reply, err, "%s (" PRIxPTR ")",
-			                  MPT_tr("step operation error"), ev->id);
-			ev->id = 0;
-			return err | MPT_EVENTFLAG(Default);
+			                  MPT_tr("solver step processed"), ev->id);
+			return MPT_EVENTFLAG(None);
 		}
+		mpt_context_reply(ev->reply, err, "%s (" PRIxPTR ")",
+		                  MPT_tr("solver operation finished"), ev->id);
+		ev->id = 0;
+		return MPT_EVENTFLAG(Default);
 	}
 	return mpt_solver_dispatch(cl, ev);
 }

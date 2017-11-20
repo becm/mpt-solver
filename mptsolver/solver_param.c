@@ -43,6 +43,6 @@ extern void mpt_solver_param(MPT_INTERFACE(object) *obj, const MPT_STRUCT(node) 
 		}
 	}
 	if ((conf = mpt_node_next(base, "solver")) && (conf = conf->children)) {
-		mpt_solver_pset(obj, conf, ~maskGeneric, out);
+		mpt_solver_pset(obj, conf, maskGeneric, out);
 	}
 }
