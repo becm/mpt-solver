@@ -25,15 +25,16 @@ public:
     { delete this; }
 
     int dispatch(mpt::event *ev) __MPT_OVERRIDE
-    { return mpt::solver::mpt_solver_dispatch(this, ev); }
-
+    {
+        if (!ev) return mpt::event::Terminate;
+        return mpt::solver::mpt_solver_dispatch(this, ev);
+    }
     int process(uintptr_t id, mpt::iterator *) __MPT_OVERRIDE
     {
-        if (id == mpt::mpt_hash("start", 5)) {
+        if (!id) {
             return mpt::event::Default;
-        } else {
-            return mpt::event::Terminate;
         }
+        return mpt::event::None;
     }
 };
 

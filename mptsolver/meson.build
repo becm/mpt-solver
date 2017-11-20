@@ -10,6 +10,7 @@ solv_src = files(
   'solver_load.c',
   'solver_param.c', 'solver_print.c', 'solver_pset.c',
   'solver_read.c',
+  'solver_require.c',
   'solver_setvalue.c', 'solver_statistics.c',
   'solver_typeid.c',
   'steps_ode.c',

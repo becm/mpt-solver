@@ -69,7 +69,7 @@ int main(int argc, char * const argv[])
 	if (mpt_init(argc, argv) < 0) {
 		return 1;
 	}
-	cl  = mpt_client_ivp(neter_init);
+	cl  = mpt_client_nls(neter_init);
 	return solver_run(cl);
 }
 

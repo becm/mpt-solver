@@ -21,7 +21,6 @@ vecpar.o : CPPFLAGS+=-std=c++11
 client client_static : client.o solver_run.o
 client_static : LDLIBS=-lmptsolver -lmpt++ -lmpt
 client : LDLIBS=-lmptsolver -lmpt++ -lmptio -lmptcore
-test_client : ARGS=client.conf
 
 solvers solvers_static : solvers.o
 solvers : LDLIBS=-lmpt++ -lmptcore $(solvers:%=-lmpt_%)

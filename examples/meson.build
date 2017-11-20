@@ -15,7 +15,16 @@ if with_cxx
       cpp_args: test_defines,
       dependencies: cxx)
   )
-
+  if get_option('with_io')
+    test('client instance',
+      executable('client', 'client.cpp', 'solver_run.c',
+        include_directories : solv_inc,
+        c_args: test_defines,
+        cpp_args: test_defines,
+        dependencies: [ cxx, solv ])
+    )
+  endif
+  
   if is_variable('mod_sundials')
     test('solver status output',
       executable('solvers', 'solvers.cpp',

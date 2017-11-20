@@ -345,27 +345,6 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("failed to query"), MPT_tr("client configuration"));
 		return MPT_ERROR(BadOperation);
 	}
-	/* reevaluate solver config file */
-	if ((curr = mpt_node_find(conf, "solconf", 1))
-	    && !curr->children
-	    && (val = mpt_node_data(curr, 0))) {
-		MPT_STRUCT(parse) parse = MPT_PARSE_INIT;
-		if (!(parse.src.arg = fopen(val, "r"))) {
-			mpt_log(info, _func, MPT_LOG(Error), "%s: %s: %s",
-			        MPT_tr("failed to open"), MPT_tr("solver config"), val);
-			return MPT_ERROR(BadOperation);
-		}
-		parse.src.getc = (int (*)()) mpt_getchar_stdio;
-		ret = mpt_parse_node(curr, &parse, "[ ] = !#");
-		fclose(parse.src.arg);
-		if (ret < 0) {
-			mpt_log(info, _func, MPT_LOG(Error), "%s (%d): line = %d: %s",
-			        MPT_tr("parse error"), parse.curr, (int) parse.src.line, val);
-			return ret;
-		}
-		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
-		        MPT_tr("loaded solver config file"), val);
-	}
 	/* use supplied initial value */
 	if (args) {
 		if ((mt = ivp->steps)) {
