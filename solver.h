@@ -49,18 +49,37 @@ MPT_STRUCT(solver_data)
 MPT_STRUCT(solver_output)
 {
 #ifdef __cplusplus
-	inline solver_output()
+	inline solver_output() : _data(0), _graphic(0), _info(0)
 	{ }
-	Reference<metatype> data;
-	Reference<metatype> graphic;
-	Reference<metatype> info;
+	inline Slice<const uint8_t> pass() const
+	{
+		return _pass.slice();
+	}
+	bool setFlags(int flg, int pos = -1)
+	{
+		if (pos >= 0) {
+			if (pos >= _pass.length()
+			    && !_pass.resize(pos + 1)) {
+				return false;
+			}
+			return _pass.set(pos, flg);
+		}
+		if (!(pos = _pass.length())) {
+			return false;
+		}
+		for (uint8_t &v : _pass) {
+			v |= flg;
+		}
+		return true;
+	}
 protected:
 #else
 # define MPT_SOLVER_OUTPUT_INIT { 0, 0, 0, MPT_ARRAY_INIT }
-	MPT_INTERFACE(metatype) *_data;
-	MPT_INTERFACE(metatype) *_graphic;
-	MPT_INTERFACE(metatype) *_info;
 #endif
+	MPT_INTERFACE(output) *_data;
+	MPT_INTERFACE(output) *_graphic;
+	MPT_INTERFACE(logger) *_info;
+	
 	_MPT_ARRAY_TYPE(uint8_t) _pass;  /*  process flags for data dimensions */
 };
 
@@ -598,12 +617,11 @@ extern void mpt_solver_statistics(MPT_SOLVER(interface) *, MPT_INTERFACE(logger)
 
 
 /* output for solvers */
-extern void mpt_solver_output_close(MPT_STRUCT(solver_output) *);
 extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
 extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(value) *, const MPT_STRUCT(solver_data) *);
 extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *, int , const MPT_STRUCT(solver_data) *);
 /* select solver log target */
-extern MPT_INTERFACE(logger) *mpt_solver_output_logger(const MPT_STRUCT(solver_output) *);
+extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *, const MPT_INTERFACE(config) *);
 
 /* push data to output */
 extern int mpt_output_solver_data(MPT_INTERFACE(output) *, int , int , int , const double *, int);

@@ -30,7 +30,7 @@ extern int mpt_output_ivp_header(MPT_STRUCT(output) *out, int row, int col, cons
 	hdr.cmd = MPT_MESGTYPE(ValueFmt);
 	hdr.arg = 0;
 	
-	/* push parameter data */
+	/* push header data indicator */
 	if ((val = out->_vptr->push(out, sizeof(hdr), &hdr)) < 0) {
 		return val;
 	}

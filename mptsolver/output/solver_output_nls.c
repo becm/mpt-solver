@@ -12,22 +12,55 @@
 
 #include "solver.h"
 
-static void outputParam(MPT_STRUCT(output) *out, const double *par, int np)
+static void outputSize(MPT_STRUCT(output) *out, int nres)
 {
-	MPT_STRUCT(msgtype) mt;
+	MPT_STRUCT(msgtype) hdr;
+	uint32_t val;
+	uint8_t fmt;
+	int len;
 	
-	mt.cmd = MPT_MESGTYPE(ValueRaw);
-	mt.arg = 0;
+	hdr.cmd = MPT_MESGTYPE(ValueFmt);
+	hdr.arg = 0;
 	
-	/* push parameter data */
-	if (out->_vptr->push(out, sizeof(mt), &mt) < 0) {
+	/* push header data indicator */
+	if ((len = out->_vptr->push(out, sizeof(hdr), &hdr)) < 0) {
 		return;
 	}
-	while (np-- > 0) {
-		uint8_t fmt = (int8_t) MPT_message_value(Float, *par);
-		out->_vptr->push(out, sizeof(fmt), &fmt);
-		out->_vptr->push(out, sizeof(*par), par++);
+	/* append residual size */
+	fmt = MPT_message_value(Unsigned, val);
+	val = nres;
+	out->_vptr->push(out, sizeof(fmt), &fmt);
+	out->_vptr->push(out, sizeof(val), &val);
+	/* terminate message */
+	out->_vptr->push(out, 0, 0);
+}
+
+static void outputParam(MPT_STRUCT(output) *out, int state, const double *par, int np)
+{
+	struct {
+		MPT_STRUCT(msgtype) mt;
+		MPT_STRUCT(msgbind) bnd;
+	} hdr;
+	int i;
+	
+	hdr.mt.cmd = MPT_MESGTYPE(ValueRaw);
+	hdr.mt.arg = (int8_t) MPT_message_value(Float, *par);
+	
+	/* indicate special data */
+	hdr.bnd.dim = state;
+	hdr.bnd.state = 0;
+	
+	/* push header */
+	if (out->_vptr->push(out, sizeof(hdr), &hdr) < 0) {
+		return;
 	}
+	/* append values */
+	for (i = 0; i < np; ++i) {
+		if (out->_vptr->push(out, sizeof(*par), par++) < 0) {
+			out->_vptr->push(out, 1, 0);
+		}
+	}
+	/* terminate message */
 	out->_vptr->push(out, 0, 0);
 }
 static void outputValues(MPT_STRUCT(output) *out, int state, int dim, int len, const double *val, int ld)
@@ -63,8 +96,6 @@ static void outputValues(MPT_STRUCT(output) *out, int state, int dim, int len, c
  */
 extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_STRUCT(solver_data) *sd)
 {
-	MPT_INTERFACE(output) *dat, *grf;
-	const MPT_INTERFACE(metatype) *mt;
 	const MPT_STRUCT(buffer) *buf;
 	const uint8_t *pass;
 	const char *fmt;
@@ -83,16 +114,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	if (!(vec = val->ptr)) {
 		return MPT_ERROR(BadValue);
 	}
-	dat = 0;
-	if ((mt = out->_data)) {
-		mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &dat);
-	}
-	grf = 0;
-	if ((mt = out->_graphic)) {
-		mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &grf);
-	}
-	
-	if (!dat && !out) {
+	if (!out->_data && !out->_graphic) {
 		return 0;
 	}
 	par = vec->iov_base;
@@ -110,12 +132,13 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	/* output parameters */
 	if (par &&
 	    (state & (MPT_DATASTATE(Init) | MPT_DATASTATE(Step) | MPT_DATASTATE(Fini)))) {
-		if (dat) {
-			outputParam(dat, par, np);
+		if (out->_data) {
+			outputParam(out->_data, state, par, np);
 		}
-		if (grf) {
+		if (out->_graphic
+		    && out->_graphic != out->_data) {
 			/* pass state via dimension */
-			outputValues(grf, 0, state, np, par, 1);
+			outputParam(out->_graphic, state, par, np);
 		}
 	}
 	if (!res) {
@@ -129,18 +152,19 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		passlen = 0;
 	}
 	/* output residuals */
-	if (grf
+	if (out->_graphic
 	    && state & MPT_DATASTATE(Step)) {
 		if (!pass || (passlen && (pass[0] & state))) {
-			outputValues(grf, 0, state, nr, res, 1);
+			outputValues(out->_graphic, 0, state, nr, res, 1);
 		}
 	}
-	if (dat
+	if (out->_data
 	    && state & MPT_DATASTATE(Fini)) {
-		mpt_output_solver_history(dat, res, nr, 0, 0);
+		outputSize(out->_data, nr);
+		mpt_output_solver_history(out->_data, res, nr, 0, 0);
 	}
 	/* output user data */
-	if (grf
+	if (out->_graphic
 	    && (state & MPT_DATASTATE(Init))
 	    && sd
 	    && (buf = sd->val._buf)
@@ -157,7 +181,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		}
 		for (i = 0; i < np; ++i) {
 			if (!pass || ((size_t) i < passlen && pass[i] & state)) {
-				outputValues(grf, state, i+1, np, val+i, nv);
+				outputValues(out->_graphic, state, i + 1, np, val + i, nv);
 			}
 		}
 		return np + 1;

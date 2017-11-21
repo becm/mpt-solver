@@ -2,6 +2,7 @@
 client
 libassign
 loadsol
+output
 solvers
 vecpar
 

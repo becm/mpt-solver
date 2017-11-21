@@ -50,8 +50,6 @@ static void outputTime(MPT_STRUCT(output) *out, int state, double t)
  */
 extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_STRUCT(solver_data) *sd)
 {
-	MPT_INTERFACE(output) *dat, *grf;
-	const MPT_INTERFACE(metatype) *mt;
 	const MPT_STRUCT(buffer) *buf;
 	const struct iovec *vec;
 	const char *fmt;
@@ -62,16 +60,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 	if (!val || !(fmt = val->fmt) || !(vec = val->ptr)) {
 		return MPT_ERROR(BadArgument);
 	}
-	dat = 0;
-	if ((mt = out->_data)) {
-		mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &dat);
-	}
-	grf = 0;
-	if ((mt = out->_graphic)) {
-		mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &grf);
-	}
-	
-	if (!dat && !out) {
+	if (!out->_data && !out->_graphic) {
 		return 0;
 	}
 	t = 0;
@@ -79,8 +68,9 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 		t = val->ptr;
 		
 		/* push time data */
-		if (grf && (grf != dat)) {
-			outputTime(grf, state, *t);
+		if (out->_graphic
+		    && (out->_graphic != out->_data)) {
+			outputTime(out->_graphic, state, *t);
 		}
 		vec = (void *) (t + 1);
 		++fmt;
@@ -126,24 +116,24 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 	}
 	
 	if (grid) {
-		if (dat) {
-			mpt_output_ivp_header(dat, glen, ld+1, t);
-			mpt_output_solver_history(dat, grid, glen, y, ld);
+		if (out->_data) {
+			mpt_output_ivp_header(out->_data, glen, ld + 1, t);
+			mpt_output_solver_history(out->_data, grid, glen, y, ld);
 		}
-		if (grf
+		if (out->_graphic
 		    && (!pass || (passlen && (pass[0] & state)))) {
-			mpt_output_solver_data(grf, state, 0, glen, grid, 1);
+			mpt_output_solver_data(out->_graphic, state, 0, glen, grid, 1);
 		}
 	}
-	else if (dat) {
-		outputTime(dat, state, *t);
+	else if (out->_data) {
+		outputTime(out->_data, state, *t);
 	}
-	if (!grf) {
+	if (!out->_graphic) {
 		return ld;
 	}
 	for (i = 1; i <= ld; i++) {
 		if (!pass || (i < passlen && pass[i] & state)) {
-			mpt_output_solver_data(grf, state, i, glen, y, ld);
+			mpt_output_solver_data(out->_graphic, state, i, glen, y, ld);
 		}
 		++y;
 	}
