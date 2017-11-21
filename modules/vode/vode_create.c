@@ -7,12 +7,16 @@
 
 #include "meta.h"
 
+#include "module.h"
+
 #include "vode.h"
 
 MPT_STRUCT(VodeData) {
-	MPT_SOLVER(generic) _gen;
-	MPT_SOLVER_STRUCT(vode)  d;
-	MPT_IVP_STRUCT(odefcn)   uf;
+	MPT_STRUCT(module_generic) _gen;
+	
+	MPT_SOLVER_STRUCT(vode) d;
+	MPT_IVP_STRUCT(odefcn)  uf;
+	
 	double next;
 };
 /* reference interface */
@@ -30,7 +34,7 @@ static uintptr_t vdAddref()
 static int vdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(VodeData) *vd = (void *) mt;
-	return mpt_solver_module_generic_conv(&vd->_gen, type, ptr);
+	return mpt_module_generic_conv(&vd->_gen, type, ptr);
 }
 MPT_INTERFACE(metatype) *vdClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -106,8 +110,8 @@ extern MPT_SOLVER(interface) *mpt_vode_create()
 	mpt_vode_init(&vd->d);
 	memset(&vd->uf, 0, sizeof(vd->uf));
 	
-	vd->_gen._sol._vptr = &vodeSol;
+	vd->_gen._mt._vptr  = &vodeSol.meta;
 	vd->_gen._obj._vptr = &vodeObj;
 	
-	return &vd->_gen._sol;
+	return (void *) &vd->_gen._mt;
 }

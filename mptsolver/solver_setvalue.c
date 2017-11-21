@@ -70,15 +70,15 @@ static MPT_INTERFACE(metatype) *valueClone(const MPT_INTERFACE(metatype) *mt)
 
 /*!
  * \ingroup mptSolver
- * \brief ODE steps
+ * \brief set single float value
  * 
- * Execute generic DAE/ODE solver steps.
+ * Set object property to single float value.
  * 
  * \param obj  object interface descriptor
  * \param prop property name
  * \param val  floating point value to assign
  * 
- * \return step operation result
+ * \return assign operation result
  */
 extern int mpt_solver_setvalue(MPT_INTERFACE(object) *obj, const char *prop, double val)
 {

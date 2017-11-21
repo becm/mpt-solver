@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "meta.h"
+#include "module.h"
 
 #include "limex.h"
 
@@ -84,12 +84,15 @@ static const MPT_INTERFACE_VPTR(solver) limexSol = {
 	lxFcn,
 	lxSolve
 };
-static MPT_SOLVER(generic) lxGlobSolver = { { &limexSol}, { &limexObj} };
+static MPT_STRUCT(module_generic) lxGlobSolver = {
+	{ &limexSol.meta },
+	{ &limexObj }
+};
 
 static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	(void) mt;
-	return mpt_solver_module_generic_conv(&lxGlobSolver, type, ptr);
+	return mpt_module_generic_conv(&lxGlobSolver, type, ptr);
 }
 
 /*!
@@ -104,5 +107,5 @@ extern MPT_SOLVER(interface) *mpt_limex_create()
 {
 	if (lxReserved) return 0;
 	mpt_limex_global();
-	return &lxGlobSolver._sol;
+	return (void *) &lxGlobSolver._mt;
 }

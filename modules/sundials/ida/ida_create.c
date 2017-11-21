@@ -7,16 +7,18 @@
 
 #include <ida/ida.h>
 
-#include "meta.h"
+#include "module.h"
 
 #include "sundials.h"
 
 #include "module_functions.h"
 
 MPT_STRUCT(SundialsIDA) {
-	MPT_SOLVER(generic) _gen;
+	MPT_STRUCT(module_generic) _gen;
+	
 	MPT_SOLVER_STRUCT(ida) d;
 	MPT_IVP_STRUCT(daefcn) uf;
+	
 	double next;
 };
 /* reference interface */
@@ -34,7 +36,7 @@ static uintptr_t idaRef()
 static int idaConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(SundialsIDA) *ida = (void *) mt;
-	return mpt_solver_module_generic_conv(&ida->_gen, type, ptr);
+	return mpt_module_generic_conv(&ida->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *idaClone()
 {
@@ -121,8 +123,8 @@ extern MPT_SOLVER(interface) *sundials_ida_create()
 	IDASetUserData(ida->d.mem, &ida->d);
 	ida->next = 0.0;
 	
-	ida->_gen._sol._vptr = &idaSol;
+	ida->_gen._mt._vptr  = &idaSol.meta;
 	ida->_gen._obj._vptr = &idaObj;
 	
-	return &ida->_gen._sol;
+	return (void *) &ida->_gen._mt;
 }

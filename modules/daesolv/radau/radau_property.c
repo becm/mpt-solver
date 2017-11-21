@@ -6,8 +6,7 @@
 #include <strings.h>
 
 #include "version.h"
-
-#include "meta.h"
+#include "module.h"
 
 #include "radau.h"
 
@@ -15,36 +14,38 @@
 
 static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(solver_value) val;
+	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	const char *key;
 	int32_t ld, ud;
 	long len;
-	int ret, key;
+	int ret;
+	char mode;
 	
 	if (!src) {
 		rd->ijac = 0;
 		return 0;
 	}
-	ret = 1;
-	if ((key = mpt_solver_module_value(&val, src)) < 0) {
-		const char *ptr;
-		if ((key = src->_vptr->conv(src, 'k', &ptr)) < 0) {
-			return key;
+	key = 0;
+	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+			return ret;
 		}
-		key = ptr ? *ptr : 0;
 		ret = 0;
 	}
-	else if ((key = mpt_solver_module_value_key(&val)) < 0) {
-		return key;
+	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+		return ret;
+	} else {
+		ret = 1;
 	}
-	if (!key) {
+	if (!key || (mode = *key)) {
 		rd->ijac = 0;
-		return 0;
+		return ret;
 	}
 	len = rd->ivp.neqs * (rd->ivp.pint + 1);
 	ld = len;
 	ud = ld;
 	
-	switch (key) {
+	switch (mode) {
 		case 'f':
 			rd->ijac = 0;
 		case 'F':
@@ -52,14 +53,14 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatyp
 		case 'b':
 			rd->ijac = 0;
 		case 'B':
-			if ((ret = mpt_solver_module_value_int(&val, &ld)) < 0) {
+			if ((ret = mpt_module_value_int(&val, &ld)) < 0) {
 				return ret;
 			}
 			if (!ret) {
 				ld = ud = rd->ivp.neqs;
 				ret = 1;
 			}
-			else if ((ret = mpt_solver_module_value_int(&val, &ud)) < 0) {
+			else if ((ret = mpt_module_value_int(&val, &ud)) < 0) {
 				return ret;
 			}
 			else if (!ret) {

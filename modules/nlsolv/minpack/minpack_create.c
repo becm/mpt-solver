@@ -5,10 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "module.h"
+
 #include "minpack.h"
 
 MPT_STRUCT(MinpackData) {
-	MPT_SOLVER(generic) _gen;
+	MPT_STRUCT(module_generic) _gen;
+	
 	MPT_SOLVER_STRUCT(minpack) d;
 	MPT_NLS_STRUCT(functions)  uf;
 };
@@ -27,7 +30,7 @@ static uintptr_t mpRef()
 static int mpConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	MPT_STRUCT(MinpackData) *mp = (void *) mt;
-	return mpt_solver_module_generic_conv(&mp->_gen, type, ptr);
+	return mpt_module_generic_conv(&mp->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *mpClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -95,9 +98,9 @@ extern MPT_SOLVER(interface) *mpt_minpack_create()
 	mpt_minpack_init(&mp->d);
 	memset(&mp->uf, 0, sizeof(mp->uf));
 	
-	mp->_gen._sol._vptr = &mpSol;
+	mp->_gen._mt._vptr  = &mpSol.meta;
 	mp->_gen._obj._vptr = &mpObj;
 	
-	return &mp->_gen._sol;
+	return (void *) &mp->_gen._mt;
 }
 

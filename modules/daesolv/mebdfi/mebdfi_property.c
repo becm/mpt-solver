@@ -6,8 +6,7 @@
 #include <strings.h>
 
 #include "version.h"
-
-#include "meta.h"
+#include "module.h"
 
 #include "mebdfi.h"
 
@@ -25,43 +24,48 @@ static int setInt(MPT_SOLVER_STRUCT(mebdfi) *me, size_t pos, int val)
 
 static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(solver_value) val;
+	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	const char *key;
 	int32_t ld, ud;
-	int ret, key, jnum;
+	int ret, jnum;
 	long max;
+	char mode;
 	
 	if (!src) {
 		me->jnum = me->jbnd = 0;
 		return 0;
 	}
-	ret = 1;
-	if ((key = mpt_solver_module_value(&val, src)) < 0) {
-		const char *par;
-		if ((key = src->_vptr->conv(src, 'k', &par)) < 0) {
-			return key;
+	key = 0;
+	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+			return ret;
 		}
-		key = par ? *par : 0;
 		ret = 0;
 	}
-	else if (!key) {
-		me->jnum = me->jbnd = 0;
-		return 0;
+	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+		return ret;
+	} else {
+		ret = 1;
 	}
-	switch (key) {
+	if (!key || (mode = *key)) {
+		me->jnum = me->jbnd = 0;
+		return ret;
+	}
+	switch (mode) {
 		case 'F': me->jnum = 0; me->jbnd = 0; return ret;
 		case 'f': me->jnum = 1; me->jbnd = 0; return ret;
 		case 'B': jnum = 0; break;
 		case 'b': jnum = 1; break;
 		default: return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_module_value_int(&val, &ld)) < 0) {
+	if ((ret = mpt_module_value_int(&val, &ld)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
 		ld = ud = me->ivp.neqs;
 		ret = 1;
 	}
-	else if ((ret = mpt_solver_module_value_int(&val, &ud)) < 0) {
+	else if ((ret = mpt_module_value_int(&val, &ud)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
@@ -84,8 +88,8 @@ static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_INTERFACE(metaty
 	
 	me->mbnd[0] = ld;
 	me->mbnd[1] = ud;
-	me->mbnd[2] =   ld + ud + 1;
-	me->mbnd[3] = 2*ld + ud + 1;
+	me->mbnd[2] =     ld + ud + 1;
+	me->mbnd[3] = 2 * ld + ud + 1;
 	
 	return ret;
 }

@@ -7,8 +7,7 @@
 #include <strings.h>
 
 #include "version.h"
-
-#include "meta.h"
+#include "module.h"
 
 #include "dassl.h"
 
@@ -47,34 +46,36 @@ static int setReal(MPT_SOLVER_STRUCT(dassl) *da, size_t pos, double val)
 
 static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(solver_value) val;
+	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	const char *key;
 	int32_t ld, ud;
-	int key, ret, ujac;
+	int ret, ujac;
 	long max;
+	char mode;
 	
 	if (!src) {
 		da->info[4] = 1;
 		da->info[5] = 0;
 		return 0;
 	}
-	ret = 1;
-	if ((key = mpt_solver_module_value(&val, src)) < 0) {
-		const char *ptr;
-		if ((key = src->_vptr->conv(src, 'k', &ptr)) < 0) {
-			return key;
+	key = 0;
+	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+			return ret;
 		}
-		key = ptr ? *ptr : 0;
 		ret = 0;
 	}
-	else if ((key = mpt_solver_module_value_key(&val)) < 0) {
-		return key;
+	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+		return ret;
+	} else {
+		ret = 1;
 	}
-	if (!key) {
+	if (!key || !(mode = *key)) {
 		da->info[4] = 1;
 		da->info[5] = 0;
 		return ret;
 	}
-	switch (key) {
+	switch (mode) {
 		case 'F': da->info[4] = 1; da->info[5] = 0; return ret;
 		case 'f': da->info[4] = 0; da->info[5] = 0; return ret;
 		case 'B': ujac = 1; break;
@@ -82,14 +83,14 @@ static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, const MPT_INTERFACE(metatyp
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_module_value_int(&val, &ld)) < 0) {
+	if ((ret = mpt_module_value_int(&val, &ld)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
 		ld = ud = da->ivp.neqs;
 		ret = 1;
 	}
-	else if ((ret = mpt_solver_module_value_int(&val, &ud)) < 0) {
+	else if ((ret = mpt_module_value_int(&val, &ud)) < 0) {
 		return ret;
 	}
 	else if (!ret) {

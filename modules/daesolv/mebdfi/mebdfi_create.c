@@ -6,14 +6,16 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "meta.h"
+#include "module.h"
 
 #include "mebdfi.h"
 
 MPT_STRUCT(MebdfiData) {
-	MPT_SOLVER(generic) _gen;
+	MPT_STRUCT(module_generic) _gen;
+	
 	MPT_SOLVER_STRUCT(mebdfi) d;
 	MPT_IVP_STRUCT(daefcn)    uf;
+	
 	double next;
 };
 /* reference interface */
@@ -31,7 +33,7 @@ static uintptr_t meAddref()
 static int meConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(MebdfiData) *md = (void *) mt;
-	return mpt_solver_module_generic_conv(&md->_gen, type, ptr);
+	return mpt_module_generic_conv(&md->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *meClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -107,9 +109,9 @@ extern MPT_SOLVER(interface) *mpt_mebdfi_create()
 	mpt_mebdfi_init(&md->d);
 	md->d.ipar = memset(&md->uf, 0, sizeof(md->uf));
 	
-	md->_gen._sol._vptr = &mebdfiSol;
+	md->_gen._mt._vptr  = &mebdfiSol.meta;
 	md->_gen._obj._vptr = &mebdfiObj;
 	
-	return &md->_gen._sol;
+	return (void *) &md->_gen._mt;
 }
 

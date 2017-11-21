@@ -10,8 +10,7 @@
 #include <ctype.h>
 
 #include "version.h"
-
-#include "meta.h"
+#include "module.h"
 
 #include "minpack.h"
 
@@ -19,32 +18,39 @@
 
 static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(solver_value) val;
+	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	const char *key;
 	int32_t ml, mu;
-	int ret, key;
+	int ret;
 	
 	if (!src) {
 		mp->mu = mp->ml = 0;
 		return 0;
 	}
-	if ((ret = mpt_solver_module_value(&val, src)) < 0) {
+	key = 0;
+	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+			return ret;
+		}
+		ret = 0;
+	}
+	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+		return ret;
+	} else {
+		ret = 1;
+	}
+	if (!key || !*key) {
+		mp->mu = mp->ml = 0;
 		return ret;
 	}
-	if ((key = mpt_solver_module_value_key(&val)) < 0) {
-		return key;
-	}
-	if (!key) {
-		mp->mu = mp->ml = 0;
-		return 0;
-	}
-	switch (key) {
-		case 'F': mp->mu = mp->ml = 0; return 1;
-		case 'f': mp->mu = mp->ml = 0; return 1;
+	switch (*key) {
+		case 'F': mp->mu = mp->ml = 0; return ret;
+		case 'f': mp->mu = mp->ml = 0; return ret;
 		case 'B': case 'b': break;
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_module_value_int(&val, &ml)) < 0) {
+	if ((ret = mpt_module_value_int(&val, &ml)) < 0) {
 		return ret;
 	}
 	if (!ret) {
@@ -54,7 +60,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metat
 	if (ml < 0 || ml >= mp->nls.nres) {
 		return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_module_value_int(&val, &mu)) < 0) {
+	if ((ret = mpt_module_value_int(&val, &mu)) < 0) {
 		return ret;
 	}
 	if (!ret) {

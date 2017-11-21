@@ -14,11 +14,13 @@ DIR_BASE ?= ${DIR_SOLVER_MODULES}../base/
 INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and other shared operations
-mod_gen = valloc value generic_conv
 mod_tol = tol_check tol_set tol_get
-mod_ivp = ivpset nextval ${mod_tol} ${mod_gen}
-mod_nls = nlsset ${mod_gen}
+mod_ivp = ivpset nextval ${mod_tol} valloc
+mod_nls = nlsset valloc
 mod_sol = nlsset ${mod_ivp}
+#
+# base module includes
+mod_gen ?= value generic_conv
 #
 # module function templates
 src_modfcn = \
@@ -32,7 +34,10 @@ MATH_OBJS_STATIC ?= ${MATH_OBJS}
 MATH_OBJS_SHARED ?= ${MATH_OBJS}
 # object collections
 STATIC_OBJS ?= ${OBJS} ${MATH_OBJS_STATIC}
-SHLIB_OBJS ?= libinfo.o ${OBJS} ${MATH_OBJS_SHARED} $(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o)
+SHLIB_OBJS ?= libinfo.o \
+	${OBJS} ${MATH_OBJS_SHARED} \
+	$(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o) \
+	$(mod_gen:%=${DIR_BASE}module_%.o)
 #
 # import library creation
 include ${DIR_BASE}/mpt.lib.mk
@@ -41,7 +46,9 @@ CLEAN_FILES += libinfo.o
 FFLAGS ?= -fpic -O5 -Wall -fstack-protector
 #
 # additional object dependancies
-${OBJS} : ${DIR_SOLVER_MODULES}../solver.h
+$(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o) \
+$(mod_gen:%=${DIR_BASE}module_%.o) \
+${OBJS} : ${DIR_SOLVER_MODULES}../solver.h ${DIR_BASE}module.h
 libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
 #
 # solver module configuration

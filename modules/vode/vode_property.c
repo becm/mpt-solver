@@ -6,8 +6,7 @@
 #include <strings.h>
 
 #include "version.h"
-
-#include "meta.h"
+#include "module.h"
 
 #include "vode.h"
 
@@ -45,32 +44,34 @@ static int setReal(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, double val)
 }
 static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(solver_value) val;
+	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	const char *key;
 	int32_t ml, mu;
-	int key, ret;
 	long max;
+	int ret;
+	char mode;
 	
 	if (!src) {
 		vd->miter = 0;
 		return 0;
 	}
-	ret = 1;
-	if ((key = mpt_solver_module_value(&val, src)) < 0) {
-		const char *ptr;
-		if ((key = src->_vptr->conv(src, 'k', &ptr)) < 0) {
-			return key;
+	key = 0;
+	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+			return ret;
 		}
-		key = ptr ? *ptr : 0;
 		ret = 0;
 	}
-	if ((key = mpt_solver_module_value_key(&val)) < 0) {
-		return key;
+	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+		return ret;
+	} else {
+		ret = 1;
 	}
-	if (!key) {
+	if (!key || !(mode = *key)) {
 		vd->miter = 0;
 		return 0;
 	}
-	switch (key) {
+	switch (mode) {
 		case 'n': case 'N': vd->miter = 0; return ret;
 		case 'F': vd->miter = 1; return ret;
 		case 'f': vd->miter = 2; return ret;
@@ -79,14 +80,14 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_module_value_int(&val, &ml)) < 0) {
+	if ((ret = mpt_module_value_int(&val, &ml)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
 		ml = mu = vd->ivp.neqs;
 		ret = 1;
 	}
-	else if ((ret = mpt_solver_module_value_int(&val, &mu)) < 0) {
+	else if ((ret = mpt_module_value_int(&val, &mu)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
@@ -107,37 +108,39 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 	 || setInt(vd, 1, mu) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	vd->miter = (key == 'B') ? 4 : 5;
+	vd->miter = (mode == 'B') ? 4 : 5;
 	
 	return ret;
 }
 static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(solver_value) val;
+	MPT_STRUCT(module_value) val;
+	const char *key;
 	double tcrit;
-	int ret, key;
+	int ret;
+	char mode;
 	
 	if (!src) {
 		vd->itask = 1;
 		return 0;
 	}
-	ret = 1;
-	if ((ret = mpt_solver_module_value(&val, src)) < 0) {
-		const char *ptr = 0;
-		if ((ret = src->_vptr->conv(src, 'k', &ptr)) < 0) {
+	key = 0;
+	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
 			return ret;
 		}
-		key = ptr ? *ptr : 0;
 		ret = 0;
 	}
-	else if ((key = mpt_solver_module_value_key(&val)) < 0) {
-		return key;
+	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+		return ret;
+	} else {
+		ret = 1;
 	}
-	if (!key) {
+	if (!key || !(mode = *key)) {
 		vd->itask = 1;
 		return 0;
 	}
-	switch (key) {
+	switch (mode) {
 		/* single step */
 		case 's': case '2': vd->itask = 2; return ret;
 		/* disable interpolation */
@@ -150,7 +153,7 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if (!ret || !(ret = mpt_solver_module_value_double(&val, &tcrit))) {
+	if (!ret || !(ret = mpt_module_value_double(&val, &tcrit))) {
 		return MPT_ERROR(MissingData);
 	}
 	if (ret < 0) {
@@ -159,7 +162,7 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 	if (setReal(vd, 0, tcrit) < 0) {
 		return MPT_ERROR(BadOperation);
 	}
-	vd->itask = (key == 'S' || key == '5') ? 5 : 4;
+	vd->itask = (mode == 'S' || mode == '5') ? 5 : 4;
 	
 	return 2;
 }

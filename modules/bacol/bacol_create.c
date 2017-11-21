@@ -4,16 +4,18 @@
 
 #include <stdlib.h>
 
-#include "meta.h"
+#include "module.h"
 
 #include "bacol.h"
 
 extern void uinit_(const double *, double *, const int *);
 
 MPT_STRUCT(BacolData) {
-	MPT_SOLVER(generic) _gen;
+	MPT_STRUCT(module_generic) _gen;
+	
 	MPT_SOLVER_STRUCT(bacol)     d;
 	MPT_SOLVER_STRUCT(bacol_out) out;
+	
 	double next;
 };
 /* reference interface */
@@ -33,7 +35,7 @@ static uintptr_t bacAddref(MPT_INTERFACE(reference) *ref)
 static int bacConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	MPT_STRUCT(BacolData) *bac = (void *) mt;
-	return mpt_solver_module_generic_conv(&bac->_gen, type, ptr);
+	return mpt_module_generic_conv(&bac->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *bacClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -139,8 +141,8 @@ extern MPT_SOLVER(interface) *mpt_bacol_create()
 	mpt_bacol_output_init(&bac->out);
 	bac->next = 0;
 	
-	bac->_gen._sol._vptr = &bacolSol;
+	bac->_gen._mt._vptr  = &bacolSol.meta;
 	bac->_gen._obj._vptr = &bacolObj;
 	
-	return &bac->_gen._sol;
+	return (void *) &bac->_gen._mt;
 }

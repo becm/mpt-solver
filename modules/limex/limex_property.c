@@ -8,8 +8,7 @@
 #include <ctype.h>
 
 #include "version.h"
-
-#include "meta.h"
+#include "module.h"
 
 #include "limex.h"
 
@@ -17,34 +16,36 @@
 
 static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(solver_value) val;
-	int ret, usr, key;
+	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	const char *key;
+	int ret, usr;
 	int32_t lb, ub;
 	long max;
+	char mode;
 	
 	if (!src) {
 		lx->iopt[6] = 0;
 		return 0;
 	}
-	ret = 1;
-	if ((key = mpt_solver_module_value(&val, src)) < 0) {
-		const char *par = 0;
-		if ((key = src->_vptr->conv(src, 'k', &par)) < 0) {
-			return key;
+	key = 0;
+	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+			return ret;
 		}
-		key = (ret && par) ? *par : 0;
 		ret = 0;
 	}
-	else if ((key = mpt_solver_module_value_key(&val)) < 0) {
-		return key;
+	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+		return ret;
+	} else {
+		ret = 1;
 	}
-	if (!key) {
+	if (!key || !(mode = *key)) {
 		lx->iopt[6] = 0;
-		return 0;
+		return ret;
 	}
 	max = lx->ivp.neqs * (lx->ivp.pint + 1);
 	usr = 0;
-	switch (key) {
+	switch (mode) {
 		case 'F':
 			usr = 1;
 		case 'f':
@@ -57,7 +58,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 			if (!ret) {
 				lb = ub = lx->ivp.neqs;
 			}
-			else if ((ret = mpt_solver_module_value_int(&val, &lb)) < 0) {
+			else if ((ret = mpt_module_value_int(&val, &lb)) < 0) {
 				return ret;
 			}
 			else if (!ret) {
@@ -65,7 +66,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 				ret = 1;
 				break;
 			}
-			else if ((ret = mpt_solver_module_value_int(&val, &ub)) < 0) {
+			else if ((ret = mpt_module_value_int(&val, &ub)) < 0) {
 				return ret;
 			}
 			else if (!ret) {

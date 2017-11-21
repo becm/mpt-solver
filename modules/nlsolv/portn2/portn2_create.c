@@ -5,10 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "module.h"
+
 #include "portn2.h"
 
 MPT_STRUCT(PortN2Data) {
-	MPT_SOLVER(generic) _gen;
+	MPT_STRUCT(module_generic) _gen;
+	
 	MPT_SOLVER_STRUCT(portn2) d;
 	MPT_NLS_STRUCT(functions) uf;
 };
@@ -27,7 +30,7 @@ static uintptr_t n2Ref()
 static int n2Conv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(PortN2Data) *n2 = (void *) mt;
-	return mpt_solver_module_generic_conv(&n2->_gen, type, ptr);
+	return mpt_module_generic_conv(&n2->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *n2Clone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -98,9 +101,9 @@ extern MPT_SOLVER(interface) *mpt_portn2_create()
 	}
 	memset(&n2->uf, 0, sizeof(n2->uf));
 	
-	n2->_gen._sol._vptr = &n2Sol;
+	n2->_gen._mt._vptr  = &n2Sol.meta;
 	n2->_gen._obj._vptr = &n2Obj;
 	
-	return &n2->_gen._sol;
+	return (void *) &n2->_gen._mt;
 }
 

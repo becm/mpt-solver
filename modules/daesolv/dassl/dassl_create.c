@@ -6,14 +6,16 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "meta.h"
+#include "module.h"
 
 #include "dassl.h"
 
 MPT_STRUCT(DasslData) {
-	MPT_SOLVER(generic) _gen;
+	MPT_STRUCT(module_generic) _gen;
+	
 	MPT_SOLVER_STRUCT(dassl) d;
 	MPT_IVP_STRUCT(daefcn)   uf;
+	
 	double next;
 };
 /* reference interface */
@@ -31,7 +33,7 @@ static uintptr_t ddAddref()
 static int ddConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(DasslData) *da = (void *) mt;
-	return mpt_solver_module_generic_conv(&da->_gen, type, ptr);
+	return mpt_module_generic_conv(&da->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *ddClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -108,8 +110,8 @@ extern MPT_SOLVER(interface) *mpt_dassl_create()
 	da->d.ipar = memset(&da->uf, 0, sizeof(da->uf));
 	da->d.rpar = (void *) &da->d;
 	
-	da->_gen._sol._vptr = &dasslSol;
+	da->_gen._mt._vptr  = &dasslSol.meta;
 	da->_gen._obj._vptr = &dasslObj;
 	
-	return &da->_gen._sol;
+	return (void *) &da->_gen._mt;
 }

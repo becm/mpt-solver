@@ -64,17 +64,6 @@ protected:
 	_MPT_ARRAY_TYPE(uint8_t) _pass;  /*  process flags for data dimensions */
 };
 
-MPT_STRUCT(solver_value)
-{
-#ifdef __cplusplus
-	inline solver_value() : _it(0)
-	{ }
-protected:
-#endif
-	MPT_INTERFACE(iterator) *_it;
-	MPT_STRUCT(value) _val;
-};
-
 #ifndef __cplusplus
 # ifndef __MPT_IVP_RTOL
 #  define __MPT_IVP_RTOL  1e-4
@@ -208,11 +197,6 @@ public:
 		return setFunctions(functionType(fcn), &fcn) >= 0;
 	}
 #else
-MPT_SOLVER(generic)
-{
-	MPT_SOLVER(interface) _sol;
-	MPT_INTERFACE(object) _obj;
-};
 MPT_IVP_STRUCT(parameters);
 #endif
 /* right side function */
@@ -640,22 +624,12 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *, const MPT_INTE
 extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
 
 /* solver module generic type conversion */
-extern int mpt_solver_module_generic_conv(const MPT_SOLVER(generic) *, int , void *);
-
-/* solver module generic type conversion */
 extern int mpt_solver_module_nextval(double *, double , const MPT_INTERFACE(metatype) *);
 
 /* assign user functions */
 extern int mpt_solver_module_ufcn_ode(long , MPT_IVP_STRUCT(odefcn) *,    int , const void *);
 extern int mpt_solver_module_ufcn_dae(long , MPT_IVP_STRUCT(daefcn) *,    int , const void *);
 extern int mpt_solver_module_ufcn_nls(long , MPT_NLS_STRUCT(functions) *, int , const void *);
-
-/* get value and advance source */
-extern int mpt_solver_module_value(MPT_STRUCT(solver_value) *, const MPT_INTERFACE(metatype) *);
-extern int mpt_solver_module_value_double(MPT_STRUCT(solver_value) *, double *);
-extern int mpt_solver_module_value_uint(MPT_STRUCT(solver_value) *, uint32_t *);
-extern int mpt_solver_module_value_int(MPT_STRUCT(solver_value) *, int32_t *);
-extern int mpt_solver_module_value_key(MPT_STRUCT(solver_value) *);
 
 
 /* id for registered input metatype */

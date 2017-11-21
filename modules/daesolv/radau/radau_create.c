@@ -6,14 +6,16 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "meta.h"
+#include "module.h"
 
 #include "radau.h"
 
 MPT_STRUCT(RadauData) {
-	MPT_SOLVER(generic) _gen;
+	MPT_STRUCT(module_generic) _gen;
+	
 	MPT_SOLVER_STRUCT(radau) d;
 	MPT_IVP_STRUCT(daefcn)   uf;
+	
 	double next;
 };
 /* reference interface */
@@ -31,7 +33,7 @@ static uintptr_t rdAddref()
 static int rdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(RadauData) *rd = (void *) mt;
-	return mpt_solver_module_generic_conv(&rd->_gen, type, ptr);
+	return mpt_module_generic_conv(&rd->_gen, type, ptr);
 }
 static MPT_INTERFACE(metatype) *rdClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -107,9 +109,9 @@ extern MPT_SOLVER(interface) *mpt_radau_create()
 	mpt_radau_init(&rd->d);
 	rd->d.ipar = memset(&rd->uf, 0, sizeof(rd->uf));
 	
-	rd->_gen._sol._vptr = &radauSol;
+	rd->_gen._mt._vptr = &radauSol.meta;
 	rd->_gen._obj._vptr = &radauObj;
 	
-	return &rd->_gen._sol;
+	return (void *) &rd->_gen._mt;
 }
 

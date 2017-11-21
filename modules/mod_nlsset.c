@@ -5,13 +5,13 @@
 
 #include <stdlib.h>
 
-#include "meta.h"
+#include "module.h"
 
 #include "../solver.h"
 
 extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *nls, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(solver_value) val;
+	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
 	int32_t nv = 1, nr = 0;
 	int ret;
 	
@@ -20,7 +20,7 @@ extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *nls, const MPT_I
 		nls->nres = nr;
 		return 0;
 	}
-	if ((ret = mpt_solver_module_value(&val, src)) < 0) {
+	if ((ret = mpt_module_value_init(&val, src)) < 0) {
 		if ((ret = src->_vptr->conv(src, 'i', &nv)) < 0) {
 			return ret;
 		}
@@ -34,7 +34,7 @@ extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *nls, const MPT_I
 		nls->nres = nr;
 		return 0;
 	}
-	if ((ret = mpt_solver_module_value_int(&val, &nv)) < 0) {
+	if ((ret = mpt_module_value_int(&val, &nv)) < 0) {
 		return ret;
 	}
 	if (!ret) {
@@ -45,7 +45,7 @@ extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *nls, const MPT_I
 	if (nv < 0) {
 		return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_solver_module_value_int(&val, &nr)) < 0) {
+	if ((ret = mpt_module_value_int(&val, &nr)) < 0) {
 		return ret;
 	}
 	if (!ret) {
