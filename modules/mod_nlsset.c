@@ -1,6 +1,6 @@
 /*!
  * MPT solver module helper function
- *   set NLS parameter
+ *   set NLS parameter and residual count
  */
 
 #include <stdlib.h>

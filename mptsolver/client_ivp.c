@@ -342,7 +342,6 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	/* no supplied initial value */
 	if (!args) {
-		MPT_INTERFACE(metatype) *old;
 		/* reset existing time source */
 		if (!(curr = mpt_node_find(conf, "times", 1))) {
 			mpt_log(out._info, _func, MPT_LOG(Error), "%s",
@@ -352,23 +351,24 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		val = "";
 		if (!(mt = curr->_meta)
 		    || (val = mpt_meta_data(mt, 0))) {
-			if (!(mt = mpt_iterator_create(val))) {
+			MPT_INTERFACE(metatype) *src;
+			if (!(src = mpt_iterator_create(val))) {
 				mpt_log(out._info, _func, MPT_LOG(Error), "%s: %s",
 				        MPT_tr("bad iteratior description"), val);
 				return MPT_ERROR(BadValue);
 			}
-			if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &args)) < 0
+			if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &args)) < 0
 			    || !args) {
-				mt->_vptr->ref.unref((void *) mt);
+				src->_vptr->ref.unref((void *) src);
 				mpt_log(out._info, _func, MPT_LOG(Error), "%s: %s",
 				        MPT_tr("bad iteratior metatype"), val);
 				return MPT_ERROR(BadType);
 			}
 			/* replace old source */
-			if ((old = curr->_meta)) {
-				old->_vptr->ref.unref((void *) old);
+			if ((mt = curr->_meta)) {
+				mt->_vptr->ref.unref((void *) mt);
 			}
-			curr->_meta = mt;
+			curr->_meta = src;
 		}
 		else if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &args)) < 0
 		    || !args) {

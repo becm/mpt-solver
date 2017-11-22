@@ -1,6 +1,6 @@
 /*!
  * MPT solver module helper function
- *   set IVP exuotation count and grid size/data
+ *   set IVP equotation count and grid size/data
  */
 
 #include <limits.h>
