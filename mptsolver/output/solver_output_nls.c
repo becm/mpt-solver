@@ -155,7 +155,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	if (out->_graphic
 	    && state & MPT_DATASTATE(Step)) {
 		if (!pass || (passlen && (pass[0] & state))) {
-			outputValues(out->_graphic, 0, state, nr, res, 1);
+			outputValues(out->_graphic, state, 0, nr, res, 1);
 		}
 	}
 	if (out->_data
@@ -169,8 +169,8 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	    && sd
 	    && (buf = sd->val._buf)
 	    && (np = buf->_used / sizeof(double))) {
-		const double *val = (double *) (sd->val._buf + 1);
-		int i, nv;
+		const double *val = (double *) (buf + 1);
+		int i, nv, add;
 		if ((nv = sd->nval) < 0) {
 			np = 0;
 		}
@@ -179,12 +179,15 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		} else {
 			nv = 1;
 		}
+		add = 0;
 		for (i = 0; i < np; ++i) {
-			if (!pass || ((size_t) i < passlen && pass[i] & state)) {
-				outputValues(out->_graphic, state, i + 1, np, val + i, nv);
+			size_t pos = i + 1;
+			if (!pass || (pos < passlen && pass[pos] & state)) {
+				outputValues(out->_graphic, state, pos, np, val + i, nv);
+				++add;
 			}
 		}
-		return np + 1;
+		return add;
 	}
 	return 0;
 }

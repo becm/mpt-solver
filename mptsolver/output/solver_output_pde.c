@@ -98,7 +98,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 		}
 	}
 	else if (sd && (glen = sd->nval) > 0) {
-		if (!ylen || !(ld = ylen / glen)) {
+		if (!(ld = ylen / glen)) {
 			return MPT_ERROR(BadValue);
 		}
 		grid = (const double *) (sd->val._buf + 1);
@@ -131,11 +131,13 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 	if (!out->_graphic) {
 		return ld;
 	}
+	ylen = 0;
 	for (i = 1; i <= ld; i++) {
 		if (!pass || (i < passlen && pass[i] & state)) {
 			mpt_output_solver_data(out->_graphic, state, i, glen, y, ld);
+			++ylen;
 		}
 		++y;
 	}
-	return ld;
+	return ylen;
 }
