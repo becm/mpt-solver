@@ -27,3 +27,4 @@ CONFIG = bacol.conf
 include ../mpt.solver.mk
 bacol_*.o : bacol.h
 bacol_property.o libinfo.o : ${DIR_BASE}version.h
+

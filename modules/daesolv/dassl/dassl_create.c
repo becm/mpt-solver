@@ -6,12 +6,13 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "module.h"
-
 #include "dassl.h"
 
+#include "module_functions.h"
+
 MPT_STRUCT(DasslData) {
-	MPT_STRUCT(module_generic) _gen;
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
 	
 	MPT_SOLVER_STRUCT(dassl) d;
 	MPT_IVP_STRUCT(daefcn)   uf;
@@ -32,8 +33,8 @@ static uintptr_t ddAddref()
 /* metatype interface */
 static int ddConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
-	const MPT_STRUCT(DasslData) *da = (void *) mt;
-	return mpt_module_generic_conv(&da->_gen, type, ptr);
+	MPT_STRUCT(DasslData) *da = (void *) mt;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&da->_sol, &da->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *ddClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -62,12 +63,12 @@ static int ddSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int ddGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _gen._obj);
+	const MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _obj);
 	return mpt_dassl_get(&da->d, pr);
 }
 static int ddSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _gen._obj);
+	MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _obj);
 	if (!pr) {
 		if (!src) {
 			int ret = mpt_dassl_prepare(&da->d);
@@ -110,8 +111,8 @@ extern MPT_SOLVER(interface) *mpt_dassl_create()
 	da->d.ipar = memset(&da->uf, 0, sizeof(da->uf));
 	da->d.rpar = (void *) &da->d;
 	
-	da->_gen._mt._vptr  = &dasslSol.meta;
-	da->_gen._obj._vptr = &dasslObj;
+	da->_sol._vptr = &dasslSol;
+	da->_obj._vptr = &dasslObj;
 	
-	return (void *) &da->_gen._mt;
+	return &da->_sol;
 }

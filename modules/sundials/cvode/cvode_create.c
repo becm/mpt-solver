@@ -6,15 +6,14 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "module.h"
-
 #include "cvode/cvode_impl.h"
 #include "sundials.h"
 
 #include "module_functions.h"
 
 MPT_STRUCT(SundialsCVode) {
-	MPT_STRUCT(module_generic) _gen;
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
 	
 	MPT_SOLVER_STRUCT(cvode) d;
 	MPT_IVP_STRUCT(odefcn)   uf;
@@ -37,7 +36,7 @@ static uintptr_t cVodeRef(MPT_INTERFACE(reference) *ref)
 static int cVodeConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(SundialsCVode) *cv = (void *) mt;
-	return mpt_module_generic_conv(&cv->_gen, type, ptr);
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&cv->_sol, &cv->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *cVodeClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -72,12 +71,12 @@ static int cVodeSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int cVodeGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _gen._obj);
+	const MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _obj);
 	return sundials_cvode_get(&cv->d, pr);
 }
 static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _gen._obj);
+	MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _obj);
 	
 	if (!pr) {
 		if (!src) {
@@ -125,8 +124,8 @@ extern MPT_SOLVER(interface) *sundials_cvode_create()
 	CVodeSetUserData(cv->d.mem, &cv->d);
 	cv->next = 0.0;
 	
-	cv->_gen._mt._vptr  = &cVodeSol.meta;
-	cv->_gen._obj._vptr = &cVodeObj;
+	cv->_sol._vptr = &cVodeSol;
+	cv->_obj._vptr = &cVodeObj;
 	
-	return (void *) &cv->_gen._mt;
+	return &cv->_sol;
 }

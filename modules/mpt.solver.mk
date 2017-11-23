@@ -20,10 +20,11 @@ mod_nls = nlsset valloc
 mod_sol = nlsset ${mod_ivp}
 #
 # base module includes
-mod_gen ?= value generic_conv
+mod_val ?= consume consumable_setup
 #
 # module function templates
 src_modfcn = \
+	modfcn_solver_conv.c \
 	modfcn_data_new.c modfcn_data_set.c \
 	modfcn_ivp_state.c modfcn_ivp_vecset.c \
 	modfcn_ivp_values.c
@@ -37,7 +38,7 @@ STATIC_OBJS ?= ${OBJS} ${MATH_OBJS_STATIC}
 SHLIB_OBJS ?= libinfo.o \
 	${OBJS} ${MATH_OBJS_SHARED} \
 	$(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o) \
-	$(mod_gen:%=${DIR_BASE}module_%.o)
+	$(mod_gen:%=${DIR_BASE}mptcore/meta/%.o)
 #
 # import library creation
 include ${DIR_BASE}/mpt.lib.mk
@@ -47,8 +48,7 @@ FFLAGS ?= -fpic -O5 -Wall -fstack-protector
 #
 # additional object dependancies
 $(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o) \
-$(mod_gen:%=${DIR_BASE}module_%.o) \
-${OBJS} : ${DIR_SOLVER_MODULES}../solver.h ${DIR_BASE}module.h
+${OBJS} : ${DIR_SOLVER_MODULES}../solver.h ${DIR_BASE}mptcore/meta.h
 libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
 #
 # solver module configuration

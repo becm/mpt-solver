@@ -6,7 +6,6 @@
 #include <strings.h>
 
 #include "version.h"
-#include "module.h"
 
 #include "vode.h"
 
@@ -44,7 +43,7 @@ static int setReal(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, double val)
 }
 static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	MPT_STRUCT(consumable) val;
 	const char *key;
 	int32_t ml, mu;
 	long max;
@@ -56,13 +55,13 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
 		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
 	}
-	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
 		return ret;
 	} else {
 		ret = 1;
@@ -80,14 +79,14 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_module_value_int(&val, &ml)) < 0) {
+	if ((ret = mpt_consume_int(&val, &ml)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
 		ml = mu = vd->ivp.neqs;
 		ret = 1;
 	}
-	else if ((ret = mpt_module_value_int(&val, &mu)) < 0) {
+	else if ((ret = mpt_consume_int(&val, &mu)) < 0) {
 		return ret;
 	}
 	else if (!ret) {
@@ -114,7 +113,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 }
 static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(module_value) val;
+	MPT_STRUCT(consumable) val;
 	const char *key;
 	double tcrit;
 	int ret;
@@ -125,13 +124,13 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
 		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
 	}
-	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
 		return ret;
 	} else {
 		ret = 1;
@@ -153,7 +152,7 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if (!ret || !(ret = mpt_module_value_double(&val, &tcrit))) {
+	if (!ret || !(ret = mpt_consume_double(&val, &tcrit))) {
 		return MPT_ERROR(MissingData);
 	}
 	if (ret < 0) {

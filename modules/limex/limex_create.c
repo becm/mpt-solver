@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "module.h"
-
 #include "limex.h"
+
+#include "module_functions.h"
 
 static MPT_SOLVER_STRUCT(limex) lxGlob;
 static MPT_IVP_STRUCT(daefcn) lxGlobFcn;
@@ -41,9 +41,6 @@ static int lxSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 	}
 	return mpt_limex_set(&lxGlob, pr, src);
 }
-static const MPT_INTERFACE_VPTR(object) limexObj = {
-	lxGet, lxSet
-};
 /* reference interface */
 static void lxFini()
 {
@@ -54,7 +51,14 @@ static uintptr_t lxAddref()
 	return 0;
 }
 /* metatype interface */
-static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr);
+static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+{
+	static const MPT_INTERFACE_VPTR(object) limexObj = {
+		lxGet, lxSet
+	};
+	static MPT_INTERFACE(object) lxGlobObj = { &limexObj };
+	return MPT_SOLVER_MODULE_FCN(solver_conv)((void *) mt, &lxGlobObj, type, ptr);
+}
 static MPT_INTERFACE(metatype) *lxClone()
 {
 	return 0;
@@ -78,22 +82,6 @@ static int lxSolve(MPT_SOLVER(interface) *sol)
 	(void) sol;
 	return mpt_limex_step(&lxGlob, lxNext);
 }
-static const MPT_INTERFACE_VPTR(solver) limexSol = {
-	{ { lxFini, lxAddref }, lxConv, lxClone },
-	lxReport,
-	lxFcn,
-	lxSolve
-};
-static MPT_STRUCT(module_generic) lxGlobSolver = {
-	{ &limexSol.meta },
-	{ &limexObj }
-};
-
-static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	(void) mt;
-	return mpt_module_generic_conv(&lxGlobSolver, type, ptr);
-}
 
 /*!
  * \ingroup mptLimex
@@ -105,7 +93,14 @@ static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
  */
 extern MPT_SOLVER(interface) *mpt_limex_create()
 {
+	static const MPT_INTERFACE_VPTR(solver) limexSol = {
+		{ { lxFini, lxAddref }, lxConv, lxClone },
+		lxReport,
+		lxFcn,
+		lxSolve
+	};
+	static MPT_SOLVER(interface) lxGlobSolver = { &limexSol };
 	if (lxReserved) return 0;
 	mpt_limex_global();
-	return (void *) &lxGlobSolver._mt;
+	return &lxGlobSolver;
 }

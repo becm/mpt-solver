@@ -8,7 +8,6 @@
 #include <ctype.h>
 
 #include "version.h"
-#include "module.h"
 
 #include "limex.h"
 
@@ -16,7 +15,7 @@
 
 static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	MPT_STRUCT(consumable) val;
 	const char *key;
 	int ret, usr;
 	int32_t lb, ub;
@@ -28,13 +27,13 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
 		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
 	}
-	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
 		return ret;
 	} else {
 		ret = 1;
@@ -58,7 +57,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 			if (!ret) {
 				lb = ub = lx->ivp.neqs;
 			}
-			else if ((ret = mpt_module_value_int(&val, &lb)) < 0) {
+			else if ((ret = mpt_consume_int(&val, &lb)) < 0) {
 				return ret;
 			}
 			else if (!ret) {
@@ -66,7 +65,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 				ret = 1;
 				break;
 			}
-			else if ((ret = mpt_module_value_int(&val, &ub)) < 0) {
+			else if ((ret = mpt_consume_int(&val, &ub)) < 0) {
 				return ret;
 			}
 			else if (!ret) {

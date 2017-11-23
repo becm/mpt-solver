@@ -2,8 +2,6 @@
  * set Sundials jacobian parameters
  */
 
-#include "module.h"
-
 #include "sundials.h"
 
 /*!
@@ -16,7 +14,7 @@
  */
 extern int sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	MPT_STRUCT(consumable) val;
 	const char *key;
 	int ret;
 	char mode;
@@ -26,13 +24,13 @@ extern int sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, const M
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
 		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
 	}
-	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
 		return ret;
 	} else {
 		ret = 1;
@@ -54,10 +52,10 @@ extern int sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, const M
 		case 'b': case 'B':
 			sd->jacobian = MPT_SOLVER_ENUM(SundialsJacBand);
 			
-			if ((ret = mpt_module_value_int(&val, &sd->ml)) <= 0) {
+			if ((ret = mpt_consume_int(&val, &sd->ml)) <= 0) {
 				sd->ml = sd->mu = neqs;
 			}
-			else if ((ret = src->_vptr->conv(src, 'i', &sd->mu)) <= 0) {
+			else if ((ret = mpt_consume_int(&val, &sd->mu)) <= 0) {
 				sd->mu = sd->ml;
 				ret = 2;
 			}

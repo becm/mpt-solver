@@ -6,7 +6,6 @@
 #include <strings.h>
 
 #include "version.h"
-#include "module.h"
 
 #include "radau.h"
 
@@ -14,7 +13,7 @@
 
 static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	MPT_STRUCT(consumable) val;
 	const char *key;
 	int32_t ld, ud;
 	long len;
@@ -26,13 +25,13 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatyp
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
 		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
 	}
-	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
 		return ret;
 	} else {
 		ret = 1;
@@ -53,14 +52,14 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatyp
 		case 'b':
 			rd->ijac = 0;
 		case 'B':
-			if ((ret = mpt_module_value_int(&val, &ld)) < 0) {
+			if ((ret = mpt_consume_int(&val, &ld)) < 0) {
 				return ret;
 			}
 			if (!ret) {
 				ld = ud = rd->ivp.neqs;
 				ret = 1;
 			}
-			else if ((ret = mpt_module_value_int(&val, &ud)) < 0) {
+			else if ((ret = mpt_consume_int(&val, &ud)) < 0) {
 				return ret;
 			}
 			else if (!ret) {

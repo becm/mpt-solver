@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "module.h"
-
 #include "portn2.h"
 
+#include "module_functions.h"
+
 MPT_STRUCT(PortN2Data) {
-	MPT_STRUCT(module_generic) _gen;
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
 	
 	MPT_SOLVER_STRUCT(portn2) d;
 	MPT_NLS_STRUCT(functions) uf;
@@ -30,7 +31,7 @@ static uintptr_t n2Ref()
 static int n2Conv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(PortN2Data) *n2 = (void *) mt;
-	return mpt_module_generic_conv(&n2->_gen, type, ptr);
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&n2->_sol, &n2->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *n2Clone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -59,12 +60,12 @@ static int n2Solve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int n2Get(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, obj, _gen._obj);
+	MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, obj, _obj);
 	return mpt_portn2_get(&n2->d, pr);
 }
 static int n2Set(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, obj, _gen._obj);
+	MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, obj, _obj);
 	if (!pr && !src) {
 		return mpt_portn2_prepare(&n2->d);
 	}
@@ -101,9 +102,9 @@ extern MPT_SOLVER(interface) *mpt_portn2_create()
 	}
 	memset(&n2->uf, 0, sizeof(n2->uf));
 	
-	n2->_gen._mt._vptr  = &n2Sol.meta;
-	n2->_gen._obj._vptr = &n2Obj;
+	n2->_sol._vptr = &n2Sol;
+	n2->_obj._vptr = &n2Obj;
 	
-	return (void *) &n2->_gen._mt;
+	return &n2->_sol;
 }
 

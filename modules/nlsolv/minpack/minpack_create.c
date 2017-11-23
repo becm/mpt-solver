@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "module.h"
-
 #include "minpack.h"
 
+#include "module_functions.h"
+
 MPT_STRUCT(MinpackData) {
-	MPT_STRUCT(module_generic) _gen;
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
 	
 	MPT_SOLVER_STRUCT(minpack) d;
 	MPT_NLS_STRUCT(functions)  uf;
@@ -29,8 +30,8 @@ static uintptr_t mpRef()
 /* metatype interface */
 static int mpConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
-	MPT_STRUCT(MinpackData) *mp = (void *) mt;
-	return mpt_module_generic_conv(&mp->_gen, type, ptr);
+	const MPT_STRUCT(MinpackData) *mp = (void *) mt;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&mp->_sol, &mp->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *mpClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -59,12 +60,12 @@ static int mpSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int mpGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, obj, _gen._obj);
+	const MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, obj, _obj);
 	return mpt_minpack_get(&mp->d, pr);
 }
 static int mpSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, obj, _gen._obj);
+	MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, obj, _obj);
 	if (!pr && !src) {
 		return mpt_minpack_prepare(&mp->d);
 	}
@@ -98,9 +99,9 @@ extern MPT_SOLVER(interface) *mpt_minpack_create()
 	mpt_minpack_init(&mp->d);
 	memset(&mp->uf, 0, sizeof(mp->uf));
 	
-	mp->_gen._mt._vptr  = &mpSol.meta;
-	mp->_gen._obj._vptr = &mpObj;
+	mp->_sol._vptr = &mpSol;
+	mp->_obj._vptr = &mpObj;
 	
-	return (void *) &mp->_gen._mt;
+	return &mp->_sol;
 }
 

@@ -4,14 +4,15 @@
 
 #include <stdlib.h>
 
-#include "module.h"
-
 #include "bacol.h"
+
+#include "module_functions.h"
 
 extern void uinit_(const double *, double *, const int *);
 
 MPT_STRUCT(BacolData) {
-	MPT_STRUCT(module_generic) _gen;
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
 	
 	MPT_SOLVER_STRUCT(bacol)     d;
 	MPT_SOLVER_STRUCT(bacol_out) out;
@@ -35,7 +36,7 @@ static uintptr_t bacAddref(MPT_INTERFACE(reference) *ref)
 static int bacConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
 	MPT_STRUCT(BacolData) *bac = (void *) mt;
-	return mpt_module_generic_conv(&bac->_gen, type, ptr);
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&bac->_sol, &bac->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *bacClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -95,12 +96,12 @@ static int bacSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int bacGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _gen._obj);
+	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _obj);
 	return mpt_bacol_get(&bac->d, pr);
 }
 static int bacSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _gen._obj);
+	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _obj);
 	if (!pr) {
 		if (!src) {
 			bac->out.nint = 0;
@@ -141,8 +142,8 @@ extern MPT_SOLVER(interface) *mpt_bacol_create()
 	mpt_bacol_output_init(&bac->out);
 	bac->next = 0;
 	
-	bac->_gen._mt._vptr  = &bacolSol.meta;
-	bac->_gen._obj._vptr = &bacolObj;
+	bac->_sol._vptr = &bacolSol;
+	bac->_obj._vptr = &bacolObj;
 	
-	return (void *) &bac->_gen._mt;
+	return &bac->_sol;
 }

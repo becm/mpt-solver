@@ -6,12 +6,13 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "module.h"
-
 #include "radau.h"
 
+#include "module_functions.h"
+
 MPT_STRUCT(RadauData) {
-	MPT_STRUCT(module_generic) _gen;
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
 	
 	MPT_SOLVER_STRUCT(radau) d;
 	MPT_IVP_STRUCT(daefcn)   uf;
@@ -32,8 +33,8 @@ static uintptr_t rdAddref()
 /* metatype interface */
 static int rdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
-	const MPT_STRUCT(RadauData) *rd = (void *) mt;
-	return mpt_module_generic_conv(&rd->_gen, type, ptr);
+	MPT_STRUCT(RadauData) *rd = (void *) mt;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&rd->_sol, &rd->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *rdClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -62,12 +63,12 @@ static int rdSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int rdGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _gen._obj);
+	const MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _obj);
 	return mpt_radau_get(&rd->d, pr);
 }
 static int rdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _gen._obj);
+	MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _obj);
 	if (!pr) {
 		if (!src) {
 			int ret = mpt_radau_prepare(&rd->d);
@@ -109,9 +110,9 @@ extern MPT_SOLVER(interface) *mpt_radau_create()
 	mpt_radau_init(&rd->d);
 	rd->d.ipar = memset(&rd->uf, 0, sizeof(rd->uf));
 	
-	rd->_gen._mt._vptr = &radauSol.meta;
-	rd->_gen._obj._vptr = &radauObj;
+	rd->_sol._vptr = &radauSol;
+	rd->_obj._vptr = &radauObj;
 	
-	return (void *) &rd->_gen._mt;
+	return &rd->_sol;
 }
 

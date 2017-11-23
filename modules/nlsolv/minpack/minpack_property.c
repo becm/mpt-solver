@@ -10,7 +10,6 @@
 #include <ctype.h>
 
 #include "version.h"
-#include "module.h"
 
 #include "minpack.h"
 
@@ -18,7 +17,7 @@
 
 static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(module_value) val = MPT_MODULE_VALUE_INIT;
+	MPT_STRUCT(consumable) val;
 	const char *key;
 	int32_t ml, mu;
 	int ret;
@@ -28,13 +27,13 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metat
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_module_value_init(&val, src)) < 0) {
+	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
 		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
 	}
-	else if ((ret = mpt_module_value_key(&val, &key)) < 0) {
+	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
 		return ret;
 	} else {
 		ret = 1;
@@ -50,7 +49,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metat
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_module_value_int(&val, &ml)) < 0) {
+	if ((ret = mpt_consume_int(&val, &ml)) < 0) {
 		return ret;
 	}
 	if (!ret) {
@@ -60,7 +59,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metat
 	if (ml < 0 || ml >= mp->nls.nres) {
 		return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_module_value_int(&val, &mu)) < 0) {
+	if ((ret = mpt_consume_int(&val, &mu)) < 0) {
 		return ret;
 	}
 	if (!ret) {

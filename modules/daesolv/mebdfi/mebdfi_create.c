@@ -6,12 +6,13 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "module.h"
-
 #include "mebdfi.h"
 
+#include "module_functions.h"
+
 MPT_STRUCT(MebdfiData) {
-	MPT_STRUCT(module_generic) _gen;
+	MPT_SOLVER(interface) _sol;
+	MPT_INTERFACE(object) _obj;
 	
 	MPT_SOLVER_STRUCT(mebdfi) d;
 	MPT_IVP_STRUCT(daefcn)    uf;
@@ -32,8 +33,8 @@ static uintptr_t meAddref()
 /* metatype interface */
 static int meConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 {
-	const MPT_STRUCT(MebdfiData) *md = (void *) mt;
-	return mpt_module_generic_conv(&md->_gen, type, ptr);
+	MPT_STRUCT(MebdfiData) *md = (void *) mt;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&md->_sol, &md->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *meClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -62,12 +63,12 @@ static int meSolve(MPT_SOLVER(interface) *sol)
 /* object interface */
 static int meGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
-	const MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _gen._obj);
+	const MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _obj);
 	return mpt_mebdfi_get(&md->d, pr);
 }
 static int meSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _gen._obj);
+	MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _obj);
 	if (!pr) {
 		if (!src) {
 			int ret = mpt_mebdfi_prepare(&md->d);
@@ -109,9 +110,9 @@ extern MPT_SOLVER(interface) *mpt_mebdfi_create()
 	mpt_mebdfi_init(&md->d);
 	md->d.ipar = memset(&md->uf, 0, sizeof(md->uf));
 	
-	md->_gen._mt._vptr  = &mebdfiSol.meta;
-	md->_gen._obj._vptr = &mebdfiObj;
+	md->_sol._vptr = &mebdfiSol;
+	md->_obj._vptr = &mebdfiObj;
 	
-	return (void *) &md->_gen._mt;
+	return &md->_sol;
 }
 
