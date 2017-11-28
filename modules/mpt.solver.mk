@@ -38,7 +38,7 @@ STATIC_OBJS ?= ${OBJS} ${MATH_OBJS_STATIC}
 SHLIB_OBJS ?= libinfo.o \
 	${OBJS} ${MATH_OBJS_SHARED} \
 	$(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o) \
-	$(mod_gen:%=${DIR_BASE}mptcore/meta/%.o)
+	$(mod_val:%=${DIR_BASE}mptcore/meta/%.o)
 #
 # import library creation
 include ${DIR_BASE}/mpt.lib.mk
