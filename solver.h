@@ -139,10 +139,10 @@ enum MPT_SOLVER_ENUM(Flags)
 	
 	MPT_SOLVER_ENUM(CapableNls) = 0xf00,
 	MPT_SOLVER_ENUM(NlsVector)  = 0x100,
-	MPT_SOLVER_ENUM(NlsJac)     = 0x200,
+	MPT_SOLVER_ENUM(NlsOverdet) = 0x200,
 	MPT_SOLVER_ENUM(NlsUser)    = 0x300,
-	MPT_SOLVER_ENUM(NlsOut)     = 0x400,
-	MPT_SOLVER_ENUM(NlsOverdet) = 0x800
+	MPT_SOLVER_ENUM(NlsJac)     = 0x400,
+	MPT_SOLVER_ENUM(NlsOut)     = 0x800
 };
 enum MPT_SOLVER_ENUM(Report) {
 	MPT_SOLVER_ENUM(Header)     = 0x1,
@@ -280,6 +280,7 @@ MPT_IVP_STRUCT(rside)
 #ifdef __cplusplus
 	inline rside(Fcn f, void *p = 0) : fcn(f), par(p)
 	{ }
+	enum { Type = IvpRside };
 #else
 # define MPT_IVP_RSIDE_INIT { 0, 0 }
 #endif
@@ -292,6 +293,7 @@ MPT_IVP_STRUCT(jacobian)
 #ifdef __cplusplus
 	inline jacobian(Jac f, void *p = 0) : fcn(f), par(p)
 	{ }
+	enum { Type = IvpJac };
 #else
 # define MPT_IVP_JAC_INIT { 0, 0 }
 #endif
@@ -304,6 +306,7 @@ MPT_IVP_STRUCT(odefcn)
 #ifdef __cplusplus
 	inline odefcn(Fcn f, void *p = 0, Jac j = 0) : rside(f, p), jac(j, p)
 	{ }
+	enum { Type = ODE };
 #else
 # define MPT_IVP_ODE_INIT  { MPT_IVP_RSIDE_INIT, MPT_IVP_JAC_INIT }
 #endif
@@ -316,6 +319,7 @@ MPT_IVP_STRUCT(daefcn) : public IVP::odefcn
 {
 	inline daefcn(Fcn f, void *p = 0, Jac j = 0) : IVP::odefcn(f, p, j)
 	{ mas.fcn = 0; mas.par = 0; }
+	enum { Type = DAE };
 #else
 MPT_IVP_STRUCT(daefcn)
 {
@@ -371,6 +375,7 @@ MPT_NLS_STRUCT(jacobian)
 #ifdef __cplusplus
 	inline jacobian(Jac f, void *p = 0) : fcn(f), par(p)
 	{ }
+	enum { Type = NlsJac };
 #else
 # define MPT_NLS_JAC_INIT  { 0, 0 }
 #endif
@@ -383,7 +388,7 @@ MPT_NLS_STRUCT(functions)
 #ifdef __cplusplus
 	inline functions(Fcn f, void *u = 0, Jac j = 0) : res(f, u), jac(j, u)
 	{ }
-	enum { Type = NlsVector | NlsJac };
+	enum { Type = NlsUser | NlsJac };
 #else
 # define MPT_NLSFCN_INIT  { { 0, 0 }, { 0, 0 } }
 #endif
@@ -405,16 +410,15 @@ MPT_NLS_STRUCT(output)
 };
 
 #ifdef __cplusplus
-inline __MPT_CONST_EXPR int functionType(const IVP::rside &)    { return IvpRside; }
-inline __MPT_CONST_EXPR int functionType(const IVP::jacobian &) { return IvpJac; }
-inline __MPT_CONST_EXPR int functionType(const IVP::odefcn &)   { return ODE; }
-inline __MPT_CONST_EXPR int functionType(const IVP::daefcn &)   { return DAE; }
-inline __MPT_CONST_EXPR int functionType(const IVP::pdefcn &)   { return IvpRside | PDE; }
+inline __MPT_CONST_EXPR int functionType(const IVP::rside &)    { return IVP::rside::Type; }
+inline __MPT_CONST_EXPR int functionType(const IVP::jacobian &) { return IVP::jacobian::Type; }
+inline __MPT_CONST_EXPR int functionType(const IVP::odefcn &)   { return IVP::odefcn::Type; }
+inline __MPT_CONST_EXPR int functionType(const IVP::daefcn &)   { return IVP::daefcn::Type; }
+inline __MPT_CONST_EXPR int functionType(const IVP::pdefcn &)   { return IVP::pdefcn::Type; }
 
-inline __MPT_CONST_EXPR int functionType(const NLS::residuals &) { return NlsVector; }
-inline __MPT_CONST_EXPR int functionType(const NLS::jacobian &)  { return NlsJac; }
-inline __MPT_CONST_EXPR int functionType(const NLS::functions &) { return NlsUser; }
-inline __MPT_CONST_EXPR int functionType(const NLS::output &)    { return NlsOut; }
+inline __MPT_CONST_EXPR int functionType(const NLS::jacobian &)  { return NLS::jacobian::Type; }
+inline __MPT_CONST_EXPR int functionType(const NLS::functions &) { return NLS::functions::Type; }
+inline __MPT_CONST_EXPR int functionType(const NLS::output &)    { return NLS::output::Type; }
 
 
 template <typename T>
@@ -645,9 +649,9 @@ extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *, const MPT_INTE
 extern int mpt_solver_module_nextval(double *, double , const MPT_INTERFACE(metatype) *);
 
 /* assign user functions */
-extern int mpt_solver_module_ufcn_ode(long , MPT_IVP_STRUCT(odefcn) *,    int , const void *);
-extern int mpt_solver_module_ufcn_dae(long , MPT_IVP_STRUCT(daefcn) *,    int , const void *);
-extern int mpt_solver_module_ufcn_nls(long , MPT_NLS_STRUCT(functions) *, int , const void *);
+extern int mpt_solver_module_ufcn_ode(long , MPT_IVP_STRUCT(odefcn) *, int , const void *);
+extern int mpt_solver_module_ufcn_dae(long , MPT_IVP_STRUCT(daefcn) *, int , const void *);
+extern int mpt_solver_module_ufcn_nls(const MPT_NLS_STRUCT(parameters) *, MPT_NLS_STRUCT(functions) *, int , const void *);
 
 
 /* id for registered input metatype */

@@ -8,16 +8,12 @@
 
 extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *mp, MPT_NLS_STRUCT(functions) *ufcn, int type, const void *ptr)
 {
-	long len;
 	int ret;
 	
 	if (mp->nls.nval > mp->nls.nres) {
 		return MPT_ERROR(BadArgument);
 	}
-	if ((len = mp->nls.nres) && len == mp->nls.nval) {
-		len = 0;
-	}
-	if ((ret = mpt_solver_module_ufcn_nls(len, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_solver_module_ufcn_nls(&mp->nls, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	if (!(mp->ufcn = ufcn) || !ufcn->res.fcn) {
@@ -26,7 +22,7 @@ extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *mp, MPT_NLS_STRUCT(funct
 		mp->solv = 0;
 		return 0;
 	}
-	if (len) {
+	if (mp->nls.nval < mp->nls.nres) {
 		return mpt_minpack_ufcn_lmderv(mp);
 	}
 	return mpt_minpack_ufcn_hybrid(mp);

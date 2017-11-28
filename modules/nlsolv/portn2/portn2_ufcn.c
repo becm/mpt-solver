@@ -41,16 +41,12 @@ static void portn2_jac(const int *n, const int *p, const double *x, int *nf, dou
 
 extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *n2, MPT_NLS_STRUCT(functions) *ufcn, int type, const void *ptr)
 {
-	long len;
 	int ret;
 	
 	if (n2->nls.nval > n2->nls.nres) {
 		return MPT_ERROR(BadArgument);
 	}
-	if ((len = n2->nls.nres) && len == n2->nls.nval) {
-		len = 0;
-	}
-	if ((ret = mpt_solver_module_ufcn_nls(len, ufcn, type, ptr)) < 0) {
+	if ((ret = mpt_solver_module_ufcn_nls(&n2->nls, ufcn, type, ptr)) < 0) {
 		return ret;
 	}
 	if (!(n2->ui = (void *) ufcn)) {

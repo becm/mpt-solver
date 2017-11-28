@@ -69,7 +69,7 @@ extern int mpt_minpack_ufcn_lmderv(MPT_SOLVER_STRUCT(minpack) *mp)
 	if (!(ufcn = mp->ufcn) || !ufcn->res.fcn) {
 		return MPT_ERROR(BadValue);
 	}
-	ret = MPT_SOLVER_ENUM(NlsVector);
+	ret = MPT_SOLVER_ENUM(NlsUser);
 	if (ufcn->jac.fcn) {
 		ret |= MPT_SOLVER_ENUM(NlsJac);
 		mp->fcn.der = lmder_fcn;

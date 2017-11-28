@@ -20,6 +20,7 @@
  */
 extern int mpt_init_nls(MPT_SOLVER(interface) *sol, const MPT_NLS_STRUCT(functions) *fcn, const MPT_STRUCT(solver_data) *dat, MPT_INTERFACE(logger) *log)
 {
+	static const int type = MPT_SOLVER_ENUM(NlsUser) | MPT_SOLVER_ENUM(NlsJac);
 	static const char fmt[] = { MPT_value_toVector('d'), 0 };
 	MPT_INTERFACE(object) *obj;
 	struct iovec vec;
@@ -62,12 +63,12 @@ extern int mpt_init_nls(MPT_SOLVER(interface) *sol, const MPT_NLS_STRUCT(functio
 		                 MPT_tr("failed to set problem dimensions"), npar, nres);
 		return ret;
 	}
-	if (fcn && (ret = sol->_vptr->setFunctions(sol, MPT_SOLVER_ENUM(NlsUser), fcn)) < 0) {
+	if (fcn && (ret = sol->_vptr->setFunctions(sol, type, fcn)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to set user functions"));
 		return ret;
 	}
-	if ((ret = sol->_vptr->setFunctions(sol, ~MPT_SOLVER_ENUM(NlsUser), 0)) < 0) {
+	if ((ret = sol->_vptr->setFunctions(sol, ~type, 0)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
 		                 MPT_tr("unable to set user functions"));
 		return ret;
