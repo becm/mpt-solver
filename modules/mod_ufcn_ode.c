@@ -13,8 +13,7 @@ extern int mpt_solver_module_ufcn_ode(long pint, MPT_IVP_STRUCT(odefcn) *ufcn, i
 		return pint ? MPT_SOLVER_ENUM(PDE) : 0;
 	}
 	if (!ptr) {
-		if (!(type & MPT_SOLVER_ENUM(IvpRside))
-		 || !(type & MPT_SOLVER_ENUM(PDE))) {
+		if (!(type & MPT_SOLVER_ENUM(IvpRside))) {
 			ufcn->rside.fcn = 0;
 		}
 		if (!(type & MPT_SOLVER_ENUM(IvpJac))) {
