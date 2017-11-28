@@ -57,7 +57,7 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 	
 	/* TODO: notify setup from client/global config */
 	
-	/* interactive run */
+	/* remote run */
 	if (no._fdused) {
 		MPT_STRUCT(dispatch) *disp;
 		
@@ -81,8 +81,12 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		}
 	}
 	else {
+		/* interactive file assignment */
+		if (cfg && (ret = mpt_solver_require(cfg, 0)) < 0) {
+			ret = 1;
+		}
 		/* setup standalone operation */
-		if ((ret = c->_vptr->process(c, 0, 0)) < 0) {
+		else if ((ret = c->_vptr->process(c, 0, 0)) < 0) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        "solver client start failed");
 			ret = 2;

@@ -691,9 +691,6 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		if (!(cfg = configIVP(ivp))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if (!id && (ret = mpt_solver_require(&ivp->_cfg, 0)) < 0) {
-			return ret;
-		}
 		if ((ret = mpt_solver_read(cfg, id ? it : 0, loggerIVP(ivp))) < 0) {
 			return ret;
 		}

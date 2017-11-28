@@ -487,9 +487,6 @@ static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		if (!(cfg = configNLS(nls))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if (!id && (ret = mpt_solver_require(&nls->_cfg, 0)) < 0) {
-			return ret;
-		}
 		if ((ret = mpt_solver_read(cfg, id ? it : 0, out._info)) < 0) {
 			return ret;
 		}
