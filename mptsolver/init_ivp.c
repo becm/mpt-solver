@@ -90,7 +90,7 @@ static int initIvpData(MPT_SOLVER(interface) *sol, const void *fcn, int neqs, MP
 		return ret;
 	}
 	/* limit user functions to compatible types */
-	if ((ret = sol->_vptr->setFunctions(sol, type, 0)) < 0) {
+	if ((ret = sol->_vptr->setFunctions(sol, ~type, 0)) < 0) {
 		if (log) mpt_log(log, _func, MPT_LOG(Error), "%s (0x%x)",
 		                 MPT_tr("unable to limit user functions"), type);
 	}

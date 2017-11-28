@@ -67,6 +67,11 @@ extern int mpt_init_nls(MPT_SOLVER(interface) *sol, const MPT_NLS_STRUCT(functio
 		                 MPT_tr("unable to set user functions"));
 		return ret;
 	}
+	if ((ret = sol->_vptr->setFunctions(sol, ~MPT_SOLVER_ENUM(NlsUser), 0)) < 0) {
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
+		                 MPT_tr("unable to set user functions"));
+		return ret;
+	}
 	if ((ret = mpt_object_set(obj, 0, fmt, vec)) < 0) {
 		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (%d)",
 		                 MPT_tr("failed to set initial parameters"), npar);

@@ -13,10 +13,10 @@ extern int mpt_solver_module_ufcn_nls(long nres, MPT_NLS_STRUCT(functions) *ufcn
 		return nres ? MPT_SOLVER_ENUM(NlsOverdet) : 0;
 	}
 	if (!ptr) {
-		if (!(type & MPT_SOLVER_ENUM(NlsVector))) {
+		if ((type & MPT_SOLVER_ENUM(NlsVector))) {
 			ufcn->res.fcn = 0;
 		}
-		if (!(type & MPT_SOLVER_ENUM(NlsJac))) {
+		if ((type & MPT_SOLVER_ENUM(NlsJac))) {
 			ufcn->jac.fcn = 0;
 		}
 	}
