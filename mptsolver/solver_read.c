@@ -81,7 +81,7 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 {
 	MPT_STRUCT(node) *sol, cfg = MPT_NODE_INIT;
 	const char *fname;
-	int ret = 1, err;
+	int ret = 0, err;
 	
 	/* parse top level config */
 	fname = mpt_node_data(conf, 0);
@@ -89,7 +89,7 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 		if ((err = parseNode(&cfg, args, fname, "{*} = !#", log)) < 0) {
 			return err;
 		}
-		ret = 3;
+		ret = 2;
 		if (args->_vptr->advance(args) <= 0) {
 			if ((sol = cfg.children)
 			    && (sol = mpt_node_next(sol, solconfName))) {
@@ -111,7 +111,7 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 		if ((err = parseNode(sol, 0, fname, "[ ] = !#", log)) < 0) {
 			return err;
 		}
-		return 2;
+		return 1;
 	}
 	/* read new top level config */
 	else if ((err = parseNode(&cfg, 0, fname, "{*} = !#", log)) < 0) {
@@ -130,7 +130,7 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 			mpt_node_clear(&cfg);
 			return err;
 		}
-		ret = 3;
+		ret = 2;
 	}
 	/* replace solver configuration */
 	mpt_node_clear(conf);

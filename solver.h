@@ -607,8 +607,8 @@ extern const char *mpt_solver_alias(const char *);
 extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *, int , const char *, MPT_INTERFACE(logger) *);
 
 /* set solver parameter */
-extern void mpt_solver_pset (MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-extern void mpt_solver_param(MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern void mpt_solver_pset(MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_solver_param(MPT_INTERFACE(object) *, MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 /* set solver parameter to value */
 extern int mpt_solver_setvalue(MPT_INTERFACE(object) *, const char *, double);
 
