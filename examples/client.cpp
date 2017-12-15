@@ -4,29 +4,34 @@
 
 #include "solver_run.h"
 
-#ifndef MPT_INCLUDE
-# define MPT_INCLUDE(h) <mpt/h>
-#endif
-
 #include MPT_INCLUDE(client.h)
-#include MPT_INCLUDE(event.h)
 #include MPT_INCLUDE(config.h)
-#include MPT_INCLUDE(notify.h)
+#include MPT_INCLUDE(event.h)
 #include MPT_INCLUDE(solver.h)
 
 class MyClient : public mpt::client
 {
 public:
-    MyClient(mpt::solver::UserInit * = 0)
+    MyClient()
     { }
     virtual ~MyClient()
     { }
     void unref() __MPT_OVERRIDE
-    { delete this; }
-
+    {
+        delete this;
+    }
+    int conv(int type, void *ptr) const __MPT_OVERRIDE
+    {
+        if (type == mpt::config::Type) {
+            return mpt::BadType;
+        }
+        return client::conv(type, ptr);
+    }
     int dispatch(mpt::event *ev) __MPT_OVERRIDE
     {
-        if (!ev) return mpt::event::Terminate;
+        if (!ev) {
+            return mpt::event::Terminate;
+        }
         return mpt::solver::mpt_solver_dispatch(this, ev);
     }
     int process(uintptr_t id, mpt::iterator *) __MPT_OVERRIDE
