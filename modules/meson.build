@@ -1,10 +1,16 @@
 # mpt-solver/modules/sundials/meson.build
 # build definition for SUNDIALS module library
 
-modules_src_tol = files(
-  'mod_tol_set.c', 'mod_tol_get.c', 'mod_tol_check.c'
+modules_src_gen = files(
+  'mod_valloc.c',
+  join_paths('..', 'base', 'mptcore', 'meta', 'consume.c'),
+  join_paths('..', 'base', 'mptcore', 'meta', 'consumable_setup.c')
 )
-modules_src_gen = files('mod_value.c', 'mod_generic_conv.c')
+modules_src_tol = files(
+  'mod_tol_set.c',
+  'mod_tol_get.c',
+  'mod_tol_check.c'
+)
 modules_src_ivp = files('mod_ivpset.c', 'mod_nextval.c') + modules_src_gen + modules_src_tol
 modules_dep_ode = declare_dependency(
   include_directories : solv_inc,

@@ -31,7 +31,6 @@ static int dispatchClient(void *ptr, MPT_STRUCT(event) *ev)
 extern int solver_run(MPT_INTERFACE(client) *c)
 {
 	MPT_STRUCT(notify) no = MPT_NOTIFY_INIT;
-	MPT_INTERFACE(logger) *info;
 	MPT_INTERFACE(config) *cfg;
 	int ret;
 	
@@ -51,10 +50,6 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 			return 1;
 		}
 	}
-	/* prefer client log output */
-	info = 0;
-	ret = c->_vptr->meta.conv((void *) c, MPT_ENUM(TypeLogger), &info);
-	
 	/* TODO: notify setup from client/global config */
 	
 	/* remote run */
@@ -63,14 +58,14 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		
 		/* register message dispatcher for notifier */
 		if (!(disp = mpt_notify_dispatch(&no))) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			mpt_log(0, __func__, MPT_LOG(Error), "%s",
 			        "failed to create dispatcher");
 			dispatchClient(c, 0);
 			ret = 2;
 		}
 		/* setup dispatcher for solver client */
 		else if ((ret = mpt_dispatch_set(disp, MPT_MESGTYPE(Command), dispatchClient, c)) < 0) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			mpt_log(0, __func__, MPT_LOG(Error), "%s",
 			        "event setup failed");
 			dispatchClient(c, 0);
 			ret = 3;
@@ -87,7 +82,7 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		}
 		/* setup standalone operation */
 		else if ((ret = c->_vptr->process(c, 0, 0)) < 0) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			mpt_log(0, __func__, MPT_LOG(Error), "%s",
 			        "solver client start failed");
 			ret = 2;
 		}

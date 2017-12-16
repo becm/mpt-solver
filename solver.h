@@ -49,7 +49,7 @@ MPT_STRUCT(solver_data)
 MPT_STRUCT(solver_output)
 {
 #ifdef __cplusplus
-	inline solver_output() : _data(0), _graphic(0), _info(0)
+	inline solver_output() : _data(0), _graphic(0)
 	{ }
 	inline Slice<const uint8_t> pass() const
 	{
