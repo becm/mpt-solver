@@ -33,15 +33,6 @@ static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 	struct iovec *vec;
 	int i;
 	
-	if (p->pos < 0) {
-		if (type != 'd') {
-			return MPT_ERROR(BadType);
-		}
-		if (dest) {
-			*((double *) dest) = p->t;
-		}
-		return 'd';
-	}
 	if (type != MPT_value_toVector('d')) {
 		return MPT_ERROR(BadType);
 	}
@@ -77,10 +68,6 @@ static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 	MPT_INTERFACE(iterator) **iptr = (void *) (mptr + p->neqs);
 	long i;
 	
-	if (p->pos < 0) {
-		p->pos = 0;
-		return MPT_value_toVector('d');
-	}
 	if (p->pos >= p->len) {
 		return MPT_ERROR(BadOperation);
 	}
@@ -219,54 +206,61 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 	ip->_mt._vptr = &iterProfileMeta;
 	ip->_it._vptr = &iterProfileIter;
 	ip->t = t;
-	ip->pos = -1;
+	ip->pos = 0;
 	ip->len = dat->nval;
 	ip->neqs = neqs;
 	
-	for (i = 0; i < neqs; ++i) {
-		iptr[i] = 0;
+	if (!conf) {
+		return &ip->_mt;
 	}
-	for (i = 0; i < neqs; ++i) {
-		val[i] = 0;
-	}
-	/* no source iterators */
-	if (!conf || !(prof = conf->children)) {
+	/* no source iterator descriptions */
+	if (!(prof = conf->children)) {
 		i = 0;
-		/* set static profile data */
-		if (conf && (desc = mpt_node_data(conf, 0))) {
-			while (i < neqs) {
-				ssize_t len;
-				if ((len = mpt_cdouble(val + i++, desc, 0)) < 0) {
-					if (out) mpt_log(out, __func__, MPT_LOG(Info), "%s: %d",
-					                 MPT_tr("bad profile constant"), i);
-					break;
-				}
-				if (!len) {
-					break;
-				}
-				desc += len;
+		/* default zero profiles */
+		if (!(desc = mpt_node_data(conf, 0))) {
+			return &ip->_mt;
+		}
+		/* static initial values for components */
+		while (i < neqs) {
+			ssize_t len;
+			if ((len = mpt_cdouble(val + i++, desc, 0)) < 0) {
+				if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s (%d): %s",
+				                 MPT_tr("bad profile constant"), i, desc);
+				iterProfileUnref((void *) ip);
+				errno = EINVAL;
+				return 0;
 			}
+			if (!len) {
+				break;
+			}
+			desc += len;
 		}
 		return &ip->_mt;
 	}
-	while (prof && neqs--) {
+	i = 0;
+	while (prof && i++ < neqs) {
 		MPT_INTERFACE(metatype) *mt;
 		if (!(desc = mpt_node_data(prof, 0))) {
 			if (out) mpt_log(out, __func__, MPT_LOG(Info), "%s: %d",
 			                 MPT_tr("no profile description"), i);
 			continue;
 		}
-		if (!(mt = mpt_iterator_profile(&dat->val, desc))
-		    && out) {
-			mpt_log(out, __func__, MPT_LOG(Warning), "%s (%d): %s",
-			        MPT_tr("bad profile"), i, desc);
-		}
-		*mptr++ = mt;
-		*iptr = 0;
-		if (mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), iptr++) < 0) {
+		/* require valid iterator element */
+		if (!(mt = mpt_iterator_profile(&dat->val, desc))) {
 			if (out) {
 				mpt_log(out, __func__, MPT_LOG(Warning), "%s (%d): %s",
 				        MPT_tr("bad profile"), i, desc);
+			}
+			iterProfileUnref((void *) ip);
+			errno = EINVAL;
+			return 0;
+		}
+		*mptr++ = mt;
+		/* skip bad iterator implementations */
+		if (mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), iptr++) < 0) {
+			if (out) {
+				mpt_log(out, __func__, MPT_LOG(Warning), "%s (%d): %s",
+				        MPT_tr("invalid profile iterator"), i, desc);
 			}
 		}
 		prof = prof->next;
