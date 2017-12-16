@@ -74,11 +74,10 @@ MPT_STRUCT(solver_output)
 	}
 protected:
 #else
-# define MPT_SOLVER_OUTPUT_INIT { 0, 0, 0, MPT_ARRAY_INIT }
+# define MPT_SOLVER_OUTPUT_INIT { 0, 0, MPT_ARRAY_INIT }
 #endif
 	MPT_INTERFACE(output) *_data;
 	MPT_INTERFACE(output) *_graphic;
-	MPT_INTERFACE(logger) *_info;
 	
 	_MPT_ARRAY_TYPE(uint8_t) _pass;  /*  process flags for data dimensions */
 };
