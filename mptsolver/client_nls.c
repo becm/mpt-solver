@@ -287,6 +287,17 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("unable to get NLS client config"));
 		return MPT_ERROR(BadOperation);
 	}
+	if ((curr = mpt_node_find(conf, "output", 1))) {
+		MPT_INTERFACE(metatype) *old;
+		mt = mpt_output_local();
+		mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj);
+		mpt_conf_history(obj, curr);
+		if ((old = curr->_meta)) {
+			old->_vptr->ref.unref((void *) old);
+		}
+		curr->_meta = mt;
+		info = loggerNLS(nls);
+	}
 	/* clear/create solver data */
 	if ((dat = nls->sd)) {
 		mpt_solver_data_clear(dat);

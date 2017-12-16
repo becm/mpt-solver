@@ -23,11 +23,11 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 	int sep, off, ret;
 	
 	if (cfg) {
-		off = 0;
-		sep = '.';
-	} else {
 		off = 4;
 		sep = 0;
+	} else {
+		off = 0;
+		sep = '.';
 	}
 	ret = 0;
 	if (!so->_data) {
@@ -39,6 +39,9 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 				ret |= 0x1;
 			}
 		}
+	}
+	if (so->_graphic && so->_pass._buf) {
+		return ret;
 	}
 	if ((mt = mpt_config_get(cfg, path + off, sep, 0))) {
 		MPT_STRUCT(array) a = MPT_ARRAY_INIT;

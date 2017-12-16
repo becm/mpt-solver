@@ -26,33 +26,32 @@
  */
 extern int mpt_conf_history(MPT_INTERFACE(object) *out, const MPT_STRUCT(node) *conf)
 {
-	static const char data_def[] = "";
-	MPT_STRUCT(node) *tmp;
+	static const int flags = MPT_ENUM(TraverseLeafs) | MPT_ENUM(TraverseChange) | MPT_ENUM(TraverseDefault);
 	const char *data;
-	int e1, e2;
+	int ret;
 	
 	if (!out) {
 		return 0;
 	}
-	/* set history output format */
-	if (!(tmp = conf ? mpt_node_next(conf, "outfmt") : 0)) {
-		data = 0;
-	} else if (!(data = mpt_node_data(tmp, 0))) {
-		data = data_def;
+	if (!conf) {
+		out->_vptr->setProperty(out, 0, 0);
+		return 0;
 	}
-	e1 = mpt_object_set_string((void *) out, "format", data, 0);
-	
-	/* set history output */
-	if (!(tmp = conf ? mpt_node_next(conf, "outfile") : 0)) {
-		data = 0;
-	} else if (!(data = mpt_node_data(tmp, 0))) {
-		data = data_def;
+	/* process output config */
+	data = mpt_node_data(conf, 0);
+	conf = conf->children;
+	if (!conf) {
+		if ((ret = mpt_object_set_string(out, 0, data, 0)) < 0) {
+			return ret;
+		}
+		return 1;
 	}
-	if ((e2 = mpt_object_set_string((void *) out, "file", data, 0)) < 0) {
-		return (e1 < 0) ? e1 : (e1 ? 1 : 0);
-	}
-	if (e2) {
-		return (e1 > 0) ? 3 : 2;
-	}
-	return (e1 > 0) ? 1 : 0;
+	ret = 0;
+	do {
+		/* apply options with non-empty name */
+		if (mpt_object_set_node(out, conf, flags) >= 0) {
+			++ret;
+		}
+	} while ((conf = conf->next));
+	return ret;
 }

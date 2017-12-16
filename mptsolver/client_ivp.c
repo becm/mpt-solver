@@ -339,6 +339,17 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("failed to query"), MPT_tr("client configuration"));
 		return MPT_ERROR(BadOperation);
 	}
+	if ((curr = mpt_node_find(conf, "output", 1))) {
+		MPT_INTERFACE(metatype) *old;
+		mt = mpt_output_local();
+		mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj);
+		mpt_conf_history(obj, curr);
+		if ((old = curr->_meta)) {
+			old->_vptr->ref.unref((void *) old);
+		}
+		curr->_meta = mt;
+		info = loggerIVP(ivp);
+	}
 	/* no supplied initial value */
 	if (!args) {
 		/* reset existing time source */
@@ -512,9 +523,10 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 {
 	const MPT_INTERFACE(metatype) *mt;
+	MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
 	MPT_INTERFACE(object) *obj;
 	MPT_STRUCT(node) *cfg;
-	int err;
+	int err, state;
 	
 	obj = 0;
 	if (!(mt = ivp->pr._ref)
@@ -534,7 +546,25 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	if (args && (err = mpt_object_args(obj, args)) < 0) {
 		return err;
 	}
-	return obj->_vptr->setProperty(obj, 0, 0);
+	err = obj->_vptr->setProperty(obj, 0, 0);
+	
+	state = MPT_DATASTATE(Init);
+	if (err < 0) {
+		state |= MPT_DATASTATE(Fail);
+	}
+	mpt_solver_output_query(&out, &ivp->_cfg);
+	mpt_solver_output_query(&out, 0);
+	if (!ivp->pdim) {
+		mpt_solver_output_ode(&out, state, ivp->sd);
+	} else {
+		struct _clientPdeOut ctx;
+		ctx.state = state;
+		ctx.out = &out;
+		ctx.dat = ivp->sd;
+		mpt_solver_status(ivp->sol, loggerIVP(ivp), outPDE, &ctx);
+	}
+	mpt_array_clone(&out._pass, 0);
+	return err;
 }
 /* step operation on solver */
 static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
