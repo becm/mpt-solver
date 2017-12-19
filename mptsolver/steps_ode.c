@@ -106,7 +106,7 @@ extern int mpt_steps_ode(MPT_SOLVER(interface) *sol, MPT_INTERFACE(iterator) *sr
 	}
 	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
 	    || !obj) {
-		mpt_log(out, __func__, MPT_LOG(Error), "%s (" PRIxPTR ")",
+		mpt_log(out, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		        MPT_tr("solver has no object interface"), sol);
 		return MPT_ERROR(BadArgument);
 	}

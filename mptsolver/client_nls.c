@@ -369,7 +369,7 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	int err;
 	
 	if (!(mt = nls->pr._ref)) {
-		mpt_log(loggerNLS(nls), _func, MPT_LOG(Warning), "%s (" PRIxPTR ")",
+		mpt_log(loggerNLS(nls), _func, MPT_LOG(Warning), "%s (%" PRIxPTR ")",
 		        MPT_tr("missing solver interface"), nls);
 		return MPT_ERROR(BadOperation);
 	}
@@ -552,7 +552,7 @@ static int dispatchNLS(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 			return MPT_event_fail(ev, err, MPT_tr("bad step operation"));
 		}
 		if (err & MPT_EVENTFLAG(Fail)) {
-			mpt_context_reply(ev->reply, err, "%s (" PRIxPTR ")",
+			mpt_context_reply(ev->reply, err, "%s (%" PRIxPTR ")",
 			                  MPT_tr("step operation error"), ev->id);
 			ev->id = 0;
 			return err | MPT_EVENTFLAG(Default);

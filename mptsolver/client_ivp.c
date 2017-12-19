@@ -629,7 +629,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	obj = 0;
 	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
 	    || !obj) {
-		mpt_log(loggerIVP(ivp), _func, MPT_LOG(Error), "%s (" PRIxPTR ")",
+		mpt_log(loggerIVP(ivp), _func, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		        MPT_tr("no object interface for solver"), sol);
 		return ret;
 	}
@@ -785,11 +785,11 @@ static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 			return MPT_event_fail(ev, err, MPT_tr("bad step operation"));
 		}
 		if (err) {
-			mpt_context_reply(ev->reply, err, "%s (" PRIxPTR ")",
+			mpt_context_reply(ev->reply, err, "%s (%" PRIxPTR ")",
 			                  MPT_tr("solver step processed"), ev->id);
 			return MPT_EVENTFLAG(None);
 		}
-		mpt_context_reply(ev->reply, err, "%s (" PRIxPTR ")",
+		mpt_context_reply(ev->reply, err, "%s (%" PRIxPTR ")",
 		                  MPT_tr("solver operation finished"), ev->id);
 		ev->id = 0;
 		return MPT_EVENTFLAG(Default);

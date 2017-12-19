@@ -35,7 +35,7 @@ extern int mpt_init_nls(MPT_SOLVER(interface) *sol, const MPT_NLS_STRUCT(functio
 	obj = 0;
 	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
 	    || !obj) {
-		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (" PRIxPTR ")",
+		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		                 MPT_tr("solver without object interface"), sol);
 		return MPT_ERROR(BadArgument);
 	}
