@@ -523,10 +523,9 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 {
 	const MPT_INTERFACE(metatype) *mt;
-	MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
 	MPT_INTERFACE(object) *obj;
 	MPT_STRUCT(node) *cfg;
-	int err, state;
+	int err;
 	
 	obj = 0;
 	if (!(mt = ivp->pr._ref)
@@ -548,22 +547,20 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	err = obj->_vptr->setProperty(obj, 0, 0);
 	
-	state = MPT_DATASTATE(Init);
-	if (err < 0) {
-		state |= MPT_DATASTATE(Fail);
-	}
-	mpt_solver_output_query(&out, &ivp->_cfg);
-	mpt_solver_output_query(&out, 0);
-	if (!ivp->pdim) {
-		mpt_solver_output_ode(&out, state, ivp->sd);
-	} else {
+	if (ivp->pdim) {
+		MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
 		struct _clientPdeOut ctx;
-		ctx.state = state;
+		mpt_solver_output_query(&out, &ivp->_cfg);
+		mpt_solver_output_query(&out, 0);
+		ctx.state = MPT_DATASTATE(Init);
+		if (err < 0) {
+			ctx.state |= MPT_DATASTATE(Fail);
+		}
 		ctx.out = &out;
 		ctx.dat = ivp->sd;
 		mpt_solver_status(ivp->sol, loggerIVP(ivp), outPDE, &ctx);
+		mpt_array_clone(&out._pass, 0);
 	}
-	mpt_array_clone(&out._pass, 0);
 	return err;
 }
 /* step operation on solver */
