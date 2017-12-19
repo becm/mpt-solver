@@ -106,7 +106,7 @@ extern int mpt_solver_dispatch(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 		                  MPT_tr("invalid message type"), mt.cmd, MPT_MESGTYPE(Command));
 		return MPT_ERROR(BadArgument);
 	}
-	if (ret <= (int) sizeof(mt)) {
+	if (ret < (int) sizeof(mt)) {
 		ret = cl->_vptr->process(cl, mt.cmd, 0);
 	} else {
 		ret = mpt_client_command(cl, &tmp, mt.arg);

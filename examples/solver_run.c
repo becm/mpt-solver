@@ -50,7 +50,8 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 			return 1;
 		}
 	}
-	/* TODO: notify setup from client/global config */
+	/* global controller setup */
+	ret = mpt_notify_config(&no, 0);
 	
 	/* remote run */
 	if (no._fdused) {
