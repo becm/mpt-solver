@@ -381,7 +381,8 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 			curr->_meta = src;
 		}
 		else if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &args)) < 0
-		    || !args) {
+		    || !args
+		    || (ret = args->_vptr->reset(args)) < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
 			        MPT_tr("bad iteratior in config"), "times");
 			return MPT_ERROR(BadType);

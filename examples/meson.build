@@ -21,7 +21,7 @@ if with_cxx
         include_directories : solv_inc,
         c_args: test_defines,
         cpp_args: test_defines,
-        dependencies: [ cxx, solv ])
+        dependencies: [ cxx, solv, io ])
     )
   endif
   
