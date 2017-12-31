@@ -321,8 +321,8 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("solver preparation failed"));
 		return ret;
 	}
-	/* rebind graphic associations */
-	if ((curr = conf->children)) {
+	/* set graphic parameters */
+	if ((curr = mpt_node_find(conf, "graphic", 1))) {
 		MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
 		mpt_solver_output_query(&out, &nls->_cfg);
 		mpt_solver_output_query(&out, 0);

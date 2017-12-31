@@ -437,24 +437,25 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 			return ret;
 		}
 	}
-	/* get user parameter */
-	if ((curr = conf->children)) {
+	/* set graphic parameters */
+	if ((curr = mpt_node_find(conf, "graphic", 1))) {
 		MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
 		
 		mpt_solver_output_query(&out, &ivp->_cfg);
 		mpt_solver_output_query(&out, 0);
 		if (out._graphic) {
-			mpt_conf_graphic(out._graphic, curr, info);
+			mpt_conf_graphic(out._graphic, conf->children, info);
 		}
 		mpt_array_clone(&out._pass, 0);
-		if ((curr = mpt_node_next(curr, "param"))) {
-			if ((ret = mpt_conf_param(&dat->param, curr, 0)) < 0) {
-				mpt_log(info, _func, MPT_LOG(Warning), "%s: %s",
-				        "param", MPT_tr("invalid parameter format"));
-				ret = 0;
-			}
-			dat->npar = ret;
+	}
+	/* get user parameter */
+	if ((curr = mpt_node_find(conf, "param", 1))) {
+		if ((ret = mpt_conf_param(&dat->param, curr, 0)) < 0) {
+			mpt_log(info, _func, MPT_LOG(Warning), "%s: %s",
+			        "param", MPT_tr("invalid parameter format"));
+			ret = 0;
 		}
+		dat->npar = ret;
 	}
 	/* load new solver or evaluate existing */
 	curr = mpt_node_find(conf, "solver", 1);
