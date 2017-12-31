@@ -603,7 +603,7 @@ extern int mpt_residuals_cdiff(void *, double , const double *, double *, const 
 /* generate library description form short form */
 extern const char *mpt_solver_alias(const char *);
 /* load solver of specific type */
-extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *, int , const char *, MPT_INTERFACE(logger) *);
+extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **, int , const char *, MPT_INTERFACE(logger) *);
 
 /* set solver parameter */
 extern void mpt_solver_pset(MPT_INTERFACE(object) *, const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));

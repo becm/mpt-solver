@@ -30,12 +30,12 @@ MPT_STRUCT(IVP) {
 	MPT_INTERFACE(client) _cl;
 	MPT_INTERFACE(config) _cfg;
 	
-	MPT_STRUCT(proxy) pr;
 	
 	MPT_STRUCT(solver_data) *sd;
 	
 	MPT_INTERFACE(metatype) *cfg;
 	
+	MPT_STRUCT(metatype) *sol_ref;
 	MPT_SOLVER(interface) *sol;
 	
 	MPT_SOLVER_TYPE(UserInit) *uinit;
@@ -168,7 +168,7 @@ static const MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen,
 		return 0;
 	}
 	if (!porg) {
-		return ivp->pr._ref;
+		return ivp->sol_ref;
 	}
 	if (!porg->len) {
 		return conf->_meta;
@@ -242,14 +242,16 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	MPT_STRUCT(path) p;
 	
 	if (!porg) {
+		MPT_INTERFACE(reference) *ref;
 		if (ivp->sd) {
 			mpt_solver_data_clear(ivp->sd);
 		}
-		if (!ivp->pr._ref) {
+		ivp->sol = 0;
+		if (!(ref = (void *) ivp->sol_ref)) {
 			return 0;
 		}
-		mpt_proxy_fini(&ivp->pr);
-		ivp->sol = 0;
+		ref->_vptr->unref(ref);
+		ivp->sol_ref = 0;
 		return 1;
 	}
 	if (!(conf = configIVP(ivp))) {
@@ -274,11 +276,12 @@ static void deleteIVP(MPT_INTERFACE(reference) *gen)
 	MPT_STRUCT(IVP) *ivp = (void *) gen;
 	MPT_INTERFACE(metatype) *mt;
 	
-	mpt_proxy_fini(&ivp->pr);
-	
 	if (ivp->sd) {
 		mpt_solver_data_fini(ivp->sd);
 		free(ivp->sd);
+	}
+	if ((mt = ivp->sol_ref)) {
+		mt->_vptr->ref.unref((void *) mt);
 	}
 	if ((mt = ivp->cfg)) {
 		mt->_vptr->ref.unref((void *) mt);
@@ -456,8 +459,9 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	/* load new solver or evaluate existing */
 	curr = mpt_node_find(conf, "solver", 1);
 	val = curr ? mpt_node_data(curr, 0) : 0;
-	ivp->sol = mpt_solver_load(&ivp->pr, MPT_SOLVER_ENUM(CapableIvp), val, info);
-	
+	if (!(ivp->sol = mpt_solver_load(&ivp->sol_ref, MPT_SOLVER_ENUM(CapableIvp), val, info))) {
+		return MPT_ERROR(BadValue);
+	}
 	obj = 0;
 	if (!(mt = (void *) ivp->sol)
 	    || mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) < 0
@@ -529,7 +533,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	int err;
 	
 	obj = 0;
-	if (!(mt = ivp->pr._ref)
+	if (!(mt = ivp->sol_ref)
 	    || mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) < 0
 	    || !obj) {
 		err = mt->_vptr->conv(mt, 0, 0);
@@ -830,11 +834,11 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit)
 	ivp->_cl._vptr = &clientIVP;
 	ivp->_cfg._vptr = &configIVP;
 	
-	memset(&ivp->pr, 0, sizeof(ivp->pr));
 	ivp->sd = 0;
 	ivp->cfg = 0;
-	
+	ivp->sol_ref = 0;
 	ivp->sol = 0;
+	
 	ivp->uinit = uinit;
 	memset(&ivp->ru_usr, 0, sizeof(ivp->ru_usr));
 	memset(&ivp->ru_sys, 0, sizeof(ivp->ru_sys));

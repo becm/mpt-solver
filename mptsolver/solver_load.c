@@ -75,11 +75,11 @@ static int validSolver(MPT_SOLVER(interface) *sol, int match, MPT_INTERFACE(logg
  * \return solver interface (tracked by proxy reference)
  */
 /* load solver of specific type */
-extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, const char *conf, MPT_INTERFACE(logger) *log)
+extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int match, const char *conf, MPT_INTERFACE(logger) *log)
 {
 	MPT_INTERFACE(metatype) *mt;
 	MPT_SOLVER(interface) *sol;
-	uintptr_t h;
+	const char *old;
 	int mode, me;
 	
 	if ((me = mpt_solver_typeid()) < 0) {
@@ -89,9 +89,10 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, 
 		}
 		return 0;
 	}
+	mt = *ref;
 	sol = 0;
 	if (!conf) {
-		if (!(mt = pr->_ref)) {
+		if (!mt) {
 			if (log) {
 				mpt_log(log, __func__, MPT_LOG(Error), "%s",
 			                MPT_tr("no existing solver"));
@@ -128,8 +129,10 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, 
 			int val;
 			if (!(val = name[pos])) {
 				if (!(sym = mpt_solver_alias(name))) {
-					mpt_log(log, __func__, MPT_LOG(Error), "%s (%d)",
-					        MPT_tr("no valid solver alias"), conf);
+					if (log) {
+						mpt_log(log, __func__, MPT_LOG(Error), "%s (%d)",
+						        MPT_tr("no valid solver alias"), conf);
+					}
 					return 0;
 				}
 				conf = sym;
@@ -148,8 +151,10 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, 
 					++pos;
 				}
 				val = pos;
-				mpt_log(log, __func__, MPT_LOG(Error), "%s (%d)",
-				        MPT_tr("solver description element exceeds buffer"), val);
+				if (log) {
+					mpt_log(log, __func__, MPT_LOG(Error), "%s (%d)",
+					        MPT_tr("solver description element exceeds buffer"), val);
+				}
 				name += pos;
 				pos = 0;
 			}
@@ -162,17 +167,18 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, 
 				conf = sym;
 				break;
 			}
-			mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
-			        MPT_tr("loader alias unknown"), tmp);
-			
+			if (log) {
+				mpt_log(log, __func__, MPT_LOG(Error), "%s: %s",
+				        MPT_tr("loader alias unknown"), tmp);
+			}
 			name += pos;
 			pos = 0;
 		}
 	}
 	/* identical to current instance */
-	h = mpt_hash(conf, strlen(conf));
-	if ((mt = pr->_ref)
-	    && pr->_hash == h
+	if (mt
+	    && (old = mpt_meta_data(mt, 0))
+	    && !strcmp(conf, old)
 	    && (mode = mt->_vptr->conv(mt, me, &sol)) >= 0
 	    && sol
 	    && (mode = validSolver(sol, match, log, __func__)) >= 0) {
@@ -182,33 +188,34 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_STRUCT(proxy) *pr, int match, 
 	else {
 		const MPT_INTERFACE(metatype) *cfg;
 		MPT_SOLVER(interface) *sol;
-		MPT_INTERFACE(metatype) *old;
+		MPT_INTERFACE(metatype) *next;
 		const char *lpath = 0;
+		
 		if ((cfg = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
 			cfg->_vptr->conv(cfg, 's', &lpath);
 		}
-		if (!(mt = mpt_library_bind(conf, lpath, log))) {
+		if (!(next = mpt_library_meta(me, conf, lpath, log))) {
 			return 0;
 		}
-		if ((mode = mt->_vptr->conv(mt, me, &sol)) < 0
+		sol = 0;
+		if ((mode = next->_vptr->conv(next, me, &sol)) < 0
 		    || !sol) {
 			if (log) {
-				mode = mt->_vptr->conv(mt, 0, 0);
+				mode = next->_vptr->conv(next, 0, 0);
 				mpt_log(log, __func__, MPT_LOG(Error), "%s (%d): %s",
 				        MPT_tr("no solver type"), mode, conf);
 			}
-			mt->_vptr->ref.unref((void *) mt);
+			next->_vptr->ref.unref((void *) next);
 			return 0;
 		}
 		if ((mode = validSolver(sol, match, log, __func__) < 0)) {
-			mt->_vptr->ref.unref((void *) mt);
+			next->_vptr->ref.unref((void *) next);
 			return 0;
 		}
-		if ((old = pr->_ref)) {
-			old->_vptr->ref.unref((void *) old);
+		if (mt) {
+			mt->_vptr->ref.unref((void *) mt);
 		}
-		pr->_ref  = mt;
-		pr->_hash = h;
+		*ref = next;
 		
 		return sol;
 	}

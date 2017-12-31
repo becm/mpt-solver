@@ -58,7 +58,7 @@ extern const char *mpt_solver_alias(const char *descr)
 	if (!(id = mpt_meta_data(mt, 0))) {
 		return 0;
 	}
-	if ((type = mpt_proxy_typeid(id, 0)) != sol) {
+	if ((type = mpt_proxy_typeid(id, &id)) != sol) {
 		errno = EINVAL;
 		return 0;
 	}
