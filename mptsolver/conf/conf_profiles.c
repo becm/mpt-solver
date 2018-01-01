@@ -163,7 +163,7 @@ static MPT_INTERFACE(metatype) *iterProfileClone(const MPT_INTERFACE(metatype) *
  * 
  * \return iterator containing profile segments
  */
-extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *dat, double t, const MPT_STRUCT(node) *conf, int neqs, MPT_INTERFACE(logger) *out)
+extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *dat, double t, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
 {
 	static const MPT_INTERFACE_VPTR(iterator) iterProfileIter = {
 		iterProfileGet, iterProfileAdvance, iterProfileReset
@@ -174,19 +174,30 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 	MPT_STRUCT(iterProfile) *ip;
 	MPT_INTERFACE(metatype) **mptr;
 	MPT_INTERFACE(iterator) **iptr;
+	const MPT_STRUCT(buffer) *buf;
 	const MPT_STRUCT(node) *prof;
 	const char *desc;
 	double *val;
-	int i;
-
-	if ((i = dat->nval) < 1) {
-		mpt_log(out, __func__, MPT_LOG(Error), "%s: (len = %i)",
-		        MPT_tr("bad solver data size"), i);
+	size_t len;
+	int i, neqs;
+	
+	if (!(buf = dat->val._buf)
+	    || !(len = buf->_used / sizeof(*val))) {
+		mpt_log(out, __func__, MPT_LOG(Error), "%s",
+		        MPT_tr("empty buffer"));
 		return 0;
 	}
-	if (neqs < 0) {
-		neqs = 0;
-		if (conf && (prof = conf->children)) {
+	i = buf->_vptr->content(buf);
+	if (i && i != 'd') {
+		mpt_log(out, __func__, MPT_LOG(Error), "%s (%d)",
+		        MPT_tr("bad grid content"), i);
+		return 0;
+	}
+	if ((neqs = dat->nval) < 0) {
+		if (!conf || !(prof = conf->children)) {
+			neqs = 256;
+		} else {
+			neqs = 0;
 			while (prof) {
 				++neqs;
 				prof = prof->next;
@@ -207,7 +218,7 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 	ip->_it._vptr = &iterProfileIter;
 	ip->t = t;
 	ip->pos = 0;
-	ip->len = dat->nval;
+	ip->len = len;
 	ip->neqs = neqs;
 	
 	if (!conf) {
@@ -231,6 +242,7 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 				return 0;
 			}
 			if (!len) {
+				ip->neqs = i;
 				break;
 			}
 			desc += len;

@@ -70,7 +70,9 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		/* increase buffer size */
 		if (!len) {
 			if (!(dest = mpt_values_prepare(grid, len = 16))) {
-				if (buf) buf->_used = old;
+				if (buf) {
+					buf->_used = old;
+				}
 				return MPT_ERROR(BadOperation);
 			}
 			buf = grid->_buf;

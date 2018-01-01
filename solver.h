@@ -570,11 +570,12 @@ extern int mpt_solver_data_nls(MPT_STRUCT(solver_data) *, const MPT_STRUCT(value
 extern void mpt_timeradd_sys(struct timeval *, const struct rusage *, const struct rusage *);
 extern void mpt_timeradd_usr(struct timeval *, const struct rusage *, const struct rusage *);
 
+/* query iteration source */
+extern MPT_INTERFACE(iterator) *mpt_conf_iter(MPT_INTERFACE(metatype) **, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* set problem specific parameters */
 extern int mpt_conf_nls(MPT_STRUCT(solver_data) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-extern int mpt_conf_pde(MPT_STRUCT(solver_data) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-extern int mpt_conf_ode(MPT_STRUCT(solver_data) *, double , const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *, MPT_STRUCT(node) *, MPT_INTERFACE(iterator) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* configure graphic output and bindings */
 extern int mpt_conf_graphic(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *);
@@ -582,7 +583,7 @@ extern int mpt_conf_graphic(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *, M
 extern int mpt_conf_history(MPT_INTERFACE(object) *, const MPT_STRUCT(node) *);
 
 /* create profile data */
-extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *, double , const MPT_STRUCT(node) *, int , MPT_INTERFACE(logger) *);
+extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *, double , const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *);
 
 /* append user data */
 extern int mpt_conf_param(MPT_STRUCT(array) *, const MPT_STRUCT(node) *, int);
