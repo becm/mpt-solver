@@ -400,28 +400,28 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	/* setup PDE time and profile data */
 	if (!dat->nval) {
-		int err;
 		curr = mpt_node_next(conf->children, "profile");
 		/* no profile data requested or available */
 		if (!ret || !curr || !(mt = curr->_meta)) {
-			MPT_INTERFACE(iterator) *it = 0;
 			double t = 0;
-			if ((curr = mpt_node_next(conf->children, "times"))
-			    && (mt = curr->_meta)
-			    && (err = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &it)) > 0
-			    && it
-			    && (err = it->_vptr->get(it, 'd', &t)) >= 0
-			    && (err = mpt_solver_setvalue(obj, 0, t)) < 0) {
+			if (!args
+			    && (curr = mpt_node_next(conf->children, "times"))
+			    && (mt = curr->_meta)) {
+				ret = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &args);
+			}
+			 if (args
+			    && (ret = args->_vptr->get(args, 'd', &t)) >= 0
+			    && (ret = mpt_solver_setvalue(obj, 0, t)) < 0) {
 				mpt_log(info, 0, MPT_LOG(Error), "%s: %s",
 				        MPT_tr("solver"), MPT_tr("failed to set initial time"));
-				return err;
+				return ret;
 			}
 		}
 		/* process profile data */
-		else if ((err = obj->_vptr->setProperty(obj, 0, mt)) < 0) {
+		else if ((ret = obj->_vptr->setProperty(obj, 0, mt)) < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("PDE init state assignment failed"));
-			return err;
+			return ret;
 		}
 	}
 	else if (ret++) {
