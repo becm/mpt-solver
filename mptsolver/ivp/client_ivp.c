@@ -214,13 +214,14 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	if (!porg->len) {
 		MPT_INTERFACE(logger) *info = loggerIVP(ivp);
 		int ret = mpt_node_parse(conf, val, info);
-		if (ret < 0) {
-			return ret;
-		}
 		info = loggerIVP(ivp);
-		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
-		        MPT_tr("loaded IVP client config file"));
-		
+		if (ret < 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+			        MPT_tr("failed to load client config"));
+		} else {
+			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
+			        MPT_tr("loaded client config file"));
+		}
 		return ret;
 	}
 	if (!(conf = mpt_node_assign(&conf->children, porg, val))) {

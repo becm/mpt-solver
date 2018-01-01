@@ -54,23 +54,26 @@ extern int mpt_solver_param(MPT_INTERFACE(object) *obj, MPT_STRUCT(node) *base, 
 	}
 	if (sub) {
 		MPT_STRUCT(property) pr;
-		mpt_solver_pset(obj, sub, maskGeneric, out);
 		
+		if (mpt_object_set_nodes(obj, ~maskGeneric, sub, out)) {
+			ret |= 0x1;
+		}
 		pr.name = "";
 		pr.desc = 0;
 		
 		if (obj->_vptr->property(obj, &pr) >= 0
 		    && pr.name
 		    && (conf = mpt_node_next(sub, pr.name))
-		    && (sub = conf->children)) {
-			mpt_solver_pset(obj, sub, maskSpecific, out);
+		    && (sub = conf->children)
+		    && mpt_object_set_nodes(obj, ~maskSpecific, sub, out)) {
+			ret |= 0x2;
 		}
-		ret |= 0x1;
+		
 	}
 	if ((conf = mpt_node_next(base, "solver"))
-	    && (sub = conf->children)) {
-		mpt_solver_pset(obj, sub, maskGeneric, out);
-		ret |= 0x2;
+	    && (sub = conf->children)
+	    && mpt_object_set_nodes(obj, ~maskSpecific, sub, out)) {
+		ret |= 0x10;
 	}
 	return ret;
 }

@@ -166,9 +166,13 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	if (!porg->len) {
 		MPT_INTERFACE(logger) *info = loggerNLS(nls);
 		int ret = mpt_node_parse(conf, val, info);
-		if (ret >= 0) {
+		info = loggerNLS(nls);
+		if (ret < 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s",
+			        MPT_tr("failed to load client config"));
+		} else {
 			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
-			        MPT_tr("loaded NLS client config file"));
+			        MPT_tr("loaded client config file"));
 		}
 		return ret;
 	}

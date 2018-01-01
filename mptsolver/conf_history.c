@@ -46,12 +46,5 @@ extern int mpt_conf_history(MPT_INTERFACE(object) *out, const MPT_STRUCT(node) *
 		}
 		return 1;
 	}
-	ret = 0;
-	do {
-		/* apply options with non-empty name */
-		if (mpt_object_set_node(out, conf, flags) >= 0) {
-			++ret;
-		}
-	} while ((conf = conf->next));
-	return ret;
+	return mpt_object_set_nodes(out, flags, conf, 0);
 }
