@@ -1,7 +1,9 @@
 # meson.build.gen: *.c
 src = files(
-  'solver_data_fini.c',
-  'solver_data_grid.c',
+  'client_nls.c',
+  'conf_nls.c',
+  'init_nls.c',
   'solver_data_nls.c',
   'solver_data_param.c',
+  'solver_output_nls.c',
 )

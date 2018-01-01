@@ -16,9 +16,9 @@ SHLIB_OBJS = libinfo.o ${OBJS}
 LDLIBS = -lmptplot -lmptloader -lmptcore
 #
 # source summary
-SRCS := $(wildcard client_*.c solver_*.c init_*.c) \
-	$(wildcard conf/*.c data/*.c output/*.c) \
-	timeradd.c steps_ode.c residuals_cdiff.c
+SRCS := $(wildcard conf_*.c output_*.c solver_*.c) \
+	$(wildcard ivp/*.c nls/*.c) \
+	timeradd.c
 #
 # import library creation settings
 DIR_TOP = ${MPT_PREFIX}

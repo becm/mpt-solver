@@ -2,21 +2,19 @@
 # build definition for mpt solver library
 
 solv_src = files(
-  'client_ivp.c', 'client_nls.c',
-  'init_ivp.c', 'init_pde.c', 'init_nls.c',
-  'residuals_cdiff.c',
+  'conf_graphic.c', 'conf_history.c', 'conf_param.c',
+  'output_solver_history.c', 'output_solver_data.c',
   'solver_alias.c',
-  'solver_dispatch.c',
+  'solver_data_fini.c', 'solver_dispatch.c',
   'solver_load.c',
+  'solver_output_query.c',
   'solver_param.c', 'solver_print.c', 'solver_pset.c',
-  'solver_read.c',
-  'solver_require.c',
-  'solver_setvalue.c', 'solver_statistics.c',
+  'solver_read.c', 'solver_require.c',
+  'solver_statistics.c',
   'solver_typeid.c',
-  'steps_ode.c',
   'timeradd.c'
 )
-foreach d : [ 'conf', 'data', 'output' ]
+foreach d : [ 'ivp', 'nls' ]
   subdir(d)
   solv_src += src
 endforeach
