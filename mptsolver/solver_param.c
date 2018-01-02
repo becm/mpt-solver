@@ -34,9 +34,10 @@ extern int mpt_solver_param(MPT_INTERFACE(object) *obj, MPT_STRUCT(node) *base, 
 	    && !(sub = conf->children)
 	    && (fname = mpt_node_data(conf, 0))) {
 		MPT_STRUCT(value) val;
+		static const uint8_t fmt[] = "ss";
 		const char *arg[2];
 		
-		val.fmt = "ss";
+		val.fmt = fmt;
 		val.ptr = arg;
 		
 		arg[0] = fname;

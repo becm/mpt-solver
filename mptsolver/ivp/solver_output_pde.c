@@ -52,7 +52,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 {
 	const MPT_STRUCT(buffer) *buf;
 	const struct iovec *vec;
-	const char *fmt;
+	const uint8_t *fmt;
 	const uint8_t *pass;
 	const double *grid, *y, *t;
 	size_t i, glen, ylen, passlen, ld;

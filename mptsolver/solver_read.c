@@ -21,15 +21,16 @@ static const char solconfName[] = "solconf";
 static int parseNode(MPT_STRUCT(node) *conf, MPT_INTERFACE(iterator) *args, const char *fname, const char *format, MPT_INTERFACE(logger) *log)
 {
 	MPT_STRUCT(value) val;
-	const char *dat[2];
+	static const uint8_t fmt[] = "ss";
+	const char *arg[2];
 	int ret;
 	
 	/* use fallback name */
-	val.fmt = "ss";
-	val.ptr = dat;
+	val.fmt = fmt;
+	val.ptr = arg;
 	
-	dat[0] = fname;
-	dat[1] = format;
+	arg[0] = fname;
+	arg[1] = format;
 	
 	if (args && (ret = args->_vptr->get(args, MPT_ENUM(TypeValue), &val)) < 0) {
 		if ((ret = args->_vptr->get(args, 's', &fname)) < 0

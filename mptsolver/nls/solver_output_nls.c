@@ -98,7 +98,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 {
 	const MPT_STRUCT(buffer) *buf;
 	const uint8_t *pass;
-	const char *fmt;
+	const uint8_t *fmt;
 	const struct iovec *vec;
 	const double *res, *par;
 	size_t passlen;

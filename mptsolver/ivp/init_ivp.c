@@ -22,7 +22,7 @@
  */
 extern int mpt_init_ivp(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
 {
-	static const char fmt[] = { 'd', MPT_value_toVector('d'), 0 };
+	static const uint8_t fmt[] = { 'd', MPT_value_toVector('d'), 0 };
 	const MPT_STRUCT(buffer) *buf;
 	MPT_STRUCT(value) val;
 	struct {

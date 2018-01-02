@@ -126,8 +126,12 @@ static int iterProfileConv(const MPT_INTERFACE(metatype) *mt, int type, void *pt
 	const MPT_STRUCT(iterProfile) *p = (void *) mt;
 	
 	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeIterator), 0 };
-		if (ptr) *((const char **) ptr) = fmt;
+		static const uint8_t fmt[] = { MPT_ENUM(TypeIterator), 'd', 0 };
+		if (ptr) {
+			*((const uint8_t **) ptr) = fmt;
+			return MPT_value_toVector('d');
+		}
+		return MPT_ENUM(TypeIterator);
 	}
 	if (type == 'd') {
 		if (ptr) *((double *) ptr) = p->t;

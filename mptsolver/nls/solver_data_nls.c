@@ -12,7 +12,7 @@
 
 extern int mpt_solver_data_nls(MPT_STRUCT(solver_data) *dat, const MPT_STRUCT(value) *val)
 {
-	const char *fmt;
+	const uint8_t *fmt;
 	const struct iovec *vec;
 	const double *par;
 	double *dst;

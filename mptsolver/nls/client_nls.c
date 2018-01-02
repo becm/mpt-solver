@@ -250,8 +250,10 @@ static int convNLS(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 		me = MPT_ENUM(TypeMeta);
 	}
 	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeConfig), 0 };
-		if (ptr) *((const char **) ptr) = fmt;
+		static const uint8_t fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeConfig), 0 };
+		if (ptr) {
+			*((const uint8_t **) ptr) = fmt;
+		}
 		return me;
 	}
 	if (type == MPT_ENUM(TypeConfig)) {

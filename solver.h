@@ -484,11 +484,13 @@ struct vecpar
 	{
 		struct value v;
 		if (base) {
-			static const char fmt[2] = { static_cast<char>(vectorIdentifier<T>()), 0 };
+			static value::format fmt;
+			fmt.set(vectorIdentifier<T>());
 			v.fmt = fmt;
 			v.ptr = this;
 		} else {
-			static const char fmt[2] = { static_cast<char>(typeIdentifier<T>()), 0 };
+			static value::format fmt;
+			fmt.set(typeIdentifier<T>());
 			v.fmt = fmt;
 			v.ptr = &d.val;
 		}
