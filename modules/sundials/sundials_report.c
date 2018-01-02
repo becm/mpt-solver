@@ -6,6 +6,8 @@
 
 extern int sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(PropertyHandler) out, void *usr)
 {
+	static const uint8_t fmt_full[] = "s";
+	static const uint8_t fmt_band[] = "sii";
 	MPT_STRUCT(property) pr;
 	struct {
 		const char *type;
@@ -14,7 +16,7 @@ extern int sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(P
 	
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";
-	pr.val.fmt = "s";
+	pr.val.fmt = fmt_full;
 	pr.val.ptr = &val;
 	
 	switch (sd->jacobian) {
@@ -26,11 +28,13 @@ extern int sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(P
 		case MPT_SOLVER_ENUM(SundialsJacDense) | MPT_SOLVER_ENUM(SundialsJacNumeric):
 			val.type = "full"; break;
 		case MPT_SOLVER_ENUM(SundialsJacBand):
-			val.type = "banded(user)"; pr.val.fmt = "sii";
+			pr.val.fmt = fmt_band;
+			val.type = "banded(user)";
 			val.mu = sd->mu; val.ml = sd->ml;
 			break;
 		case MPT_SOLVER_ENUM(SundialsJacBand) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			val.type = "banded"; pr.val.fmt = "sii";
+			pr.val.fmt = fmt_band;
+			val.type = "banded";
 			val.mu = sd->mu; val.ml = sd->ml;
 			break;
 		default:

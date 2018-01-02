@@ -168,8 +168,9 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 		}
 	}
 	else if (!*name) {
-		prop->name = "radau"; prop->desc = "implicit Runge-Kutta DAE solver";
-		prop->val.fmt  = "iu"; prop->val.ptr = &rd->ivp;
+		prop->name = "radau";
+		prop->desc = "implicit Runge-Kutta DAE solver";
+		mpt_solver_module_value_ivp(&prop->val, &rd->ivp);
 		return (rd->ivp.neqs == 1 && !rd->ivp.pint) ? 0 : 1;
 	}
 	else if (!strcasecmp(name, "version")) {
@@ -181,26 +182,35 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
-		if (!rd) { prop->val.fmt = "d"; prop->val.ptr = &rd->atol.d.val; }
-		else { id = mpt_solver_module_tol_get(&rd->atol, &prop->val); }
-		prop->name = "atol"; prop->desc = "absolute tolerances";
+		prop->name = "atol";
+		prop->desc = "absolute tolerances";
+		if (rd) {
+			return mpt_solver_module_tol_get(&prop->val, &rd->atol);
+		}
+		mpt_solver_module_value_double(&prop->val, &rd->atol.d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
-		if (!rd) { prop->val.fmt = "d"; prop->val.ptr = &rd->rtol.d.val; }
-		else { id = mpt_solver_module_tol_get(&rd->rtol, &prop->val); }
-		prop->name = "rtol"; prop->desc = "relative tolerances";
+		prop->name = "rtol";
+		prop->desc = "relative tolerances";
+		if (rd) {
+			return mpt_solver_module_tol_get(&prop->val, &rd->rtol);
+		}
+		mpt_solver_module_value_double(&prop->val, &rd->rtol.d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jacobian", 3) : pos == ++id) {
-		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
-		prop->val.fmt  = "i"; prop->val.ptr = &rd->ijac;
-		return id;
+		prop->name = "jacobian";
+		prop->desc = "(user) jacobian parameters";
+		mpt_solver_module_value_int(&prop->val, &rd->ijac);
+		if (!rd) return id;
+		return rd->ijac ? 1 : 0;
 	}
 	/* set initial stepsize */
 	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) : pos == ++id) {
-		prop->name = "stepinit"; prop->desc = "explicit initial stepsize";
-		prop->val.fmt = "d"; prop->val.ptr = &rd->h;
+		prop->name = "stepinit";
+		prop->desc = "explicit initial stepsize";
+		mpt_solver_module_value_double(&prop->val, &rd->h);
 		if (!rd) return id;
 		return rd->h ? 1 : 0;
 	}

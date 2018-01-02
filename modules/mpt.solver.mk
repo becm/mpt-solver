@@ -15,8 +15,8 @@ INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and other shared operations
 mod_tol = tol_check tol_set tol_get
-mod_ivp = ivpset nextval ${mod_tol} valloc
-mod_nls = nlsset valloc
+mod_ivp = ivpset nextval ${mod_tol} valloc value
+mod_nls = nlsset valloc value
 mod_sol = nlsset ${mod_ivp}
 #
 # base module includes

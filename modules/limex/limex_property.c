@@ -237,103 +237,122 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 		}
 	}
 	else if (!*name) {
-		prop->name = "limex"; prop->desc = "extrapolation integrator for linearly-implicit DAE";
-		prop->val.fmt = "iu"; prop->val.ptr = &lx->ivp;
-		return (lx->ivp.pint || lx->ivp.neqs != 1) ? 1 : 0;
+		prop->name = "limex";
+		prop->desc = "extrapolation integrator for linearly-implicit DAE";
+		return mpt_solver_module_value_ivp(&prop->val, lx ? &lx->ivp : 0);
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
-		prop->name = "version"; prop->desc = "solver release information";
-		prop->val.fmt= 0; prop->val.ptr = version;
+		prop->name = "version";
+		prop->desc = "solver release information";
+		prop->val.fmt = 0;
+		prop->val.ptr = version;
 		return 0;
 	}
 	
 	id = 0;
 	if (name ? !strcasecmp(name, "atol") : pos == id++) {
-		if (!lx) { prop->val.fmt = "d"; prop->val.ptr = &lx->atol.d.val; }
-		else { id = mpt_solver_module_tol_get(&lx->atol, &prop->val); }
-		prop->name = "atol"; prop->desc = "absolute tolerances";
+		prop->name = "atol";
+		prop->desc = "absolute tolerances";
+		if (lx) {
+			return mpt_solver_module_tol_get(&prop->val, &lx->atol);
+		}
+		mpt_solver_module_value_double(&prop->val, &lx->atol.d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == id++) {
-		if (!lx) { prop->val.fmt = "d"; prop->val.ptr = &lx->rtol.d.val; }
-		else { id = mpt_solver_module_tol_get(&lx->rtol, &prop->val); }
-		prop->name = "rtol"; prop->desc = "relative tolerances";
+		prop->name = "rtol";
+		prop->desc = "relative tolerances";
+		if (lx) {
+			return mpt_solver_module_tol_get(&prop->val, &lx->rtol);
+		}
+		mpt_solver_module_value_double(&prop->val, &lx->rtol.d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == id++) {
-		prop->name = "jacobian"; prop->desc = "(user) jacobian settings";
-		prop->val.fmt = "iii"; prop->val.ptr = lx->iopt + 6;
+		static const uint8_t fmt[] = "iii";
+		prop->name = "jacobian";
+		prop->desc = "(user) jacobian settings";
+		prop->val.fmt = fmt;
+		prop->val.ptr = lx->iopt + 6;
 		if (!lx) return id;
 		return lx->iopt[6] || lx->iopt[7] != lx->ivp.neqs || lx->iopt[8] != lx->ivp.neqs;
 	}
 	if (name ? (!strcasecmp(name, "h") || !strcasecmp(name, "initstep")) : pos == id++) {
-		prop->name = "h"; prop->desc = "initial/next stepsize";
-		prop->val.fmt = "d"; prop->val.ptr = &lx->h;
+		prop->name = "h";
+		prop->desc = "initial/next stepsize";
+		mpt_solver_module_value_double(&prop->val, &lx->h);
 		if (!lx) return id;
 		return lx->h ? 1 : 0;
 	}
 	/* integer parameter */
 	if (name ? (!strcasecmp(name, "monitor") || !strcasecmp(name, "iopt1")) : pos == id++) {
-		prop->name = "monitor"; prop->desc = "integration monitor output";
-		prop->val.fmt = "i"; prop->val.ptr = lx->iopt;
+		prop->name = "monitor";
+		prop->desc = "integration monitor output";
+		mpt_solver_module_value_int(&prop->val, &lx->iopt[0]);
 		if (!lx) return id;
 		return lx->iopt[0] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "solout") || !strcasecmp(name, "iopt3")) : pos == id++) {
-		prop->name = "solout"; prop->desc = "(intermediate) solution output";
-		prop->val.fmt = "i"; prop->val.ptr = lx->iopt+2;
+		prop->name = "solout";
+		prop->desc = "(intermediate) solution output";
+		mpt_solver_module_value_int(&prop->val, &lx->iopt[2]);
 		if (!lx) return id;
 		return lx->iopt[2] ? 1 : 0;
 	}
 	if (name ? (!strncasecmp(name, "bnos", 4) || !strcasecmp(name, "iopt5")) : pos == id++) {
-		prop->name = "bnosingular"; prop->desc = "B-matrix may not be singular";
-		prop->val.fmt = "i"; prop->val.ptr = lx->iopt+4;
+		prop->name = "bnosingular";
+		prop->desc = "B-matrix may not be singular";
+		mpt_solver_module_value_int(&prop->val, &lx->iopt[4]);
 		if (!lx) return id;
 		return lx->iopt[4] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "jacreuse") || !strcasecmp(name, "iopt10")) : pos == id++) {
-		prop->name = "jacreuse"; prop->desc = "try to reuse jacobian";
-		prop->val.fmt = "i"; prop->val.ptr = lx->iopt+9;
+		prop->name = "jacreuse";
+		prop->desc = "try to reuse jacobian";
+		mpt_solver_module_value_int(&prop->val, &lx->iopt[9]);
 		if (!lx) return id;
 		return lx->iopt[9] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "single") || !strcasecmp(name, "iopt12")) : pos == id++) {
-		prop->name = "single"; prop->desc = "single step mode";
-		prop->val.fmt = "i"; prop->val.ptr = lx->iopt+11;
+		prop->name = "single";
+		prop->desc = "single step mode";
+		mpt_solver_module_value_int(&prop->val, &lx->iopt[11]);
 		if (!lx) return id;
 		return lx->iopt[11] ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "denseout") : pos == id++) {
-		prop->name = "denseout"; prop->desc = "dense output settings";
-		prop->val.fmt = "i"; prop->val.ptr = lx->iopt+12;
+		prop->name = "denseout";
+		prop->desc = "dense output settings";
+		mpt_solver_module_value_int(&prop->val, &lx->iopt[12]);
 		if (!lx) return id;
 		if (lx->iopt[12] == 1 || lx->iopt[12] == 2) {
-			prop->val.fmt = "ii";
-			return 1;
+			return 2;
 		}
 		if (lx->iopt[12] == 3) {
-			prop->val.fmt = "d";
-			prop->val.ptr = lx->ropt+1;
+			mpt_solver_module_value_double(&prop->val, &lx->ropt[1]);
 			return 1;
 		}
 		return 0;
 	}
 	if (name ? (!strcasecmp(name, "tend") || !strcasecmp(name, "ropt3")) : pos == id++) {
-		prop->name = "tend"; prop->desc = "dense output settings";
-		prop->val.fmt = "d"; prop->val.ptr = lx->ropt+2;
+		prop->name = "tend";
+		prop->desc = "dense output settings";
+		mpt_solver_module_value_double(&prop->val, &lx->ropt[2]);
 		if (!lx) return id;
 		return lx->iopt[16] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "plotjac") || !strcasecmp(name, "iopt18")) : pos == id++) {
-		prop->name = "plotjac"; prop->desc = "dense output settings";
-		prop->val.fmt = "i"; prop->val.ptr = lx->iopt+17;
+		prop->name = "plotjac";
+		prop->desc = "dense output settings";
+		mpt_solver_module_value_int(&prop->val, &lx->iopt[17]);
 		if (!lx) return id;
 		return lx->iopt[17] != 0;
 	}
 	if (name ? (!strcasecmp(name, "maxstep") || !strcasecmp(name, "ropt1")) : pos == id++) {
-		prop->name = "ipos"; prop->desc = "maximum internal step size";
-		prop->val.fmt = "d"; prop->val.ptr = lx->ropt;
+		prop->name = "ipos";
+		prop->desc = "maximum internal step size";
+		mpt_solver_module_value_double(&prop->val, &lx->ropt[0]);
 		if (!lx) return id;
 		return lx->ropt[0] ? 1 : 0;
 	}
@@ -342,14 +361,18 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 		return MPT_ERROR(BadArgument);
 	}
 	if (!strcasecmp(name, "ipos")) {
-		prop->name = "ipos"; prop->desc = "maximum internal step size";
-		prop->val.fmt = "i"; prop->val.ptr = lx->ipos;
-		return lx->ivp.neqs * (lx->ivp.pint + 1);
+		prop->name = "ipos";
+		prop->desc = "maximum internal step size";
+		mpt_solver_module_value_int(&prop->val, lx->ipos);
+		id = lx->ivp.pint + 1;
+		return lx->ivp.neqs * id;
 	}
 	if (!strncasecmp(name, "yprime", 2) || !strcasecmp(name, "ys")) {
-		prop->name = "yprime"; prop->desc = "current deviation vector";
-		prop->val.fmt = "d"; prop->val.ptr = lx->ys;
-		return lx->ivp.neqs * (lx->ivp.pint + 1);
+		prop->name = "yprime";
+		prop->desc = "current deviation vector";
+		mpt_solver_module_value_double(&prop->val, lx->ys);
+		id = lx->ivp.pint + 1;
+		return lx->ivp.neqs * id;
 	}
 	return MPT_ERROR(BadArgument);
 }

@@ -24,7 +24,7 @@ extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_
 	}
 	state = ((int *) n2->iv.iov_base)[0];
 	if ((show & MPT_SOLVER_ENUM(Values)) && state >= 0) {
-		static const char fmt[] = { MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
+		static const uint8_t fmt[] = { MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
 		struct {
 			struct iovec x, f;
 		} d;

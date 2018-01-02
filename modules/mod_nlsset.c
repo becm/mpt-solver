@@ -7,6 +7,14 @@
 
 #include "../solver.h"
 
+extern int mpt_solver_module_value_nls(MPT_STRUCT(value) *val, const MPT_NLS_STRUCT(parameters) *par)
+{
+	static const uint8_t fmt[] = "ii";
+	val->fmt = fmt;
+	val->ptr = par;
+	return par && (par->nval != 1 || par->nres) ? 1 : 0;
+}
+
 extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *nls, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_STRUCT(consumable) val;

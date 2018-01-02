@@ -19,7 +19,7 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_values)(const MPT_IVP_STRUCT(parameters) *i
 	*((double *) buf) = t;
 	vec = (void *) (buf + sizeof(t));
 	if (!(len = ivp->pint)) {
-		static const char fmt[] = {
+		static const uint8_t fmt[] = {
 			'd',
 			MPT_value_toVector(MPT_SOLVER_MODULE_DATA_ID),
 			0
@@ -28,7 +28,7 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_values)(const MPT_IVP_STRUCT(parameters) *i
 		vec->iov_len  = ivp->neqs * sizeof(*y);
 		pr.val.fmt = fmt;
 	} else {
-		static const char fmt[] = {
+		static const uint8_t fmt[] = {
 			'd',
 			MPT_value_toVector('d'),
 			MPT_value_toVector(MPT_SOLVER_MODULE_DATA_ID),

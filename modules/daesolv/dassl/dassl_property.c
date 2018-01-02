@@ -253,7 +253,6 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 	}
 	return MPT_ERROR(BadArgument);
 }
-
 /*!
  * \ingroup mptDaesolvDassl
  * \brief set DASSL property
@@ -281,8 +280,9 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		}
 	}
 	else if (!*name) {
-		prop->name = "dassl"; prop->desc = "implicit DAE solver with BDF";
-		prop->val.fmt = "iu"; prop->val.ptr = &da->ivp;
+		prop->name = "dassl";
+		prop->desc = "implicit DAE solver with BDF";
+		mpt_solver_module_value_ivp(&prop->val, &da->ivp);
 		return (da->ivp.neqs == 1 && !da->ivp.pint) ? 0 : 1;
 	}
 	else if (!strcasecmp(name, "version")) {
@@ -294,62 +294,78 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
-		if (!da) { prop->val.fmt = "d"; prop->val.ptr = &da->rtol.d.val; }
-		else { id = mpt_solver_module_tol_get(&da->rtol, &prop->val); }
-		prop->name = "rtol"; prop->desc = "relative tolerances";
+		prop->name = "rtol";
+		prop->desc = "relative tolerances";
+		if (da) {
+			return mpt_solver_module_tol_get(&prop->val, &da->atol);
+		}
+		mpt_solver_module_value_double(&prop->val, &da->atol.d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
-		if (!da) { prop->val.fmt = "d"; prop->val.ptr = &da->rtol.d.val; }
-		else { id = mpt_solver_module_tol_get(&da->rtol, &prop->val); }
-		prop->name = "atol"; prop->desc = "absolute tolerances";
+		prop->name = "atol";
+		prop->desc = "absolute tolerances";
+		if (da) {
+			return mpt_solver_module_tol_get(&prop->val, &da->rtol);
+		}
+		mpt_solver_module_value_double(&prop->val, &da->rtol.d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == ++id) {
-		size_t len = da ? da->iwork.iov_len / sizeof(int) : 0;
-		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
-		prop->val.fmt = "ii"; prop->val.ptr = 0;
+		static const uint8_t fmt[] = "ii";
+		size_t len;
+		prop->name = "jacobian";
+		prop->desc = "(user) jacobian parameters";
+		prop->val.fmt = fmt;
+		prop->val.ptr = 0;
 		if (!da) return id;
+		len = da->iwork.iov_len / sizeof(int);
 		if (len > 1) prop->val.ptr = da->iwork.iov_base;
 		return da->info[5] ? 1 :  0;
 	}
 	if (name ? !strcasecmp(name, "info3") : pos == ++id) {
-		prop->name = "info3"; prop->desc = "output only at tout";
-		prop->val.fmt = "i"; prop->val.ptr = da ? da->info+2 : 0;
+		static const uint8_t fmt[] = "i";
+		prop->name = "info3";
+		prop->desc = "output only at tout";
+		prop->val.fmt = fmt;
+		prop->val.ptr = da ? da->info + 2 : 0;
 		if (!da) return id;
 		return da->info[2] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "info4") || !strcasecmp(name, "tstop")) : pos == ++id) {
-		size_t len = da ? da->rwork.iov_len / sizeof(double) : 0;
-		prop->name = "tstop"; prop->desc = "do not step past 'tstop'";
-		prop->val.fmt = "d"; prop->val.ptr = len ? da->rwork.iov_base : 0;
+		prop->name = "tstop";
+		prop->desc = "do not step past 'tstop'";
+		pos = mpt_solver_module_value_rvec(&prop->val, 1, da ? &da->rwork : 0);
 		if (!da) return id;
 		return da->info[3] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "info7") || !strcasecmp(name, "hmax")) : pos == ++id) {
-		size_t len = da ? da->rwork.iov_len / sizeof(double) : 0;
-		prop->name = "hmax"; prop->desc = "maximum step size";
-		prop->val.fmt = "d"; prop->val.ptr = len > 1 ? ((double *) da->rwork.iov_base) + 1 : 0;
+		prop->name = "hmax";
+		prop->desc = "maximum step size";
+		pos = mpt_solver_module_value_rvec(&prop->val, 2, da ? &da->rwork : 0);
 		if (!da) return id;
 		return da->info[6] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "info8") || !strcasecmp(name, "h0") || !strcasecmp(name, "initstep")) : pos == ++id) {
-		size_t len = da ? da->rwork.iov_len / sizeof(double) : 0;
-		prop->name = "h0"; prop->desc = "explicit initial step size";
-		prop->val.fmt = "d"; prop->val.ptr = len > 2 ? ((double *) da->rwork.iov_base) + 2 : 0;
+		prop->name = "h0";
+		prop->desc = "explicit initial step size";
+		pos = mpt_solver_module_value_rvec(&prop->val, 3, da ? &da->rwork : 0);
 		if (!da) return id;
 		return da->info[7] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "info9") || !strcasecmp(name, "maxord")) : pos == ++id) {
-		size_t len = da ? da->iwork.iov_len / sizeof(int) : 0;
-		prop->name = "maxord"; prop->desc = "maximum order";
-		prop->val.fmt = "i"; prop->val.ptr = len > 2 ? ((int *) da->iwork.iov_base) + 2 : 0;
+		prop->name = "maxord";
+		prop->desc = "maximum order";
+		pos = mpt_solver_module_value_rvec(&prop->val, 3, da ? &da->iwork : 0);
 		if (!da) return id;
 		return da->info[8] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "info10") || !strncasecmp(name, "nonnegative", 6)) : pos == ++id) {
-		prop->name = "info10"; prop->desc = "restrict to nonnegative solutions";
-		prop->val.fmt = "i"; prop->val.ptr = da ? da->info + 9 : 0;
+		static const uint8_t fmt[] = "i";
+		prop->name = "nonnegative";
+		prop->desc = "restrict to nonnegative solutions";
+		prop->val.fmt = fmt;
+		prop->val.ptr = da ? da->info + 9 : 0;
 		if (!da) return id;
 		return da->info[9] ? 1 : 0;
 	}
@@ -358,8 +374,11 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		return MPT_ERROR(BadArgument);
 	}
 	if (!strncasecmp(name, "yp", 2)) {
-		prop->name = "yprime"; prop->desc = "current deviation vector";
-		prop->val.fmt = "d"; prop->val.ptr = da->yp;
+		static const uint8_t fmt[] = "d";
+		prop->name = "yprime";
+		prop->desc = "current deviation vector";
+		prop->val.fmt = fmt;
+		prop->val.ptr = da->yp;
 		return da->info[10] ? da->ivp.neqs * (da->ivp.pint + 1) : 0;
 	}
 	return MPT_ERROR(BadArgument);

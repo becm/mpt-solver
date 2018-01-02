@@ -46,7 +46,7 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	++line;
 	}
 	if ((show & MPT_SOLVER_ENUM(Values)) && mpack->info >= 0) {
-		static const char fmt[] = { MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
+		static const uint8_t fmt[] = { MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
 		struct {
 			struct iovec x, f;
 		} d;
@@ -58,25 +58,27 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 		
 		pr.name = 0;
 		pr.desc = MPT_tr("parameters and residual data");
-		pr.val.fmt = mpack->info ? fmt : fmt+1;
+		pr.val.fmt = mpack->info ? fmt : fmt + 1;
 		pr.val.ptr = &d;
 		
 		out(usr, &pr);
 	}
-	if (!(show & MPT_SOLVER_ENUM(Report))) return line;
-	
+	if (!(show & MPT_SOLVER_ENUM(Report))) {
+		return line;
+	}
 	
 	pr.name = "feval";
 	pr.desc = MPT_tr("function evaluations");
-	pr.val.fmt = "i";
-	pr.val.ptr = &mpack->nfev;
+	mpt_solver_module_value_int(&pr.val, &mpack->nfev);
 	out(usr, &pr);
+	++line;
 	
-	if (!mpack->njev) return line + 1;
-	pr.name = "jeval";
-	pr.desc = MPT_tr("jacobian evaluations");
-	pr.val.fmt = "i";
-	pr.val.ptr = &mpack->njev;
-	out(usr, &pr);
-	return line + 2;
+	if (mpack->njev) {
+		pr.name = "jeval";
+		pr.desc = MPT_tr("jacobian evaluations");
+		mpt_solver_module_value_int(&pr.val, &mpack->njev);
+		out(usr, &pr);
+		++line;
+	}
+	return line;
 }

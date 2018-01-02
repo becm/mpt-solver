@@ -13,6 +13,14 @@
 
 #include "../solver.h"
 
+extern int mpt_solver_module_value_ivp(MPT_STRUCT(value) *val, const MPT_IVP_STRUCT(parameters) *par)
+{
+	static const uint8_t fmt[] = "iu";
+	val->fmt = fmt;
+	val->ptr = par;
+	return par && (par->neqs != 1 || par->pint) ? 1 : 0;
+}
+
 extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_INTERFACE(iterator) *it;
@@ -69,6 +77,7 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_I
 			}
 			return 0;
 		}
+		len = 0;
 	}
 	/* get values from iterator */
 	if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) >= 0) {

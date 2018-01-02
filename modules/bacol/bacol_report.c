@@ -30,8 +30,7 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_T
 	
 	pr.name = "kcol";
 	pr.desc = "collocations";
-	pr.val.fmt = "i";
-	pr.val.ptr = &kcol;
+	mpt_solver_module_value_int(&pr.val, &kcol);
 	out(usr, &pr);
 	++lines;
 	}
@@ -40,27 +39,21 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_T
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	pr.val.fmt = "d";
-	pr.val.ptr = &bac->t;
+	mpt_solver_module_value_double(&pr.val, &bac->t);
 	out(usr, &pr);
 	++lines;
 	
 	pr.name = "nint";
 	pr.desc = "intervals";
-	pr.val.fmt = "i";
-	pr.val.ptr = &bac->nint;
+	mpt_solver_module_value_int(&pr.val, &bac->nint);
 	out(usr, &pr);
 	++lines;
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)) {
-		const char fmt[] = { 'd', 0 };
-		double t = bac->t;
-
 		pr.name = 0;
 		pr.desc = MPT_tr("BACOL solver state");
-		pr.val.fmt = fmt;
-		pr.val.ptr = &t;
+		mpt_solver_module_value_double(&pr.val, &bac->t);
 		out(usr, &pr);
 	}
 	return lines;

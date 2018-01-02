@@ -13,17 +13,17 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 {
 	MPT_STRUCT(property) pr;
 	int line = 0, *iwk = me->iwork.iov_base;
-	double *rwk = me->rwork.iov_base;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("method for jacobian");
 	if (me->jbnd) {
+		static const uint8_t fmt[] = "sii";
 		struct { const char *t; int32_t mu, ml; } val;
 		val.t = (me->jac && !me->jnum) ? "banded(user)" : "banded";
 		val.t = MPT_tr(val.t);
 		val.ml = me->mbnd[0]; val.mu = me->mbnd[0];
-		pr.val.fmt = "sii";
+		pr.val.fmt = fmt;
 		pr.val.ptr = &val;
 		out(usr, &pr);
 	} else {
@@ -39,11 +39,11 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 	MPT_SOLVER_MODULE_FCN(ivp_values)(&me->ivp, me->t, me->y, MPT_tr("MEBDFI solver state"), out, usr);
 	}
 	
-	if (show & MPT_SOLVER_ENUM(Status)) {
+	if (show & MPT_SOLVER_ENUM(Status)
+	    && me->rwork.iov_base) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	pr.val.fmt = "d";
-	pr.val.ptr = &me->t;
+	mpt_solver_module_value_double(&pr.val, &me->t);
 	out(usr, &pr);
 	++line;
 	}
@@ -51,64 +51,54 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 	if (show & (MPT_SOLVER_ENUM(Status) | MPT_SOLVER_ENUM(Report)) && iwk) {
 	pr.name = "n";
 	pr.desc = MPT_tr("integration steps");
-	pr.val.fmt = "i";
-	pr.val.ptr = &iwk[4];
+	mpt_solver_module_value_ivec(&pr.val, 5, &me->iwork);
 	out(usr, &pr);
 	++line;
 	}
 	
-	if (show & MPT_SOLVER_ENUM(Status) && rwk) {
+	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	pr.val.fmt = "d";
-	pr.val.ptr = &rwk[1];
+	mpt_solver_module_value_rvec(&pr.val, 2, &me->rwork);
 	out(usr, &pr);
 	++line;
 	}
 	
-	if (show & MPT_SOLVER_ENUM(Report) && iwk) {
+	if (show & MPT_SOLVER_ENUM(Report)) {
 	
-	if (iwk[5]) {
 	pr.name = "nfail";
 	pr.desc = MPT_tr("failed steps");
-	pr.val.fmt = "i";
-	pr.val.ptr = &iwk[5];
+	mpt_solver_module_value_ivec(&pr.val, 6, &me->iwork);
 	out(usr, &pr);
 	++line;
-	}
 	
 	pr.name = "feval";
 	pr.desc = MPT_tr("function evaluations");
-	pr.val.fmt = "i";
-	pr.val.ptr = &iwk[6];
+	mpt_solver_module_value_ivec(&pr.val, 7, &me->iwork);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jeval";
 	pr.desc = MPT_tr("jacobian evaluations");
-	pr.val.fmt = "i";
-	pr.val.ptr = &iwk[7];
+	mpt_solver_module_value_ivec(&pr.val, 8, &me->iwork);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
-	pr.val.fmt = "i";
-	pr.val.ptr = &iwk[8];
+	mpt_solver_module_value_ivec(&pr.val, 9, &me->iwork);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "bsol";
 	pr.desc = MPT_tr("backsolves");
-	pr.val.fmt = "i";
-	pr.val.ptr = &iwk[9];
+	mpt_solver_module_value_ivec(&pr.val, 10, &me->iwork);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "mform";
 	pr.desc = MPT_tr("coeff. matrix form.");
-	pr.val.fmt = "i";
-	pr.val.ptr = &iwk[10];
+	mpt_solver_module_value_ivec(&pr.val, 11, &me->iwork);
 	out(usr, &pr);
 	++line;
 	}

@@ -21,8 +21,8 @@
 extern int MPT_SOLVER_MODULE_FCN(solver_conv)(const MPT_SOLVER(interface) *sol, const MPT_INTERFACE(object) *obj, int type, void *ptr)
 {
 	if (!type) {
-		static const char fmt[] = { MPT_ENUM(TypeObject), MPT_ENUM(TypeMeta), 0 };
-		if (ptr) *((const char **) ptr) = obj ? fmt : fmt + 1;
+		static const uint8_t fmt[] = { MPT_ENUM(TypeObject), MPT_ENUM(TypeMeta), 0 };
+		if (ptr) *((const uint8_t **) ptr) = obj ? fmt : fmt + 1;
 		return MPT_ENUM(TypeMeta);
 	}
 	if (type == MPT_ENUM(TypeMeta)) {

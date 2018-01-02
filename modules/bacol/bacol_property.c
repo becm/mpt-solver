@@ -195,72 +195,92 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 		}
 	}
 	else if (!*name) {
-		prop->name = "bacol"; prop->desc = "SPline PDE solver";
-		prop->val.fmt = "iu"; prop->val.ptr = &bac->ivp;
-		return (bac->ivp.pint || bac->ivp.neqs != 1) ? 1 : 0;
+		prop->name = "bacol";
+		prop->desc = "SPline PDE solver";
+		return mpt_solver_module_value_ivp(&prop->val, bac ? &bac->ivp : 0);
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
-		prop->name = "version"; prop->desc = "solver release information";
-		prop->val.fmt = 0; prop->val.ptr = version;
+		prop->name = "version";
+		prop->desc = "solver release information";
+		prop->val.fmt = 0;
+		prop->val.ptr = version;
 		return 0;
 	}
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
-		if (!bac) { prop->val.fmt = "d"; prop->val.ptr = &bac->atol.d.val; }
-		else { id = mpt_solver_module_tol_get(&bac->atol, &prop->val); }
-		prop->name = "atol"; prop->desc = "absolute tolerances";
+		prop->name = "atol";
+		prop->desc = "absolute tolerances";
+		if (bac) {
+			return mpt_solver_module_tol_get(&prop->val, &bac->atol);
+		}
+		mpt_solver_module_value_double(&prop->val, &bac->atol.d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
-		if (!bac) { prop->val.fmt = "d"; prop->val.ptr = &bac->rtol.d.val; }
-		else { id = mpt_solver_module_tol_get(&bac->rtol, &prop->val); }
-		prop->name = "rtol"; prop->desc = "relative tolerances";
+		prop->name = "rtol";
+		prop->desc = "relative tolerances";
+		if (bac) {
+			return mpt_solver_module_tol_get(&prop->val, &bac->rtol);
+		}
+		mpt_solver_module_value_double(&prop->val, &bac->rtol.d.val);
 		return id;
 	}
 	/* bacol parameters */
 	if (name ? !strcasecmp(name, "kcol") : pos == ++id) {
-		prop->name = "kcol"; prop->desc = "collocations per interval";
-		prop->val.fmt = "n"; prop->val.ptr = &bac->kcol;
+		static const uint8_t fmt[] = "n";
+		prop->name = "kcol";
+		prop->desc = "collocations per interval";
+		prop->val.fmt = fmt;
+		prop->val.ptr = &bac->kcol;
 		if (!bac) return id;
 		return bac->kcol == 2 ? 0 : 1;
 	}
 	if (name ? !strcasecmp(name, "nint") : pos == ++id) {
-		prop->name = "nint"; prop->desc = "number of internal intervals";
-		prop->val.fmt = "i"; prop->val.ptr = &bac->nint;
+		prop->name = "nint";
+		prop->desc = "number of internal intervals";
+		mpt_solver_module_value_int(&prop->val, &bac->nint);
 		if (!bac) return id;
 		return bac->nint == 10 ? 0 : 1;
 	}
 	if (name ? (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) : pos == ++id) {
-		prop->name = "iout"; prop->desc = "number of internal intervals";
-		prop->val.fmt = "i"; prop->val.ptr = &bac->ivp.pint;
+		static const uint8_t fmt[] = "u";
+		prop->name = "iout";
+		prop->desc = "number of output intervals";
+		prop->val.fmt = fmt;
+		prop->val.ptr = &bac->ivp.pint;
 		if (!bac) return id;
-		return bac->ivp.pint ? 1 : 0;
+		return bac->ivp.pint != 10 ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "nintmx") : pos == ++id) {
-		prop->name = "nintmx"; prop->desc = "maximum internal intervals";
-		prop->val.fmt = "i"; prop->val.ptr = &bac->nintmx;
+		prop->name = "nintmx";
+		prop->desc = "maximum internal intervals";
+		mpt_solver_module_value_int(&prop->val, &bac->nintmx);
 		if (!bac) return id;
 		return bac->nintmx == MPT_BACOL_NIMAXDEF ? 0 : 1;
 	}
 	if (name ? !strcasecmp(name, "dirichlet") : pos == ++id) {
-		prop->name = "dirichlet"; prop->desc = "boundaries of dirichlet type";
-		prop->val.fmt = "i"; prop->val.ptr = &bac->mflag.bdir;
+		prop->name = "dirichlet";
+		prop->desc = "boundaries of dirichlet type";
+		mpt_solver_module_value_int(&prop->val, &bac->mflag.bdir);
 		if (!bac) return id;
 		return bac->mflag.bdir;
 	}
 	/* ode parameter */
 	if (name ? !strcasecmp(name, "stepinit") : pos == ++id) {
-		prop->name = "stepinit"; prop->desc = "expl. initial stepsize";
-		prop->val.fmt = "d"; prop->val.ptr = &bac->initstep;
+		prop->name = "stepinit";
+		prop->desc = "expl. initial stepsize";
+		mpt_solver_module_value_double(&prop->val, &bac->initstep);
 		if (!bac) return id;
-		return bac->mflag.step;
+		return bac->mflag.step ? 1 : 0;
 	}
 	/* solving backend */
 	if (name ? !strcasecmp(name, "backend") : pos == ++id) {
-		prop->name = "backend"; prop->desc = "solver step backend";
-		prop->val.fmt = 0; prop->val.ptr = 0;
+		prop->name = "backend";
+		prop->desc = "solver step backend";
+		prop->val.fmt = 0;
+		prop->val.ptr = 0;
 		if (!bac) return id;
 		switch (bac->_backend) {
 #ifdef MPT_BACOL_DASSL
@@ -276,22 +296,25 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 #ifdef MPT_BACOL_DASSL
 	/* dassl parameter */
 	if (!bac || bac->_backend == 'd' || bac->_backend == 'D') {
-	if (name ? !strcasecmp(name, "tstop") : pos == ++id) {
-		prop->name = "tstop"; prop->desc = "max. time allowed";
-		prop->val.fmt = "d"; prop->val.ptr = &bac->mflag.bdir;
+	if (name ? (!strcasecmp(name, "tstop") || !strcasecmp(name, "mflag(3)")) : pos == ++id) {
+		prop->name = "tstop";
+		prop->desc = "max. time allowed";
+		mpt_solver_module_value_rvec(&prop->val, 1, bac ? &bac->rpar : 0);
 		if (!bac) return id;
-		return id;
+		return bac->mflag.bdir ? 1 : 0;
 	}
 	/* dassl parameter */
-	if (name ? !strcasecmp(name, "maxstep") : pos == ++id) {
-		prop->name = "maxstep"; prop->desc = "max. steps per call";
-		prop->val.fmt = "d"; prop->val.ptr = &bac->bd.tstop;
+	if (name ? (!strcasecmp(name, "maxstep") || !strcasecmp(name, "mflag(4)")) : pos == ++id) {
+		prop->name = "maxstep";
+		prop->desc = "max. steps per call";
+		mpt_solver_module_value_ivec(&prop->val, 8, bac ? &bac->ipar : 0);
 		if (!bac) return id;
-		return bac->mflag.tstop;
+		return bac->mflag.tstop ? 1 : 0;
 	}
-	if (name ? (!strcasecmp(name, "dasslbdf") || !strcasecmp(name, "bdf")) : pos == ++id) {
-		prop->name = "dasslbdf"; prop->desc = "max. number of BDF order";
-		prop->val.fmt = "i"; prop->val.ptr = &bac->mflag.bdir;
+	if (name ? (!strcasecmp(name, "dasslbdf") || !strcasecmp(name, "bdf") || !strcasecmp(name, "mflag(7)")) : pos == ++id) {
+		prop->name = "dasslbdf";
+		prop->desc = "max. number of BDF order";
+		mpt_solver_module_value_ivec(&prop->val, 15, bac ? &bac->ipar : 0);
 		if (!bac) return id;
 		return bac->mflag.bdir ? 1 : 0;
 	}

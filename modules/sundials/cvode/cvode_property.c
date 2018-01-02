@@ -134,9 +134,8 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, co
  */
 extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(property) *prop)
 {
-	static const char longfmt[] = { 'l', 0 };
-	static const char realfmt[] = { MPT_SOLVER_ENUM(SundialsRealtype), 0 };
-	static const char dblfmt[] = { 'd', 0 };
+	static const uint8_t longfmt[] = { 'l', 0 };
+	static const uint8_t realfmt[] = { MPT_SOLVER_ENUM(SundialsRealtype), 0 };
 	const char *name;
 	intptr_t pos = 0, id;
 	CVodeMem cv_mem = cv ? cv->mem : 0;
@@ -150,38 +149,51 @@ extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(pro
 		}
 	}
 	else if (!*name) {
-		prop->name = "cvode"; prop->desc = "ODE solver from Sundials Library";
-		prop->val.fmt = "iu"; prop->val.ptr = &cv->ivp;
-		return (cv->ivp.pint || cv->ivp.neqs != 1) ? 1 : 0;
+		prop->name = "cvode";
+		prop->desc = "ODE solver from Sundials Library";
+		return mpt_solver_module_value_ivp(&prop->val, cv ? &cv->ivp : 0);
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
-		prop->name = "version"; prop->desc = "solver release information";
-		prop->val.fmt = 0; prop->val.ptr = version;
+		prop->name = "version";
+		prop->desc = "solver release information";
+		prop->val.fmt = 0;
+		prop->val.ptr = version;
 		return 0;
 	}
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : (pos == ++id)) {
-		if (!cv) { prop->val.fmt = dblfmt; prop->val.ptr = &cv->atol.d.val; }
-		else { id = mpt_solver_module_tol_get(&cv->atol, &prop->val); }
-		prop->name = "atol"; prop->desc = "absolute tolerances";
+		prop->name = "atol";
+		prop->desc = "absolute tolerances";
+		if (cv) {
+			return mpt_solver_module_tol_get(&prop->val, &cv->atol);
+		}
+		mpt_solver_module_value_double(&prop->val, &cv->atol.d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == ++id)) {
-		if (!cv) { prop->val.fmt = dblfmt; prop->val.ptr = &cv->rtol.d.val; }
-		else { id = mpt_solver_module_tol_get(&cv->rtol, &prop->val); };
-		prop->name = "rtol"; prop->desc = "relative tolerances";
+		prop->name = "rtol";
+		prop->desc = "relative tolerances";
+		if (cv) {
+			return mpt_solver_module_tol_get(&prop->val, &cv->rtol);
+		}
+		mpt_solver_module_value_double(&prop->val, &cv->rtol.d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
-		prop->name = "jacobian"; prop->desc = "jacobian type";
-		prop->val.fmt = "y"; prop->val.ptr = &cv->sd.jacobian;
+		static const uint8_t fmt[] = "y";
+		prop->name = "jacobian";
+		prop->desc = "jacobian type";
+		prop->val.fmt = fmt;
+		prop->val.ptr = &cv->sd.jacobian;
 		return cv ? (cv->sd.jacobian ? 1 : 0) : id;
 	}
 	if (name ? !strcasecmp(name, "method") : (pos == ++id)) {
-		prop->name = "method"; prop->desc = "solver method";
-		prop->val.fmt = prop->val.ptr = 0;
+		prop->name = "method";
+		prop->desc = "solver method";
+		prop->val.fmt = 0;
+		prop->val.ptr = 0;
 		if (!cv_mem) return id;
 		switch (cv_mem->cv_lmm) {
 		  case CV_BDF: prop->val.ptr = bdfText; break;
@@ -191,46 +203,54 @@ extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(pro
 		return id;
 	}
 	if (name ? !strcasecmp(name, "maxord") : (pos == ++id)) {
-		prop->name = "maxord"; prop->desc = "maximum order of steps";
-		prop->val.fmt = "i"; prop->val.ptr = 0;
+		const int *ptr = cv_mem ? &cv_mem->cv_qmax : 0;
+		prop->name = "maxord";
+		prop->desc = "maximum order of steps";
+		mpt_solver_module_value_int(&prop->val, ptr);
 		if (!cv_mem) return id;
-		prop->val.ptr = &cv_mem->cv_qmax;
-		return cv_mem->cv_qmax == ADAMS_Q_MAX ? 0 : 1;
+		return *ptr == ADAMS_Q_MAX ? 0 : 1;
 	}
 	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) : (pos == ++id)) {
-		prop->name = "mxstep"; prop->desc = "allowed function evaluations per call";
-		prop->val.fmt = longfmt; prop->val.ptr = 0;
+		const long *ptr = cv_mem ? &cv_mem->cv_mxstep : 0;
+		prop->name = "mxstep";
+		prop->desc = "allowed function evaluations per call";
+		prop->val.fmt = longfmt;
+		prop->val.ptr = ptr;
 		if (!cv_mem) return id;
-		prop->val.ptr = &cv_mem->cv_mxstep;
-		return cv_mem->cv_mxstep ? 1 : 0;
+		return *ptr ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "hnilwarns") : (pos == ++id)) {
-		prop->name = "hnilwarns"; prop->desc = "max. warnings for 't + h == t'";
-		prop->val.fmt = "i"; prop->val.ptr = 0;
+		const int *ptr = cv_mem ? &cv_mem->cv_mxhnil : 0;
+		prop->name = "hnilwarns";
+		prop->desc = "max. warnings for 't + h == t'";
+		mpt_solver_module_value_int(&prop->val, ptr);
 		if (!cv_mem) return id;
-		prop->val.ptr = &cv_mem->cv_mxhnil;
-		return cv_mem->cv_mxhnil ? 1 : 0;
+		return *ptr ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "hin") || !strcasecmp(name, "h0")) : (pos == ++id)) {
-		prop->name = "hin"; prop->desc = "initial stepsize";
-		prop->val.fmt = "d"; prop->val.ptr = 0;
+		const double *ptr = cv_mem ? &cv_mem->cv_hin : 0;
+		prop->name = "hin";
+		prop->desc = "initial stepsize";
+		mpt_solver_module_value_double(&prop->val, ptr);
 		if (!cv_mem) return id;
-		prop->val.ptr = &cv_mem->cv_hin;
-		return cv_mem->cv_hin ? 1 : 0;
+		return *ptr ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "stepmin")) : (pos == ++id)) {
-		prop->name = "hmin"; prop->desc = "minimal stepsize";
-		prop->val.fmt = "d"; prop->val.ptr = 0;
+		const double *ptr = cv_mem ? &cv_mem->cv_hmin : 0;
+		prop->name = "hmin";
+		prop->desc = "minimal stepsize";
+		mpt_solver_module_value_double(&prop->val, ptr);
 		if (!cv_mem) return id;
-		prop->val.ptr = &cv_mem->cv_hmin;
 		return cv_mem->cv_hmin ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) : (pos == ++id)) {
-		prop->name = "hmax"; prop->desc = "maximal stepsize";
-		prop->val.fmt = realfmt; prop->val.ptr = 0;
+		const realtype *ptr = &cv->hmax;
+		prop->name = "hmax";
+		prop->desc = "maximal stepsize";
+		prop->val.fmt = realfmt;
+		prop->val.ptr = ptr;
 		if (!cv) return id;
-		prop->val.ptr = &cv->hmax;
-		return cv->hmax ? 1 : 0;
+		return *ptr ? 1 : 0;
 	}
 	return MPT_ERROR(BadArgument);
 }

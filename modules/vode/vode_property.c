@@ -264,8 +264,20 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT
 	}
 	return MPT_ERROR(BadArgument);
 }
+
+static int getiwork(MPT_STRUCT(value) *val, int pos, const MPT_SOLVER_STRUCT(vode) *vd)
+{
+	return mpt_solver_module_value_ivec(val, pos, vd ? &vd->iwork : 0);
+}
+static int getrwork(MPT_STRUCT(value) *val, int pos, const MPT_SOLVER_STRUCT(vode) *vd)
+{
+	return mpt_solver_module_value_rvec(val, pos, vd ? &vd->rwork : 0);
+}
+
 extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) *prop)
 {
+	static const uint8_t fmt_short[] = "n";
+	static const uint8_t fmt_byte[]  = "b";
 	const char *name;
 	intptr_t pos = -1, id;
 	
@@ -278,8 +290,9 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 		}
 	}
 	else if (!*name) {
-		prop->name = "vode"; prop->desc = "implicit ODE solver with BDF";
-		prop->val.fmt  = "iu"; prop->val.ptr = &vd->ivp;
+		prop->name = "vode";
+		prop->desc = "implicit ODE solver with BDF";
+		mpt_solver_module_value_ivp(&prop->val, &vd->ivp);
 		return vd->ivp.neqs == 1 && !vd->ivp.pint ? 0 : 1;
 	}
 	else if (!strcasecmp(name, "version")) {
@@ -291,78 +304,84 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "atol") : (pos == ++id)) {
-		if (!vd) { prop->val.fmt = "d"; prop->val.ptr = &vd->atol.d.val; }
-		else { id = mpt_solver_module_tol_get(&vd->atol, &prop->val); }
-		prop->name = "atol"; prop->desc = "absolute tolerances";
+		prop->name = "atol";
+		prop->desc = "absolute tolerances";
+		if (vd) {
+			return mpt_solver_module_tol_get(&prop->val, &vd->atol);
+		}
+		mpt_solver_module_value_double(&prop->val, &vd->atol.d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == ++id)) {
-		if (!vd) { prop->val.fmt = "d"; prop->val.ptr = &vd->rtol.d.val; }
-		else { id = mpt_solver_module_tol_get(&vd->rtol, &prop->val); }
-		prop->name = "rtol"; prop->desc = "relative tolerances";
+		prop->name = "rtol";
+		prop->desc = "relative tolerances";
+		if (vd) {
+			return mpt_solver_module_tol_get(&prop->val, &vd->rtol);
+		}
+		mpt_solver_module_value_double(&prop->val, &vd->rtol.d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
-		prop->name = "jacobian"; prop->desc = "(user) jacobian parameters";
-		prop->val.fmt  = "b"; prop->val.ptr = &vd->miter;
+		prop->name = "jacobian";
+		prop->desc = "(user) jacobian parameters";
+		prop->val.fmt = fmt_byte;
+		prop->val.ptr = &vd->miter;
 		if (!vd) return id;
 		return vd->miter ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "itask", 2) : (pos == ++id)) {
-		prop->name = "itask"; prop->desc = "step control";
-		prop->val.fmt  = "n"; prop->val.ptr = &vd->itask;
+		prop->name = "itask";
+		prop->desc = "step control";
+		prop->val.fmt = fmt_short;
+		prop->val.ptr = &vd->itask;
 		if (!vd) return id;
 		return (vd->itask != 1) ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "method", 4) : (pos == ++id)) {
-		prop->name = "method"; prop->desc = "iteration method";
-		prop->val.fmt  = "b"; prop->val.ptr = &vd->meth;
+		prop->name = "method";
+		prop->desc = "iteration method";
+		prop->val.fmt = fmt_byte;
+		prop->val.ptr = &vd->meth;
 		if (!vd) return id;
 		return (vd->meth != 1) ? 1 : 0;
 	}
 	/* integer array parameter */
 	if (name ? (!strcasecmp(name, "maxord") || !strcasecmp(name, "iwork5")) : (pos == ++id)) {
-		prop->name = "maxord"; prop->desc = "maximum order to be allowed";
-		prop->val.fmt  = "i"; prop->val.ptr = 0;
-		if (!vd) return id;
-		if (vd->iwork.iov_len >= 5 * sizeof(int)) prop->val.ptr = ((int *) vd->iwork.iov_base) + 4;
-		return prop->val.ptr && *((int *) prop->val.ptr) ? 1 : 0;
+		prop->name = "maxord";
+		prop->desc = "maximum order to be allowed";
+		pos = getiwork(&prop->val, 5, vd);
+		return vd ? pos : id;
 	}
 	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "iwork6")) : (pos == ++id)) {
-		prop->name = "mxstep"; prop->desc = "max. internal steps per call";
-		prop->val.fmt  = "i"; prop->val.ptr = 0;
-		if (!vd) return id;
-		if (vd->iwork.iov_len >= 6 * sizeof(int)) prop->val.ptr = ((int *) vd->iwork.iov_base) + 5;
-		return prop->val.ptr && *((int *) prop->val.ptr) ? 1 : 0;
+		prop->name = "mxstep";
+		prop->desc = "max. internal steps per call";
+		pos = getiwork(&prop->val, 6, vd);
+		return vd ? pos : id;
 	}
 	if (name ? (!strcasecmp(name, "mxhnil") || !strcasecmp(name, "iwork7")) : (pos == ++id)) {
-		prop->name = "mxhnil"; prop->desc = "max. warnings for 't + h = t'";
-		prop->val.fmt  = "i"; prop->val.ptr = 0;
-		if (!vd) return id;
-		if (vd->iwork.iov_len >= 7 * sizeof(int)) prop->val.ptr = ((int *) vd->iwork.iov_base) + 6;
-		return prop->val.ptr && *((int *) prop->val.ptr) ? 1 : 0;
+		prop->name = "mxhnil";
+		prop->desc = "max. warnings for 't + h = t'";
+		pos = getiwork(&prop->val, 7, vd);
+		return vd ? pos : id;
 	}
 	/* real array parameter */
 	if (name ? (!strcasecmp(name, "h0") || !strcasecmp(name, "rwork5")) : (pos == ++id)) {
-		prop->name = "h0"; prop->desc = "explicit initial steps size";
-		prop->val.fmt  = "d"; prop->val.ptr = 0;
-		if (!vd) return id;
-		if (vd->iwork.iov_len >= 5 * sizeof(double)) prop->val.ptr = ((double *) vd->rwork.iov_base) + 4;
-		return prop->val.ptr && *((double *) prop->val.ptr) ? 1 : 0;
+		prop->name = "h0";
+		prop->desc = "explicit initial steps size";
+		pos = getrwork(&prop->val, 5, vd);
+		return vd ? pos : id;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "rwork6")) : (pos == ++id)) {
-		prop->name = "hmax"; prop->desc = "maximal internal steps size";
-		prop->val.fmt = "d"; prop->val.ptr = 0;
-		if (!vd) return id;
-		if (vd->iwork.iov_len >= 6 * sizeof(double)) prop->val.ptr = ((double *) vd->rwork.iov_base) + 5;
-		return prop->val.ptr && *((double *) prop->val.ptr) ? 1 : 0;
+		prop->name = "hmax";
+		prop->desc = "maximal internal steps size";
+		pos = getrwork(&prop->val, 6, vd);
+		return vd ? pos : id;
 	}
 	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "rwork7")) : (pos == ++id)) {
-		prop->name = "hmin"; prop->desc = "maximal internal steps size";
-		prop->val.fmt  = "d"; prop->val.ptr = 0;
-		if (!vd) return id;
-		if (vd->iwork.iov_len >= 7 * sizeof(double)) prop->val.ptr = ((double *) vd->rwork.iov_base) + 6;
-		return prop->val.ptr && *((double *) prop->val.ptr) ? 1 : 0;
+		prop->name = "hmin";
+		prop->desc = "maximal internal steps size";
+		pos = getrwork(&prop->val, 7, vd);
+		return vd ? pos : id;
 	}
 	return MPT_ERROR(BadArgument);
 }

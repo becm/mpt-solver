@@ -232,70 +232,84 @@ extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *mp, MPT_STRUCT(prop
 		}
 	}
 	else if (!*name) {
-		prop->name = "minpack"; prop->desc = "solver for (overdetermined) nonlinear equotations";
-		prop->val.fmt = "ii"; prop->val.ptr = &mp->nls;
-		return (mp->nls.nval != 1 || mp->nls.nres) ? 1 : 0;
+		prop->name = "minpack";
+		prop->desc = "solver for (overdetermined) nonlinear equotations";
+		return mpt_solver_module_value_nls(&prop->val, mp ? &mp->nls : 0);
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
-		prop->name = "version"; prop->desc = "solver release information";
-		prop->val.fmt = 0; prop->val.ptr = version;
+		prop->name = "version";
+		prop->desc = "solver release information";
+		prop->val.fmt = 0;
+		prop->val.ptr = version;
 		return 0;
 	}
 	
 	id = -1;
 	if (name ? !strcasecmp(name, "xtol") : (pos == ++id)) {
-		prop->name = "xtol"; prop->desc = "desired relative error";
-		prop->val.fmt = "d"; prop->val.ptr = &mp->xtol;
+		prop->name = "xtol";
+		prop->desc = "desired relative error";
+		mpt_solver_module_value_double(&prop->val, &mp->xtol);
 		if (!mp) return id;
 		return mp->xtol ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "ftol") : (pos == ++id)) {
-		prop->name = "ftol"; prop->desc = "desired residual";
-		prop->val.fmt = "d"; prop->val.ptr = &mp->ftol;
+		prop->name = "ftol";
+		prop->desc = "desired residual";
+		mpt_solver_module_value_double(&prop->val, &mp->ftol);
 		if (!mp) return id;
 		return (mp->ftol != 1e-7) ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "gtol") : (pos == ++id)) {
-		prop->name = "gtol"; prop->desc = "desired orthogonality";
-		prop->val.fmt = "d"; prop->val.ptr = &mp->gtol; prop->val.fmt= "d";
+		prop->name = "gtol";
+		prop->desc = "desired orthogonality";
+		mpt_solver_module_value_double(&prop->val, &mp->gtol);
 		if (!mp) return id;
 		return mp->gtol ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
-		prop->name = "jacobian"; prop->desc = "(user) jacobian settings";
-		prop->val.fmt = "ii"; prop->val.ptr = &mp->mu;
+		prop->name = "jacobian";
+		prop->desc = "(user) jacobian settings";
+		mpt_solver_module_value_int(&prop->val, &mp->mu);
 		if (!mp) return id;
 		return (mp->mu || mp->ml) ? 2 : 0;
 	}
 	if (name ? !strcasecmp(name, "maxfev") : (pos == ++id)) {
-		prop->name = "maxfev"; prop->desc = "max. function evaluations per call";
-		prop->val.fmt = "i"; prop->val.ptr = &mp->maxfev;
+		prop->name = "maxfev";
+		prop->desc = "max. function evaluations per call";
+		mpt_solver_module_value_int(&prop->val, &mp->maxfev);
 		if(!mp) return id;
 		return mp->maxfev ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "fac", 3) : (pos == ++id)) {
-		prop->name = "factor"; prop->desc = "initial step bound";
-		prop->val.fmt = "d"; prop->val.ptr = &mp->factor;
+		prop->name = "factor";
+		prop->desc = "initial step bound";
+		mpt_solver_module_value_double(&prop->val, &mp->factor);
 		if (!mp) return id;
-		return (mp->factor == 200*(mp->nls.nval + 1)) ? 0 : 1;
+		return (mp->factor == 200 * (mp->nls.nval + 1)) ? 0 : 1;
 	}
 	if (name ? !strncasecmp(name, "eps", 3) : (pos == ++id)) {
-		prop->name = "epsfcn"; prop->desc = "initial forward-difference step length";
-		prop->val.fmt = "d"; prop->val.ptr = &mp->epsfcn;
+		prop->name = "epsfcn";
+		prop->desc = "initial forward-difference step length";
+		mpt_solver_module_value_double(&prop->val, &mp->epsfcn);
 		if (!mp) return id;
 		return mp->epsfcn ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "nprint", 3) : (pos == ++id)) {
-		prop->name = "nprint"; prop->desc = "iteration output";
-		prop->val.fmt = "c"; prop->val.ptr = &mp->nprint;
+		static const uint8_t fmt[] = "c";
+		prop->name = "nprint";
+		prop->desc = "iteration output";
+		prop->val.fmt = fmt;
+		prop->val.ptr = &mp->nprint;
 		if (!mp) return id;
 		return mp->nprint ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "diag") : (pos == ++id)) {
-		static const char fmt[] = { MPT_value_toVector('d'), 0 };
-		prop->name = "diag"; prop->desc = "scale factor for variables";
-		prop->val.fmt = fmt; prop->val.ptr = &mp->diag;
+		static const uint8_t fmt[] = { MPT_value_toVector('d'), 0 };
+		prop->name = "diag";
+		prop->desc = "scale factor for variables";
+		prop->val.fmt = fmt;
+		prop->val.ptr = &mp->diag;
 		if (!mp) return id;
 		return mp->diag.iov_len / sizeof(double);
 	}

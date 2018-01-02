@@ -28,7 +28,7 @@
  */
 extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
-	static const char longfmt[] = { 'l', 0 };
+	static const uint8_t longfmt[] = "l\0";
 	MPT_STRUCT(property) pr;
 	long int lval;
 	double dval;
@@ -43,8 +43,7 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	    && (IDAGetCurrentTime(ida->mem, &dval) == IDA_SUCCESS)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	pr.val.fmt = "d";
-	pr.val.ptr = &dval;
+	mpt_solver_module_value_double(&pr.val, &dval);
 	out(usr, &pr);
 	++line;
 	}
@@ -67,8 +66,7 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	    && (IDAGetLastStep(ida->mem, &dval) == IDA_SUCCESS)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	pr.val.fmt = "d";
-	pr.val.ptr = &dval;
+	mpt_solver_module_value_double(&pr.val, &dval);
 	out(usr, &pr);
 	++line;
 	}
