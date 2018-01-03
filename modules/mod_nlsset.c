@@ -7,6 +7,8 @@
 
 #include "../solver.h"
 
+#include "meta.h"
+
 extern int mpt_solver_module_value_nls(MPT_STRUCT(value) *val, const MPT_NLS_STRUCT(parameters) *par)
 {
 	static const uint8_t fmt[] = "ii";

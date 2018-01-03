@@ -8,9 +8,13 @@
 
 #include "mebdfi.h"
 
+#include "meta.h"
+
 #include "module_functions.h"
 
 MPT_STRUCT(MebdfiData) {
+	MPT_INTERFACE(metatype) _mt;
+	
 	MPT_SOLVER(interface) _sol;
 	MPT_INTERFACE(object) _obj;
 	
@@ -44,7 +48,7 @@ static MPT_INTERFACE(metatype) *meClone(const MPT_INTERFACE(metatype) *mt)
 /* solver interface */
 static int meReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	const MPT_STRUCT(MebdfiData) *md = (void *) sol;
+	const MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, sol, _sol);
 	if (!what && !out && !data) {
 		return mpt_mebdfi_get(&md->d, 0);
 	}
@@ -52,12 +56,12 @@ static int meReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandl
 }
 static int meFcn(MPT_SOLVER(interface) *sol, int type, const void *par)
 {
-	MPT_STRUCT(MebdfiData) *md = (void *) sol;
+	MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, sol, _sol);
 	return mpt_mebdfi_ufcn(&md->d, &md->uf, type, par);
 }
 static int meSolve(MPT_SOLVER(interface) *sol)
 {
-	MPT_STRUCT(MebdfiData) *md = (void *) sol;
+	MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, sol, _sol);
 	return mpt_mebdfi_step(&md->d, md->next);
 }
 /* object interface */
@@ -91,16 +95,20 @@ static int meSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
  * 
  * \return MEBDFI solver instance
  */
-extern MPT_SOLVER(interface) *mpt_mebdfi_create()
+extern MPT_INTERFACE(metatype) *mpt_mebdfi_create()
 {
 	static const MPT_INTERFACE_VPTR(object) mebdfiObj = {
 		meGet, meSet
 	};
 	static const MPT_INTERFACE_VPTR(solver) mebdfiSol = {
-		{ { meFini, meAddref }, meConv, meClone },
 		meReport,
 		meFcn,
 		meSolve
+	};
+	static const MPT_INTERFACE_VPTR(metatype) mebdfiMeta = {
+		{ meFini, meAddref },
+		meConv,
+		meClone
 	};
 	MPT_STRUCT(MebdfiData) *md;
 	
@@ -110,9 +118,11 @@ extern MPT_SOLVER(interface) *mpt_mebdfi_create()
 	mpt_mebdfi_init(&md->d);
 	md->d.ipar = memset(&md->uf, 0, sizeof(md->uf));
 	
+	md->_mt._vptr = &mebdfiMeta;
+	
 	md->_sol._vptr = &mebdfiSol;
 	md->_obj._vptr = &mebdfiObj;
 	
-	return &md->_sol;
+	return &md->_mt;
 }
 

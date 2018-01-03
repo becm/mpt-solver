@@ -7,9 +7,10 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "version.h"
-
 #include "limex.h"
+
+#include "version.h"
+#include "meta.h"
 
 #include "module_functions.h"
 

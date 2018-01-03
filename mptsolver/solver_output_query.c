@@ -3,6 +3,7 @@
  */
 
 #include "config.h"
+#include "meta.h"
 
 #include "solver.h"
 

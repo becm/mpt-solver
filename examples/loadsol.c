@@ -63,7 +63,7 @@ int main(int argc, char * const argv[])
 		if ((s = mpt_solver_load(&mt, 0, buf, log))) {
 			MPT_INTERFACE(object) *obj = 0;
 			const char *n;
-			if (s->_vptr->meta.conv((void *) s, MPT_ENUM(TypeObject), &obj) > 0
+			if (mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) > 0
 			    && obj
 			    && (n = mpt_object_typename(obj))) {
 				puts(n);

@@ -7,9 +7,13 @@
 
 #include "minpack.h"
 
+#include "meta.h"
+
 #include "module_functions.h"
 
 MPT_STRUCT(MinpackData) {
+	MPT_INTERFACE(metatype) _mt;
+	
 	MPT_SOLVER(interface) _sol;
 	MPT_INTERFACE(object) _obj;
 	
@@ -41,7 +45,7 @@ static MPT_INTERFACE(metatype) *mpClone(const MPT_INTERFACE(metatype) *mt)
 /* solver interface */
 static int mpReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	MPT_STRUCT(MinpackData) *mp = (void *) sol;
+	MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, sol, _sol);
 	if (!what && !out && !data) {
 		return mpt_minpack_get(&mp->d, 0);
 	}
@@ -49,12 +53,12 @@ static int mpReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandl
 }
 static int mpFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {
-	MPT_STRUCT(MinpackData) *mp = (void *) sol;
+	MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, sol, _sol);
 	return mpt_minpack_ufcn(&mp->d, &mp->uf, type, ptr);
 }
 static int mpSolve(MPT_SOLVER(interface) *sol)
 {
-	MPT_STRUCT(MinpackData) *mp = (void *) sol;
+	MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, sol, _sol);
 	return mpt_minpack_solve(&mp->d);
 }
 /* object interface */
@@ -80,16 +84,20 @@ static int mpSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
  * 
  * \return MINPACK solver instance
  */
-extern MPT_SOLVER(interface) *mpt_minpack_create()
+extern MPT_INTERFACE(metatype) *mpt_minpack_create()
 {
 	static const MPT_INTERFACE_VPTR(object) mpObj = {
 		mpGet, mpSet
 	};
 	static const MPT_INTERFACE_VPTR(solver) mpSol = {
-		{ { mpUnref, mpRef }, mpConv, mpClone },
 		mpReport,
 		mpFcn,
 		mpSolve
+	};
+	static const MPT_INTERFACE_VPTR(metatype) mpMeta = {
+		{ mpUnref, mpRef },
+		mpConv,
+		mpClone
 	};
 	MPT_STRUCT(MinpackData) *mp;
 	
@@ -99,9 +107,11 @@ extern MPT_SOLVER(interface) *mpt_minpack_create()
 	mpt_minpack_init(&mp->d);
 	memset(&mp->uf, 0, sizeof(mp->uf));
 	
+	mp->_mt._vptr = &mpMeta;
+	
 	mp->_sol._vptr = &mpSol;
 	mp->_obj._vptr = &mpObj;
 	
-	return &mp->_sol;
+	return &mp->_mt;
 }
 

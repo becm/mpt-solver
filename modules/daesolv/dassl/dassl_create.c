@@ -8,9 +8,13 @@
 
 #include "dassl.h"
 
+#include "meta.h"
+
 #include "module_functions.h"
 
 MPT_STRUCT(DasslData) {
+	MPT_INTERFACE(metatype) _mt;
+	
 	MPT_SOLVER(interface) _sol;
 	MPT_INTERFACE(object) _obj;
 	
@@ -44,7 +48,7 @@ static MPT_INTERFACE(metatype) *ddClone(const MPT_INTERFACE(metatype) *mt)
 /* solver interface */
 static int ddReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	const MPT_STRUCT(DasslData) *da = (void *) sol;
+	const MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, sol, _sol);
 	if (!what && !out && !data) {
 		return mpt_dassl_get(&da->d, 0);
 	}
@@ -52,12 +56,12 @@ static int ddReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandl
 }
 static int ddFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {
-	MPT_STRUCT(DasslData) *da = (void *) sol;
+	MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, sol, _sol);
 	return mpt_dassl_ufcn(&da->d, &da->uf, type, ptr);
 }
 static int ddSolve(MPT_SOLVER(interface) *sol)
 {
-	MPT_STRUCT(DasslData) *da = (void *) sol;
+	MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, sol, _sol);
 	return mpt_dassl_step(&da->d, da->next);
 }
 /* object interface */
@@ -91,16 +95,20 @@ static int ddSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
  * 
  * \return Dassl solver instance
  */
-extern MPT_SOLVER(interface) *mpt_dassl_create()
+extern MPT_INTERFACE(metatype) *mpt_dassl_create()
 {
 	static const MPT_INTERFACE_VPTR(object) dasslObj = {
 		ddGet, ddSet
 	};
 	static const MPT_INTERFACE_VPTR(solver) dasslSol = {
-		{ { ddFini, ddAddref }, ddConv, ddClone },
 		ddReport,
 		ddFcn,
 		ddSolve
+	};
+	static const MPT_INTERFACE_VPTR(metatype) dasslMeta = {
+		{ ddFini, ddAddref },
+		ddConv,
+		ddClone
 	};
 	MPT_STRUCT(DasslData) *da;
 	
@@ -111,8 +119,10 @@ extern MPT_SOLVER(interface) *mpt_dassl_create()
 	da->d.ipar = memset(&da->uf, 0, sizeof(da->uf));
 	da->d.rpar = (void *) &da->d;
 	
+	da->_mt._vptr = &dasslMeta;
+	
 	da->_sol._vptr = &dasslSol;
 	da->_obj._vptr = &dasslObj;
 	
-	return &da->_sol;
+	return &da->_mt;
 }

@@ -84,7 +84,7 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *, int , MPT_TYPE(Pro
 
 /* setup generic solver to use limex */
 #ifndef __cplusplus
-extern MPT_SOLVER(interface) *mpt_limex_create(void);
+extern MPT_INTERFACE(metatype) *mpt_limex_create(void);
 #else
 extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global(void);
 #endif
@@ -110,10 +110,7 @@ public:
 	{
 		if (_lx) mpt_limex_fini(_lx);
 	}
-	int step(double t) __MPT_OVERRIDE
-	{
-		return _lx ? mpt_limex_step(_lx, t) : BadOperation;
-	}
+	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return _lx ? mpt_limex_get(_lx, pr) : BadOperation;
@@ -128,7 +125,11 @@ public:
 		}
 		return mpt_limex_set(_lx, pr, src);
 	}
-	
+	/* solver operations */
+	int solve() __MPT_OVERRIDE
+	{
+		return _lx ? mpt_limex_step(_lx, _t) : BadOperation;
+	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
 		return _lx ? mpt_limex_report(_lx, what, out, opar) : BadOperation;

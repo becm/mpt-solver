@@ -5,9 +5,10 @@
 #include <string.h>
 #include <strings.h>
 
-#include "version.h"
-
 #include "radau.h"
+
+#include "version.h"
+#include "meta.h"
 
 #include "module_functions.h"
 

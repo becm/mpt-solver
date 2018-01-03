@@ -5,7 +5,7 @@
 #include "solver_run.h"
 
 /* map functions to bacol parameters */
-static int bacol_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
+static int bacol_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
 {
 	int ret, npde = 4;
 	

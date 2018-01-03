@@ -6,9 +6,10 @@
 #include <string.h>
 #include <strings.h>
 
-#include "version.h"
-
 #include "dassl.h"
+
+#include "version.h"
+#include "meta.h"
 
 #include "module_functions.h"
 

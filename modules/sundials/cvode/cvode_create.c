@@ -9,9 +9,13 @@
 #include "cvode/cvode_impl.h"
 #include "sundials.h"
 
+#include "meta.h"
+
 #include "module_functions.h"
 
 MPT_STRUCT(SundialsCVode) {
+	MPT_INTERFACE(metatype) _mt;
+	
 	MPT_SOLVER(interface) _sol;
 	MPT_INTERFACE(object) _obj;
 	
@@ -46,7 +50,7 @@ static MPT_INTERFACE(metatype) *cVodeClone(const MPT_INTERFACE(metatype) *mt)
 /* solver interface */
 static int cVodeReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	MPT_STRUCT(SundialsCVode) *cv = (void *) sol;
+	const MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, sol, _sol);
 	if (!what && !out && !data) {
 		return sundials_cvode_get(&cv->d, 0);
 	}
@@ -54,7 +58,7 @@ static int cVodeReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHa
 }
 static int cVodeFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {
-	MPT_STRUCT(SundialsCVode) *cv = (void *) sol;
+	MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, sol, _sol);
 	int ret;
 	
 	if ((ret = mpt_solver_module_ufcn_ode(cv->d.ivp.pint, &cv->uf, type, ptr)) < 0) {
@@ -65,7 +69,7 @@ static int cVodeFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 }
 static int cVodeSolve(MPT_SOLVER(interface) *sol)
 {
-	MPT_STRUCT(SundialsCVode) *cv = (void *) sol;
+	MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, sol, _sol);
 	return sundials_cvode_step(&cv->d, cv->next);
 }
 /* object interface */
@@ -100,16 +104,20 @@ static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERF
  * 
  * \return CVode solver instance
  */
-extern MPT_SOLVER(interface) *sundials_cvode_create()
+extern MPT_INTERFACE(metatype) *sundials_cvode_create()
 {
+	static const MPT_INTERFACE_VPTR(object) cVodeObj = {
+		cVodeGet, cVodeSet
+	};
 	static const MPT_INTERFACE_VPTR(solver) cVodeSol = {
-		{ { cVodeUnref, cVodeRef }, cVodeConv, cVodeClone },
 		cVodeReport,
 		cVodeFcn,
 		cVodeSolve
 	};
-	static const MPT_INTERFACE_VPTR(object) cVodeObj = {
-		cVodeGet, cVodeSet
+	static const MPT_INTERFACE_VPTR(metatype) cVodeMeta = {
+		{ cVodeUnref, cVodeRef },
+		cVodeConv,
+		cVodeClone
 	};
 	MPT_STRUCT(SundialsCVode) *cv;
 	
@@ -124,8 +132,10 @@ extern MPT_SOLVER(interface) *sundials_cvode_create()
 	CVodeSetUserData(cv->d.mem, &cv->d);
 	cv->next = 0.0;
 	
+	cv->_mt._vptr = &cVodeMeta;
+	
 	cv->_sol._vptr = &cVodeSol;
 	cv->_obj._vptr = &cVodeObj;
 	
-	return &cv->_sol;
+	return &cv->_mt;
 }

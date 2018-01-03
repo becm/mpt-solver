@@ -172,8 +172,8 @@ extern int sundials_ida_step(MPT_SOLVER_STRUCT(ida) *, realtype);
 #endif
 
 #ifndef __cplusplus
-extern MPT_SOLVER(interface) *sundials_cvode_create(void);
-extern MPT_SOLVER(interface) *sundials_ida_create(void);
+extern MPT_INTERFACE(metatype) *sundials_cvode_create(void);
+extern MPT_INTERFACE(metatype) *sundials_ida_create(void);
 #endif
 
 /* setup Sundials jacobian parameters */
@@ -228,10 +228,7 @@ public:
 	}
 	~CVode() __MPT_OVERRIDE
 	{ }
-	int step(double t) __MPT_OVERRIDE
-	{
-		return sundials_cvode_step(this, t);
-	}
+	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return sundials_cvode_get(this, pr);
@@ -242,6 +239,11 @@ public:
 			return sundials_cvode_prepare(this);
 		}
 		return sundials_cvode_set(this, pr, src);
+	}
+	/* solver operations */
+	int solve() __MPT_OVERRIDE
+	{
+		return sundials_cvode_step(this, _t);
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
@@ -268,10 +270,7 @@ public:
 	}
 	~IDA() __MPT_OVERRIDE
 	{ }
-	int step(double t) __MPT_OVERRIDE
-	{
-		return sundials_ida_step(this, t);
-	}
+	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return sundials_ida_get(this, pr);
@@ -282,6 +281,11 @@ public:
 			return sundials_ida_prepare(this);
 		}
 		return sundials_ida_set(this, pr, src);
+	}
+	/* solver operations */
+	int solve() __MPT_OVERRIDE
+	{
+		return sundials_ida_step(this, _t);
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{

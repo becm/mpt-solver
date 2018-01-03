@@ -4,6 +4,7 @@
 
 #include <math.h>
 
+#include "meta.h"
 #include "node.h"
 #include "array.h"
 

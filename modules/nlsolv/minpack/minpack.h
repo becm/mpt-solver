@@ -110,7 +110,7 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *, int , MPT_TYPE
 
 /* assign minpack solver to interface */
 #ifndef __cplusplus
-extern MPT_SOLVER(interface) *mpt_minpack_create(void);
+extern MPT_INTERFACE(metatype) *mpt_minpack_create(void);
 #endif
 
 __MPT_EXTDECL_END

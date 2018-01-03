@@ -5,13 +5,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "vode.h"
+
 #include "meta.h"
 
 #include "module_functions.h"
 
-#include "vode.h"
-
 MPT_STRUCT(VodeData) {
+	MPT_INTERFACE(metatype) _mt;
+	
 	MPT_SOLVER(interface) _sol;
 	MPT_INTERFACE(object) _obj;
 	
@@ -45,7 +47,7 @@ MPT_INTERFACE(metatype) *vdClone(const MPT_INTERFACE(metatype) *mt)
 /* solver interface */
 static int vdReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	const MPT_STRUCT(VodeData) *vd = (void *) sol;
+	const MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, sol, _sol);
 	if (!what && !out && !data) {
 		return mpt_vode_get(&vd->d, 0);
 	}
@@ -53,12 +55,12 @@ static int vdReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandl
 }
 static int vdFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {
-	MPT_STRUCT(VodeData) *vd = (void *) sol;
+	MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, sol, _sol);
 	return mpt_vode_ufcn(&vd->d, &vd->uf, type, ptr);
 }
 static int vdSolve(MPT_SOLVER(interface) *sol)
 {
-	MPT_STRUCT(VodeData) *vd = (void *) sol;
+	MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, sol, _sol);
 	return mpt_vode_step(&vd->d, vd->next);
 }
 /* object interface */
@@ -92,16 +94,20 @@ static int vdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
  * 
  * \return VODE solver instance
  */
-extern MPT_SOLVER(interface) *mpt_vode_create()
+extern MPT_INTERFACE(metatype) *mpt_vode_create()
 {
 	static const MPT_INTERFACE_VPTR(object) vodeObj = {
 		vdGet, vdSet
 	};
 	static const MPT_INTERFACE_VPTR(solver) vodeSol = {
-		{ { vdFini, vdAddref }, vdConv, vdClone },
 		vdReport,
 		vdFcn,
 		vdSolve
+	};
+	static const MPT_INTERFACE_VPTR(metatype) vodeMeta = {
+		{ vdFini, vdAddref },
+		vdConv,
+		vdClone
 	};
 	MPT_STRUCT(VodeData) *vd;
 	
@@ -111,8 +117,10 @@ extern MPT_SOLVER(interface) *mpt_vode_create()
 	mpt_vode_init(&vd->d);
 	memset(&vd->uf, 0, sizeof(vd->uf));
 	
+	vd->_mt._vptr = &vodeMeta;
+	
 	vd->_sol._vptr = &vodeSol;
 	vd->_obj._vptr = &vodeObj;
 	
-	return &vd->_sol;
+	return &vd->_mt;
 }

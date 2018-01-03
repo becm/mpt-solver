@@ -9,78 +9,26 @@
 
 #include "solver.h"
 
-static int validSolver(MPT_SOLVER(interface) *sol, int match, MPT_INTERFACE(logger) *log, const char *fcn)
-{
-	MPT_INTERFACE(object) *obj;
-	const char *name;
-	int cap;
-	
-	obj = 0;
-	name = 0;
-	if (log
-	    && (cap = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) >= 0
-	    && obj) {
-		name = mpt_object_typename(obj);
-	}
-	if ((cap = sol->_vptr->report(sol, 0, 0, 0)) < 0) {
-		int type = sol->_vptr->meta.conv((void *) sol, 0, 0);
-		if (log) {
-			const char *err = MPT_tr("no valid solver");
-			if (name) {
-				mpt_log(log, fcn, MPT_LOG(Error), "%s: %s (%d)",
-				        err, name, type);
-			} else {
-				mpt_log(log, fcn, MPT_LOG(Error), "%s: %d",
-				        err, type);
-			}
-		}
-		return MPT_ERROR(BadType);
-	}
-	if (match && !(cap & match)) {
-		if (log) {
-			const char *err = MPT_tr("solver has incompatile capabilities");
-			if (name) {
-				mpt_log(log, fcn, MPT_LOG(Error), "%s (%s): 0x%02x <> 0x%02x",
-				        err, name, cap, match);
-			} else {
-				mpt_log(log, fcn, MPT_LOG(Error), "%s: 0x%02x <> 0x%02x",
-				        err, cap, match);
-			}
-		}
-		return MPT_ERROR(BadValue);
-	}
-	if (log) {
-		const char *msg = MPT_tr("use solver instance");
-		if (name) {
-			mpt_log(log, fcn, MPT_LOG(Info), "%s: %s (0x%02x)",
-			        msg, name, cap);
-		} else {
-			mpt_log(log, fcn, MPT_LOG(Info), "%s: 0x%02x",
-			        msg, cap);
-		}
-	}
-	return cap;
-}
-    
 /*!
  * \ingroup mptSolver
- * \brief solver proxy access
+ * \brief solver proxy assign
  * 
  * Load (or convert) reference in proxy element.
  * Track/Replace reference in proxy structure.
  * 
- * \param pr   proxy data
- * \param conf solver alias/symbol to bind
+ * \param ref    proxy metatype pointer reference
+ * \param match  flags required for solver
+ * \param conf   solver alias/symbol to bind
+ * \param info   log/error output descriptor
  * 
  * \return solver interface (tracked by proxy reference)
  */
-/* load solver of specific type */
 extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int match, const char *conf, MPT_INTERFACE(logger) *log)
 {
 	MPT_INTERFACE(metatype) *mt;
 	MPT_SOLVER(interface) *sol;
 	const char *old;
-	int mode, me;
+	int me;
 	
 	if ((me = mpt_solver_typeid()) < 0) {
 		if (log) {
@@ -90,7 +38,6 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 		return 0;
 	}
 	mt = *ref;
-	sol = 0;
 	if (!conf) {
 		if (!mt) {
 			if (log) {
@@ -99,15 +46,7 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 			}
 			return 0;
 		}
-		if ((mode = mt->_vptr->conv(mt, me, &sol)) < 0
-		    || !sol) {
-			if (log) {
-				mpt_log(log, __func__, MPT_LOG(Error), "%s",
-			                MPT_tr("no solver in proxy object"));
-			}
-			return 0;
-		}
-		return validSolver(sol, match, log, __func__) < 0 ? 0 : sol;
+		return mpt_solver_conv(mt, match, log);
 	}
 	if (!*conf) {
 		if (!(conf = mpt_solver_alias(0))) {
@@ -179,15 +118,12 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 	if (mt
 	    && (old = mpt_meta_data(mt, 0))
 	    && !strcmp(conf, old)
-	    && (mode = mt->_vptr->conv(mt, me, &sol)) >= 0
-	    && sol
-	    && (mode = validSolver(sol, match, log, __func__)) >= 0) {
+	    && (sol = mpt_solver_conv(mt, match, log))) {
 		return sol;
 	}
 	/* change library symbol */
 	else {
 		const MPT_INTERFACE(metatype) *cfg;
-		MPT_SOLVER(interface) *sol;
 		MPT_INTERFACE(metatype) *next;
 		const char *lpath = 0;
 		
@@ -197,18 +133,7 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 		if (!(next = mpt_library_meta(me, conf, lpath, log))) {
 			return 0;
 		}
-		sol = 0;
-		if ((mode = next->_vptr->conv(next, me, &sol)) < 0
-		    || !sol) {
-			if (log) {
-				mode = next->_vptr->conv(next, 0, 0);
-				mpt_log(log, __func__, MPT_LOG(Error), "%s (%d): %s",
-				        MPT_tr("no solver type"), mode, conf);
-			}
-			next->_vptr->ref.unref((void *) next);
-			return 0;
-		}
-		if ((mode = validSolver(sol, match, log, __func__) < 0)) {
+		if (!(sol = mpt_solver_conv(next, match, log))) {
 			next->_vptr->ref.unref((void *) next);
 			return 0;
 		}

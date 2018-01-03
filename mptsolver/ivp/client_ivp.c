@@ -31,9 +31,7 @@ MPT_STRUCT(IVP) {
 	MPT_INTERFACE(config) _cfg;
 	
 	MPT_STRUCT(solver_data) *sd;
-	
 	MPT_INTERFACE(metatype) *cfg;
-	
 	MPT_INTERFACE(metatype) *sol;
 	
 	MPT_SOLVER_TYPE(UserInit) *uinit;
@@ -397,7 +395,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		mpt_log(info, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
 	
-	if ((ret = ivp->uinit(sol, dat, info)) < 0) {
+	if ((ret = ivp->uinit(mt, dat, info)) < 0) {
 		return ret;
 	}
 	/* setup PDE time and profile data */
@@ -482,8 +480,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	sol = 0;
 	if (ivp->sd
 	    && !ivp->sd->nval
-	    && (err = mpt_solver_typeid()) > 0
-	    && (err = mt->_vptr->conv(mt, err, &sol)) >= 0
+	    && (err = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) >= 0
 	    && sol) {
 		MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
 		struct _clientPdeOut ctx;
@@ -520,7 +517,8 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	
 	info = loggerIVP(ivp);
 	
-	if (!(mt = ivp->sol) || !(ctx.dat = ivp->sd)) {
+	if (!(mt = ivp->sol)
+	    || !(ctx.dat = ivp->sd)) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("client not prepared for step operation"));
 		return MPT_ERROR(BadOperation);
@@ -535,8 +533,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 			return MPT_ERROR(BadArgument);
 		}
 	}
-	if ((ret = mpt_solver_typeid()) < 0
-	    || (ret = mt->_vptr->conv(mt, ret, &sol)) < 0
+	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
 	    || !sol) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s (%d)",
 		        MPT_tr("unable to get solver interface"), ret);
@@ -549,7 +546,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		/* current time data */
 		getrusage(RUSAGE_SELF, &pre);
 		/* execute possible steps */
-		ret = mpt_steps_ode(sol, steps, ivp->sd, info);
+		ret = mpt_steps_ode(mt, steps, ivp->sd, info);
 		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
 		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);

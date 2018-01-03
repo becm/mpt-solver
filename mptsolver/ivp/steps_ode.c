@@ -82,13 +82,15 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  * \param sol  IVP solver descriptor
  * \param src  time step source
  * \param sd   solver data
- * \param out  logging descriptor
+ * \param info log/error output descriptor
  * 
  * \return step operation result
  */
-extern int mpt_steps_ode(MPT_SOLVER(interface) *sol, MPT_INTERFACE(iterator) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+extern int mpt_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *info)
 {
+	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;
+	const char *name;
 	double curr, end, *data;
 	int ret;
 	
@@ -104,31 +106,42 @@ extern int mpt_steps_ode(MPT_SOLVER(interface) *sol, MPT_INTERFACE(iterator) *sr
 	if (sd->nval < 1 || !(data = mpt_solver_data_grid(sd))) {
 		return MPT_ERROR(BadArgument);
 	}
-	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
+	obj = 0;
+	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) < 0
 	    || !obj) {
-		mpt_log(out, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
-		        MPT_tr("solver has no object interface"), sol);
+		mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
+		        MPT_tr("missing object interface"), mt);
+		return MPT_ERROR(BadArgument);
+	}
+	if (!(name = mpt_object_typename(obj))) {
+		name = "solver";
+	}
+	sol = 0;
+	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
+	    || !sol) {
+		mpt_log(info, __func__, MPT_LOG(Error), "%s: %s (%" PRIxPTR ")",
+		        name, MPT_tr("missing solver interface"), mt);
 		return MPT_ERROR(BadArgument);
 	}
 	curr = getTime(sol);
 	/* try to complete full run */
 	while(1) {
-		mpt_log(out, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
+		mpt_log(info, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
 		        MPT_tr("attempt solver step"), curr, end);
 		
 		/* set ODE/DAE solver target time */
 		if ((ret = mpt_solver_setvalue(obj, "t", end)) < 0) {
-			mpt_log(out, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
+			mpt_log(info, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
 			        MPT_tr("failed to set target time"), curr, end);
 			return ret;
 		}
 		ret = sol->_vptr->solve(sol);
 		curr = getTime(sol);
 		if (ret < 0) {
-			if (out) {
-				mpt_solver_status(sol, out, 0, 0);
+			if (info) {
+				mpt_solver_status(sol, info, 0, 0);
 			}
-			mpt_log(out, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
+			mpt_log(info, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
 			        MPT_tr("failed solver step"), curr, end);
 			return ret;
 		}
@@ -137,15 +150,15 @@ extern int mpt_steps_ode(MPT_SOLVER(interface) *sol, MPT_INTERFACE(iterator) *sr
 			curr = end;
 			continue;
 		}
-		if (out) {
-			mpt_solver_status(sol, out, updateIvpData, sd);
+		if (info) {
+			mpt_solver_status(sol, info, updateIvpData, sd);
 		} else {
 			sol->_vptr->report(sol, MPT_SOLVER_ENUM(Values), updateIvpDataWrap, sd);
 		}
 		/* get next target value */
 		do {
 			if ((ret = src->_vptr->advance(src)) < 0) {
-				mpt_log(out, __func__, MPT_LOG(Warning), "%s",
+				mpt_log(info, __func__, MPT_LOG(Warning), "%s",
 				        MPT_tr("bad time step advance"));
 				return ret;
 			}
@@ -153,12 +166,12 @@ extern int mpt_steps_ode(MPT_SOLVER(interface) *sol, MPT_INTERFACE(iterator) *sr
 				return ret;
 			}
 			if ((ret = src->_vptr->get(src, 'd', &end)) < 0) {
-				mpt_log(out, __func__, MPT_LOG(Warning), "%s",
+				mpt_log(info, __func__, MPT_LOG(Warning), "%s",
 				        MPT_tr("bad time step data"));
 				return ret;
 			}
 			if (!ret) {
-				mpt_log(out, __func__, MPT_LOG(Error), "%s",
+				mpt_log(info, __func__, MPT_LOG(Error), "%s",
 				        MPT_tr("bad time step state"));
 				return ret;
 			}

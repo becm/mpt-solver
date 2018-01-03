@@ -7,9 +7,13 @@
 
 #include "portn2.h"
 
+#include "meta.h"
+
 #include "module_functions.h"
 
 MPT_STRUCT(PortN2Data) {
+	MPT_INTERFACE(metatype) _mt;
+	
 	MPT_SOLVER(interface) _sol;
 	MPT_INTERFACE(object) _obj;
 	
@@ -41,7 +45,7 @@ static MPT_INTERFACE(metatype) *n2Clone(const MPT_INTERFACE(metatype) *mt)
 /* solver interface */
 static int n2Report(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	MPT_STRUCT(PortN2Data) *n2 = (void *) sol;
+	const MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, sol, _sol);
 	if (!what && !out && !data) {
 		return mpt_portn2_get(&n2->d, 0);
 	}
@@ -49,12 +53,12 @@ static int n2Report(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandl
 }
 static int n2Fcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {
-	MPT_STRUCT(PortN2Data) *n2 = (void *) sol;
+	MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, sol, _sol);
 	return mpt_portn2_ufcn(&n2->d, &n2->uf, type, ptr);
 }
 static int n2Solve(MPT_SOLVER(interface) *sol)
 {
-	MPT_STRUCT(PortN2Data) *n2 = (void *) sol;
+	MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, sol, _sol);
 	return mpt_portn2_solve(&n2->d);
 }
 /* object interface */
@@ -80,16 +84,20 @@ static int n2Set(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
  * 
  * \return PortN2 solver instance
  */
-extern MPT_SOLVER(interface) *mpt_portn2_create()
+extern MPT_INTERFACE(metatype) *mpt_portn2_create()
 {
 	static const MPT_INTERFACE_VPTR(object) n2Obj = {
 		n2Get, n2Set
 	};
 	static const MPT_INTERFACE_VPTR(solver) n2Sol = {
-		{ { n2Unref, n2Ref }, n2Conv, n2Clone },
 		n2Report,
 		n2Fcn,
 		n2Solve
+	};
+	static const MPT_INTERFACE_VPTR(metatype) n2Meta = {
+		{ n2Unref, n2Ref },
+		n2Conv,
+		n2Clone
 	};
 	MPT_STRUCT(PortN2Data) *n2;
 	
@@ -102,9 +110,11 @@ extern MPT_SOLVER(interface) *mpt_portn2_create()
 	}
 	memset(&n2->uf, 0, sizeof(n2->uf));
 	
+	n2->_mt._vptr = &n2Meta;
+	
 	n2->_sol._vptr = &n2Sol;
 	n2->_obj._vptr = &n2Obj;
 	
-	return &n2->_sol;
+	return &n2->_mt;
 }
 

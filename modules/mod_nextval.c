@@ -5,6 +5,8 @@
 
 #include "../solver.h"
 
+#include "meta.h"
+
 extern int mpt_solver_module_nextval(double *next, double min, const MPT_INTERFACE(metatype) *src)
 {
 	double end = *next;

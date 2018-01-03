@@ -146,7 +146,7 @@ extern int mpt_bacol_grid_init(int , const double *, int , double *);
 
 #ifndef __cplusplus
 /* create generic solver type */
-extern MPT_SOLVER(interface) *mpt_bacol_create(void);
+extern MPT_INTERFACE(metatype) *mpt_bacol_create(void);
 #endif
 
 /* init bacol output data */
@@ -181,9 +181,9 @@ public:
 	}
 	~Bacol() __MPT_OVERRIDE
 	{ }
-	int step(double t) __MPT_OVERRIDE
+	int solve() __MPT_OVERRIDE
 	{
-		return mpt_bacol_step(this, t);
+		return mpt_bacol_step(this, _t);
 	}
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{

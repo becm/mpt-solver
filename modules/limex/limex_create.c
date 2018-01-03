@@ -7,6 +7,8 @@
 
 #include "limex.h"
 
+#include "meta.h"
+
 #include "module_functions.h"
 
 static MPT_SOLVER_STRUCT(limex) lxGlob;
@@ -16,8 +18,9 @@ static int lxReserved = 0;
 
 extern MPT_SOLVER_STRUCT(limex) *mpt_limex_global()
 {
-	if (lxReserved) return &lxGlob;
-	
+	if (lxReserved) {
+		return &lxGlob;
+	}
 	mpt_limex_init(&lxGlob);
 	lxGlob.ufcn = memset(&lxGlobFcn, 0, sizeof(lxGlobFcn));
 	lxReserved = 1;
@@ -41,28 +44,6 @@ static int lxSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 	}
 	return mpt_limex_set(&lxGlob, pr, src);
 }
-/* reference interface */
-static void lxFini()
-{
-	mpt_limex_fini(&lxGlob);
-}
-static uintptr_t lxAddref()
-{
-	return 0;
-}
-/* metatype interface */
-static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	static const MPT_INTERFACE_VPTR(object) limexObj = {
-		lxGet, lxSet
-	};
-	static MPT_INTERFACE(object) lxGlobObj = { &limexObj };
-	return MPT_SOLVER_MODULE_FCN(solver_conv)((void *) mt, &lxGlobObj, type, ptr);
-}
-static MPT_INTERFACE(metatype) *lxClone()
-{
-	return 0;
-}
 /* solver interface */
 static int lxReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
@@ -82,6 +63,35 @@ static int lxSolve(MPT_SOLVER(interface) *sol)
 	(void) sol;
 	return mpt_limex_step(&lxGlob, lxNext);
 }
+/* reference interface */
+static void lxFini()
+{
+	mpt_limex_fini(&lxGlob);
+}
+static uintptr_t lxAddref()
+{
+	return 0;
+}
+/* metatype interface */
+static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+{
+	static const MPT_INTERFACE_VPTR(object) limexObj = {
+		lxGet, lxSet
+	};
+	static const MPT_INTERFACE_VPTR(solver) limexSol = {
+		lxReport,
+		lxFcn,
+		lxSolve
+	};
+	(void) mt;
+	static MPT_INTERFACE(object) lxGlobObj    = { &limexObj };
+	static MPT_SOLVER(interface) lxGlobSolver = { &limexSol };
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&lxGlobSolver, &lxGlobObj, type, ptr);
+}
+static MPT_INTERFACE(metatype) *lxClone()
+{
+	return 0;
+}
 
 /*!
  * \ingroup mptLimex
@@ -91,16 +101,17 @@ static int lxSolve(MPT_SOLVER(interface) *sol)
  * 
  * \return LIMEX solver instance
  */
-extern MPT_SOLVER(interface) *mpt_limex_create()
+extern MPT_INTERFACE(metatype) *mpt_limex_create()
 {
-	static const MPT_INTERFACE_VPTR(solver) limexSol = {
-		{ { lxFini, lxAddref }, lxConv, lxClone },
-		lxReport,
-		lxFcn,
-		lxSolve
+	static const MPT_INTERFACE_VPTR(metatype) limexMeta = {
+		{ lxFini, lxAddref },
+		lxConv,
+		lxClone
 	};
-	static MPT_SOLVER(interface) lxGlobSolver = { &limexSol };
-	if (lxReserved) return 0;
+	static MPT_INTERFACE(metatype) lxGlob = { &limexMeta };
+	if (lxReserved) {
+		return 0;
+	}
 	mpt_limex_global();
-	return &lxGlobSolver;
+	return &lxGlob;
 }

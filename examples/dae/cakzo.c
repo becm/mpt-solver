@@ -68,7 +68,7 @@ static int bm_akzo(void *udata, double t, const double *y, double *b, int *idrow
 	return n;
 }
 
-static int cakzo_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+static int cakzo_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(daefcn) usr = MPT_IVP_DAE_INIT;
 	double *param;

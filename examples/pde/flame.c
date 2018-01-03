@@ -56,7 +56,7 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_I
 	return 0;
 }
 /* setup solver for PDE run */
-static int flame_init(MPT_SOLVER(interface) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
+static int flame_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(pdefcn) pde = MPT_IVP_PDE_INIT;
 	int ret, npde = 2;

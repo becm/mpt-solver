@@ -94,7 +94,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *, int , MPT_TYPE(Pro
 
 /* setup generic solver to use radau */
 #ifndef __cplusplus
-extern MPT_SOLVER(interface) *mpt_radau_create(void);
+extern MPT_INTERFACE(metatype) *mpt_radau_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -115,6 +115,7 @@ public:
 	{ }
 	~Radau() __MPT_OVERRIDE
 	{ }
+	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_radau_get(this, pr);
@@ -126,10 +127,10 @@ public:
 		}
 		return mpt_radau_set(this, pr, src);
 	}
-	
-	int step(double t) __MPT_OVERRIDE
+	/* solver operations */
+	int solve() __MPT_OVERRIDE
 	{
-		return mpt_radau_step(this, t);
+		return mpt_radau_step(this, _t);
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{

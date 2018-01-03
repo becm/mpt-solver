@@ -72,7 +72,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *, int , MPT_TYPE(Pro
 
 /* handle for generic solver type */
 #ifndef __cplusplus
-extern MPT_SOLVER(interface) *mpt_dassl_create(void);
+extern MPT_INTERFACE(metatype) *mpt_dassl_create(void);
 #endif
 
 __MPT_EXTDECL_END
@@ -89,6 +89,7 @@ public:
 	{ }
 	~Dassl() __MPT_OVERRIDE
 	{ }
+	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_dassl_get(this, pr);
@@ -100,10 +101,10 @@ public:
 		}
 		return mpt_dassl_set(this, pr, src);
 	}
-	
-	int step(double t) __MPT_OVERRIDE
+	/* solver operations */
+	int solve() __MPT_OVERRIDE
 	{
-		return mpt_dassl_step(this, t);
+		return mpt_dassl_step(this, _t);
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{

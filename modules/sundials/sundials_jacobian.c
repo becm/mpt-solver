@@ -4,6 +4,8 @@
 
 #include "sundials.h"
 
+#include "meta.h"
+
 /*!
  * \ingroup mptSundials
  * \brief set SUNDIALS jacobian

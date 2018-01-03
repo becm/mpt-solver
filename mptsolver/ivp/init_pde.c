@@ -2,6 +2,8 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include "meta.h"
+
 #include "solver.h"
 
 /*!
@@ -14,52 +16,73 @@
  * \param fcn   user supplied right side function and context
  * \param neqs  number of PDE equotations
  * \param arr   grid data points
- * \param log   log/error output descriptor
+ * \param info  log/error output descriptor
  * 
  * \return pointer to nonlinear user funtions
  */
-extern int mpt_init_pde(MPT_SOLVER(interface) *sol, const MPT_IVP_STRUCT(pdefcn) *fcn, int neqs, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *log)
+extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(pdefcn) *fcn, int neqs, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *info)
 {
 	static const char fmt[] = { 'i', MPT_value_toVector('d'), 0 };
 	MPT_INTERFACE(object) *obj;
+	MPT_SOLVER(interface) *sol;
 	MPT_STRUCT(buffer) *buf;
 	struct iovec vec;
 	uint64_t len;
-	int ret;
+	int ret, cap;
 	
 	if (fcn && !fcn->fcn) {
-		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
-		                 MPT_tr("missing right side function"));
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			        MPT_tr("missing right side function"));
+		}
 		return MPT_ERROR(BadArgument);
 	}
 	if (neqs <= 0) {
-		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
-		                 MPT_tr("bad equotation count"));
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			        MPT_tr("bad equotation count"));
+		}
 		return MPT_ERROR(BadValue);
 	}
 	if (!arr
 	 || !(buf = arr->_buf)
 	 || (len = buf->_used / sizeof(double)) < 2) {
-		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s: " PRIu64,
-		                 MPT_tr("bad grid size"), len);
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s: " PRIu64,
+			        MPT_tr("bad grid size"), len);
+		}
 		return MPT_ERROR(BadValue);
 	}
-	if ((ret = sol->_vptr->meta.conv((void *) sol, MPT_ENUM(TypeObject), &obj)) < 0
+	cap = MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE);
+	if (!(sol = mpt_solver_conv(mt, cap, info))) {
+		return MPT_ERROR(BadType);
+	}
+	obj = 0;
+	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) < 0
 	    || !obj) {
-		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s [%d, " PRIu64 "]",
-		                 MPT_tr("failed to get object interface"), neqs, len);
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
+			        MPT_tr("failed to get object interface"), mt);
+		}
 		return ret;
 	}
 	vec.iov_base = buf + 1;
 	vec.iov_len  = len * sizeof(double);
 	if ((ret = mpt_object_set(obj, "", fmt, neqs, vec)) < 0) {
-		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s [%d, " PRIu64 "]",
-		                 MPT_tr("failed to set PDE size"), neqs, len);
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s [%d, " PRIu64 "]",
+			        MPT_tr("failed to set PDE size"), neqs, len);
+		}
 		return ret;
 	}
-	if (fcn && (ret = sol->_vptr->setFunctions(sol, MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE), fcn)) < 0) {
-		if (log) mpt_log(log, __func__, MPT_LOG(Error), "%s",
-		                 MPT_tr("unable to get PDE user functions"));
+	if (!fcn) {
+		return 0;
+	}
+	if ((ret = sol->_vptr->setFunctions(sol, cap, fcn)) < 0) {
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			        MPT_tr("unable to set PDE user functions"));
+		}
 	}
 	return ret;
 }

@@ -12,10 +12,10 @@
 #include <sys/resource.h>
 #include <sys/uio.h>
 
+#include "meta.h"
 #include "node.h"
 #include "message.h"
 #include "array.h"
-#include "meta.h"
 
 #include "values.h"
 #include "output.h"
@@ -31,10 +31,8 @@ MPT_STRUCT(NLS) {
 	MPT_INTERFACE(config) _cfg;
 	
 	MPT_STRUCT(solver_data) *sd;
-	
 	MPT_INTERFACE(metatype) *cfg;
-	
-	MPT_STRUCT(metatype) *sol;
+	MPT_INTERFACE(metatype) *sol;
 	
 	MPT_SOLVER_TYPE(UserInit) *uinit;
 	
@@ -348,7 +346,7 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	    && (val = mpt_object_typename(obj))) {
 		mpt_log(info, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
-	if ((ret = nls->uinit(sol, nls->sd, info)) < 0) {
+	if ((ret = nls->uinit(mt, nls->sd, info)) < 0) {
 		return ret;
 	}
 	return 0;
@@ -421,8 +419,7 @@ static int stepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("solver or data missing"));
 		return MPT_ERROR(BadArgument);
 	}
-	if ((res = mpt_solver_typeid()) < 0
-	    || (res = mt->_vptr->conv(mt, res, &sol)) < 0
+	if ((res = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
 	    || !sol) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("no solver interface"));

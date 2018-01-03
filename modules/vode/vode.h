@@ -71,7 +71,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(Prope
 
 /* setup generic solver to use vode */
 #ifndef __cplusplus
-extern MPT_SOLVER(interface) *mpt_vode_create();
+extern MPT_INTERFACE(metatype) *mpt_vode_create();
 #endif
 
 __MPT_EXTDECL_END
@@ -101,10 +101,10 @@ public:
 		}
 		return mpt_vode_set(this, pr, src);
 	}
-	/* IVP solver implementation */
-	int step(double t) __MPT_OVERRIDE
+	/* solver operations */
+	int solve() __MPT_OVERRIDE
 	{
-		return mpt_vode_step(this, t);
+		return mpt_vode_step(this, _t);
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{

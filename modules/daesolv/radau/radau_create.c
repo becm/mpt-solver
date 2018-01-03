@@ -8,9 +8,13 @@
 
 #include "radau.h"
 
+#include "meta.h"
+
 #include "module_functions.h"
 
 MPT_STRUCT(RadauData) {
+	MPT_INTERFACE(metatype) _mt;
+	
 	MPT_SOLVER(interface) _sol;
 	MPT_INTERFACE(object) _obj;
 	
@@ -44,7 +48,7 @@ static MPT_INTERFACE(metatype) *rdClone(const MPT_INTERFACE(metatype) *mt)
 /* solver interface */
 static int rdReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
 {
-	const MPT_STRUCT(RadauData) *rd = (void *) sol;
+	const MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, sol, _sol);
 	if (!what && !out && !data) {
 		return mpt_radau_get(&rd->d, 0);
 	}
@@ -52,12 +56,12 @@ static int rdReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandl
 }
 static int rdFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {
-	MPT_STRUCT(RadauData) *rd = (void *) sol;
+	MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, sol, _sol);
 	return mpt_radau_ufcn(&rd->d, &rd->uf, type, ptr);
 }
 static int rdSolve(MPT_SOLVER(interface) *sol)
 {
-	MPT_STRUCT(RadauData) *rd = (void *) sol;
+	MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, sol, _sol);
 	return mpt_radau_step(&rd->d, rd->next);
 }
 /* object interface */
@@ -91,16 +95,20 @@ static int rdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
  * 
  * \return RADAU solver instance
  */
-extern MPT_SOLVER(interface) *mpt_radau_create()
+extern MPT_INTERFACE(metatype) *mpt_radau_create()
 {
 	static const MPT_INTERFACE_VPTR(object) radauObj = {
 		rdGet, rdSet
 	};
 	static const MPT_INTERFACE_VPTR(solver) radauSol = {
-		{ { rdFini, rdAddref }, rdConv, rdClone },
 		rdReport,
 		rdFcn,
 		rdSolve
+	};
+	static const MPT_INTERFACE_VPTR(metatype) radauMeta = {
+		{ rdFini, rdAddref },
+		rdConv,
+		rdClone
 	};
 	MPT_STRUCT(RadauData) *rd;
 	
@@ -110,9 +118,11 @@ extern MPT_SOLVER(interface) *mpt_radau_create()
 	mpt_radau_init(&rd->d);
 	rd->d.ipar = memset(&rd->uf, 0, sizeof(rd->uf));
 	
+	rd->_mt._vptr = &radauMeta;
+	
 	rd->_sol._vptr = &radauSol;
 	rd->_obj._vptr = &radauObj;
 	
-	return &rd->_sol;
+	return &rd->_mt;
 }
 

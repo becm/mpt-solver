@@ -107,7 +107,7 @@ extern const double *mpt_portn2_residuals(const MPT_SOLVER_STRUCT(portn2) *);
 
 /* assign portdn2 solver to interface */
 #ifndef __cplusplus
-extern MPT_SOLVER(interface) *mpt_portn2_create(void);
+extern MPT_INTERFACE(metatype) *mpt_portn2_create(void);
 #endif
 
 __MPT_EXTDECL_END

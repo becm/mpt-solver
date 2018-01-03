@@ -9,9 +9,10 @@
 #include <float.h>
 #include <ctype.h>
 
-#include "version.h"
-
 #include "minpack.h"
+
+#include "version.h"
+#include "meta.h"
 
 #include "module_functions.h"
 

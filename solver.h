@@ -8,7 +8,6 @@
 
 #include "object.h"
 #include "array.h"
-#include "meta.h"
 
 #include <sys/uio.h>
 
@@ -152,7 +151,7 @@ enum MPT_SOLVER_ENUM(Report) {
 
 /*! generic solver interface */
 #ifdef __cplusplus
-class interface : public metatype
+class interface
 {
 protected:
 	inline ~interface() {}
@@ -165,33 +164,33 @@ public:
 MPT_SOLVER(interface);
 MPT_INTERFACE_VPTR(solver)
 {
-	/* metatype operations */
-	MPT_INTERFACE_VPTR(metatype) meta;
-	/* call output function with data to report for type */
 	int (*report)(MPT_SOLVER(interface) *, int , MPT_TYPE(PropertyHandler) , void *);
 	int (*setFunctions)(MPT_SOLVER(interface) *, int , const void *);
 	int (*solve)(MPT_SOLVER(interface) *);
+}; MPT_SOLVER(interface) {
+	const MPT_INTERFACE_VPTR(solver) *_vptr;
 };
-MPT_SOLVER(interface)
-{ const MPT_INTERFACE_VPTR(solver) *_vptr; };
 #endif
 
 #ifdef __cplusplus
-/*! generic solver implementation */
-class generic : public object
+class generic : public object, public interface
 {
 public:
 	virtual ~generic()
-	{}
-	virtual int report(int , PropertyHandler , void *) = 0;
+	{ }
 	
 	virtual bool prepare()
 	{
 		return setProperty(0, 0) >= 0;
 	}
-protected:
-	virtual int setFunctions(int , const void *) = 0;
+	
+	template <typename T>
+	inline bool set(const T &fcn)
+	{
+		return setFunctions(functionType(fcn), &fcn) >= 0;
+	}
 };
+
 /*! extension for Initial Value Problems */
 class IVP : public generic
 {
@@ -203,16 +202,27 @@ public:
 	struct daefcn;
 	struct pdefcn;
 	
-	virtual int step(double) = 0;
+	inline IVP() : _t(0.0)
+	{ }
 	
-	inline bool set(double t, Slice<double> x)
+	virtual int step(double t)
 	{
-		return mpt_object_set(this, 0, "dD", t, x) >= 0;
+		double save = _t;
+		_t = t;
+		int err = solve();
+		if (err < 0) _t = save;
+		return err;
+	}
+	inline bool set(double t, Slice<const double> x)
+	{
+		int ret = mpt_object_set(this, 0, "dD", t, x);
+		if (ret >= 0) _t = t;
+		return ret;
 	}
 	template <typename T>
 	inline bool set(const T &fcn)
 	{
-		return setFunctions(functionType(fcn), &fcn) >= 0;
+		return generic::set(fcn);
 	}
 #else
 MPT_IVP_STRUCT(parameters);
@@ -226,6 +236,8 @@ typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Mas))(void *, double , const double *, dou
 /* extensions for PDE solvers */
 typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Rside))(void *, double , const double *, double *, double , double *, double *);
 #ifdef __cplusplus
+protected:
+	double _t;
 };
 #endif
 
@@ -234,13 +246,14 @@ typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Rside))(void *, double , const double *, d
 class NLS : public generic
 {
 public:
+	virtual ~NLS()
+	{ }
+	
 	struct parameters;
 	struct residuals;
 	struct jacobian;
 	struct output;
 	struct functions;
-	
-	virtual int solve() = 0;
 	
 	inline bool set(Slice<const double> par)
 	{
@@ -249,7 +262,7 @@ public:
 	template <typename T>
 	inline bool set(const T &fcn)
 	{
-		return setFunctions(functionType(fcn), &fcn) >= 0;
+		return generic::set(fcn);
 	}
 #endif
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Fcn))(void *rpar, const double *p, double *res, const int *lres);
@@ -334,7 +347,7 @@ MPT_IVP_STRUCT(daefcn)
 MPT_IVP_STRUCT(pdefcn)
 {
 #ifdef __cplusplus
-	inline pdefcn(Pde f, void *p = 0) :fcn(f), par(p)
+	inline pdefcn(Pde f, void *p = 0) : fcn(f), par(p)
 	{ }
 	enum { Type = IvpRside | PDE };
 #else
@@ -527,7 +540,7 @@ typedef struct
 } MPT_SOLVER_TYPE(ivecpar);
 #endif
 
-typedef int (MPT_SOLVER_TYPE(UserInit))(MPT_SOLVER(interface) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
+typedef int (MPT_SOLVER_TYPE(UserInit))(const MPT_INTERFACE(metatype) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
 
 
 __MPT_EXTDECL_BEGIN
@@ -541,12 +554,12 @@ extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) *);
 /* initialize IVP solver states */
 extern int mpt_init_ivp(MPT_INTERFACE(object) *, const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
-extern int mpt_init_dae(MPT_SOLVER(interface) *, const MPT_IVP_STRUCT(daefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-extern int mpt_init_ode(MPT_SOLVER(interface) *, const MPT_IVP_STRUCT(odefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
-extern int mpt_init_pde(MPT_SOLVER(interface) *, const MPT_IVP_STRUCT(pdefcn) *, int , const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_dae(const MPT_INTERFACE(metatype) *, const MPT_IVP_STRUCT(daefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_ode(const MPT_INTERFACE(metatype) *, const MPT_IVP_STRUCT(odefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_pde(const MPT_INTERFACE(metatype) *, const MPT_IVP_STRUCT(pdefcn) *, int , const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* initialize NLS solver states */
-extern int mpt_init_nls(MPT_SOLVER(interface) *, const MPT_NLS_STRUCT(functions) *, const MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_init_nls(const MPT_INTERFACE(metatype) *, const MPT_NLS_STRUCT(functions) *, const MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 
 /* register events on notifier */
@@ -598,7 +611,7 @@ extern double *mpt_solver_data_grid (MPT_STRUCT(solver_data) *);
 extern double *mpt_solver_data_param(MPT_STRUCT(solver_data) *);
 
 /* execute specific IVP solver step */
-extern int mpt_steps_ode(MPT_SOLVER(interface) *, MPT_INTERFACE(iterator) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_steps_ode(MPT_INTERFACE(metatype) *, MPT_INTERFACE(iterator) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* inner node residuals with central differences */
 extern int mpt_residuals_cdiff(void *, double , const double *, double *, const MPT_IVP_STRUCT(parameters) *, MPT_SOLVER_IVP(Rside));
@@ -607,6 +620,8 @@ extern int mpt_residuals_cdiff(void *, double , const double *, double *, const 
 extern const char *mpt_solver_alias(const char *);
 /* load solver of specific type */
 extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **, int , const char *, MPT_INTERFACE(logger) *);
+/* get solver interface from metatype */
+extern MPT_SOLVER(interface) *mpt_solver_conv(const MPT_INTERFACE(metatype) *, int , MPT_INTERFACE(logger) *);
 
 /* set solver parameter */
 extern int mpt_solver_param(MPT_INTERFACE(object) *, MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
@@ -669,53 +684,6 @@ extern int mpt_solver_typeid(void);
 __MPT_EXTDECL_END
 
 #ifdef __cplusplus
-template <class T>
-class Solver : public interface, public T
-{
-public:
-	virtual ~Solver()
-	{ }
-	void unref() __MPT_OVERRIDE
-	{
-		delete this;
-	}
-	int conv(int type, void *ptr) const __MPT_OVERRIDE
-	{
-		int me = mpt_solver_typeid();
-		if (me < 0) {
-			me = metatype::Type;
-		}
-		if (!type) {
-			static const char fmt[] = { metatype::Type, object::Type, 0 };
-			if (ptr) *static_cast<const char **>(ptr) = fmt;
-			return me;
-		}
-		if (type == metatype::Type) {
-			if (ptr) *static_cast<const metatype **>(ptr) = this;
-			return object::Type;
-		}
-		if (type == object::Type) {
-			if (ptr) *static_cast<const object **>(ptr) = this;
-			return me;
-		}
-		if (type == me) {
-			if (ptr) *static_cast<const interface **>(ptr) = this;
-			return object::Type;
-		}
-		return BadType;
-	}
-	int report(int what, PropertyHandler prop, void *ptr) __MPT_OVERRIDE
-	{
-		if (!what && !prop && !ptr) {
-			return T::property(0);
-		}
-		return T::report(what, prop, ptr);
-	}
-	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
-	{
-		return T::setFunctions(what, ptr);
-	}
-};
 } /* namespace solver */
 #endif
 

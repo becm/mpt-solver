@@ -5,9 +5,10 @@
 #include <stdlib.h>
 #include <strings.h>
 
-#include "version.h"
-
 #include "vode.h"
+
+#include "version.h"
+#include "meta.h"
 
 #include "module_functions.h"
 
