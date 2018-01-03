@@ -1,6 +1,5 @@
 
 #include <inttypes.h>
-#include <string.h>
 
 #include "meta.h"
 
@@ -28,7 +27,7 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 	MPT_STRUCT(buffer) *buf;
 	struct iovec vec;
 	uint64_t len;
-	int ret, cap;
+	int ret;
 	
 	if (fcn && !fcn->fcn) {
 		if (info) {
@@ -53,8 +52,13 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		}
 		return MPT_ERROR(BadValue);
 	}
-	cap = MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE);
-	if (!(sol = mpt_solver_conv(mt, cap, info))) {
+	sol = 0;
+	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
+	    || !sol) {
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
+			        MPT_tr("failed to get solver interface"), mt);
+		}
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
@@ -64,7 +68,7 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 			        MPT_tr("failed to get object interface"), mt);
 		}
-		return ret;
+		return MPT_ERROR(BadType);
 	}
 	vec.iov_base = buf + 1;
 	vec.iov_len  = len * sizeof(double);
@@ -78,7 +82,8 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 	if (!fcn) {
 		return 0;
 	}
-	if ((ret = sol->_vptr->setFunctions(sol, cap, fcn)) < 0) {
+	ret = MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE);
+	if ((ret = sol->_vptr->setFunctions(sol, ret, fcn)) < 0) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("unable to set PDE user functions"));

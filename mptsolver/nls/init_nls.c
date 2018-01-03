@@ -37,7 +37,13 @@ extern int mpt_init_nls(const MPT_INTERFACE(metatype) *mt, const MPT_NLS_STRUCT(
 		}
 		return MPT_ERROR(BadArgument);
 	}
-	if (!(sol = mpt_solver_conv(mt, MPT_SOLVER_ENUM(CapableNls), info))) {
+	sol = 0;
+	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
+	    || !sol) {
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
+			        MPT_tr("failed to get solver interface"), mt);
+		}
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;

@@ -1,4 +1,5 @@
 
+#include <inttypes.h>
 #include <sys/uio.h>
 
 #include "meta.h"
@@ -117,7 +118,13 @@ extern int mpt_init_dae(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		}
 		return MPT_ERROR(BadArgument);
 	}
-	if (!(sol = mpt_solver_conv(mt, MPT_SOLVER_ENUM(DAE), info))) {
+	sol = 0;
+	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0
+	    || !sol) {
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
+			        MPT_tr("failed to get solver interface"), mt);
+		}
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
@@ -143,7 +150,13 @@ extern int mpt_init_ode(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		}
 		return MPT_ERROR(BadArgument);
 	}
-	if (!(sol = mpt_solver_conv(mt, MPT_SOLVER_ENUM(DAE), info))) {
+	sol = 0;
+	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0
+	    || !sol) {
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
+			        MPT_tr("failed to get solver interface"), mt);
+		}
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
