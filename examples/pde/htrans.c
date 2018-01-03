@@ -42,7 +42,7 @@ static int rs_pde(void *udata, double t, const double *y, double *f, const MPT_I
 	
 	return 0;
 }
-/* setup solver for PDE run */
+/* solver/client setup for PDE run */
 static int htrans_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(pdefcn) usr = MPT_IVP_PDE_INIT;
@@ -60,6 +60,6 @@ int main(int argc, char * const argv[])
 	if (mpt_init(argc, argv) < 0) {
 		return 1;
 	}
-	cl  = mpt_client_ivp(htrans_init);
+	cl = mpt_client_ivp(htrans_init);
 	return solver_run(cl);
 }

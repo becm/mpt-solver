@@ -67,7 +67,7 @@ static int bm_akzo(void *udata, double t, const double *y, double *b, int *idrow
 	}
 	return n;
 }
-
+/* setup solver for DAE run */
 static int cakzo_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(daefcn) usr = MPT_IVP_DAE_INIT;
@@ -96,13 +96,12 @@ static int cakzo_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data
 	}
 	return neqs;
 }
-
 int main(int argc, char * const argv[])
 {
 	MPT_INTERFACE(client) *cl;
 	if (mpt_init(argc, argv) < 0) {
 		return 1;
 	}
-	cl  = mpt_client_ivp(cakzo_init);
+	cl = mpt_client_ivp(cakzo_init);
 	return solver_run(cl);
 }

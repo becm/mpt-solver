@@ -4,7 +4,7 @@
 
 #include "solver_run.h"
 
-/* map functions to bacol parameters */
+/* solver/client setup for PDE run */
 static int bacol_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
 {
 	int ret, npde = 4;
@@ -16,7 +16,6 @@ static int bacol_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data
 	/* no profile operation */
 	return 0;
 }
-
 int main(int argc, char * const argv[])
 {
 	MPT_INTERFACE(client) *cl;

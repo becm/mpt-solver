@@ -54,7 +54,7 @@ int jac_eval(void *udata, double t, const double *y, double *jac, int ljac)
 	
 	return 0;
 }
-
+/* solver setup for DAE run */
 static int robertson_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(daefcn) usr = MPT_IVP_DAE_INIT;
@@ -78,13 +78,12 @@ static int robertson_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_
 	}
 	return neqs;
 }
-
 int main(int argc, char * const argv[])
 {
 	MPT_INTERFACE(client) *cl;
 	if (mpt_init(argc, argv) < 0) {
 		return 1;
 	}
-	cl  = mpt_client_ivp(robertson_init);
+	cl = mpt_client_ivp(robertson_init);
 	return solver_run(cl);
 }

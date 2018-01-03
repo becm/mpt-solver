@@ -43,7 +43,7 @@ static int deriv(void *udata, const double *x, double *jac, const int *lj, const
 	}
 	return 0;
 }
-
+/* solver/client setup for nonlinear equotations */
 static int neter_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
 {
 	MPT_NLS_STRUCT(functions) usr = MPT_NLSFCN_INIT;
@@ -62,14 +62,12 @@ static int neter_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data
 	}
 	return 2;
 }
-
 int main(int argc, char * const argv[])
 {
 	MPT_INTERFACE(client) *cl;
 	if (mpt_init(argc, argv) < 0) {
 		return 1;
 	}
-	cl  = mpt_client_nls(neter_init);
+	cl = mpt_client_nls(neter_init);
 	return solver_run(cl);
 }
-

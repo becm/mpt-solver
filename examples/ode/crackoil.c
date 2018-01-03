@@ -17,7 +17,7 @@ static int rh_side(void *udata, double t, const double *y, double *f)
 	
 	return 0;
 }
-
+/* solver/client setup for PDE run */
 static int crackoil_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *out)
 {
 	MPT_IVP_STRUCT(odefcn) usr = MPT_IVP_ODE_INIT;
@@ -37,13 +37,12 @@ static int crackoil_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_d
 	}
 	return 2;
 }
-
 int main(int argc, char * const argv[])
 {
 	MPT_INTERFACE(client) *cl;
 	if (mpt_init(argc, argv) < 0) {
 		return 1;
 	}
-	cl  = mpt_client_ivp(crackoil_init);
+	cl = mpt_client_ivp(crackoil_init);
 	return solver_run(cl);
 }

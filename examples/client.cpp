@@ -2,6 +2,8 @@
  *  define user init parameters
  */
 
+#include <iostream>
+
 #include "solver_run.h"
 
 #include MPT_INCLUDE(client.h)
@@ -18,6 +20,7 @@ public:
     { }
     void unref() __MPT_OVERRIDE
     {
+        std::cout << __func__ << std::endl;
         delete this;
     }
     int conv(int type, void *ptr) const __MPT_OVERRIDE
@@ -30,12 +33,15 @@ public:
     int dispatch(mpt::event *ev) __MPT_OVERRIDE
     {
         if (!ev) {
+            std::cout << __func__ << " (term)" << std::endl;
             return mpt::event::Terminate;
         }
+        std::cout << __func__ << " (solver)" << std::endl;
         return mpt::solver::mpt_solver_dispatch(this, ev);
     }
     int process(uintptr_t id, mpt::iterator *) __MPT_OVERRIDE
     {
+        std::cout << __func__ << " " << id << std::endl;
         if (!id) {
             return mpt::event::Default;
         }
