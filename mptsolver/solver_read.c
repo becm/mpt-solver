@@ -34,7 +34,7 @@ static int parseNode(MPT_STRUCT(node) *conf, MPT_INTERFACE(iterator) *args, cons
 	
 	if (args && (ret = args->_vptr->get(args, MPT_ENUM(TypeValue), &val)) < 0) {
 		if ((ret = args->_vptr->get(args, 's', &fname)) < 0
-		    || !fname) {
+		    || !(arg[0] = fname)) {
 			ret = args->_vptr->get(args, 0, 0);
 			mpt_log(log, __func__, MPT_LOG(Error), "%s: %d",
 			        MPT_tr("invalid config type"), ret);
