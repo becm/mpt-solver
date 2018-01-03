@@ -566,7 +566,7 @@ extern int mpt_init_nls(const MPT_INTERFACE(metatype) *, const MPT_NLS_STRUCT(fu
 extern int mpt_solver_dispatch(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
 
 /* get input for required config elements */
-extern int mpt_solver_require(MPT_INTERFACE(config) *, MPT_INTERFACE(reply_context) *);
+extern int mpt_solver_require(MPT_INTERFACE(config) *, MPT_INTERFACE(logger) *);
 
 /* set solver (user data and solver parameter) config files */
 extern int mpt_solver_config(MPT_INTERFACE(object) *, MPT_INTERFACE(iterator) *, MPT_INTERFACE(logger) *);

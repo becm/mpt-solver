@@ -33,6 +33,26 @@ static char *stripFilename(char *base)
 	return base;
 }
 
+static int setFile(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(logger) *info, const char *dest, const char *fname, const char *_func)
+{
+	if (access(fname, R_OK) < 0) {
+		mpt_log(info, _func, MPT_LOG(Warning), "%s: %s",
+		        MPT_tr("file not readable"), fname);
+		return MPT_ERROR(BadValue);
+	}
+	if (mpt_config_set(cfg, dest, fname, 0, 0) < 0) {
+		if (dest) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("failed to set solver config filename"), fname);
+		    
+		} else {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("failed to set client config"), fname);
+		}
+		return MPT_ERROR(BadOperation);
+	}
+	return 0;
+}
 
 /*!
  * \ingroup mptSolver
@@ -40,12 +60,12 @@ static char *stripFilename(char *base)
  * 
  * Get missing solver client file names from user.
  * 
- * \param solv  solver config descriptor
- * \param rc    reply context
+ * \param cfg   solver client config
+ * \param info  log/error output target
  * 
  * \return event result or error
  */
-extern int mpt_solver_require(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(reply_context) *rc)
+extern int mpt_solver_require(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(logger) *info)
 {
 	/* problem config filename from configuration/terminal */
 	static const char defExt[] = "conf\0";
@@ -63,7 +83,9 @@ extern int mpt_solver_require(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(reply_co
 	    && mt->_vptr->conv(mt, 's', &cname) > 0
 	    && cname) {
 		const char *sep = strrchr(cname, '/');
-		if (sep) cname = sep + 1;
+		if (sep) {
+			cname = sep + 1;
+		}
 	}
 	if (!fname) {
 		static const char defName[] = "client\0";
@@ -72,32 +94,20 @@ extern int mpt_solver_require(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(reply_co
 		         MPT_tr("problem settings"), conf, defExt);
 		
 		if (!(rname = mpt_readline(buf))) {
-			mpt_context_reply(rc, MPT_ERROR(MissingData), "%s (%s)",
-			                  MPT_tr("user interrupt"), MPT_tr("client config"));
+			mpt_log(info, __func__, MPT_LOG(Error), "%s (%s)",
+			        MPT_tr("user interrupt"), MPT_tr("client config"));
 			return MPT_ERROR(MissingData);
 		}
 		if (!(fname = stripFilename(rname))) {
 			snprintf(buf, sizeof(buf), "%s.%s", conf, defExt);
 			fname = buf;
 		}
-		if (access(fname, R_OK) < 0) {
-			mpt_context_reply(rc, MPT_ERROR(BadValue), "%s: %s",
-			                  MPT_tr("file not readable"), fname);
-			if (*rname) {
-				free(rname);
-			}
-			return MPT_ERROR(BadValue);
-		}
-		if (mpt_config_set(cfg, 0, fname, 0, 0) < 0) {
-			mpt_context_reply(rc, MPT_ERROR(BadOperation), "%s: %s",
-			                  MPT_tr("failed to set client config"), fname);
-			if (*rname) {
-				free(rname);
-			}
-			return MPT_ERROR(BadOperation);
-		}
+		ret = setFile(cfg, info, 0, fname, __func__);
 		if (*rname) {
 			free(rname);
+		}
+		if (ret < 0) {
+			return ret;
 		}
 	}
 	/* config file has solver settings */
@@ -109,32 +119,20 @@ extern int mpt_solver_require(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(reply_co
 		snprintf(buf, sizeof(buf), "%s [%s_%s.%s]: ",
 		         MPT_tr("solver config"), sol, defPost, defExt);
 		if (!(rname = mpt_readline(buf))) {
-			mpt_context_reply(rc, MPT_ERROR(MissingData), "%s (%s)",
-			                  MPT_tr("user interrupt"), MPT_tr("soler config"));
+			mpt_log(info, __func__, MPT_LOG(Error), "%s (%s)",
+			        MPT_tr("user interrupt"), MPT_tr("soler config"));
 			return MPT_ERROR(MissingData);
 		}
 		if (!(fname = stripFilename(rname))) {
 			snprintf(buf, sizeof(buf), "%s_%s.%s", sol, defPost, defExt);
 			fname = buf;
 		}
-		if (access(fname, R_OK) < 0) {
-			mpt_context_reply(rc, MPT_ERROR(BadValue), "%s: %s",
-			                  MPT_tr("file not readable"), fname);
-			if (*rname) {
-				free(rname);
-			}
-			return MPT_ERROR(BadValue);
-		}
-		if ((ret = mpt_config_set(cfg, "solconf", fname, 0, 0)) < 0) {
-			mpt_context_reply(rc, MPT_ERROR(BadOperation), "%s: %s",
-			                  MPT_tr("failed to set solver config filename"), fname);
-			if (*rname) {
-				free(rname);
-			}
-			return MPT_ERROR(BadOperation);
-		}
-		if (*rname ) {
+		ret = setFile(cfg, info, "solconf", fname, __func__);
+		if (*rname) {
 			free(rname);
+		}
+		if (ret < 0) {
+			return ret;
 		}
 	}
 	return 0;
