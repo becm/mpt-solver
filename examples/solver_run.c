@@ -73,6 +73,7 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		}
 		/* execute event loop */
 		else {
+			mpt_dispatch_param(disp, 0);
 			ret = mpt_loop(&no);
 		}
 	}

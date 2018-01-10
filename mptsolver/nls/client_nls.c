@@ -366,7 +366,7 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	
 	if (!(mt = nls->sol)) {
 		mpt_log(info, _func, MPT_LOG(Warning), "%s (%" PRIxPTR ")",
-		        MPT_tr("missing solver interface"), nls);
+		        MPT_tr("no solver configured"), nls);
 		return MPT_ERROR(BadOperation);
 	}
 	obj = 0;

@@ -6,7 +6,6 @@
 
 #include <stdlib.h>
 #include <inttypes.h>
-#include <stdio.h>
 #include <string.h>
 
 #include <sys/resource.h>
@@ -445,6 +444,8 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 /* prepare operation on solver */
 static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 {
+	static const char _func[] = "mpt::client<IVP>::prep";
+	
 	const MPT_INTERFACE(metatype) *mt;
 	MPT_INTERFACE(logger) *info;
 	MPT_INTERFACE(object) *obj;
@@ -455,11 +456,15 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	info = loggerIVP(ivp);
 	
 	obj = 0;
-	if (!(mt = ivp->sol)
-	    || (err = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) < 0
+	if (!(mt = ivp->sol)) {
+		mpt_log(info, _func, MPT_LOG(Warning), "%s",
+		        MPT_tr("no solver configured"));
+		return MPT_ERROR(BadOperation);
+	}
+	if ((err = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) < 0
 	    || !obj) {
 		err = mt->_vptr->conv(mt, 0, 0);
-		mpt_log(info, __func__, MPT_LOG(Warning), "%s (%s = %d)",
+		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
 		        MPT_tr("solver without object interface"), MPT_tr("type"), err);
 		return MPT_ERROR(BadOperation);
 	}
@@ -470,7 +475,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	/* set solver parameters from args */
 	if (args && (err = mpt_object_args(obj, args)) < 0) {
-		mpt_log(info, __func__, MPT_LOG(Warning), "%s",
+		mpt_log(info, _func, MPT_LOG(Warning), "%s",
 		        MPT_tr("failed to apply solver parameters"));
 		return err;
 	}
@@ -575,13 +580,14 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("no object interface for solver"), sol);
 		return ret;
 	}
-	/* advance time source */
+	/* query solver time */
 	if ((ret = getTime(sol, &curr)) < 0) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		        MPT_tr("unable to get solver time"), sol);
 		return ret;
 	}
 	end = curr;
+	/* advance time source */
 	if ((ret = nextTime(steps, &end, _func, args, info)) <= 0) {
 		return ret;
 	}
@@ -593,20 +599,22 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		ctx.state = MPT_DATASTATE(Step);
 		ret = 1;
 		
-		getrusage(RUSAGE_SELF, &pre);
-		
 		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s (t = %g > %g)",
 		        MPT_tr("attempt solver step"), curr, end);
 		
 		/* assign solver step end time */
 		if ((ret = mpt_solver_setvalue(obj, "t", end)) < 0) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s (t = %g > %g)",
+			mpt_log(info, _func, MPT_LOG(Error), "%s (t = %g > %g)",
 			        MPT_tr("failed to set target time"), curr, end);
 			break;
 		}
+		/* current time */
+		getrusage(RUSAGE_SELF, &pre);
+		
+		/* execute single step */
 		ret = sol->_vptr->solve(sol);
 		
-		/* collect time difference */
+		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
 		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
 		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
@@ -699,6 +707,9 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 	else if (id == mpt_hash("step", 4)) {
 		ret = stepIVP(ivp, it);
 	}
+	else if (id == mpt_hash("cont", 4)) {
+		return MPT_EVENTFLAG(Default);
+	}
 	else if (id == mpt_hash("set", 3)) {
 		ret = mpt_config_args(&ivp->_cfg, it);
 		if (ret > 0) {
@@ -718,9 +729,10 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		return MPT_ERROR(BadArgument);
 	}
 	if (ret < 0) {
-		return ret;
+		return MPT_EVENTFLAG(Fail) | MPT_EVENTFLAG(Default);
+	} else {
+		return MPT_EVENTFLAG(None);
 	}
-	return MPT_EVENTFLAG(None);
 }
 static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 {

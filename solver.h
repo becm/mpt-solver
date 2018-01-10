@@ -156,10 +156,12 @@ class interface
 protected:
 	inline ~interface() {}
 public:
+	enum { Type = TypeSolver };
+	
 	virtual int report(int , PropertyHandler , void *) = 0;
 	virtual int setFunctions(int , const void *) = 0;
 	virtual int solve() = 0;
-}; /* generic solver end */
+};
 #else
 MPT_SOLVER(interface);
 MPT_INTERFACE_VPTR(solver)
@@ -685,6 +687,11 @@ __MPT_EXTDECL_END
 
 #ifdef __cplusplus
 } /* namespace solver */
+
+template<> inline __MPT_CONST_EXPR int typeIdentifier<solver::interface>()
+{
+	return solver::interface::Type;
+}
 #endif
 
 __MPT_NAMESPACE_END
