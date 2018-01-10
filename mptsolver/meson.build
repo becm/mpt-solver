@@ -5,6 +5,7 @@ solv_src = files(
   'conf_graphic.c', 'conf_history.c', 'conf_param.c',
   'output_solver_history.c', 'output_solver_data.c',
   'solver_alias.c',
+  'solver_conv.c',
   'solver_data_fini.c', 'solver_dispatch.c',
   'solver_load.c',
   'solver_output_query.c',

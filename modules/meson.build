@@ -3,6 +3,7 @@
 
 modules_src_gen = files(
   'mod_valloc.c',
+  'mod_value.c',
   join_paths('..', 'base', 'mptcore', 'meta', 'consume.c'),
   join_paths('..', 'base', 'mptcore', 'meta', 'consumable_setup.c')
 )
