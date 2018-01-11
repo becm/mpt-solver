@@ -66,7 +66,8 @@ static MPT_INTERFACE(logger) *loggerNLS(const MPT_STRUCT(NLS) *nls)
 	const MPT_INTERFACE(metatype) *mt;
 	MPT_INTERFACE(logger) *info;
 	
-	if ((mt = nls->cfg)) {
+	if (nls
+	    && (mt = nls->cfg)) {
 		MPT_INTERFACE(config) *cfg = 0;
 		if (mt->_vptr->conv(mt, MPT_ENUM(TypeConfig), &cfg) > 0
 		    && cfg
@@ -162,10 +163,12 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		return MPT_ERROR(BadOperation);
 	}
 	if (!porg->len) {
-		MPT_INTERFACE(logger) *info = loggerNLS(nls);
-		int ret = mpt_node_parse(conf, val, info);
-		info = loggerNLS(nls);
-		if (ret < 0) {
+		MPT_INTERFACE(logger) *info;
+		int ret;
+		
+		/* external log target only */
+		info = loggerNLS(0);
+		if ((ret = mpt_node_parse(conf, val, info)) < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("failed to load client config"));
 		} else {
@@ -285,7 +288,7 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	
 	(void) args;
 	
-	info = loggerNLS(nls);
+	info = loggerNLS(0);
 	
 	if (!(conf = configNLS(nls))) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
@@ -494,17 +497,14 @@ static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 	static const char _func[] = "mpt::client<NLS>::process";
 	
 	MPT_STRUCT(NLS) *nls = (void *) cl;
-	MPT_INTERFACE(logger) *info;
 	int ret;
-	
-	info = loggerNLS(nls);
 	
 	if (!id || id == mpt_hash("start", 5)) {
 		MPT_STRUCT(node) *cfg;
 		if (!(cfg = configNLS(nls))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if ((ret = mpt_solver_read(cfg, id ? it : 0, info)) < 0) {
+		if ((ret = mpt_solver_read(cfg, id ? it : 0, loggerNLS(0))) < 0) {
 			return ret;
 		}
 		if ((ret = initNLS(nls, id ? 0 : it)) < 0) {
@@ -515,11 +515,24 @@ static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		}
 		return MPT_EVENTFLAG(Default);
 	}
-	if (id == mpt_hash("init", 4)) {
+	else if (id == mpt_hash("read", 4)) {
+		MPT_STRUCT(node) *cfg;
+		if (!(cfg = configNLS(nls))) {
+			return MPT_ERROR(BadOperation);
+		}
+		ret = mpt_solver_read(cfg, it, loggerNLS(0));
+	}
+	else if (id == mpt_hash("init", 4)) {
 		ret = initNLS(nls, it);
+	}
+	else if (id == mpt_hash("prep", 4)) {
+		ret = prepNLS(nls, it);
 	}
 	else if (id == mpt_hash("step", 4)) {
 		ret = stepNLS(nls, it);
+	}
+	else if (id == mpt_hash("cont", 4)) {
+		return MPT_EVENTFLAG(Default);
 	}
 	else if (id == mpt_hash("set", 3)) {
 		ret = mpt_config_args(&nls->_cfg, it);
@@ -528,13 +541,13 @@ static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 			if (it) {
 				it->_vptr->get(it, 's', &val);
 			}
-			mpt_log(info, _func, MPT_LOG(Error), "%s (%d): %s",
+			mpt_log(loggerNLS(0), _func, MPT_LOG(Error), "%s (%d): %s",
 			        MPT_tr("bad assign argument"), ret, val);
 			return MPT_EVENTFLAG(Fail);
 		}
 	}
 	else if (id == mpt_hash("unset", 5) || id == mpt_hash("del", 3)) {
-		ret = mpt_config_clear(&nls->_cfg, it, info);
+		ret = mpt_config_clear(&nls->_cfg, it, loggerNLS(0));
 	}
 	else {
 		return MPT_ERROR(BadArgument);

@@ -45,7 +45,8 @@ static MPT_INTERFACE(logger) *loggerIVP(const MPT_STRUCT(IVP) *ivp)
 	MPT_INTERFACE(logger) *info;
 	
 	/* get local config log target */
-	if ((mt = ivp->cfg)) {
+	if (ivp
+	    && (mt = ivp->cfg)) {
 		MPT_INTERFACE(config) *cfg = 0;
 		if (mt->_vptr->conv(mt, MPT_ENUM(TypeConfig), &cfg) > 0
 		    && cfg
@@ -209,10 +210,12 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		return MPT_ERROR(BadOperation);
 	}
 	if (!porg->len) {
-		MPT_INTERFACE(logger) *info = loggerIVP(ivp);
-		int ret = mpt_node_parse(conf, val, info);
-		info = loggerIVP(ivp);
-		if (ret < 0) {
+		MPT_INTERFACE(logger) *info;
+		int ret;
+		
+		/* external log target only */
+		info = loggerIVP(0);
+		if ((ret = mpt_node_parse(conf, val, info)) < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("failed to load client config"));
 		} else {
@@ -330,7 +333,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	const char *val;
 	int ret;
 	
-	info = loggerIVP(ivp);
+	info = loggerIVP(0);
 	
 	if (!(conf = configIVP(ivp))) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
@@ -680,7 +683,7 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		if (!(cfg = configIVP(ivp))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if ((ret = mpt_solver_read(cfg, id ? it : 0, loggerIVP(ivp))) < 0) {
+		if ((ret = mpt_solver_read(cfg, id ? it : 0, loggerIVP(0))) < 0) {
 			return ret;
 		}
 		if ((ret = initIVP(ivp, id ? 0 : it)) < 0) {
@@ -696,7 +699,7 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		if (!(cfg = configIVP(ivp))) {
 			return MPT_ERROR(BadOperation);
 		}
-		ret = mpt_solver_read(cfg, it, loggerIVP(ivp));
+		ret = mpt_solver_read(cfg, it, loggerIVP(0));
 	}
 	else if (id == mpt_hash("init", 4)) {
 		ret = initIVP(ivp, it);
@@ -717,13 +720,13 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 			if (it) {
 				it->_vptr->get(it, 's', &val);
 			}
-			mpt_log(loggerIVP(ivp), _func, MPT_LOG(Error), "%s (%d): %s",
+			mpt_log(loggerIVP(0), _func, MPT_LOG(Error), "%s (%d): %s",
 			        MPT_tr("bad assign argument"), ret, val);
 			return MPT_EVENTFLAG(Fail);
 		}
 	}
 	else if (id == mpt_hash("unset", 5) || id == mpt_hash("del", 3)) {
-		ret = mpt_config_clear(&ivp->_cfg, it, loggerIVP(ivp));
+		ret = mpt_config_clear(&ivp->_cfg, it, loggerIVP(0));
 	}
 	else {
 		return MPT_ERROR(BadArgument);
