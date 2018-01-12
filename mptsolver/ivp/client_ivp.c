@@ -673,8 +673,6 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 /* client interface */
 static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(iterator) *it)
 {
-	static const char _func[] = "mpt::client<IVP>::process";
-	
 	MPT_STRUCT(IVP) *ivp = (void *) cl;
 	int ret;
 	
@@ -714,16 +712,7 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		return MPT_EVENTFLAG(Default);
 	}
 	else if (id == mpt_hash("set", 3)) {
-		ret = mpt_config_args(&ivp->_cfg, it);
-		if (ret > 0) {
-			const char *val = "";
-			if (it) {
-				it->_vptr->get(it, 's', &val);
-			}
-			mpt_log(loggerIVP(0), _func, MPT_LOG(Error), "%s (%d): %s",
-			        MPT_tr("bad assign argument"), ret, val);
-			return MPT_EVENTFLAG(Fail);
-		}
+		ret = mpt_config_args(&ivp->_cfg, it, loggerIVP(0));
 	}
 	else if (id == mpt_hash("unset", 5) || id == mpt_hash("del", 3)) {
 		ret = mpt_config_clear(&ivp->_cfg, it, loggerIVP(0));

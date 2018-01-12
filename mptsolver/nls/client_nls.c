@@ -494,8 +494,6 @@ static int stepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 /* client interface */
 static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(iterator) *it)
 {
-	static const char _func[] = "mpt::client<NLS>::process";
-	
 	MPT_STRUCT(NLS) *nls = (void *) cl;
 	int ret;
 	
@@ -535,16 +533,7 @@ static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		return MPT_EVENTFLAG(Default);
 	}
 	else if (id == mpt_hash("set", 3)) {
-		ret = mpt_config_args(&nls->_cfg, it);
-		if (ret > 0) {
-			const char *val = "";
-			if (it) {
-				it->_vptr->get(it, 's', &val);
-			}
-			mpt_log(loggerNLS(0), _func, MPT_LOG(Error), "%s (%d): %s",
-			        MPT_tr("bad assign argument"), ret, val);
-			return MPT_EVENTFLAG(Fail);
-		}
+		ret = mpt_config_args(&nls->_cfg, it, loggerNLS(0));
 	}
 	else if (id == mpt_hash("unset", 5) || id == mpt_hash("del", 3)) {
 		ret = mpt_config_clear(&nls->_cfg, it, loggerNLS(0));

@@ -45,7 +45,7 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 		cfg->_vptr->assign(cfg, 0, &val);
 		
 		/* set solver client arguments */
-		if ((ret = mpt_client_config(cfg)) < 0) {
+		if ((ret = mpt_client_config(cfg, 0)) < 0) {
 			dispatchClient(c, 0);
 			return 1;
 		}
