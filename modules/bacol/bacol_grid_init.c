@@ -49,7 +49,7 @@ extern int mpt_bacol_grid_init(int vint, const double *val, int xint, double *x)
 			xint--;
 			x[j++] = next;
 		}
-		return j-1;
+		return j - 1;
 	}
 	/* more data than initial intervals */
 	else {
@@ -57,9 +57,10 @@ extern int mpt_bacol_grid_init(int vint, const double *val, int xint, double *x)
 		x[0] = val[0];
 		x[xint] = val[vint--];
 		
+		++val;
 		while (pos < xint && vint) {
 			double sum = 0.0;
-			int i, count = vint / (xint-pos);
+			int i, count = vint / (xint - pos);
 			
 			for (i = 0; i < count; ++i) sum += val[i];
 			val += count;
