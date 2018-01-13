@@ -21,13 +21,11 @@
  */
 extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(pdefcn) *fcn, int neqs, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *info)
 {
-	static const char fmt[] = { 'i', MPT_value_toVector('d'), 0 };
 	MPT_INTERFACE(object) *obj;
 	MPT_SOLVER(interface) *sol;
 	MPT_STRUCT(buffer) *buf;
-	struct iovec vec;
 	uint64_t len;
-	int ret;
+	int ret, types;
 	
 	if (fcn && !fcn->fcn) {
 		if (info) {
@@ -40,15 +38,6 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("bad equotation count"));
-		}
-		return MPT_ERROR(BadValue);
-	}
-	if (!arr
-	 || !(buf = arr->_buf)
-	 || (len = buf->_used / sizeof(double)) < 2) {
-		if (info) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s: " PRIu64,
-			        MPT_tr("bad grid size"), len);
 		}
 		return MPT_ERROR(BadValue);
 	}
@@ -70,20 +59,49 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		}
 		return MPT_ERROR(BadType);
 	}
-	vec.iov_base = buf + 1;
-	vec.iov_len  = len * sizeof(double);
-	if ((ret = mpt_object_set(obj, "", fmt, neqs, vec)) < 0) {
-		if (info) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s [%d, " PRIu64 "]",
-			        MPT_tr("failed to set PDE size"), neqs, len);
+	len = 0;
+	if (!arr) {
+		if ((ret = mpt_object_set(obj, "", "i", neqs)) < 0) {
+			if (info) {
+				mpt_log(info, __func__, MPT_LOG(Error), "%s (%d)",
+				        MPT_tr("failed to set PDE count"), neqs);
+			}
+			return ret;
 		}
-		return ret;
+	}
+	else if (!(buf = arr->_buf)
+	         || (len = buf->_used / sizeof(double)) < 2) {
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s: %" PRIu64,
+			        MPT_tr("bad grid size"), len);
+		}
+		return MPT_ERROR(BadValue);
+	}
+	else {
+		static const char fmt[] = { 'i', MPT_value_toVector('d'), 0 };
+		struct iovec vec;
+		
+		vec.iov_base = buf + 1;
+		vec.iov_len  = len * sizeof(double);
+		if ((ret = mpt_object_set(obj, "", fmt, neqs, vec)) < 0) {
+			if (info) {
+				mpt_log(info, __func__, MPT_LOG(Error), "%s: %d, [%" PRIu64 "]",
+				        MPT_tr("failed to set PDE parameters"), neqs, len);
+			}
+			return ret;
+		}
 	}
 	if (!fcn) {
 		return 0;
 	}
-	ret = MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE);
-	if ((ret = sol->_vptr->setFunctions(sol, ret, fcn)) < 0) {
+	types = MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE);
+	if ((ret = sol->_vptr->setFunctions(sol, types, fcn)) < 0) {
+		if (info) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			        MPT_tr("unable to set PDE user functions"));
+		}
+	}
+	else if ((ret = sol->_vptr->setFunctions(sol, ~types, 0)) < 0) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("unable to set PDE user functions"));
