@@ -30,43 +30,6 @@ MPT_SOLVER_STRUCT(bacol_fcn)
 	void (*uinit)(double *, double *, int *);
 };
 
-MPT_SOLVER_STRUCT(bacol);
-MPT_SOLVER_STRUCT(bacol_out)
-{
-#ifdef __cplusplus
-public:
-	bacol_out();
-	~bacol_out();
-	
-	inline const double *x() const
-	{ return nint ? static_cast<double *>(_val.iov_base) : 0; }
-	const double *y() const
-	{
-		const double *val = static_cast<double *>(_val.iov_base);
-		if (!val || !nint || deriv) return 0;
-		return val + nint + 1;
-	}
-	inline int intervals() const
-	{ return nint; }
-	inline int equotations() const
-	{ return neqs; }
-	inline void invalidate()
-	{ nint = 0; }
-	
-	bool set(const MPT_SOLVER_STRUCT(bacol) *);
-protected:
-#endif
-	/* adapt grid data */
-	int (*update)(int , const double *, int , double *);
-	
-	struct iovec _val,  /* output values */
-	             _wrk;  /* work space */
-	
-	uint32_t  nint;     /* interval count */
-	uint16_t  neqs;     /* equotation count */
-	uint8_t   deriv;    /* derivation count */
-};
-
 MPT_SOLVER_STRUCT(bacol)
 {
 #ifdef __cplusplus
@@ -107,6 +70,45 @@ public:
 	struct iovec cpar;   /* radau complex parameter */
 	double tstop;        /* dassl tstop value */
 	} bd;
+};
+
+MPT_SOLVER_STRUCT(bacol_out)
+{
+#ifdef __cplusplus
+public:
+	bacol_out();
+	~bacol_out();
+	
+	inline Slice<const double> x() const
+	{
+		const double *val = static_cast<double *>(_val.iov_base);
+		return Slice<const double>(val, nint ? nint + 1 : 0);
+	}
+	inline Slice<const double> y() const
+	{
+		const double *val = static_cast<double *>(_val.iov_base);
+		if (!nint || deriv) return Slice<const double>(0, 0);
+		return Slice<const double>(val + nint + 1, nint + 1);
+	}
+	inline int intervals() const
+	{ return nint; }
+	inline int equotations() const
+	{ return neqs; }
+	inline void invalidate()
+	{ nint = 0; }
+	
+	bool set(const bacol &);
+protected:
+#endif
+	/* adapt grid data */
+	int (*update)(int , const double *, int , double *);
+	
+	struct iovec _val,  /* output values */
+	             _wrk;  /* work space */
+	
+	uint32_t  nint;     /* interval count */
+	uint16_t  neqs;     /* equotation count */
+	uint8_t   deriv;    /* derivation count */
 };
 
 __MPT_EXTDECL_BEGIN
@@ -171,6 +173,8 @@ inline bacol_out::bacol_out()
 { mpt_bacol_output_init(this); }
 inline bacol_out::~bacol_out()
 { mpt_bacol_output_fini(this); }
+inline bool bacol_out::set(const bacol &from)
+{ return mpt_bacol_values(this, &from) != 0; }
 
 class Bacol : public IVP, bacol
 {
@@ -183,6 +187,7 @@ public:
 	{ }
 	int solve() __MPT_OVERRIDE
 	{
+		_values.invalidate();
 		return mpt_bacol_step(this, _t);
 	}
 	int property(struct property *pr) const __MPT_OVERRIDE
@@ -191,61 +196,49 @@ public:
 	}
 	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
+		_values.invalidate();
 		if (!pr && !src) {
 			return mpt_bacol_prepare(this);
 		}
-		_values.invalidate();
 		return mpt_bacol_set(this, pr, src);
 	}
 	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
 	{
-		if (what & Values) {
-			update();
-			if (out) {
-				struct context {
-					PropertyHandler out;
-					void *par;
-					static int setProp(void *ptr, value val)
-					{
-						const context *ctx = static_cast<context *>(ptr);
-						struct property pr;
-						pr.desc = "BACOL solver state";
-						pr.val = val;
-						return ctx->out(ctx->par, &pr);
-					}
-				};
-				struct context ctx;
-				ctx.out = out;
-				ctx.par = opar;
-				mpt_bacol_output_report(&_values, t, context::setProp, &ctx);
-			}
-			what &= ~Values;
+		int ret;
+		if ((ret = mpt_bacol_report(this, what & ~Values, out, opar)) < 0
+		    || !(what & Values)
+		    || !out) {
+			return ret;
 		}
-		return mpt_bacol_report(this, what, out, opar);
+		struct context {
+			PropertyHandler out;
+			void *par;
+			static int setProp(void *ptr, value val)
+			{
+				const context *ctx = static_cast<context *>(ptr);
+				struct property pr;
+				pr.desc = "BACOL solver state";
+				pr.val = val;
+				return ctx->out(ctx->par, &pr);
+			}
+		};
+		struct context ctx;
+		ctx.out = out;
+		ctx.par = opar;
+		mpt_bacol_output_report(&values(), t, context::setProp, &ctx);
+		return ret + 1;
 	}
 	int setFunctions(int , const void *) __MPT_OVERRIDE
 	{
 		return BadValue;
 	}
 	
-	inline const double *x() const
+	inline const struct bacol_out &values()
 	{
-		return _values.x();
-	}
-	inline const double *y() const
-	{
-		return _values.y();
-	}
-	inline long update()
-	{
-		long len = _values.intervals();
-		if (!len) {
-			if (!mpt_bacol_values(&_values, this)
-			 || !(len = _values.intervals())) {
-				return 0;
-			}
+		if (!_values.intervals()) {
+			_values.set(*this);
 		}
-		return len + 1;
+		return _values;
 	}
 protected:
 	struct bacol_out _values;
