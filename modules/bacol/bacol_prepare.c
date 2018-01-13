@@ -21,9 +21,6 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	if (npde < 1 || bac->nint < 1 || bac->nint > nimx) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (!bac->ivp.pint) {
-		bac->ivp.pint = bac->nint;
-	}
 	/* invalidate prepared state */
 	bac->mflag.noinit = -1;
 	
@@ -76,7 +73,9 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	if (!(tmp = realloc(bac->xy, (nimx + 1 + maxvec) * sizeof(*bac->xy)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!bac->xy) {
+	if (bac->ivp.grid) {
+		mpt_bacol_grid_init(bac->ivp.pint, bac->ivp.grid, bac->nint, tmp);
+	} else {
 		int i, nint = bac->nint;
 		double dx = 1.0 / nint;
 		for (i = 0; i <= nint; ++i) tmp[i] = i *dx;

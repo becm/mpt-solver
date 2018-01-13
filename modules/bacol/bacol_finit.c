@@ -49,7 +49,7 @@ extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *bac)
 extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *bac)
 {
 	bac->ivp.neqs = 1;
-	bac->ivp.pint = -1;
+	bac->ivp.pint = 0;
 	
 	MPT_VECPAR_INIT(&bac->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&bac->atol, __MPT_IVP_ATOL);

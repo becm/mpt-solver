@@ -17,7 +17,8 @@ extern const double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacol_out) *out, const M
 	if (!bac || bac->mflag.noinit < 0) {
 		return 0;
 	}
-	if (!(nint = bac->ivp.pint)) {
+	if (!(nint = bac->ivp.pint)
+	    && (nint = bac->nint) < 1) {
 		return 0;
 	}
 	kcol = bac->kcol;
