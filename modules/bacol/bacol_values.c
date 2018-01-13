@@ -17,7 +17,8 @@ extern const double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacol_out) *out, const M
 	if (!bac || bac->mflag.noinit < 0) {
 		return 0;
 	}
-	if (!(nint = bac->ivp.pint)
+	if ((nint = out->nint) <= 0
+	    && (nint = bac->ivp.pint) < 1
 	    && (nint = bac->nint) < 1) {
 		return 0;
 	}
@@ -39,21 +40,18 @@ extern const double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacol_out) *out, const M
 	if (!(val = mpt_solver_module_valloc(&out->_val, wlen, sizeof(double)))) {
 		return 0;
 	}
-	if (out->update && bac->xy) {
+	if (out->update) {
 		int intv;
 		if ((intv = out->update(bac->nint, bac->xy, nint, val)) < 0
 		 || intv > nint) {
 			return 0;
 		}
 		nint = intv;
-		npts = nint + 1;
+	} else {
+		nint = mpt_bacol_grid_init(bac->nint, bac->xy, nint, val);
 	}
-	else if (bac->ivp.grid) {
-		memcpy(val, bac->ivp.grid, npts * sizeof(*val));
-	}
-	else {
-		nint = mpt_bacol_grid_init(0, 0, nint, val);
-	}
+	npts = nint + 1;
+	
 	if (bac->mflag.noinit) {
 		/* generate y-values for grid */
 		values_(&kcol, val, &bac->nint, bac->xy, &neqs, &npts,

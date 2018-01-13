@@ -49,5 +49,6 @@ extern void mpt_bacol_output_fini(MPT_SOLVER_STRUCT(bacol_out) *out)
 	mpt_solver_module_valloc(&out->_wrk, 0, 0);
 	
 	out->nint = 0;
+	out->neqs = 0;
 	out->deriv = 0;
 }

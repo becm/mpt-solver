@@ -70,8 +70,8 @@ static int bacReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHand
 		return MPT_SOLVER_ENUM(PDE);
 	}
 	if (what & MPT_SOLVER_ENUM(Values)) {
-		if (!bac->out.nint) {
-			mpt_bacol_values(&bac->out, &bac->d);
+		if (!bac->out.nint && !mpt_bacol_values(&bac->out, &bac->d)) {
+			return MPT_ERROR(BadOperation);
 		}
 		if (out) {
 			struct outContext ctx;

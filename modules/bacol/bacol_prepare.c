@@ -73,14 +73,9 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	if (!(tmp = realloc(bac->xy, (nimx + 1 + maxvec) * sizeof(*bac->xy)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (bac->ivp.grid) {
-		mpt_bacol_grid_init(bac->ivp.pint, bac->ivp.grid, bac->nint, tmp);
-	} else {
-		int i, nint = bac->nint;
-		double dx = 1.0 / nint;
-		for (i = 0; i <= nint; ++i) tmp[i] = i *dx;
-	}
 	bac->xy = tmp;
+	
+	mpt_bacol_grid_init(bac->ivp.pint, bac->ivp.grid, bac->nint, tmp);
 	
 	if (!mpt_solver_module_valloc(&bac->ipar, lip, sizeof(int))) {
 		return MPT_ERROR(BadOperation);
