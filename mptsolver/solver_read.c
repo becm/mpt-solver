@@ -100,7 +100,7 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 		
 		/* no further data */
 		if (!ret) {
-			if (!sol) {
+			if (!sol || !sol->_meta) {
 				replaceConfig(conf, &cfg);
 				return 1;
 			}
@@ -144,8 +144,9 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 		if ((ret = mpt_node_parse(&cfg, &val, info)) < 0) {
 			return ret;
 		}
-		/* no solver config new data */
-		if (!(sol = mpt_node_next(cfg.children, solconfName))) {
+		/* no indirect source */
+		if (!(sol = mpt_node_next(cfg.children, solconfName))
+		    || !sol->_meta) {
 			replaceConfig(conf, &cfg);
 			return 1;
 		}
@@ -153,27 +154,13 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 	
 	/* get solver config file parameters from data */
 	if (!args) {
-		/* use existing solver config data */
-		if (sol->children) {
-			replaceConfig(conf, &cfg);
-			return 1;
-		}
-		/* no indirect source */
-		if (!sol->_meta) {
-			if (info) {
-				mpt_log(info, __func__, MPT_LOG(Info), "%s",
-				        MPT_tr("no solver config source"));
-			}
-			replaceConfig(conf, &cfg);
-			return 1;
-		}
 		/* default setup for solver config */
 		val.fmt = fmt;
 		val.ptr = dat;
 		dat[0] = 0;
 		dat[1] = fmt_sol;
 		
-		/* bad data in new config */
+		/* bad source in config */
 		if ((ret = getValue(sol->_meta, &val, (const void **) &dat[0])) < 0) {
 			if (info) {
 				mpt_log(info, __func__, MPT_LOG(Error), "%s",
