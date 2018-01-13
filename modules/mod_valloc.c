@@ -17,7 +17,9 @@ extern void *mpt_solver_module_valloc(struct iovec *vec, size_t need, size_t esi
 	void *ptr;
 	
 	if (!need) {
-		if ((ptr = vec->iov_base)) free(ptr);
+		if ((ptr = vec->iov_base)) {
+			free(ptr);
+		}
 		vec->iov_base = 0;
 		vec->iov_len  = 0;
 		return 0;

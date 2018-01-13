@@ -72,8 +72,10 @@ static void info(generic &s)
 
 static void pde(IVP &s)
 {
-	// PDE equotations and intervals
-	mpt_object_set(&s, "", "iu", 3, 10);
+	double vec[3] = { 1, 2, 3 };
+	Slice<double> val(vec, 3);
+	// PDE equotations and grid
+	mpt_object_set(&s, "", "iD", 3, val);
 	// PDE time and start values
 	mpt_object_set(&s, 0, "dddd", 0.5, 1.1, 1.2, 1.3);
 	

@@ -11,26 +11,17 @@
 
 extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *bac)
 {
-	if (bac->xy) {
-		free(bac->xy);
-		bac->xy = 0;
-	}
-	if (bac->ipar.iov_base) {
-		free(bac->ipar.iov_base);
-		bac->ipar.iov_base = 0;
-	}
-	bac->ipar.iov_len  = 0;
-	
-	if (bac->rpar.iov_base) {
-		free(bac->rpar.iov_base);
-		bac->rpar.iov_base = 0;
-	}
-	bac->rpar.iov_len  = 0;
+	mpt_solver_module_ivpset(&bac->ivp, 0);
 	
 	mpt_solver_module_tol_check(&bac->rtol, 0, 0, __MPT_IVP_RTOL);
 	mpt_solver_module_tol_check(&bac->atol, 0, 0, __MPT_IVP_ATOL);
 	
-	bac->mflag.noinit = -1;
+	if (bac->xy) {
+		free(bac->xy);
+		bac->xy = 0;
+	}
+	mpt_solver_module_valloc(&bac->ipar, 0, 0);
+	mpt_solver_module_valloc(&bac->rpar, 0, 0);
 	
 	switch (bac->_backend) {
 #ifdef MPT_BACOL_RADAU
@@ -44,6 +35,8 @@ extern void mpt_bacol_fini(MPT_SOLVER_STRUCT(bacol) *bac)
 		break;
 	  default:;
 	}
+	
+	bac->mflag.noinit = -1;
 }
 
 extern void mpt_bacol_init(MPT_SOLVER_STRUCT(bacol) *bac)

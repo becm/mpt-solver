@@ -9,20 +9,18 @@
 
 extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *data)
 {
-	if (data->ivp.grid) {
-		free(data->ivp.grid);
-		data->ivp.grid = 0;
-	}
-	if (data->y) {
-		free(data->y);
-		data->y = 0;
-	}
-	mpt_solver_module_valloc(&data->rwork, 0, 0);
-	mpt_solver_module_valloc(&data->iwork, 0, 0);
+	mpt_solver_module_ivpset(&data->ivp, 0);
 	
 	mpt_solver_module_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
 	mpt_solver_module_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
 	
+	mpt_solver_module_valloc(&data->rwork, 0, 0);
+	mpt_solver_module_valloc(&data->iwork, 0, 0);
+	
+	if (data->y) {
+		free(data->y);
+		data->y = 0;
+	}
 	data->istate = -7;
 }
 

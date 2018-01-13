@@ -2,6 +2,7 @@
  * initialize/finalize CVode instance
  */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "cvode/cvode_impl.h"
@@ -36,6 +37,8 @@ extern void sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
  */
 extern void sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
 {
+	mpt_solver_module_ivpset(&data->ivp, 0);
+	
 	sundials_cvode_reset(data);
 	
 	if (data->mem) {

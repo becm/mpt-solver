@@ -19,7 +19,6 @@
  */
 extern void sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
 {
-	
 	if (data->sd.y) {
 		N_VDestroy(data->sd.y);
 	}
@@ -49,7 +48,10 @@ extern void sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
  */
 extern void sundials_ida_fini(MPT_SOLVER_STRUCT(ida) *data)
 {
+	mpt_solver_module_ivpset(&data->ivp, 0);
+	
 	sundials_ida_reset(data);
+	
 	if (data->mem) {
 		IDAFree(&data->mem);
 		data->mem = NULL;
