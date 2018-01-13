@@ -458,18 +458,26 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	
 	info = loggerIVP(ivp);
 	
-	obj = 0;
 	if (!(mt = ivp->sol)) {
 		mpt_log(info, _func, MPT_LOG(Warning), "%s",
 		        MPT_tr("no solver configured"));
 		return MPT_ERROR(BadOperation);
 	}
+	sol = 0;
+	if ((err = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
+	    || !sol) {
+		err = mt->_vptr->conv(mt, 0, 0);
+		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
+		        MPT_tr("no solver interface"), MPT_tr("type"), err);
+		return MPT_ERROR(BadType);
+	}
+	obj = 0;
 	if ((err = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) < 0
 	    || !obj) {
 		err = mt->_vptr->conv(mt, 0, 0);
 		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
 		        MPT_tr("solver without object interface"), MPT_tr("type"), err);
-		return MPT_ERROR(BadOperation);
+		return MPT_ERROR(BadType);
 	}
 	/* set solver parameters from config */
 	if ((cfg = configIVP(ivp))
@@ -485,11 +493,10 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	ret = obj->_vptr->setProperty(obj, 0, 0);
 	
 	/* initial output for PDE mode */
-	sol = 0;
-	if (ivp->sd
-	    && !ivp->sd->nval
-	    && (err = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) >= 0
-	    && sol) {
+	if (!ivp->sd || ivp->sd->nval) {
+		mpt_solver_status(sol, info, 0, 0);
+	}
+	else {
 		MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
 		struct _clientPdeOut ctx;
 		mpt_solver_output_query(&out, &ivp->_cfg);

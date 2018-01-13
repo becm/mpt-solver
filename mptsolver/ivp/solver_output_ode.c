@@ -22,7 +22,8 @@
  */
 extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *so, int state, const MPT_STRUCT(solver_data) *sd)
 {
-	MPT_STRUCT(buffer) *buf;
+	const MPT_STRUCT(buffer) *buf;
+	MPT_INTERFACE(output) *out;
 	const double *val;
 	int ld, len;
 	
@@ -37,13 +38,13 @@ extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *so, int state,
 	    || !(len /= ld)) {
 		return MPT_ERROR(MissingData);
 	}
-	val = (void *) (buf + 1);
+	val = (const void *) (buf + 1);
 	
-	if (so->_data) {
-		mpt_output_ivp_header(so->_data, len, ld, 0);
-		mpt_output_solver_history(so->_data, 0, len, val, ld);
+	if ((out = so->_data)) {
+		mpt_output_ivp_header(out, len, ld, 0);
+		mpt_output_solver_history(out, 0, len, val, ld);
 	}
-	if (so->_graphic) {
+	if ((out = so->_graphic)) {
 		const uint8_t *pass;
 		size_t passlen;
 		int i, nout = 0;
@@ -59,7 +60,7 @@ extern int mpt_solver_output_ode(const MPT_STRUCT(solver_output) *so, int state,
 			if (pass && ((size_t) i >= passlen || !(pass[i] & state))) {
 				continue;
 			}
-			mpt_output_solver_data(so->_graphic, state, i, len, val + i, ld);
+			mpt_output_solver_data(out, state, i, len, val + i, ld);
 			++nout;
 		}
 		return nout;
