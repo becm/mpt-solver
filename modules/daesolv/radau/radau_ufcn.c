@@ -92,7 +92,6 @@ extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, MPT_IVP_STRUCT(daefcn) *
 		rd->rpar = 0;
 		return 0;
 	}
-	ret = 0;
 	if (ufcn->mas.fcn) {
 		double *mas;
 		size_t nz = rd->ivp.neqs * rd->ivp.neqs;
@@ -112,7 +111,7 @@ extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *rd, MPT_IVP_STRUCT(daefcn) *
 	if (ufcn->jac.fcn) {
 		rd->jac = radau_jac;
 	}
-	if (ufcn->jac.fcn) {
+	if (ufcn->rside.fcn) {
 		rd->fcn = radau_fcn;
 	}
 	rd->ipar = (int *) ufcn;

@@ -146,6 +146,6 @@ extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *da, MPT_IVP_STRUCT(daefcn) *
 	da->ipar = (int *) ufcn;
 	da->rpar = (double *) da;
 	
-	return 0;
+	return ret;
 }
 

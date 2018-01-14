@@ -58,17 +58,11 @@ extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *vd, MPT_IVP_STRUCT(odefcn) *uf
 		vd->rpar = 0;
 		return 0;
 	}
-	ret = 0;
 	if (ufcn->rside.fcn) {
-		ret |= MPT_SOLVER_ENUM(IvpRside);
 		vd->fcn = vode_fcn;
 	}
 	if (ufcn->jac.fcn) {
-		ret |= MPT_SOLVER_ENUM(IvpJac);
 		vd->jac = vode_jac;
-	}
-	if (vd->ivp.pint) {
-		ret |= MPT_SOLVER_ENUM(PDE);
 	}
 	vd->ipar = (int *) ufcn;
 	vd->rpar = (double *) vd;
