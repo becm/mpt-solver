@@ -172,7 +172,7 @@ static const MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen,
 	p = *porg;
 	p.flags &= ~MPT_PATHFLAG(HasArray);
 	
-	if (!(conf = mpt_node_query(conf, &p, 0))) {
+	if (!(conf = mpt_node_query(conf, &p))) {
 		return 0;
 	}
 	if (!conf->_meta) {
@@ -259,7 +259,7 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	p = *porg;
 	p.flags &= ~MPT_PATHFLAG(HasArray);
 	
-	if (!(conf = mpt_node_query(conf->children, &p, 0))) {
+	if (!(conf = mpt_node_query(conf->children, &p))) {
 		return MPT_ERROR(BadArgument);
 	}
 	mpt_node_clear(conf);
