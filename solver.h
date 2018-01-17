@@ -459,7 +459,7 @@ struct vecpar
 		return Slice<const T>(&d.val, 1);
 	}
 	inline int type()
-	{ return typeIdentifier<T>(); }
+	{ return typeinfo<T>::id(); }
 	
 	bool resize(size_t elem) {
 		T *t = base;
@@ -500,12 +500,12 @@ struct vecpar
 		struct value v;
 		if (base) {
 			static value::format fmt;
-			fmt.set(vectorIdentifier<T>());
+			fmt.set(typeinfo<Slice<T> >::id());
 			v.fmt = fmt;
 			v.ptr = this;
 		} else {
 			static value::format fmt;
-			fmt.set(typeIdentifier<T>());
+			fmt.set(typeinfo<T>::id());
 			v.fmt = fmt;
 			v.ptr = &d.val;
 		}
@@ -688,7 +688,7 @@ __MPT_EXTDECL_END
 #ifdef __cplusplus
 } /* namespace solver */
 
-template<> inline __MPT_CONST_EXPR int typeIdentifier<solver::interface>()
+template<> inline __MPT_CONST_TYPE int typeinfo<solver::interface *>::id()
 {
 	return solver::interface::Type;
 }
