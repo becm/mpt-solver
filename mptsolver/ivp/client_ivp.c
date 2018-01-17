@@ -35,8 +35,10 @@ MPT_STRUCT(IVP) {
 	
 	MPT_SOLVER_TYPE(UserInit) *uinit;
 	
-	struct timeval ru_usr,   /* user time in solver backend */
-	               ru_sys;   /* system time in solver backend */
+	struct {
+		struct timeval usr,   /* user time in solver backend */
+		               sys;   /* system time in solver backend */
+	} ru;
 };
 
 static MPT_INTERFACE(logger) *loggerIVP(const MPT_STRUCT(IVP) *ivp)
@@ -439,8 +441,9 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 			return ret;
 		}
 	}
+	memset(&ivp->ru, 0, sizeof(ivp->ru));
 	mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
-	        MPT_tr("IVP client preparation finished"));
+	        MPT_tr("IVP client setup finished"));
 	
 	return 0;
 }
@@ -510,6 +513,8 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		mpt_solver_status(sol, info, outPDE, &ctx);
 		mpt_array_clone(&out._pass, 0);
 	}
+	mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
+	        MPT_tr("IVP client preparation finished"));
 	return ret;
 }
 /* step operation on solver */
@@ -564,8 +569,8 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		ret = mpt_steps_ode(mt, steps, ivp->sd, info);
 		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
-		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
-		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
+		mpt_timeradd_sys(&ivp->ru.sys, &pre, &post);
+		mpt_timeradd_usr(&ivp->ru.usr, &pre, &post);
 		
 		if (!ret) {
 			state |= MPT_DATASTATE(Fini);
@@ -579,7 +584,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		mpt_array_clone(&out._pass, 0);
 		
 		if (!ret) {
-			mpt_solver_statistics(sol, info, &ivp->ru_usr, &ivp->ru_sys);
+			mpt_solver_statistics(sol, info, &ivp->ru.usr, &ivp->ru.sys);
 		}
 		return ret;
 	}
@@ -626,8 +631,8 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		
 		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
-		mpt_timeradd_sys(&ivp->ru_sys, &pre, &post);
-		mpt_timeradd_usr(&ivp->ru_usr, &pre, &post);
+		mpt_timeradd_sys(&ivp->ru.sys, &pre, &post);
+		mpt_timeradd_usr(&ivp->ru.usr, &pre, &post);
 		
 		/* get end time */
 		if (getTime(sol, &curr) < 0) {
@@ -664,7 +669,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		mpt_solver_status(sol, info, outPDE, &ctx);
 		
 		if (!ret) {
-			mpt_solver_statistics(sol, info, &ivp->ru_usr, &ivp->ru_sys);
+			mpt_solver_statistics(sol, info, &ivp->ru.usr, &ivp->ru.sys);
 		}
 		if (!args || ret < 1) {
 			break;
@@ -798,8 +803,7 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit)
 	ivp->sol = 0;
 	ivp->uinit = uinit;
 	
-	memset(&ivp->ru_usr, 0, sizeof(ivp->ru_usr));
-	memset(&ivp->ru_sys, 0, sizeof(ivp->ru_sys));
+	memset(&ivp->ru, 0, sizeof(ivp->ru));
 	
 	return &ivp->_cl;
 }

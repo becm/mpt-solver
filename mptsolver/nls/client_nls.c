@@ -36,8 +36,10 @@ MPT_STRUCT(NLS) {
 	
 	MPT_SOLVER_TYPE(UserInit) *uinit;
 	
-	struct timeval  ru_usr,  /* user time in solver backend */
-	                ru_sys;  /* system time in solver backend */
+	struct {
+		struct timeval usr,  /* user time in solver backend */
+		               sys;  /* system time in solver backend */
+	} ru;
 };
 struct _outNLSdata
 {
@@ -352,6 +354,10 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	if ((ret = nls->uinit(mt, nls->sd, info)) < 0) {
 		return ret;
 	}
+	memset(&nls->ru, 0, sizeof(nls->ru));
+	mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
+	        MPT_tr("NLS client setup finished"));
+	
 	return 0;
 }
 /* prepare operation on solver */
@@ -394,6 +400,9 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	if (err < 0) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("solver prepare failed"));
+	} else {
+		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
+		        MPT_tr("IVP client preparation finished"));
 	}
 	return err;
 }
@@ -436,8 +445,8 @@ static int stepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	
 	/* add solver runtime */
 	getrusage(RUSAGE_SELF, &post);
-	mpt_timeradd_sys(&nls->ru_sys, &pre, &post);
-	mpt_timeradd_usr(&nls->ru_usr, &pre, &post);
+	mpt_timeradd_sys(&nls->ru.sys, &pre, &post);
+	mpt_timeradd_usr(&nls->ru.usr, &pre, &post);
 	
 	if (!info) {
 		return res;
@@ -487,7 +496,7 @@ static int stepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 			        desc, i + 1, par[i]);
 		}
 	}
-	mpt_solver_statistics(sol, info, &nls->ru_usr, &nls->ru_sys);
+	mpt_solver_statistics(sol, info, &nls->ru.usr, &nls->ru.sys);
 	
 	return res;
 }
@@ -608,8 +617,7 @@ extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) uinit)
 	nls->sol = 0;
 	nls->uinit = uinit;
 	
-	memset(&nls->ru_usr, 0, sizeof(nls->ru_usr));
-	memset(&nls->ru_sys, 0, sizeof(nls->ru_sys));
+	memset(&nls->ru, 0, sizeof(nls->ru));
 	
 	return &nls->_cl;
 }
