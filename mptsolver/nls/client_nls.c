@@ -344,6 +344,24 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	if (!(sol = mpt_solver_load(&nls->sol, MPT_SOLVER_ENUM(CapableNls), val, info))) {
 		return MPT_ERROR(BadValue);
 	}
+	if (args) {
+		double *par = (void *) (dat->param._buf + 1);
+		int i;
+		for (i = 0; i < dat->npar; ++i) {
+			if ((ret = args->_vptr->get(args, 'd', par + i)) < 0) {
+				mpt_log(info, _func, MPT_LOG(Warning), "%s: %d",
+				        MPT_tr("bad initial value"), i + 1);
+			}
+			if ((ret = args->_vptr->advance(args)) < 0) {
+				mpt_log(info, _func, MPT_LOG(Warning), "%s: %d",
+				        MPT_tr("unable to advance initial values"), i);
+				break;
+			}
+			if (!ret) {
+				break;
+			}
+		}
+	}
 	val = 0;
 	if ((mt = nls->sol)
 	    && mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) > 0
