@@ -17,7 +17,11 @@ mod_require = ${mod_ivp}
 #
 # sources and math objects
 SRCS = $(wildcard bacol_*.c)
-MATH = bacol.o bacolrr.o
+MATH = \
+	bacolnoblas.o \
+	bacolrr.o \
+	dgbsl.o dgbfa.o \
+	dgesl.o dgefa.o
 #
 # headers to export
 HEADER = bacol.h
