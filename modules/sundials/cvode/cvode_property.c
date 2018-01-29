@@ -22,17 +22,31 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, const MPT_INTERFACE(metatype)
 	char *val;
 	int len;
 	CVodeMem cv_mem = cv->mem;
-	if (!src) return 0;
-	if ((len = src->_vptr->conv(src, 'k', &val)) < 0) return len;
-	if (!val) return -2;
-	if (*val && !len) len = strlen(val);
+	if (!src) {
+		return 0;
+	}
+	if ((len = src->_vptr->conv(src, 'k', &val)) < 0) {
+		return len;
+	}
+	if (!val) {
+		return -2;
+	}
+	if (*val && !len) {
+		len = strlen(val);
+	}
 	if (!len || !strncasecmp(adamsText, val, len)) {
-		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_ADAMS) return MPT_ERROR(BadOperation);
-		cv_mem->cv_lmm  = CV_ADAMS; cv_mem->cv_qmax = ADAMS_Q_MAX;
+		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_ADAMS) {
+			return MPT_ERROR(BadOperation);
+		}
+		cv_mem->cv_lmm  = CV_ADAMS;
+		cv_mem->cv_qmax = ADAMS_Q_MAX;
 	}
 	else if (!strncasecmp(bdfText, val, len)) {
-		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_BDF) return MPT_ERROR(BadOperation);
-		cv_mem->cv_lmm  = CV_BDF;   cv_mem->cv_qmax = BDF_Q_MAX;
+		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_BDF) {
+			return MPT_ERROR(BadOperation);
+		}
+		cv_mem->cv_lmm  = CV_BDF;
+		cv_mem->cv_qmax = BDF_Q_MAX;
 	}
 	return len;
 }
@@ -89,8 +103,17 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, co
 	}
 	if (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
-		if (CVodeSetMaxNumSteps(cv_mem, val) < 0) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) {
+			return ret;
+		}
+		if (val < 0) {
+			cv->sd.step = CV_ONE_STEP;
+		}
+		else if (CVodeSetMaxNumSteps(cv_mem, val) < 0) {
+			return MPT_ERROR(BadValue);
+		} else {
+			cv->sd.step = CV_NORMAL;
+		}
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hnilwarns")) {

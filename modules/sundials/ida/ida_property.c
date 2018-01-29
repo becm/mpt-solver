@@ -93,8 +93,18 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, const
 	}
 	if (!strcasecmp(name, "maxnumsteps") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "mxstep")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
-		if (IDASetMaxNumSteps(ida_mem, val) < 0) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) {
+			return ret;
+		}
+		if (val < 0) {
+			ida->sd.step = IDA_ONE_STEP;
+		}
+		else if (IDASetMaxNumSteps(ida_mem, val) < 0) {
+			return MPT_ERROR(BadValue);
+		}
+		else {
+			ida->sd.step = IDA_NORMAL;
+		}
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "tstop")) {
