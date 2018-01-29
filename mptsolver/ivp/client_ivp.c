@@ -333,6 +333,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	MPT_INTERFACE(logger) *info;
 	MPT_SOLVER(interface) *sol;
 	const char *val;
+	double t;
 	int ret;
 	
 	info = loggerIVP(0);
@@ -369,6 +370,21 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	if ((ret = mpt_conf_ivp(dat, conf->children, args, info)) < 0) {
 		return ret;
 	}
+	/* get time source from config */
+	if (!args
+	    && (curr = mpt_node_next(conf->children, "times"))
+	    && (mt = curr->_meta)) {
+		ret = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &args);
+	}
+	/* query and advance time source */
+	t = 0.0;
+	if (args) {
+		ret = args->_vptr->get(args, 'd', &t);
+		if ((ret = args->_vptr->advance(args)) < 0) {
+			mpt_log(info, __func__, MPT_LOG(Warning), "%s: %s",
+			        MPT_tr("unable to advance iterator"), MPT_tr("time steps"));
+		}
+	}
 	/* set graphic parameters */
 	if ((curr = mpt_node_find(conf, "graphic", 1))) {
 		MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
@@ -404,18 +420,11 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	/* setup PDE time and profile data */
 	if (!dat->nval) {
-		curr = mpt_node_next(conf->children, "profile");
 		/* no profile data requested or available */
-		if (!ret || !curr || !(mt = curr->_meta)) {
-			double t = 0;
-			if (!args
-			    && (curr = mpt_node_next(conf->children, "times"))
-			    && (mt = curr->_meta)) {
-				ret = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &args);
-			}
-			 if (args
-			    && (ret = args->_vptr->get(args, 'd', &t)) >= 0
-			    && (ret = mpt_solver_setvalue(obj, 0, t)) < 0) {
+		if (!ret
+		    || !(curr = mpt_node_next(conf->children, "profile"))
+		    || !(mt = curr->_meta)) {
+			if ((ret = mpt_solver_setvalue(obj, 0, t)) < 0) {
 				mpt_log(info, 0, MPT_LOG(Error), "%s: %s",
 				        MPT_tr("solver"), MPT_tr("failed to set initial time"));
 				return ret;

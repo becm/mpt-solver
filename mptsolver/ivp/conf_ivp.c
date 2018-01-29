@@ -51,6 +51,7 @@ extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *md, MPT_STRUCT(node) *conf, MPT
 		return MPT_ERROR(MissingData);
 	}
 	/* require valid time source */
+	t = 0.0;
 	if ((len = times->_vptr->get(times, 'd', &t)) < 0) {
 		if (info) {
 			const char *src = curr ? MPT_tr("config") : MPT_tr("argument");
@@ -58,10 +59,6 @@ extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *md, MPT_STRUCT(node) *conf, MPT
 			        MPT_tr("bad time iteratior"), src);
 		}
 		return MPT_ERROR(BadType);
-	}
-	if (len && (len = times->_vptr->advance(times)) < 0) {
-		mpt_log(info, __func__, MPT_LOG(Error), "%s: %s",
-		        MPT_tr("unable to advance iterator"), MPT_tr("time steps"));
 	}
 	/* load user parameter */
 	if (!md->npar &&

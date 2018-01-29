@@ -47,7 +47,7 @@ int main(int argc, char * const argv[])
 	const char txt[] = "load: ";
 	char buf[128];
 	MPT_INTERFACE(logger) *log;
-	MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(metatype) *mt = 0;
 	mtrace();
 	
 	mpt_init(argc, argv);
@@ -57,8 +57,11 @@ int main(int argc, char * const argv[])
 	while (fgets(buf, sizeof(buf), stdin)) {
 		MPT_SOLVER(interface) *s;
 		size_t len;
-		if (!(len = strlen(buf))) break;
-		buf[len-1] = '\0';
+		
+		if (!(len = strlen(buf))) {
+			break;
+		}
+		buf[len - 1] = '\0';
 		
 		if ((s = mpt_solver_load(&mt, 0, buf, log))) {
 			MPT_INTERFACE(object) *obj = 0;

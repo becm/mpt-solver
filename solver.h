@@ -24,10 +24,8 @@ MPT_INTERFACE(config);
 MPT_INTERFACE(client);
 MPT_INTERFACE(output);
 MPT_INTERFACE(iterator);
-MPT_INTERFACE(reply_context);
 
 MPT_STRUCT(event);
-MPT_STRUCT(proxy);
 MPT_STRUCT(node);
 
 MPT_STRUCT(solver_data)

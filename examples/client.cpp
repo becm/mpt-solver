@@ -25,6 +25,7 @@ public:
     }
     int conv(int type, void *ptr) const __MPT_OVERRIDE
     {
+        std::cout << __func__ << " " << type << std::endl;
         if (type == mpt::config::Type) {
             return mpt::BadType;
         }
