@@ -2,8 +2,16 @@
  * wrapper for IDA Jacobian
  */
 
+#include <stdio.h>
 #include <sundials/sundials_direct.h>
+
 #include <sundials/sundials_nvector.h>
+
+#include <sundials/sundials_matrix.h>
+#include <sunmatrix/sunmatrix_dense.h>
+#include <sunmatrix/sunmatrix_band.h>
+
+#include <ida/ida.h>
 
 #include "sundials.h"
 
@@ -64,50 +72,36 @@ static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double
  * 
  * \return result of user jacobian function
  */
-extern int sundials_ida_jac_band(long int n, long int mu, long int ml,
-                                 realtype t, realtype cj,
-                                 N_Vector y, N_Vector yp, N_Vector f,
-                                 DlsMat Jac, MPT_SOLVER_STRUCT(ida) *ida,
-                                 N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+extern int sundials_ida_jac(realtype t, realtype cj,
+                            N_Vector y, N_Vector yp, N_Vector f,
+                            SUNMatrix Jac, MPT_SOLVER_STRUCT(ida) *ida,
+                            N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
+	const MPT_IVP_STRUCT(daefcn) *fcn;
 	double *jac;
-	int ld;
+	sunindextype ld, n;
 	
-	(void) mu; (void) ml;
+	if (!ida || !(fcn = ida->ufcn) || !fcn->jac.fcn) {
+		return IDA_MEM_NULL;
+	}
 	(void) yp; (void) f;
 	(void) tmp1; (void) tmp2; (void) tmp3;
 	
-	/* BAND_COL(Jac,i) is diagonal element */
-	jac = BAND_COL(Jac,0);
-	ld  = BAND_COL(Jac,1) - jac - 1;
+	ld = SUNMatGetID(Jac);
+	
+	if (ld == SUNMATRIX_DENSE) {
+		jac = SM_DATA_D(Jac);
+		ld  = SM_ROWS_D(Jac);
+		n   = SM_LDATA_D(Jac);
+	}
+	else if (ld == SUNMATRIX_BAND) {
+		jac = SM_DATA_B(Jac);
+		ld  = SM_LDIM_B(Jac);
+		n   = SM_LDATA_B(Jac);
+	}
+	else {
+		return MPT_ERROR(BadArgument);
+	}
 	
 	return sundials_ida_jacobian(ida, n, t, N_VGetArrayPointer(y), cj, jac, ld);
 }
-
-/*!
- * \ingroup mptSundialsIda
- * \brief IDA dense jacobian wrapper
- * 
- * Wrapper to call mpt::ivpfcn jacobian from IDA solver.
- * For parameter description see Sundials documatation.
- * 
- * \return result of user jacobian function
- */
-extern int sundials_ida_jac_dense(long int n, realtype t, realtype cj,
-                                  N_Vector y, N_Vector yp, N_Vector f,
-                                  DlsMat Jac, MPT_SOLVER_STRUCT(ida) *ida,
-                                  N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
-{
-	double *jac;
-	int ld;
-	
-	(void) yp; (void) f;
-	(void) tmp1; (void) tmp2; (void) tmp3;
-	
-	jac = DENSE_COL(Jac,0);
-	ld  = DENSE_COL(Jac,1) - jac;
-	
-	return sundials_ida_jacobian(ida, n, t, N_VGetArrayPointer(y), cj, jac, ld);
-}
-
-

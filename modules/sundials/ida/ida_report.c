@@ -4,8 +4,10 @@
 
 #include <sys/uio.h>
 
-#include <ida/ida_spils.h>
+#include <stdio.h>
 #include <ida/ida_direct.h>
+
+#include <ida/ida_spils.h>
 #include <ida/ida.h>
 
 #include "sundials.h"

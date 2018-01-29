@@ -4,6 +4,7 @@
 
 #include <string.h>
 
+#include <stdio.h>
 #include <nvector/nvector_serial.h>
 
 #include "sundials.h"

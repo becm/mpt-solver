@@ -3,8 +3,12 @@ LIB ?= mpt_sundials
 #
 # additional build flags
 # DEFINES += SUNDIALS_WITH_LAPACK=1
-DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-2.7.0/build
-sundials_elements = cvode ida kinsol nvec_ser
+DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-3.1.0/build
+sundials_lapack = sunlinsol_lapackband sunlinsol_lapackdense
+sundials_matrix = sunmat_band sunmat_dense
+sundials_direct = sunlinsol_band sunlinsol_dense ${sundials_lapack}
+sundials_iter   = sunlinsol_pcg sunlinsol_spbcgs
+sundials_elements = cvode ida kinsol ${sundials_iter} ${sundials_direct} nvec_ser
 INC = . ${MPT_PREFIX}/include ${DIR_SUNDIALS}/include/
 #
 # shared library version
@@ -12,7 +16,7 @@ SHLIB_MAJOR = 1
 SHLIB_MINOR = 0
 SHLIB_TEENY = 0
 # linker settings
-# LDLIBS += -llapack -lblas
+LDLIBS += -llapack -lblas
 LDLIBS += -lm
 LINK   = ${CC}
 #
@@ -23,8 +27,10 @@ mod_require = ${mod_ivp} ufcn_dae ufcn_ode
 cvode_sources = $(wildcard cvode/cvode_*.c)
 ida_sources   = $(wildcard ida/ida_*.c)
 sundials_sources = \
+	sundials_finit.c \
 	sundials_ewtfcn.c \
 	sundials_nvector.c \
+	sundials_linear.c \
 	sundials_jacobian.c \
 	sundials_report.c \
 	sundials_data_new.c

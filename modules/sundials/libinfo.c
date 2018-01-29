@@ -9,7 +9,7 @@
 
 extern void _start()
 {
-	_library_ident("Sundials '"SUNDIALS_PACKAGE_VERSION"' solver library");
+	_library_ident("Sundials '"SUNDIALS_VERSION"' solver library");
 	
 	_library_task("generic interface/operations for included solvers");
 	_library_task("IDA differential-algebraic equotation solver");

@@ -9,6 +9,8 @@
 
 #ifdef __cplusplus
 # include <sundials/sundials_nvector.h>
+# include <sundials/sundials_matrix.h>
+# include <sundials/sundials_linearsolver.h>
 #endif
 
 __MPT_SOLVER_BEGIN
@@ -17,12 +19,21 @@ __MPT_SOLVER_BEGIN
 typedef void * N_Vector;
 #endif
 
+#ifndef _SUNMATRIX_H
+typedef void * SUNMatrix;
+#endif
+
+#ifndef _SUNLINEARSOLVER_H
+typedef void * SUNLinearSolver;
+#endif
+
 enum MPT_SOLVER_ENUM(SundialsFlags) {
 	/* jacobian method */
 	MPT_SOLVER_ENUM(SundialsJacNone)    = 0x00,
 	MPT_SOLVER_ENUM(SundialsJacDense)   = 0x01,
 	MPT_SOLVER_ENUM(SundialsJacBand)    = 0x02,
 	MPT_SOLVER_ENUM(SundialsJacDiag)    = 0x03,
+	MPT_SOLVER_ENUM(SundialsJacType)    = 0x03,
 	MPT_SOLVER_ENUM(SundialsJacNumeric) = 0x10,
 	
 	/* preconditioner type */
@@ -43,6 +54,11 @@ enum MPT_SOLVER_ENUM(SundialsFlags) {
 # elif defined(SUNDIALS_EXTENDED_PRECISION)
 	MPT_SOLVER_ENUM(SundialsRealtype)   = 'e',
 # endif
+# ifdef SUNDIALS_INT64_T
+	MPT_SOLVER_ENUM(SundialsIndextype)  = 'x',
+# else
+	MPT_SOLVER_ENUM(SundialsIndextype)  = 'i',
+# endif
 #endif
 	/* step strategy */
 	MPT_SOLVER_ENUM(SundialsStepNormal) = 0x0,
@@ -50,22 +66,32 @@ enum MPT_SOLVER_ENUM(SundialsFlags) {
 };
 
 MPT_SOLVER_STRUCT(sundials)
+#ifdef _SUNDIALSTYPES_H
 {
 #ifdef _cplusplus
-	inline sundials() : mem(0), y(0), jacobian(0), step(0), mu(-1), ml(-1)
+	inline sundials() : 
+		y(0), A(0), LS(0),
+		mu(-1), ml(-1),
+		jacobian(0), step(0), linalg(0), prec(0), kmax(0)
 	{ }
 	inline ~sundials()
 	{ N_VDestroy(y); }
 #endif
 	N_Vector y;  /* output container */
 	
+	SUNMatrix A; /* linear solver matrix and backend */
+	SUNLinearSolver LS;
+	
+	sunindextype mu, ml;   /* band matrix parameters */
+	
 	int8_t jacobian,  /* jacobian flags */
 	       step,      /* step strategy control */
 	       linalg,    /* type of linear algebra */
-	       prec;      /* preconditioner mode */
-	
-	int32_t mu, ml;   /* band matrix parameters */
-};
+	       prec,      /* preconditioner mode */
+	       kmax;      /* max. Krylov subspace size */
+}
+#endif
+;
 
 MPT_SOLVER_STRUCT(cvode)
 #ifdef _SUNDIALSTYPES_H
@@ -132,6 +158,10 @@ extern N_Vector sundials_nvector_new(long);
 /* calculate errors tolerances */
 extern int sundials_ewtfcn(N_Vector , N_Vector , void *);
 
+/* clear SUNDIALS data */
+extern void sundials_init(MPT_SOLVER_STRUCT(sundials) *);
+extern void sundials_fini(MPT_SOLVER_STRUCT(sundials) *);
+
 /* initialize values */
 extern int sundials_vector_set(N_Vector *, long , long , MPT_INTERFACE(iterator) *);
 
@@ -169,6 +199,9 @@ extern void *sundials_ida_tmp(MPT_SOLVER_STRUCT(ida) *, size_t , size_t);
 extern int sundials_cvode_step(MPT_SOLVER_STRUCT(cvode) *, realtype);
 /* execute IDA step(solver, x, tend) */
 extern int sundials_ida_step(MPT_SOLVER_STRUCT(ida) *, realtype);
+
+/* setup linear solver */
+extern int sundials_linear(MPT_SOLVER_STRUCT(sundials) *, sunindextype);
 #endif
 
 #ifndef __cplusplus
@@ -191,27 +224,18 @@ extern int sundials_cvode_fcn(realtype , N_Vector , N_Vector , _SUNDIALS_GENERIC
 /* wrapper for IDA user functions */
 extern int sundials_ida_fcn(realtype , N_Vector , N_Vector , N_Vector , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *);
 
-# ifdef _SUNDIALS_DIRECT_H
+# ifdef _SUNMATRIX_H
+#  ifdef _SUNDIALS_DIRECT_H
 /* Dense/Banded wrapper for CVode jacobian */
-extern int sundials_cvode_jac_dense(long int , realtype ,
-                                    N_Vector , N_Vector ,
-                                    DlsMat , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *,
-                                    N_Vector , N_Vector , N_Vector);
-extern int sundials_cvode_jac_band(long int , long int , long int , realtype ,
-                                   N_Vector , N_Vector ,
-                                   DlsMat , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *,
-                                   N_Vector , N_Vector , N_Vector);
+extern int sundials_cvode_jac(realtype , N_Vector , N_Vector ,
+                              SUNMatrix , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *,
+                              N_Vector , N_Vector , N_Vector);
 
 /* Dense/Banded wrapper for IDA jacobian */
-extern int sundials_ida_jac_dense(long int , realtype , realtype ,
-                                  N_Vector , N_Vector , N_Vector ,
-                                  DlsMat , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *,
-                                  N_Vector , N_Vector , N_Vector);
-extern int sundials_ida_jac_band(long int , long int , long int ,
-                                 realtype , realtype ,
-                                 N_Vector , N_Vector , N_Vector ,
-                                 DlsMat , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *,
-                                 N_Vector , N_Vector , N_Vector);
+extern int sundials_ida_jac(realtype , realtype , N_Vector , N_Vector , N_Vector ,
+                            SUNMatrix , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *,
+                            N_Vector , N_Vector , N_Vector);
+#  endif
 # endif
 #endif
 

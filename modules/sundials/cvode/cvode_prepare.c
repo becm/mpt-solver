@@ -4,78 +4,15 @@
 
 #include <string.h>
 
-#include <cvode/cvode_spgmr.h>
-#include <cvode/cvode_spbcgs.h>
-#include <cvode/cvode_sptfqmr.h>
-
-#include <cvode/cvode_dense.h>
+#include <stdio.h>
 #include <cvode/cvode_diag.h>
-#include <cvode/cvode_band.h>
+
+#include <cvode/cvode_direct.h>
 
 #include <cvode/cvode_impl.h>
 
 #define _SUNDIALS_GENERIC_TYPE(x) void
 #include "sundials.h"
-
-#ifdef SUNDIALS_WITH_LAPACK
-# include <cvode/cvode_lapack.h>
-/* set lapack solver jacobian method */
-static int setLapack(CVodeMem cv, MPT_SOLVER_STRUCT(sundials) *sd, long neqs)
-{
-	switch (sd->jacobian) {
-		case MPT_SOLVER_ENUM(SundialsJacDiag):
-		case MPT_SOLVER_ENUM(SundialsJacDiag) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			return CVDiag(cv);
-		case MPT_SOLVER_ENUM(SundialsJacDense):
-			if (CVDense(cv, neqs)) {
-				return -1;
-			}
-			return CVDlsSetDenseJacFn(cv, sundials_cvode_jac_dense);
-		
-		case MPT_SOLVER_ENUM(SundialsJacDense) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			return CVDense(cv, neqs);
-		
-		case MPT_SOLVER_ENUM(SundialsJacBand):
-			if (CVBand(cv, neqs, sd->mu, sd->ml)) {
-				return -1;
-			}
-			return CVDlsSetBandJacFn(cv, sundials_cvode_jac_band);
-		
-		case MPT_SOLVER_ENUM(SundialsJacBand) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			return CVBand(cv, neqs, sd->mu, sd->ml);
-		default:
-			return -1;
-	}
-}
-#endif
-/* set direct solver jacobian method */
-static int setDls(CVodeMem cv, MPT_SOLVER_STRUCT(sundials) *sd, long neqs)
-{
-	switch (sd->jacobian) {
-		case MPT_SOLVER_ENUM(SundialsJacDiag):
-		case MPT_SOLVER_ENUM(SundialsJacDiag) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			return CVDiag(cv);
-		case MPT_SOLVER_ENUM(SundialsJacDense):
-			if (CVDense(cv, neqs)) {
-				return -1;
-			}
-			return CVDlsSetDenseJacFn(cv, sundials_cvode_jac_dense);
-		
-		case MPT_SOLVER_ENUM(SundialsJacDense) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			return CVDense(cv, neqs);
-		
-		case MPT_SOLVER_ENUM(SundialsJacBand):
-			if (CVBand(cv, neqs, sd->mu, sd->ml)) {
-				return -1;
-			}
-			return CVDlsSetBandJacFn(cv, sundials_cvode_jac_band);
-		
-		case MPT_SOLVER_ENUM(SundialsJacBand) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			return CVBand(cv, neqs, sd->mu, sd->ml);
-		default:
-			return -1;
-	}
-}
 
 /*!
  * \ingroup mptSundialsCVode
@@ -128,21 +65,35 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	if (err < 0) {
 		return err;
 	}
-	if (!cv->sd.jacobian) cv->sd.linalg = 0;
-	else if (!cv->sd.linalg) cv->sd.linalg = MPT_SOLVER_ENUM(SundialsDls);
-	
-	if (cv->ivp.pint && cv->sd.jacobian) {
-		cv->sd.jacobian |= MPT_SOLVER_ENUM(SundialsJacNumeric);
+	if (!cv->sd.jacobian) {
+		cv->sd.linalg = 0;
 	}
-	switch (cv->sd.linalg) {
-	  case 0: return CVodeSetIterType(cv_mem, CV_FUNCTIONAL);
-	  case MPT_SOLVER_ENUM(SundialsDls):        return setDls(cv_mem, &cv->sd, neqs);
-	  case MPT_SOLVER_ENUM(SundialsSpilsGMR):   return CVSpgmr(cv_mem, PREC_BOTH, 0);
-	  case MPT_SOLVER_ENUM(SundialsSpilsBCG):   return CVSpbcg(cv_mem, PREC_BOTH, 0);
-	  case MPT_SOLVER_ENUM(SundialsSpilsTFQMR): return CVSptfqmr(cv_mem, PREC_BOTH, 0);
-#ifdef SUNDIALS_WITH_LAPACK
-	  case MPT_SOLVER_ENUM(SundialsLapack):     return setLapack(cv_mem, &cv->sd, neqs);
-#endif
-	  default: return -1;
+	else if (!cv->sd.linalg) {
+		cv->sd.linalg = MPT_SOLVER_ENUM(SundialsDls);
+		err = cv->sd.jacobian & MPT_SOLVER_ENUM(SundialsJacType);
+		if (err == MPT_SOLVER_ENUM(SundialsJacBand)) {
+			if (cv->sd.mu < 0) {
+				cv->sd.mu = cv->ivp.neqs;
+			}
+			if (cv->sd.ml < 0) {
+				cv->sd.ml = cv->ivp.neqs;
+			}
+		}
 	}
+	if (!cv->sd.linalg) {
+		return CVodeSetIterType(cv_mem, CV_FUNCTIONAL);
+	}
+	if ((err = sundials_linear(&cv->sd, neqs)) < 0) {
+		return err;
+	}
+	if ((err = CVDlsSetLinearSolver(cv_mem, cv->sd.LS, cv->sd.A)) < 0) {
+		return err;
+	}
+	if (cv->sd.A
+	    && !(cv->sd.jacobian & MPT_SOLVER_ENUM(SundialsJacNumeric))
+	    && cv->ufcn
+	    && cv->ufcn->jac.fcn) {
+		CVDlsSetJacFn(cv_mem, sundials_cvode_jac);
+	}
+	return err;
 }

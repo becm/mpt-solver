@@ -18,10 +18,7 @@
  */
 extern void sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
 {
-	if (data->sd.y) {
-		N_VDestroy(data->sd.y);
-	}
-	memset(&data->sd, 0, sizeof(data->sd));
+	sundials_fini(&data->sd);
 	
 	mpt_solver_module_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
 	mpt_solver_module_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);

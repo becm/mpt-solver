@@ -1,6 +1,8 @@
 /*!
- * report for CVode solver
+ * report for SUNDIALS jacobian operations
  */
+
+#include <sundials/sundials_types.h>
 
 #include "sundials.h"
 

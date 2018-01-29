@@ -19,10 +19,7 @@
  */
 extern void sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
 {
-	if (data->sd.y) {
-		N_VDestroy(data->sd.y);
-	}
-	memset(&data->sd, 0, sizeof(data->sd));
+	sundials_fini(&data->sd);
 	
 	if (data->yp) {
 		N_VDestroy(data->yp);

@@ -2,6 +2,8 @@
  * set Sundials jacobian parameters
  */
 
+#include <sundials/sundials_types.h>
+
 #include "sundials.h"
 
 #include "meta.h"
