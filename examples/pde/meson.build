@@ -5,7 +5,10 @@ test('diffusion PDE test',
   executable('diff', 'diff.c',
     c_args: test_defines,
     dependencies: [ runtime_ivp ]),
-  args: files('diff.conf', 'diff_sol.conf'),
+  args: [
+    files('diff.conf'),
+    'solconf=' + join_paths(meson.current_source_dir(), 'diff_sol.conf')
+  ],
   env : [ 'LD_LIBRARY_PATH=' + examples_ld ]
 )
 
@@ -13,7 +16,10 @@ test('flame PDE test',
   executable('flame', 'flame.c',
     c_args: test_defines,
     dependencies: [ runtime_ivp, libm ]),
-  args: files('flame.conf', 'flame_sol.conf'),
+  args: [
+    files('flame.conf'),
+    'solconf=' + join_paths(meson.current_source_dir(), 'flame_sol.conf')
+  ],
   env : [ 'LD_LIBRARY_PATH=' + examples_ld ]
 )
 
@@ -29,6 +35,9 @@ test('two equotation PDE test',
   executable('twoeq', 'twoeq.c',
     c_args: test_defines,
     dependencies: [ runtime_ivp, libm ]),
-  args: files('twoeq.conf', 'twoeq_sol.conf'),
+  args: [
+    files('twoeq.conf'),
+    'solconf=' + join_paths(meson.current_source_dir(), 'twoeq_sol.conf')
+  ],
   env : [ 'LD_LIBRARY_PATH=' + examples_ld ]
 )

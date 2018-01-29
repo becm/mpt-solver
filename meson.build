@@ -8,8 +8,8 @@ project('mptsolver', 'c', default_options : [
 
 pkg = import('pkgconfig')
 
-mpt_lib = join_paths([ get_option('prefix'), get_option('libdir') ])
-mpt_inc = join_paths([ get_option('prefix'), get_option('includedir'), 'mpt' ])
+mpt_lib = join_paths(get_option('prefix'), get_option('libdir'))
+mpt_inc = join_paths(get_option('prefix'), get_option('includedir'), 'mpt')
 
 # request MPT base elements
 with_io = get_option('with_io')
