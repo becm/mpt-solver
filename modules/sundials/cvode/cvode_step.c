@@ -17,7 +17,7 @@
  * 
  * \return non-zero on error
  */
-extern int sundials_cvode_step(MPT_SOLVER_STRUCT(cvode) *cv, double tend)
+extern int mpt_sundials_cvode_step(MPT_SOLVER_STRUCT(cvode) *cv, double tend)
 {
 	int err;
 	

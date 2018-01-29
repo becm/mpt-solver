@@ -39,7 +39,7 @@ static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double
 		nint = ida->ivp.pint;
 		max  = neqs * neqs;
 		
-		if (!(mas = sundials_ida_tmp(ida, sizeof(*mas) + sizeof(*idrow) + sizeof(*idcol), max))) {
+		if (!(mas = mpt_sundials_ida_tmp(ida, sizeof(*mas) + sizeof(*idrow) + sizeof(*idcol), max))) {
 			return -1;
 		}
 		idrow = (int *)(mas + max);
@@ -72,10 +72,10 @@ static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double
  * 
  * \return result of user jacobian function
  */
-extern int sundials_ida_jac(realtype t, realtype cj,
-                            N_Vector y, N_Vector yp, N_Vector f,
-                            SUNMatrix Jac, MPT_SOLVER_STRUCT(ida) *ida,
-                            N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+extern int mpt_sundials_ida_jac(realtype t, realtype cj,
+                                N_Vector y, N_Vector yp, N_Vector f,
+                                SUNMatrix Jac, MPT_SOLVER_STRUCT(ida) *ida,
+                                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
 	const MPT_IVP_STRUCT(daefcn) *fcn;
 	double *jac;

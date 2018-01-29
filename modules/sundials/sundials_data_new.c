@@ -16,7 +16,7 @@ extern realtype *MPT_SOLVER_MODULE_FCN(data_new)(N_Vector *vec, long len, const 
 	MPT_SOLVER_MODULE_DATA_TYPE *dest;
 	N_Vector nv, ov;
 	size_t size;
-	if (!(nv = sundials_nvector_new(len))) {
+	if (!(nv = mpt_sundials_nvector(len))) {
 		return 0;
 	}
 	dest = N_VGetArrayPointer(nv);

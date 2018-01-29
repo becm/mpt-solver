@@ -17,7 +17,7 @@
  * 
  * \return non-zero on error
  */
-extern int sundials_ida_step(MPT_SOLVER_STRUCT(ida) *ida, double tend)
+extern int mpt_sundials_ida_step(MPT_SOLVER_STRUCT(ida) *ida, double tend)
 {
 	int err;
 	

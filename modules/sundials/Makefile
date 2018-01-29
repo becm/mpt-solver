@@ -24,18 +24,11 @@ LINK   = ${CC}
 mod_require = ${mod_ivp} ufcn_dae ufcn_ode
 #
 # module components
-cvode_sources = $(wildcard cvode/cvode_*.c)
-ida_sources   = $(wildcard ida/ida_*.c)
-sundials_sources = \
-	sundials_finit.c \
-	sundials_ewtfcn.c \
-	sundials_nvector.c \
-	sundials_linear.c \
-	sundials_jacobian.c \
-	sundials_report.c \
-	sundials_data_new.c
+sources_cvode = $(wildcard cvode/*.c)
+sources_ida = $(wildcard ida/*.c)
+sources = $(wildcard sundials_*.c)
 
-SRCS := sundials_modfcn.c ${sundials_sources} ${cvode_sources} ${ida_sources}
+SRCS := ${sources} ${sources_cvode} ${sources_ida}
 
 MATH_OBJS_STATIC != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=static ./sundials_collect.sh ${sundials_elements}
 MATH_OBJS_SHARED != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=shared ./sundials_collect.sh ${sundials_elements}

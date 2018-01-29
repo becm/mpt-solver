@@ -28,7 +28,7 @@ MPT_STRUCT(SundialsIDA) {
 static void idaUnref(MPT_INTERFACE(reference) *ref)
 {
 	MPT_STRUCT(SundialsIDA) *ida = (void *) ref;
-	sundials_ida_fini(&ida->d);
+	mpt_sundials_ida_fini(&ida->d);
 	free(ref);
 }
 static uintptr_t idaRef()
@@ -50,9 +50,9 @@ static int idaReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHand
 {
 	const MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, sol, _sol);
 	if (!what && !out && !data) {
-		return sundials_ida_get(&ida->d, 0);
+		return mpt_sundials_ida_get(&ida->d, 0);
 	}
-	return sundials_ida_report(&ida->d, what, out, data);
+	return mpt_sundials_ida_report(&ida->d, what, out, data);
 }
 static int idaFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {
@@ -68,13 +68,13 @@ static int idaFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 static int idaSolve(MPT_SOLVER(interface) *sol)
 {
 	MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, sol, _sol);
-	return sundials_ida_step(&ida->d, ida->next);
+	return mpt_sundials_ida_step(&ida->d, ida->next);
 }
 /* object interface */
 static int idaGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
 	const MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _obj);
-	return sundials_ida_get(&ida->d, pr);
+	return mpt_sundials_ida_get(&ida->d, pr);
 }
 static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
@@ -82,7 +82,7 @@ static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFAC
 	
 	if (!pr) {
 		if (!src) {
-			int ret = sundials_ida_prepare(&ida->d);
+			int ret = mpt_sundials_ida_prepare(&ida->d);
 			if (ret >= 0) {
 				ida->next = ida->d.t;
 			}
@@ -91,7 +91,7 @@ static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFAC
 	} else if (pr[0] == 't' && pr[1] == 0) {
 		return mpt_solver_module_nextval(&ida->next, ida->d.t, src);
 	}
-	return sundials_ida_set(&ida->d, pr, src);
+	return mpt_sundials_ida_set(&ida->d, pr, src);
 }
 
 /*!
@@ -102,7 +102,7 @@ static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFAC
  * 
  * \return IDA solver instance
  */
-extern MPT_INTERFACE(metatype) *sundials_ida_create()
+extern MPT_INTERFACE(metatype) *mpt_sundials_ida()
 {
 	static const MPT_INTERFACE_VPTR(object) idaObj = {
 		idaGet, idaSet
@@ -122,7 +122,7 @@ extern MPT_INTERFACE(metatype) *sundials_ida_create()
 	if (!(ida = malloc(sizeof(*ida)))) {
 		return 0;
 	}
-	if (sundials_ida_init(&ida->d) < 0) {
+	if (mpt_sundials_ida_init(&ida->d) < 0) {
 		free(ida);
 		return 0;
 	}

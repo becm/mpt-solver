@@ -9,5 +9,5 @@ Local Build
   
   parallel vector implementation is excluded by default to avoid MPI
   dependency, reimplement
-    sundials_nvector_empty()
+    mpt_sundials_nvector()
   and link in before libmpt_sundials.so to use parallel implementation

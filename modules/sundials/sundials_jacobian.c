@@ -17,7 +17,7 @@
  * 
  * \return number of consumed values
  */
-extern int sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, const MPT_INTERFACE(metatype) *src)
+extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_STRUCT(consumable) val;
 	const char *key;

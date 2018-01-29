@@ -28,7 +28,7 @@ MPT_STRUCT(SundialsCVode) {
 static void cVodeUnref(MPT_INTERFACE(reference) *ref)
 {
 	MPT_STRUCT(SundialsCVode) *cv = (void *) ref;
-	sundials_cvode_fini(&cv->d);
+	mpt_sundials_cvode_fini(&cv->d);
 	free(cv);
 }
 static uintptr_t cVodeRef(MPT_INTERFACE(reference) *ref)
@@ -52,9 +52,9 @@ static int cVodeReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHa
 {
 	const MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, sol, _sol);
 	if (!what && !out && !data) {
-		return sundials_cvode_get(&cv->d, 0);
+		return mpt_sundials_cvode_get(&cv->d, 0);
 	}
-	return sundials_cvode_report(&cv->d, what, out, data);
+	return mpt_sundials_cvode_report(&cv->d, what, out, data);
 }
 static int cVodeFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {
@@ -70,13 +70,13 @@ static int cVodeFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 static int cVodeSolve(MPT_SOLVER(interface) *sol)
 {
 	MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, sol, _sol);
-	return sundials_cvode_step(&cv->d, cv->next);
+	return mpt_sundials_cvode_step(&cv->d, cv->next);
 }
 /* object interface */
 static int cVodeGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 {
 	const MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _obj);
-	return sundials_cvode_get(&cv->d, pr);
+	return mpt_sundials_cvode_get(&cv->d, pr);
 }
 static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
 {
@@ -84,7 +84,7 @@ static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERF
 	
 	if (!pr) {
 		if (!src) {
-			int ret = sundials_cvode_prepare(&cv->d);
+			int ret = mpt_sundials_cvode_prepare(&cv->d);
 			if (ret >= 0) {
 				cv->next = cv->d.t;
 			}
@@ -93,7 +93,7 @@ static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERF
 	} else if (pr[0] == 't' && pr[1] == 0) {
 		return mpt_solver_module_nextval(&cv->next, cv->d.t, src);
 	}
-	return sundials_cvode_set(&cv->d, pr, src);
+	return mpt_sundials_cvode_set(&cv->d, pr, src);
 }
 
 /*!
@@ -104,7 +104,7 @@ static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERF
  * 
  * \return CVode solver instance
  */
-extern MPT_INTERFACE(metatype) *sundials_cvode_create()
+extern MPT_INTERFACE(metatype) *mpt_sundials_cvode()
 {
 	static const MPT_INTERFACE_VPTR(object) cVodeObj = {
 		cVodeGet, cVodeSet
@@ -124,7 +124,7 @@ extern MPT_INTERFACE(metatype) *sundials_cvode_create()
 	if (!(cv = malloc(sizeof(*cv)))) {
 		return 0;
 	}
-	if (sundials_cvode_init(&cv->d) < 0) {
+	if (mpt_sundials_cvode_init(&cv->d) < 0) {
 		free(cv);
 		return 0;
 	}

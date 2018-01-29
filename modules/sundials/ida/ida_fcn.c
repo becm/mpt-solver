@@ -15,7 +15,7 @@
  * 
  * \return result of user function
  */
-extern int sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT_SOLVER_STRUCT(ida) *ida)
+extern int mpt_sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT_SOLVER_STRUCT(ida) *ida)
 {
 	const MPT_IVP_STRUCT(daefcn) *dae;
 	const MPT_IVP_STRUCT(pdefcn) *pde;
@@ -51,7 +51,7 @@ extern int sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT
 		
 		max = neqs * neqs;
 		
-		if (!(mas = sundials_ida_tmp(ida, sizeof(*mas) + sizeof(*idrow) + sizeof(*idcol), max))) {
+		if (!(mas = mpt_sundials_ida_tmp(ida, sizeof(*mas) + sizeof(*idrow) + sizeof(*idcol), max))) {
 			return -1;
 		}
 		idrow = (int *)(mas + max);

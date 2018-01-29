@@ -24,7 +24,7 @@
  * 
  * \return number of reported properties
  */
-extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	static const uint8_t longfmt[] = { 'l', 0 };
 	MPT_STRUCT(property) pr;
@@ -47,7 +47,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int show, M
 	}
 	if (out(usr, &pr) > 0) ++line;
 	
-	if (sundials_report_jac(&cv->sd, out, usr) >= 0) ++line;
+	if (mpt_sundials_report_jac(&cv->sd, out, usr) >= 0) ++line;
 	
 	}
 	

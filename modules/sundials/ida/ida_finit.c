@@ -17,9 +17,9 @@
  * 
  * \param data  IDA data
  */
-extern void sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
+extern void mpt_sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
 {
-	sundials_fini(&data->sd);
+	mpt_sundials_fini(&data->sd);
 	
 	if (data->yp) {
 		N_VDestroy(data->yp);
@@ -43,11 +43,11 @@ extern void sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
  * 
  * \param data  IDA data
  */
-extern void sundials_ida_fini(MPT_SOLVER_STRUCT(ida) *data)
+extern void mpt_sundials_ida_fini(MPT_SOLVER_STRUCT(ida) *data)
 {
 	mpt_solver_module_ivpset(&data->ivp, 0);
 	
-	sundials_ida_reset(data);
+	mpt_sundials_ida_reset(data);
 	
 	if (data->mem) {
 		IDAFree(&data->mem);
@@ -65,7 +65,7 @@ extern void sundials_ida_fini(MPT_SOLVER_STRUCT(ida) *data)
  * 
  * \return non-zero on failure
  */
-extern int sundials_ida_init(MPT_SOLVER_STRUCT(ida) *data)
+extern int mpt_sundials_ida_init(MPT_SOLVER_STRUCT(ida) *data)
 {
 	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	

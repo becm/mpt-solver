@@ -21,7 +21,7 @@
  * 
  * \return non-zero on error
  */
-extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
+extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 {
 	IDAMem ida_mem;
 	long neqs;
@@ -36,7 +36,7 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	
 	/* prepare initial vector */
 	if (!ida->sd.y) {
-		if (!(ida->sd.y = sundials_nvector_new(neqs))) {
+		if (!(ida->sd.y = mpt_sundials_nvector(neqs))) {
 			return MPT_ERROR(BadOperation);
 		}
 		N_VConst(0, ida->sd.y);
@@ -47,7 +47,7 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 		}
 		N_VConst(0, ida->yp);
 	}
-	err = IDAInit(ida_mem, sundials_ida_fcn, ida->t, ida->sd.y, ida->yp);
+	err = IDAInit(ida_mem, mpt_sundials_ida_fcn, ida->t, ida->sd.y, ida->yp);
 	
 	/* prepare tolerances */
 	if (!ida->atol.base && !ida->rtol.base) {
@@ -59,7 +59,7 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 		if (mpt_solver_module_tol_check(&ida->atol, ida->ivp.neqs, 1, __MPT_IVP_ATOL) < 0) {
 			return -22;
 		}
-		err = IDAWFtolerances(ida_mem, sundials_ewtfcn);
+		err = IDAWFtolerances(ida_mem, mpt_sundials_ewtfcn);
 	}
 	if (err < 0) {
 		return err;
@@ -80,7 +80,7 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 			}
 		}
 	}
-	if ((err = sundials_linear(&ida->sd, neqs)) < 0) {
+	if ((err = mpt_sundials_linear(&ida->sd, neqs)) < 0) {
 		return err;
 	}
 	if ((err = IDADlsSetLinearSolver(ida_mem, ida->sd.LS, ida->sd.A)) < 0) {
@@ -90,7 +90,7 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	    && !(ida->sd.stype & MPT_SOLVER_SUNDIALS(Direct))
 	    && ida->ufcn
 	    && ida->ufcn->jac.fcn) {
-		IDADlsSetJacFn(ida_mem, sundials_ida_jac);
+		IDADlsSetJacFn(ida_mem, mpt_sundials_ida_jac);
 	}
 	return err;
 }

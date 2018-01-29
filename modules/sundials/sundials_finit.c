@@ -17,8 +17,7 @@
  * 
  * Initialize SUNDIALS data on raw memory.
  */
-
-extern void sundials_init(MPT_SOLVER_STRUCT(sundials) *sd)
+extern void mpt_sundials_init(MPT_SOLVER_STRUCT(sundials) *sd)
 {
 	memset(sd, 0, sizeof(*sd));
 	sd->ml = sd->mu = -1;
@@ -30,7 +29,7 @@ extern void sundials_init(MPT_SOLVER_STRUCT(sundials) *sd)
  * 
  * Clear allocations on SUNDIALS data.
  */
-extern void sundials_fini(MPT_SOLVER_STRUCT(sundials) *sd)
+extern void mpt_sundials_fini(MPT_SOLVER_STRUCT(sundials) *sd)
 {
 	if (sd->y) {
 		N_VDestroy(sd->y);
@@ -41,5 +40,5 @@ extern void sundials_fini(MPT_SOLVER_STRUCT(sundials) *sd)
 	if (sd->A) {
 		SUNMatDestroy(sd->A);
 	}
-	sundials_init(sd);
+	mpt_sundials_init(sd);
 }

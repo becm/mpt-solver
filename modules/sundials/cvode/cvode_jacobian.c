@@ -24,10 +24,10 @@
  * 
  * \return result of user jacobian function
  */
-extern int sundials_cvode_jac(realtype t,
-                              N_Vector y, N_Vector fy,
-                              SUNMatrix Jac, const MPT_SOLVER_STRUCT(cvode) *cv,
-                              N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+extern int mpt_sundials_cvode_jac(realtype t,
+                                  N_Vector y, N_Vector fy,
+                                  SUNMatrix Jac, const MPT_SOLVER_STRUCT(cvode) *cv,
+                                  N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
 	const MPT_IVP_STRUCT(odefcn) *fcn;
 	double *jac;

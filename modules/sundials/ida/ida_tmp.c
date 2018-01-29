@@ -23,7 +23,7 @@
  * 
  * \return temporary data
  */
-extern void *sundials_ida_tmp(MPT_SOLVER_STRUCT(ida) *ida, size_t esze, size_t nelem)
+extern void *mpt_sundials_ida_tmp(MPT_SOLVER_STRUCT(ida) *ida, size_t esze, size_t nelem)
 {
 	void *tdata;
 	

@@ -8,7 +8,19 @@
 
 #include "sundials.h"
 
-extern int sundials_ewtfcn(N_Vector vy, N_Vector ve, void *data)
+/*!
+ * \ingroup mptSundials
+ * \brief get error data
+ * 
+ * Calculate weighted error values for state vector
+ * 
+ * \param[in]  vy    solver state vector
+ * \param[out] ve    error vector
+ * \param      data  user data
+ * 
+ * \retval 0  no error
+ */
+extern int mpt_sundials_ewtfcn(N_Vector vy, N_Vector ve, void *data)
 {
 	struct {
 		MPT_IVP_STRUCT(parameters) ivp;

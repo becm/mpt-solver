@@ -7,7 +7,7 @@
 
 #include "sundials.h"
 
-extern int sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	static const uint8_t fmt_full[] = "s";
 	static const uint8_t fmt_band[] = "sii";

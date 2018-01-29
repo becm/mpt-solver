@@ -117,7 +117,7 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
  * 
  * \return non-zero on error
  */
-extern int sundials_linear(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
+extern int mpt_sundials_linear(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 {
 	SUNLinearSolver s;
 	int type;

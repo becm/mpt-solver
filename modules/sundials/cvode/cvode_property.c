@@ -64,7 +64,7 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, const MPT_INTERFACE(metatype)
  * \retval <0   failure
  * \retval >=0  used values
  */
-extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, const MPT_INTERFACE(metatype) *src)
 {
 	CVodeMem cv_mem;
 	int ret = 0;
@@ -79,7 +79,7 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, co
 		if (src && (ret = mpt_solver_module_ivpset(&cv->ivp, src)) < 0) {
 			return ret;
 		}
-		sundials_cvode_reset(cv);
+		mpt_sundials_cvode_reset(cv);
 		return ret;
 	}
 	if (!strcasecmp(name, "atol")) {
@@ -90,7 +90,7 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, co
 		return mpt_solver_module_tol_set(&cv->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
-		return sundials_jacobian(&cv->sd, cv->ivp.neqs, src);
+		return mpt_sundials_jacobian(&cv->sd, cv->ivp.neqs, src);
 	}
 	if (!strcasecmp(name, "method")) {
 		return setMethod(cv, src);
@@ -155,7 +155,7 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, co
  * \retval <0  failure
  * \retval >0  changed property
  */
-extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(property) *prop)
+extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(property) *prop)
 {
 	static const uint8_t longfmt[] = { 'l', 0 };
 	static const uint8_t realfmt[] = { MPT_SOLVER_SUNDIALS(Realtype), 0 };

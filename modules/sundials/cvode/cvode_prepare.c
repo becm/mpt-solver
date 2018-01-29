@@ -25,7 +25,7 @@
  * 
  * \return non-zero on error
  */
-extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
+extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 {
 	CVodeMem cv_mem;
 	long neqs;
@@ -41,13 +41,13 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	/* prepare initial vector */
 	if (!cv->sd.y) {
 		realtype *y;
-		if (!(cv->sd.y = sundials_nvector_new(neqs))) {
+		if (!(cv->sd.y = mpt_sundials_nvector(neqs))) {
 			return MPT_ERROR(BadOperation);
 		}
 		y = N_VGetArrayPointer(cv->sd.y);
 		memset(y, 0, neqs * sizeof(*y));
 	}
-	if ((err = CVodeInit(cv_mem, sundials_cvode_fcn, cv->t, cv->sd.y)) < 0) {
+	if ((err = CVodeInit(cv_mem, mpt_sundials_cvode_fcn, cv->t, cv->sd.y)) < 0) {
 		return err;
 	}
 	/* prepare tolerances */
@@ -60,7 +60,7 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 		if (mpt_solver_module_tol_check(&cv->atol, cv->ivp.neqs, 1, __MPT_IVP_ATOL) < 0) {
 			return -22;
 		}
-		err = CVodeWFtolerances(cv_mem, sundials_ewtfcn);
+		err = CVodeWFtolerances(cv_mem, mpt_sundials_ewtfcn);
 	}
 	if (err < 0) {
 		return err;
@@ -81,7 +81,7 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 			}
 		}
 	}
-	if ((err = sundials_linear(&cv->sd, neqs)) < 0) {
+	if ((err = mpt_sundials_linear(&cv->sd, neqs)) < 0) {
 		return err;
 	}
 	if ((err = CVDlsSetLinearSolver(cv_mem, cv->sd.LS, cv->sd.A)) < 0) {
@@ -91,7 +91,7 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	    && !(cv->sd.stype & MPT_SOLVER_SUNDIALS(Numeric))
 	    && cv->ufcn
 	    && cv->ufcn->jac.fcn) {
-		CVDlsSetJacFn(cv_mem, sundials_cvode_jac);
+		CVDlsSetJacFn(cv_mem, mpt_sundials_cvode_jac);
 	}
 	return err;
 }

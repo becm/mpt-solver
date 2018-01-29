@@ -16,9 +16,9 @@
  * 
  * \param data  CVode data
  */
-extern void sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
+extern void mpt_sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
 {
-	sundials_fini(&data->sd);
+	mpt_sundials_fini(&data->sd);
 	
 	mpt_solver_module_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
 	mpt_solver_module_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
@@ -32,11 +32,11 @@ extern void sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
  * 
  * \param data  CVode data
  */
-extern void sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
+extern void mpt_sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
 {
 	mpt_solver_module_ivpset(&data->ivp, 0);
 	
-	sundials_cvode_reset(data);
+	mpt_sundials_cvode_reset(data);
 	
 	if (data->mem) {
 		CVodeFree(&data->mem);
@@ -54,7 +54,7 @@ extern void sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
  * 
  * \return non-zero on failure
  */
-extern int sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *data)
+extern int mpt_sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *data)
 {
 	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	if (!(data->mem = CVodeCreate(CV_ADAMS, CV_NEWTON))) {

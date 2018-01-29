@@ -28,7 +28,7 @@
  * 
  * \return number of reported properties
  */
-extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	static const uint8_t longfmt[] = "l\0";
 	MPT_STRUCT(property) pr;
@@ -37,7 +37,7 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
-	if (sundials_report_jac(&ida->sd, out, usr) > 0) ++line;
+	if (mpt_sundials_report_jac(&ida->sd, out, usr) > 0) ++line;
 	}
 	
 	
