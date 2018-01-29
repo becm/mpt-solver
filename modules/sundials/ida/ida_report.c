@@ -83,20 +83,22 @@ extern int sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_
 	out(usr, &pr);
 	++line;
 	}
-	
-	if (ida->sd.linalg & MPT_SOLVER_ENUM(SundialsSpils)) {
-		if (IDASpilsGetNumLinIters(ida->mem, &lval) == IDA_SUCCESS) {
-		pr.name = "liter";
-		pr.desc = MPT_tr("linear iterations");
+	/* direct solver type */
+	if (ida->sd.stype & MPT_SOLVER_SUNDIALS(Direct)) {
+		if (IDADlsGetNumJacEvals(ida->mem, &lval) == IDA_SUCCESS) {
+		pr.name = "jeval";
+		pr.desc = MPT_tr("jacobian evaluations");
 		pr.val.fmt = longfmt;
 		pr.val.ptr = &lval;
 		out(usr, &pr);
 		++line;
 		}
-	} else if (ida->sd.linalg & MPT_SOLVER_ENUM(SundialsDls)) {
-		if (IDADlsGetNumJacEvals(ida->mem, &lval) == IDA_SUCCESS) {
-		pr.name = "jeval";
-		pr.desc = MPT_tr("jacobian evaluations");
+	}
+	/* iterative solver type */
+	else if (ida->sd.stype) {
+		if (IDASpilsGetNumLinIters(ida->mem, &lval) == IDA_SUCCESS) {
+		pr.name = "liter";
+		pr.desc = MPT_tr("linear iterations");
 		pr.val.fmt = longfmt;
 		pr.val.ptr = &lval;
 		out(usr, &pr);

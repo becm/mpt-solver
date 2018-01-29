@@ -64,18 +64,14 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	if (err < 0) {
 		return err;
 	}
-	if (ida->ivp.pint && ida->sd.jacobian) {
-		ida->sd.jacobian |= MPT_SOLVER_ENUM(SundialsJacNumeric);
-	}
-	if (!ida->sd.linalg) {
-		ida->sd.linalg = MPT_SOLVER_ENUM(SundialsDls);
+	if (!ida->sd.stype) {
+		ida->sd.stype = MPT_SOLVER_SUNDIALS(Direct);
 	}
 	if (!ida->sd.jacobian) {
 		if (!ida->ivp.pint) {
-			ida->sd.jacobian = MPT_SOLVER_ENUM(SundialsJacDense);
-		}
-		else {
-			ida->sd.jacobian = MPT_SOLVER_ENUM(SundialsJacBand);
+			ida->sd.jacobian = SUNDIALS_DENSE;
+		} else {
+			ida->sd.jacobian = SUNDIALS_BAND;
 			if (ida->sd.mu < 0) {
 				ida->sd.mu = ida->ivp.neqs;
 			}
@@ -91,7 +87,7 @@ extern int sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 		return err;
 	}
 	if (ida->sd.A
-	    && !(ida->sd.jacobian & MPT_SOLVER_ENUM(SundialsJacNumeric))
+	    && !(ida->sd.stype & MPT_SOLVER_SUNDIALS(Direct))
 	    && ida->ufcn
 	    && ida->ufcn->jac.fcn) {
 		IDADlsSetJacFn(ida_mem, sundials_ida_jac);

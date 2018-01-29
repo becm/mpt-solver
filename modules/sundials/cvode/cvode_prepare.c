@@ -65,13 +65,14 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	if (err < 0) {
 		return err;
 	}
-	if (!cv->sd.jacobian) {
-		cv->sd.linalg = 0;
+	if (!cv->sd.stype) {
+		return CVodeSetIterType(cv_mem, CV_FUNCTIONAL);
 	}
-	else if (!cv->sd.linalg) {
-		cv->sd.linalg = MPT_SOLVER_ENUM(SundialsDls);
-		err = cv->sd.jacobian & MPT_SOLVER_ENUM(SundialsJacType);
-		if (err == MPT_SOLVER_ENUM(SundialsJacBand)) {
+	if (cv->sd.stype & MPT_SOLVER_SUNDIALS(Direct)) {
+		if (!cv->sd.jacobian) {
+			return CVDiag(cv_mem);
+		}
+		if (cv->sd.jacobian == SUNDIALS_BAND) {
 			if (cv->sd.mu < 0) {
 				cv->sd.mu = cv->ivp.neqs;
 			}
@@ -80,9 +81,6 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 			}
 		}
 	}
-	if (!cv->sd.linalg) {
-		return CVodeSetIterType(cv_mem, CV_FUNCTIONAL);
-	}
 	if ((err = sundials_linear(&cv->sd, neqs)) < 0) {
 		return err;
 	}
@@ -90,7 +88,7 @@ extern int sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 		return err;
 	}
 	if (cv->sd.A
-	    && !(cv->sd.jacobian & MPT_SOLVER_ENUM(SundialsJacNumeric))
+	    && !(cv->sd.stype & MPT_SOLVER_SUNDIALS(Numeric))
 	    && cv->ufcn
 	    && cv->ufcn->jac.fcn) {
 		CVDlsSetJacFn(cv_mem, sundials_cvode_jac);

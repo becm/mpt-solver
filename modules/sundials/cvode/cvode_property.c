@@ -135,7 +135,7 @@ extern int sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, co
 extern int sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(property) *prop)
 {
 	static const uint8_t longfmt[] = { 'l', 0 };
-	static const uint8_t realfmt[] = { MPT_SOLVER_ENUM(SundialsRealtype), 0 };
+	static const uint8_t realfmt[] = { MPT_SOLVER_SUNDIALS(Realtype), 0 };
 	const char *name;
 	intptr_t pos = 0, id;
 	CVodeMem cv_mem = cv ? cv->mem : 0;

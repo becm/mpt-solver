@@ -24,8 +24,9 @@ extern int sundials_cvode_step(MPT_SOLVER_STRUCT(cvode) *cv, double tend)
 	if (!cv->sd.y) {
 		return CV_MEM_NULL;
 	}
-	err = (cv->sd.step & MPT_SOLVER_ENUM(SundialsStepSingle)) ? CV_ONE_STEP : CV_NORMAL;
-	
+	if (!(err = cv->sd.step)) {
+		err = CV_NORMAL;
+	}
 	err = CVode(cv->mem, tend, cv->sd.y, &cv->t, err);
 	return err < 0 ? err : 0;
 }

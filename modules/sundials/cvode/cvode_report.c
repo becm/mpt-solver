@@ -95,7 +95,7 @@ extern int sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int show, M
 	++line;
 	}
 	
-	if ((cv->sd.linalg & MPT_SOLVER_ENUM(SundialsDls))
+	if ((cv->sd.stype & MPT_SOLVER_SUNDIALS(Direct))
 	    && (CVodeGetNumLinSolvSetups(cv_mem, &lval) == CV_SUCCESS)) {
 	pr.name = "lsetup";
 	pr.desc = MPT_tr("linear solver setups");

@@ -144,7 +144,7 @@ extern int sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, const
 extern int sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(property) *prop)
 {
 	static const uint8_t longfmt[] = { 'l', 0 };
-	static const uint8_t realfmt[] = { MPT_SOLVER_ENUM(SundialsRealtype), 0 };
+	static const uint8_t realfmt[] = { MPT_SOLVER_SUNDIALS(Realtype), 0 };
 	const char *name;
 	intptr_t pos = 0, id;
 	IDAMem ida_mem = ida->mem;

@@ -2,7 +2,8 @@
  * report for SUNDIALS jacobian operations
  */
 
-#include <sundials/sundials_types.h>
+#include <stdio.h>
+#include <sundials/sundials_direct.h>
 
 #include "sundials.h"
 
@@ -22,25 +23,23 @@ extern int sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(P
 	pr.val.ptr = &val;
 	
 	switch (sd->jacobian) {
-		case MPT_SOLVER_ENUM(SundialsJacDiag):
-		case MPT_SOLVER_ENUM(SundialsJacDiag) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			val.type = "diag"; break;
-		case MPT_SOLVER_ENUM(SundialsJacDense):
-			val.type = "full(user)"; break;
-		case MPT_SOLVER_ENUM(SundialsJacDense) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			val.type = "full"; break;
-		case MPT_SOLVER_ENUM(SundialsJacBand):
-			pr.val.fmt = fmt_band;
-			val.type = "banded(user)";
-			val.mu = sd->mu; val.ml = sd->ml;
-			break;
-		case MPT_SOLVER_ENUM(SundialsJacBand) | MPT_SOLVER_ENUM(SundialsJacNumeric):
-			pr.val.fmt = fmt_band;
-			val.type = "banded";
-			val.mu = sd->mu; val.ml = sd->ml;
-			break;
-		default:
-			return 0;
+	    case 0:
+		val.type = "diag";
+		break;
+	    case MPT_SOLVER_SUNDIALS(Direct):
+	    case MPT_SOLVER_SUNDIALS(Lapack):
+		val.type = sd->jacobian == SUNDIALS_BAND ? "banded(user)" : "full(user)";
+		break;
+	    case MPT_SOLVER_SUNDIALS(Direct) | MPT_SOLVER_SUNDIALS(Numeric):
+	    case MPT_SOLVER_SUNDIALS(Lapack) | MPT_SOLVER_SUNDIALS(Numeric):
+		val.type = sd->jacobian == SUNDIALS_BAND ? "banded" : "full";
+	    default:
+		return 0;
+	}
+	if (sd->jacobian == SUNDIALS_BAND) {
+		pr.val.fmt = fmt_band;
+		val.mu = sd->mu;
+		val.ml = sd->ml;
 	}
 	return out(usr, &pr);
 }

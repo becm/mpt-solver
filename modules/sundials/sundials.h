@@ -27,56 +27,18 @@ typedef void * SUNMatrix;
 typedef void * SUNLinearSolver;
 #endif
 
-enum MPT_SOLVER_ENUM(SundialsFlags) {
-	/* jacobian method */
-	MPT_SOLVER_ENUM(SundialsJacNone)    = 0x00,
-	MPT_SOLVER_ENUM(SundialsJacDense)   = 0x01,
-	MPT_SOLVER_ENUM(SundialsJacBand)    = 0x02,
-	MPT_SOLVER_ENUM(SundialsJacDiag)    = 0x03,
-	MPT_SOLVER_ENUM(SundialsJacType)    = 0x03,
-	MPT_SOLVER_ENUM(SundialsJacNumeric) = 0x10,
-	
-	/* preconditioner type */
-	MPT_SOLVER_ENUM(SundialsSpilsGMR)   = 0x1,
-	MPT_SOLVER_ENUM(SundialsSpilsBCG)   = 0x2,
-	MPT_SOLVER_ENUM(SundialsSpilsTFQMR) = 0x3,
-	MPT_SOLVER_ENUM(SundialsSpils)      = 0xf,
-	
-	/* linear algebra setup */
-	MPT_SOLVER_ENUM(SundialsDls)        = 0x10,
-	MPT_SOLVER_ENUM(SundialsLapack)     = 0x11,
-	
-#ifdef _SUNDIALSTYPES_H
-# if defined(SUNDIALS_SINGLE_PRECISION)
-	MPT_SOLVER_ENUM(SundialsRealtype)   = 'f',
-# elif defined(SUNDIALS_DOUBLE_PRECISION)
-	MPT_SOLVER_ENUM(SundialsRealtype)   = 'd',
-# elif defined(SUNDIALS_EXTENDED_PRECISION)
-	MPT_SOLVER_ENUM(SundialsRealtype)   = 'e',
-# endif
-# ifdef SUNDIALS_INT64_T
-	MPT_SOLVER_ENUM(SundialsIndextype)  = 'x',
-# else
-	MPT_SOLVER_ENUM(SundialsIndextype)  = 'i',
-# endif
-#endif
-	/* step strategy */
-	MPT_SOLVER_ENUM(SundialsStepNormal) = 0x0,
-	MPT_SOLVER_ENUM(SundialsStepSingle) = 0x1
-};
-
+#ifndef _SUNDIALSTYPES_H
+MPT_SOLVER_STRUCT(sundials);
+#else
 MPT_SOLVER_STRUCT(sundials)
-#ifdef _SUNDIALSTYPES_H
 {
-#ifdef _cplusplus
-	inline sundials() : 
-		y(0), A(0), LS(0),
-		mu(-1), ml(-1),
-		jacobian(0), step(0), linalg(0), prec(0), kmax(0)
-	{ }
-	inline ~sundials()
-	{ N_VDestroy(y); }
-#endif
+# ifdef __cplusplus
+	sundials();
+	~sundials();
+#  define MPT_SOLVER_SUNDIALS(x) x
+# else
+#  define MPT_SOLVER_SUNDIALS(x) MPT_SOLVER_ENUM(Sundials##x)
+# endif
 	N_Vector y;  /* output container */
 	
 	SUNMatrix A; /* linear solver matrix and backend */
@@ -86,12 +48,43 @@ MPT_SOLVER_STRUCT(sundials)
 	
 	int8_t jacobian,  /* jacobian flags */
 	       step,      /* step strategy control */
-	       linalg,    /* type of linear algebra */
+	       stype,     /* type of solver */
 	       prec,      /* preconditioner mode */
 	       kmax;      /* max. Krylov subspace size */
-}
+# ifndef __cplusplus
+}; /* sundials */
+# endif
+#endif /* _SUNDIALSTYPES_H */
+
+enum MPT_SOLVER_SUNDIALS(Type) {
+#ifdef _SUNDIALSTYPES_H
+# if defined(SUNDIALS_SINGLE_PRECISION)
+	MPT_SOLVER_SUNDIALS(Realtype)  = 'f',
+# elif defined(SUNDIALS_DOUBLE_PRECISION)
+	MPT_SOLVER_SUNDIALS(Realtype)  = 'd',
+# elif defined(SUNDIALS_EXTENDED_PRECISION)
+	MPT_SOLVER_SUNDIALS(Realtype)  = 'e',
+# endif
+# ifdef SUNDIALS_INT64_T
+	MPT_SOLVER_SUNDIALS(Indextype) = 'x',
+# else
+	MPT_SOLVER_SUNDIALS(Indextype) = 'i',
+# endif
 #endif
-;
+	/* iterative solvers */
+	MPT_SOLVER_SUNDIALS(IterGMR)   = 0x1,
+	MPT_SOLVER_SUNDIALS(IterBCG)   = 0x2,
+	MPT_SOLVER_SUNDIALS(IterTFQMR) = 0x3,
+	
+	/* linear algebra setup */
+	MPT_SOLVER_SUNDIALS(Direct)    = 0x10,
+	MPT_SOLVER_SUNDIALS(Lapack)    = 0x11,
+	MPT_SOLVER_SUNDIALS(Numeric)   = 0x20
+};
+
+#ifdef __cplusplus
+}; /* sundials */
+#endif
 
 MPT_SOLVER_STRUCT(cvode)
 #ifdef _SUNDIALSTYPES_H
@@ -243,6 +236,11 @@ __MPT_EXTDECL_END
 
 
 #ifdef __cplusplus
+inline sundials::sundials()
+{ sundials_init(this); }
+inline sundials::~sundials()
+{ sundials_fini(this); }
+
 class CVode : public IVP, cvode
 {
 public:

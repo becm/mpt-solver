@@ -44,11 +44,8 @@ static int setLapack(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 {
 	SUNMatrix A;
 	SUNLinearSolver LS;
-	int jac;
 	
-	jac = sd->jacobian & ~MPT_SOLVER_ENUM(SundialsJacNumeric);
-	
-	if (jac == MPT_SOLVER_ENUM(SundialsJacDense)) {
+	if (sd->jacobian == SUNDIALS_DENSE) {
 		if (!(A = SUNDenseMatrix(neqs, neqs))) {
 			return MPT_ERROR(BadValue);
 		}
@@ -58,7 +55,7 @@ static int setLapack(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 		}
 		return setLS(sd, LS, A);
 	}
-	if (jac == MPT_SOLVER_ENUM(SundialsJacBand)) {
+	if (sd->jacobian == SUNDIALS_BAND) {
 		sunindextype smu = sd->mu + sd->ml;
 		if (smu >= neqs) {
 			smu = neqs - 1;
@@ -81,11 +78,8 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 {
 	SUNMatrix A;
 	SUNLinearSolver LS;
-	int jac;
 	
-	jac = sd->jacobian & ~MPT_SOLVER_ENUM(SundialsJacNumeric);
-	
-	if (jac == MPT_SOLVER_ENUM(SundialsJacDense)) {
+	if (sd->jacobian == SUNDIALS_DENSE) {
 		if (!(A = SUNDenseMatrix(neqs, neqs))) {
 			return MPT_ERROR(BadValue);
 		}
@@ -95,7 +89,7 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 		}
 		return setLS(sd, LS, A);
 	}
-	if (jac == MPT_SOLVER_ENUM(SundialsJacBand)) {
+	if (sd->jacobian == SUNDIALS_BAND) {
 		sunindextype smu = sd->mu + sd->ml;
 		if (smu >= neqs) {
 			smu = neqs - 1;
@@ -126,30 +120,33 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 extern int sundials_linear(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 {
 	SUNLinearSolver s;
+	int type;
 	
-	if (sd->linalg == MPT_SOLVER_ENUM(SundialsDls)) {
+	type = sd->stype & ~MPT_SOLVER_SUNDIALS(Numeric);
+	
+	if (type == MPT_SOLVER_SUNDIALS(Direct)) {
 		return setDls(sd, neqs);
 	}
-	if (sd->linalg == MPT_SOLVER_ENUM(SundialsSpilsGMR)) {
+	if (sd->stype == MPT_SOLVER_SUNDIALS(IterGMR)) {
 		if (!(s = SUNSPGMR(sd->y, sd->prec, sd->kmax))) {
 			return MPT_ERROR(BadOperation);
 		}
 		return setLS(sd, s, 0);
 	}
-	if (sd->linalg == MPT_SOLVER_ENUM(SundialsSpilsBCG)) {
+	if (sd->stype == MPT_SOLVER_SUNDIALS(IterBCG)) {
 		if (!(s = SUNSPBCGS(sd->y, sd->prec, sd->kmax))) {
 			return MPT_ERROR(BadOperation);
 		}
 		return setLS(sd, s, 0);
 	}
-	if (sd->linalg == MPT_SOLVER_ENUM(SundialsSpilsTFQMR)) {
+	if (sd->stype == MPT_SOLVER_SUNDIALS(IterTFQMR)) {
 		if (!(s = SUNSPTFQMR(sd->y, sd->prec, sd->kmax))) {
 			return MPT_ERROR(BadOperation);
 		}
 		return setLS(sd, s, 0);
 	}
 #ifdef SUNDIALS_BLAS_LAPACK
-	if (sd->linalg == MPT_SOLVER_ENUM(SundialsLapack)) {
+	if (type == MPT_SOLVER_SUNDIALS(Lapack)) {
 		return setLapack(sd, neqs);
 	}
 #endif

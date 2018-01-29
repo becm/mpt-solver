@@ -24,8 +24,9 @@ extern int sundials_ida_step(MPT_SOLVER_STRUCT(ida) *ida, double tend)
 	if (!ida->sd.y || !ida->yp) {
 		return MPT_ERROR(BadOperation);
 	}
-	err = (ida->sd.step & MPT_SOLVER_ENUM(SundialsStepSingle)) ? IDA_ONE_STEP : IDA_NORMAL;
-	
+	if (!(err = ida->sd.step)) {
+		err = IDA_NORMAL;
+	}
 	err = IDASolve(ida->mem, tend, &ida->t, ida->sd.y, ida->yp, err);
 	
 	return err < 0 ? err : 0;
