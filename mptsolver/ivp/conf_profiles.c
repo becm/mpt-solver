@@ -27,9 +27,9 @@ MPT_STRUCT(iterProfile) {
 static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 {
 	MPT_STRUCT(iterProfile) *p = MPT_baseaddr(iterProfile, it, _it);
-	MPT_INTERFACE(metatype) **mptr = (void *) (p + 1);
+	double *val = (void *) (p + 1);
+	MPT_INTERFACE(metatype) **mptr = (void *) (val  + p->neqs);
 	MPT_INTERFACE(iterator) **iptr = (void *) (mptr + p->neqs);
-	double *tmp = (void *) (iptr + p->neqs);
 	struct iovec *vec;
 	int i;
 	
@@ -49,22 +49,23 @@ static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 		if (!(curr = iptr[i])) {
 			continue;
 		}
-		if ((ret = curr->_vptr->get(curr, 'd', tmp + i)) < 0) {
+		if ((ret = curr->_vptr->get(curr, 'd', val + i)) < 0) {
 			return ret;
 		}
 		if (!ret) {
-			tmp[i] = 0;
+			val[i] = 0;
 		}
 	}
-	vec->iov_base = tmp;
-	vec->iov_len = i * sizeof(*tmp);
+	vec->iov_base = val;
+	vec->iov_len = i * sizeof(*val);
 	
 	return MPT_value_toVector('d');
 }
 static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 {
 	MPT_STRUCT(iterProfile) *p = MPT_baseaddr(iterProfile, it, _it);
-	MPT_INTERFACE(metatype) **mptr = (void *) (p + 1);
+	double *val = (void *) (p + 1);
+	MPT_INTERFACE(metatype) **mptr = (void *) (val  + p->neqs);
 	MPT_INTERFACE(iterator) **iptr = (void *) (mptr + p->neqs);
 	long i;
 	
@@ -86,7 +87,8 @@ static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 {
 	MPT_STRUCT(iterProfile) *p = MPT_baseaddr(iterProfile, it, _it);
-	MPT_INTERFACE(iterator) **mptr = (void *) (p + 1);
+	double *val = (void *) (p + 1);
+	MPT_INTERFACE(metatype) **mptr = (void *) (val  + p->neqs);
 	MPT_INTERFACE(iterator) **iptr = (void *) (mptr + p->neqs);
 	long i;
 	
@@ -104,7 +106,8 @@ static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 static void iterProfileUnref(MPT_INTERFACE(reference) *ref)
 {
 	const MPT_STRUCT(iterProfile) *p = (void *) ref;
-	MPT_INTERFACE(metatype) **mptr = (void *) (p + 1);
+	double *val = (void *) (p + 1);
+	MPT_INTERFACE(metatype) **mptr = (void *) (val  + p->neqs);
 	int i;
 	
 	for (i = 0; i < p->neqs; ++i) {
@@ -198,7 +201,10 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 		return 0;
 	}
 	if ((neqs = dat->nval) < 0) {
-		if (!conf || !(prof = conf->children)) {
+		if (!conf) {
+			neqs = 0;
+		}
+		else if (!(prof = conf->children)) {
 			neqs = 256;
 		} else {
 			neqs = 0;
@@ -214,20 +220,18 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 		        MPT_tr("failed to create iterator"), neqs);
 		return 0;
 	}
-	mptr = memset(ip + 1,      0, neqs * sizeof(*mptr));
-	iptr = memset(mptr + neqs, 0, neqs * sizeof(*iptr));
-	val  = memset(iptr + neqs, 0, neqs * sizeof(*val));
-	
 	ip->_mt._vptr = &iterProfileMeta;
 	ip->_it._vptr = &iterProfileIter;
 	ip->t = t;
 	ip->pos = 0;
 	ip->len = len;
-	ip->neqs = neqs;
 	
 	if (!conf) {
+		ip->neqs = 0;
 		return &ip->_mt;
 	}
+	val = memset(ip + 1, 0, neqs * sizeof(*val));
+	
 	/* no source iterator descriptions */
 	if (!(prof = conf->children)) {
 		i = 0;
@@ -238,7 +242,7 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 		/* static initial values for components */
 		while (i < neqs) {
 			ssize_t len;
-			if ((len = mpt_cdouble(val + i++, desc, 0)) < 0) {
+			if ((len = mpt_cdouble(val + i, desc, 0)) < 0) {
 				if (out) mpt_log(out, __func__, MPT_LOG(Error), "%s (%d): %s",
 				                 MPT_tr("bad profile constant"), i, desc);
 				iterProfileUnref((void *) ip);
@@ -246,13 +250,19 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 				return 0;
 			}
 			if (!len) {
-				ip->neqs = i;
+				if (!(neqs = i)) {
+					ip->neqs = 0;
+					return &ip->_mt;
+				}
 				break;
 			}
 			desc += len;
+			++i;
 		}
-		return &ip->_mt;
 	}
+	ip->neqs = neqs;
+	mptr = memset(val  + neqs, 0, neqs * sizeof(*mptr));
+	iptr = memset(mptr + neqs, 0, neqs * sizeof(*iptr));
 	i = 0;
 	while (prof && i++ < neqs) {
 		MPT_INTERFACE(metatype) *mt;
