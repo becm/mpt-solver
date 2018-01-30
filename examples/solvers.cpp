@@ -42,10 +42,14 @@ using namespace mpt::solver;
 
 static int val(void *, const property *pr)
 {
-	if (!pr || !pr->name) {
+	if (!pr) {
 		return BadArgument;
 	}
-	std::cout << pr->name << " = " << pr->val << std::endl;
+	if (!pr->name) {
+		std::cout << '<' << pr->val << '>' << std::endl;
+	} else {
+		std::cout << pr->name << " = " << pr->val << std::endl;
+	}
 	return 0;
 }
 
@@ -66,7 +70,7 @@ static void info(generic &s)
 	int types = s.property(0);
 	println("<%s> [0x%x] %s (%s)", name, types, ver, type);
 	
-	s.report(Header | Status | Report, val, 0);
+	s.report(Header | Status | Values | Report, val, 0);
 	println(0);
 }
 

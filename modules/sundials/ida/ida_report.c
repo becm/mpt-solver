@@ -40,6 +40,11 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	if (mpt_sundials_report_jac(&ida->sd, out, usr) > 0) ++line;
 	}
 	
+	if (show & MPT_SOLVER_ENUM(Values)) {
+	realtype *val = ida->sd.y ? N_VGetArrayPointer(ida->sd.y) : 0;
+	MPT_SOLVER_MODULE_FCN(ivp_values)(&ida->ivp, ida->t, val, MPT_tr("IDA solver state"), out, usr);
+	}
+	
 	
 	if ((show & MPT_SOLVER_ENUM(Status))
 	    && (IDAGetCurrentTime(ida->mem, &dval) == IDA_SUCCESS)) {
@@ -57,11 +62,6 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	pr.val.ptr = &lval;
 	out(usr, &pr);
 	++line;
-	}
-	
-	if (show & MPT_SOLVER_ENUM(Values)) {
-	realtype *val = ida->sd.y ? N_VGetArrayPointer(ida->sd.y) : 0;
-	MPT_SOLVER_MODULE_FCN(ivp_values)(&ida->ivp, ida->t, val, MPT_tr("IDA solver state"), out, usr);
 	}
 	
 	if ((show & MPT_SOLVER_ENUM(Status))

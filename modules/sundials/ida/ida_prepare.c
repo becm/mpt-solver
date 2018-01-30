@@ -86,11 +86,13 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	if ((err = IDADlsSetLinearSolver(ida_mem, ida->sd.LS, ida->sd.A)) < 0) {
 		return err;
 	}
-	if (ida->sd.A
-	    && !(ida->sd.stype & MPT_SOLVER_SUNDIALS(Direct))
-	    && ida->ufcn
-	    && ida->ufcn->jac.fcn) {
-		IDADlsSetJacFn(ida_mem, mpt_sundials_ida_jac);
+	if (ida->sd.A) {
+		if (!ida->ufcn || !ida->ufcn->jac.fcn) {
+			ida->sd.stype |= MPT_SOLVER_SUNDIALS(Numeric);
+		}
+		if (!(ida->sd.stype & MPT_SOLVER_SUNDIALS(Numeric))) {
+			IDADlsSetJacFn(ida_mem, mpt_sundials_ida_jac);
+		}
 	}
 	return err;
 }

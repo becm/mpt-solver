@@ -9,8 +9,6 @@
 
 extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE(PropertyHandler) out, void *usr)
 {
-	static const uint8_t fmt_ss[] = "ss";
-	static const uint8_t fmt_band[] = "ssii";
 	MPT_STRUCT(property) pr;
 	size_t li = vd->iwork.iov_len / sizeof(int);
 	size_t lr = vd->rwork.iov_len / sizeof(double);
@@ -19,41 +17,44 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
-	struct { const char *jac, *val; int ml, mu; } d;
+	static const uint8_t fmt_ss[] = "ss";
+	static const uint8_t fmt_band[] = "siis";
+	struct { const char *fmt, *val; int32_t ml, mu; const char *jac; } d;
+	const char *val[2];
 	
 	pr.name = "method";
 	pr.desc = MPT_tr("method for solver step");
 	pr.val.fmt = fmt_ss;
-	pr.val.ptr = &d;
+	pr.val.ptr = val;
 	
-	d.jac = (vd->meth == 2) ? "BDF" : "Adams";
-	d.val = MPT_tr("(saved)");
+	val[0] = (vd->meth == 2) ? "BDF" : "Adams";
+	val[1] = MPT_tr("saved");
 	
-	if (!vd->miter || vd->jsv < 0) pr.val.fmt = fmt_ss + 1;
-	
+	if (!vd->miter || vd->jsv < 0) {
+		pr.val.fmt = fmt_ss + 1;
+	}
 	out(usr, &pr);
 	++line;
-	
-	d.jac  = "full";
-	d.val  = "(user)";
 	
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("type of jacobian");
 	pr.val.fmt = fmt_ss;
-	pr.val.ptr = &d;
+	
+	val[0] = "Full";
+	val[1] = "user";
+	d.fmt = "Banded";
+	d.ml  = iwk[0];
+	d.mu  = iwk[1];
+	d.jac = val[1];
 	
 	switch (vd->miter) {
 		case 1: if (vd->jac) break;
-		case 2: d.val = "(numerical)"; break;
-		case 3: d.jac = "diagonal"; pr.val.fmt = fmt_ss + 1; break;
-		case 4: d.jac = "banded"; pr.val.fmt = fmt_band; d.ml = iwk[0]; d.mu = iwk[1];
-			if (vd->jac) break;
-		case 5: d.jac = "banded"; d.val = "(numerical)"; pr.val.fmt = fmt_band;  d.ml = iwk[0]; d.mu = iwk[1]; break;
-		default: d.jac = "none"; pr.val.fmt = fmt_ss + 1;
+		case 2: val[0] = "full"; val[1] = "numerical"; break;
+		case 3: val[0] = "diagonal"; pr.val.fmt = fmt_ss + 1; break;
+		case 4: pr.val.fmt = fmt_band; if (vd->jac) { pr.val.ptr = &d; break; }
+		case 5: d.fmt = "banded"; d.jac = "numerical"; pr.val.fmt = fmt_band; pr.val.ptr = &d; break;
+		default: val[0] = "none"; pr.val.fmt = fmt_ss + 1;
 	}
-	d.jac = MPT_tr(d.jac);
-	d.val = MPT_tr(d.val);
-	
 	out(usr, &pr);
 	++line;
 	}
@@ -62,10 +63,14 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	MPT_SOLVER_MODULE_FCN(ivp_values)(&vd->ivp, vd->t, vd->y, MPT_tr("dVode solver state"), out, usr);
 	}
 	
-	if (show & MPT_SOLVER_ENUM(Status) && lr > 12) {
+	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	mpt_solver_module_value_double(&pr.val, &rwk[12]);
+	if (lr > 12) {
+		mpt_solver_module_value_double(&pr.val, &rwk[12]);
+	} else {
+		mpt_solver_module_value_double(&pr.val, &vd->t);
+	}
 	out(usr, &pr);
 	++line;
 	}

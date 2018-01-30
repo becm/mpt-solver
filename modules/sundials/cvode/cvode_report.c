@@ -51,6 +51,11 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	
 	}
 	
+	if (show & MPT_SOLVER_ENUM(Values)) {
+	realtype *val = cv->sd.y ? N_VGetArrayPointer(cv->sd.y) : 0;
+	MPT_SOLVER_MODULE_FCN(ivp_values)(&cv->ivp, cv->t, val, MPT_tr("CVode solver state"), out, usr);
+	}
+	
 	if ((show & MPT_SOLVER_ENUM(Status))
 	    && (CVodeGetCurrentTime(cv_mem, &dval) == CV_SUCCESS)) {
 	pr.name = "t";
@@ -68,11 +73,6 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	pr.val.ptr = &lval;
 	out(usr, &pr);
 	++line;
-	}
-	
-	if (show & MPT_SOLVER_ENUM(Values)) {
-	realtype *val = cv->sd.y ? N_VGetArrayPointer(cv->sd.y) : 0;
-	MPT_SOLVER_MODULE_FCN(ivp_values)(&cv->ivp, cv->t, val, MPT_tr("CVode solver state"), out, usr);
 	}
 	
 	if ((show & MPT_SOLVER_ENUM(Status))

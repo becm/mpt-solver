@@ -87,11 +87,13 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	if ((err = CVDlsSetLinearSolver(cv_mem, cv->sd.LS, cv->sd.A)) < 0) {
 		return err;
 	}
-	if (cv->sd.A
-	    && !(cv->sd.stype & MPT_SOLVER_SUNDIALS(Numeric))
-	    && cv->ufcn
-	    && cv->ufcn->jac.fcn) {
-		CVDlsSetJacFn(cv_mem, mpt_sundials_cvode_jac);
+	if (cv->sd.A) {
+		if (!cv->ufcn || !cv->ufcn->jac.fcn) {
+			cv->sd.stype |= MPT_SOLVER_SUNDIALS(Numeric);
+		}
+		if (!(cv->sd.stype & MPT_SOLVER_SUNDIALS(Numeric))) {
+			CVDlsSetJacFn(cv_mem, mpt_sundials_cvode_jac);
+		}
 	}
 	return err;
 }

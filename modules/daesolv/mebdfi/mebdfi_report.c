@@ -15,21 +15,33 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 	int line = 0, *iwk = me->iwork.iov_base;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
+	const char *jac;
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("method for jacobian");
+	
+	jac = (me->jac && !me->jnum) ? "user" : "numerical";
+	
 	if (me->jbnd) {
-		static const uint8_t fmt[] = "sii";
-		struct { const char *t; int32_t mu, ml; } val;
-		val.t = (me->jac && !me->jnum) ? "banded(user)" : "banded";
-		val.t = MPT_tr(val.t);
-		val.ml = me->mbnd[0]; val.mu = me->mbnd[0];
+		static const uint8_t fmt[] = "siis";
+		struct { const char *fmt; int32_t mu, ml; const char *jac; } val;
+		
+		val.fmt = (me->jac && !me->jnum) ? "Banded" : "banded";
+		val.ml  = me->mbnd[0];
+		val.mu  = me->mbnd[1];
+		val.jac = jac;
+		
 		pr.val.fmt = fmt;
 		pr.val.ptr = &val;
 		out(usr, &pr);
 	} else {
-		pr.val.fmt  = 0;
-		pr.val.ptr = (me->jac && !me->jnum) ? "full(user)" : "full";
-		pr.val.ptr = MPT_tr(pr.val.ptr);
+		static const uint8_t fmt[] = "ss";
+		const char *val[2];
+		
+		val[0] = (me->jac && !me->jnum) ? "Full" : "full";
+		val[1] = jac;
+		
+		pr.val.fmt = fmt;
+		pr.val.ptr = val;
 		out(usr, &pr);
 	}
 	++line;

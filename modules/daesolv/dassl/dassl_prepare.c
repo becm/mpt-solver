@@ -9,7 +9,7 @@
 
 extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data)
 {
-	double *v;
+	double *v, *rwork;
 	int *iwork, lrw, liw;
 	int neqs, pdim;
 	size_t len;
@@ -47,7 +47,7 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data)
 	if (!(iwork = mpt_solver_module_valloc(&data->iwork, liw, sizeof(int)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_solver_module_valloc(&data->rwork, lrw, sizeof(double))) {
+	if (!(rwork = mpt_solver_module_valloc(&data->rwork, lrw, sizeof(double)))) {
 		return MPT_ERROR(BadOperation);
 	}
 	len = neqs * sizeof(double);
@@ -69,5 +69,8 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data)
 	for (liw = 0; liw < 5; liw++) {
 		iwork[10 + liw] = 0;
 	}
+	/* set initial time */
+	rwork[3] = data->t;
+	
 	return neqs;
 }

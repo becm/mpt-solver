@@ -12,35 +12,43 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TY
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
-	struct { const char *jac, *val; int ml, mu; } d;
+	const char *jac;
 	int neqs;
 	
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";
+	jac = lx->jac ? "user" : "numerical";
 	
 	neqs = lx->ivp.neqs * (lx->ivp.pint + 1);
 	
-	d.val = lx->jac ? "(user)" : "(numerical)";
-	
-	d.ml = lx->iopt[7];
-	d.mu = lx->iopt[8];
-	
-	if (d.ml >= 0 && d.ml < neqs) {
-		static const uint8_t fmt[] = "ssii";
+	if (lx->iopt[7] >= 0 && lx->iopt[7] < neqs) {
+		static const uint8_t fmt[] = "siis";
+		struct { const char *fmt; int32_t ml, mu; const char *jac; } val;
+		
+		val.fmt = lx->jac ? "Banded" : "banded";
+		val.ml  = lx->iopt[7];
+		val.mu  = lx->iopt[8];
+		val.jac = jac;
+		
 		pr.val.fmt = fmt;
-		d.jac = "banded";
+		pr.val.ptr = &val;
+		out(usr, &pr);
 	} else {
 		static const uint8_t fmt[] = "ss";
+		const char *val[2];
+		
+		val[0] = lx->jac ? "Full" : "full";
+		val[0] = jac;
+		
 		pr.val.fmt = fmt;
-		d.jac = "full";
+		pr.val.ptr = val;
+		out(usr, &pr);
 	}
-	pr.val.ptr = &d;
-	out(usr, &pr);
 	++line;
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)) {
-	MPT_SOLVER_MODULE_FCN(ivp_values)(&lx->ivp, lx->t, lx->y, MPT_tr("dVode solver state"), out, usr);
+	MPT_SOLVER_MODULE_FCN(ivp_values)(&lx->ivp, lx->t, lx->y, MPT_tr("LIMEX solver state"), out, usr);
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Status)) {

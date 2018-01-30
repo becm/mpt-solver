@@ -13,27 +13,37 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TY
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
-	struct { const char *type; int32_t ml, mu; } miter;
-	
+	const char *jac;
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("method for jacobian");
 	
 	val = rd->ivp.neqs * (rd->ivp.pint + 1);
 	
-	if ((miter.ml = rd->mljac) >= 0 && miter.ml < val) {
-		static const uint8_t fmt[] = "sii";
-		pr.val.fmt = fmt;
-		miter.mu   = rd->mujac;
-		miter.type = rd->jac ? "banded(user)" : "banded";
-	}
-	else {
-		static const uint8_t fmt[] = "s";
-		pr.val.fmt = fmt;
-		miter.type = rd->jac ? "full(user)" : "full";
-	}
-	pr.val.ptr = &miter;
+	jac = rd->jac ? "user" : "numerical";
 	
-	out(usr, &pr);
+	if (rd->mljac >= 0 && rd->mljac < val) {
+		struct { const char *fmt; int32_t ml, mu; const char *jac; } val;
+		static const uint8_t fmt[] = "siis";
+		
+		val.fmt = rd->jac ? "Banded" : "banded";
+		val.ml  = rd->mljac;
+		val.mu  = rd->mujac;
+		val.jac = jac;
+		
+		pr.val.fmt = fmt;
+		pr.val.ptr = &val;
+		out(usr, &pr);
+	} else {
+		static const uint8_t fmt[] = "ss";
+		const char *val[2];
+		
+		val[0] = rd->jac ? "Full" : "full";
+		val[0] = jac;
+		
+		pr.val.fmt = fmt;
+		pr.val.ptr = val;
+		out(usr, &pr);
+	}
 	++line;
 	}
 	

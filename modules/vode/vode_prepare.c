@@ -10,6 +10,7 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data)
 {
 	int mf, mu, ml;     /* method flag, upper/lower band */
 	int liw, lrw, *iwk; /* length of work arrays */
+	double *rwk;
 	int neqs;
 	
 	neqs = data->ivp.neqs;
@@ -72,14 +73,16 @@ extern int mpt_vode_prepare(MPT_SOLVER_STRUCT(vode) *data)
 	if (!(iwk = mpt_solver_module_valloc(&data->iwork, liw, sizeof(int)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!mpt_solver_module_valloc(&data->rwork, lrw, sizeof(double))) {
+	if (!(rwk = mpt_solver_module_valloc(&data->rwork, lrw, sizeof(double)))) {
 		return MPT_ERROR(BadOperation);
 	}
 	data->istate = 1;
 	
 	/* reset counter on reinitialisation */
-	for (mf = 0; mf < 3; mf++) iwk[10+mf] = 0;
-	for (mf = 0; mf < 4; mf++) iwk[18+mf] = 0;
+	for (mf = 0; mf < 3; mf++) iwk[10 + mf] = 0;
+	for (mf = 0; mf < 4; mf++) iwk[18 + mf] = 0;
+	/* set initial time */
+	rwk[12] = data->t;
 	
 	return neqs;
 }

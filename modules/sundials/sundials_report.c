@@ -9,38 +9,46 @@
 
 extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(PropertyHandler) out, void *usr)
 {
-	static const uint8_t fmt_full[] = "s";
-	static const uint8_t fmt_band[] = "sii";
 	MPT_STRUCT(property) pr;
-	struct {
-		const char *type;
-		int mu, ml;
-	} val;
-	
+	static const uint8_t fmt[] = "s";
+	const char *jac;
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";
-	pr.val.fmt = fmt_full;
-	pr.val.ptr = &val;
+	pr.val.fmt = fmt;
+	pr.val.ptr = &jac;
 	
-	switch (sd->jacobian) {
-	    case 0:
-		val.type = "diag";
-		break;
-	    case MPT_SOLVER_SUNDIALS(Direct):
-	    case MPT_SOLVER_SUNDIALS(Lapack):
-		val.type = sd->jacobian == SUNDIALS_BAND ? "banded(user)" : "full(user)";
-		break;
-	    case MPT_SOLVER_SUNDIALS(Direct) | MPT_SOLVER_SUNDIALS(Numeric):
-	    case MPT_SOLVER_SUNDIALS(Lapack) | MPT_SOLVER_SUNDIALS(Numeric):
-		val.type = sd->jacobian == SUNDIALS_BAND ? "banded" : "full";
-	    default:
-		return 0;
+	if (sd->stype < MPT_SOLVER_SUNDIALS(Direct)) {
+		jac = "none";
+		return out(usr, &pr);
+	}
+	if (!sd->jacobian) {
+		jac = "diag";
+		return out(usr, &pr);
+	}
+	if (sd->jacobian == SUNDIALS_DENSE) {
+		static const uint8_t fmt[] = "ss";
+		const char *val[2];
+		
+		val[0] = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "full" : "Full";
+		val[1] = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "numerical": "user";
+		
+		pr.val.fmt = fmt;
+		pr.val.ptr = val;
+		return out(usr, &pr);
 	}
 	if (sd->jacobian == SUNDIALS_BAND) {
-		pr.val.fmt = fmt_band;
-		val.mu = sd->mu;
-		val.ml = sd->ml;
+		static const uint8_t fmt[] = "siis";
+		struct { const char *fmt; int32_t mu, ml; const char *jac; } val;
+		
+		val.fmt = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "banded" : "Banded";
+		val.mu  = sd->mu;
+		val.ml  = sd->ml;
+		val.jac = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "numerical": "user";
+		
+		pr.val.fmt = fmt;
+		pr.val.ptr = &val;
+		return out(usr, &pr);
 	}
-	return out(usr, &pr);
+	return 0;
 }
 
