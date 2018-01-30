@@ -31,7 +31,8 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	val[1] = MPT_tr("saved");
 	
 	if (!vd->miter || vd->jsv < 0) {
-		pr.val.fmt = fmt_ss + 1;
+		pr.val.fmt = 0;
+		pr.val.ptr = val[0];
 	}
 	out(usr, &pr);
 	++line;
@@ -43,17 +44,42 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	val[0] = "Full";
 	val[1] = "user";
 	d.fmt = "Banded";
-	d.ml  = iwk[0];
-	d.mu  = iwk[1];
+	if (li > 1) {
+		d.ml = iwk[0];
+		d.mu = iwk[1];
+	} else {
+		d.ml = d.mu = -1;
+	}
 	d.jac = val[1];
 	
 	switch (vd->miter) {
-		case 1: if (vd->jac) break;
-		case 2: val[0] = "full"; val[1] = "numerical"; break;
-		case 3: val[0] = "diagonal"; pr.val.fmt = fmt_ss + 1; break;
-		case 4: pr.val.fmt = fmt_band; if (vd->jac) { pr.val.ptr = &d; break; }
-		case 5: d.fmt = "banded"; d.jac = "numerical"; pr.val.fmt = fmt_band; pr.val.ptr = &d; break;
-		default: val[0] = "none"; pr.val.fmt = fmt_ss + 1;
+		case 1:
+			if (vd->jac) {
+				break;
+			}
+		case 2:
+			val[0] = "full";
+			val[1] = "numerical";
+			break;
+		case 3:
+			pr.val.fmt = 0;
+			pr.val.ptr = "diagonal";
+			break;
+		case 4:
+			pr.val.fmt = fmt_band;
+			if (vd->jac) {
+				pr.val.ptr = &d;
+				break;
+			}
+		case 5:
+			d.fmt = "banded";
+			d.jac = "numerical";
+			pr.val.fmt = fmt_band;
+			pr.val.ptr = &d;
+			break;
+		default:
+			pr.val.fmt = 0;
+			pr.val.ptr = "none";
 	}
 	out(usr, &pr);
 	++line;

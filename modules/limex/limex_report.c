@@ -38,7 +38,7 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TY
 		const char *val[2];
 		
 		val[0] = lx->jac ? "Full" : "full";
-		val[0] = jac;
+		val[1] = jac;
 		
 		pr.val.fmt = fmt;
 		pr.val.ptr = val;

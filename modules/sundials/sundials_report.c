@@ -10,19 +10,17 @@
 extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(PropertyHandler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
-	static const uint8_t fmt[] = "s";
-	const char *jac;
+	
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";
-	pr.val.fmt = fmt;
-	pr.val.ptr = &jac;
+	pr.val.fmt = 0;
 	
 	if (sd->stype < MPT_SOLVER_SUNDIALS(Direct)) {
-		jac = "none";
+		pr.val.ptr = "none";
 		return out(usr, &pr);
 	}
 	if (!sd->jacobian) {
-		jac = "diag";
+		pr.val.ptr = "diagonal";
 		return out(usr, &pr);
 	}
 	if (sd->jacobian == SUNDIALS_DENSE) {

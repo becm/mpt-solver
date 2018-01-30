@@ -38,7 +38,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TY
 		const char *val[2];
 		
 		val[0] = rd->jac ? "Full" : "full";
-		val[0] = jac;
+		val[1] = jac;
 		
 		pr.val.fmt = fmt;
 		pr.val.ptr = val;
