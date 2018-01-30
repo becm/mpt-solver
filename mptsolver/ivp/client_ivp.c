@@ -503,6 +503,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		return err;
 	}
 	ret = obj->_vptr->setProperty(obj, 0, 0);
+	mpt_solver_info(sol, info);
 	
 	/* initial output for PDE mode */
 	if (!ivp->sd || ivp->sd->nval) {

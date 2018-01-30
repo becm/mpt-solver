@@ -386,6 +386,7 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	const MPT_INTERFACE(metatype) *mt;
 	MPT_INTERFACE(logger) *info;
 	MPT_INTERFACE(object) *obj;
+	MPT_SOLVER(interface) *sol;
 	MPT_STRUCT(node) *cfg;
 	int err;
 	
@@ -396,6 +397,9 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("no solver configured"), nls);
 		return MPT_ERROR(BadOperation);
 	}
+	sol = 0;
+	mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol);
+	
 	obj = 0;
 	if (mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) < 0
 	    || !obj) {
@@ -414,7 +418,9 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		return err;
 	}
 	err = obj->_vptr->setProperty(obj, 0, 0);
-	
+	if (sol) {
+		mpt_solver_info(sol, info);
+	}
 	if (err < 0) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("solver prepare failed"));
