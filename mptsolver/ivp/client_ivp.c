@@ -446,7 +446,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		else if (!(post = mpt_values_prepare(&dat->val, dat->nval - ret))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if ((ret = mpt_init_ivp(obj, &dat->val, info)) < 0) {
+		if ((ret = mpt_ivp_data(obj, &dat->val, info)) < 0) {
 			return ret;
 		}
 	}

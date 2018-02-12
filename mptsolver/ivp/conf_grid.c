@@ -10,7 +10,7 @@
 #include "values.h"
 
 /*!
- * \ingroup mptValues
+ * \ingroup mptSolver
  * \brief create grid data
  * 
  * Create grid values from configuration.

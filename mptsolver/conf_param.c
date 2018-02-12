@@ -16,7 +16,7 @@
 #include "solver.h"
 
 /*!
- * \ingroup mptValues
+ * \ingroup mptSolver
  * \brief configure parameter data
  * 
  * Get parameter data from configuration

@@ -157,7 +157,7 @@ static MPT_INTERFACE(metatype) *iterProfileClone(const MPT_INTERFACE(metatype) *
 }
 
 /*!
- * \ingroup mptValues
+ * \ingroup mptSolver
  * \brief configure parameter data
  * 
  * Get profile data from configuration element.

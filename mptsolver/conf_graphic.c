@@ -2,12 +2,13 @@
 #include <string.h>
 
 #include "node.h"
-#include "message.h"
+
+#include "values.h"
 
 #include "solver.h"
 
 /*!
- * \ingroup mptOutput
+ * \ingroup mptSolver
  * \~english
  * \brief set graphic parameters
  * 

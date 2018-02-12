@@ -14,7 +14,7 @@
 #include "solver.h"
 
 /*!
- * \ingroup mptOutput
+ * \ingroup mptSolver
  * \brief set history parameters
  * 
  * get history parameters from configuration list.

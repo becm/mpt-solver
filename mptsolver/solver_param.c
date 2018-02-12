@@ -12,7 +12,7 @@
 #include "solver.h"
 
 /*!
- * \ingroup mptClient
+ * \ingroup mptSolver
  * \brief set solver parameter
  * 
  * Set solver parameters from client configuration and argument string.

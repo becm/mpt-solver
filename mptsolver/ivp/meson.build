@@ -7,6 +7,7 @@ src = files(
   'conf_profiles.c',
   'init_ivp.c',
   'init_pde.c',
+  'ivp_data.c',
   'output_ivp_header.c',
   'residuals_cdiff.c',
   'solver_data_grid.c',
