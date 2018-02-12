@@ -13,9 +13,11 @@ sundials_kinsol = cc.find_library('sundials_kinsol', required : false, dirs : su
 sundials_deps += declare_dependency(include_directories : sundials_dir_inc)
 
 sundials_src = files(
+  'sundials_finit.c',
   'sundials_modfcn.c',
   'sundials_data_new.c', 'sundials_ewtfcn.c',
-  'sundials_jacobian.c', 'sundials_nvector.c', 'sundials_report.c'
+  'sundials_jacobian.c', 'sundials_linear.c',
+  'sundials_nvector.c', 'sundials_report.c'
 )
 
 if sundials_ida.found()
@@ -30,7 +32,16 @@ if sundials_cvode.found()
   sundials_deps += sundials_cvode
 endif
 
-sundials_deps += libm
+sundials_deps += cc.find_library('sundials_sunlinsolband', dirs : sundials_dir_lib)
+sundials_deps += cc.find_library('sundials_sunlinsoldense', dirs : sundials_dir_lib)
+
+sundials_deps += cc.find_library('sundials_sunlinsollapackband', dirs : sundials_dir_lib)
+sundials_deps += cc.find_library('sundials_sunlinsollapackdense', dirs : sundials_dir_lib)
+
+sundials_deps += cc.find_library('sundials_sunmatrixdense', dirs : sundials_dir_lib)
+sundials_deps += cc.find_library('sundials_sunmatrixband', dirs : sundials_dir_lib)
+
+# sundials_deps += libm
 
 install_data(sources : 'sundials.conf', install_dir : join_paths('etc', 'mpt.conf.d'))
 

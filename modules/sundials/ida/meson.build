@@ -6,6 +6,7 @@ src = files(
   'ida_prepare.c',
   'ida_property.c',
   'ida_report.c',
+  'ida_solver.c',
   'ida_step.c',
   'ida_tmp.c',
 )

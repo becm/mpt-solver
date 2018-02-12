@@ -6,5 +6,6 @@ src = files(
   'cvode_prepare.c',
   'cvode_property.c',
   'cvode_report.c',
+  'cvode_solver.c',
   'cvode_step.c',
 )
