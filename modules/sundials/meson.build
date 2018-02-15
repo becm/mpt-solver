@@ -5,7 +5,7 @@ sundials_dir_lib = join_paths(sundials_dir, 'lib')
 sundials_dir_inc = include_directories(join_paths(sundials_dir, 'include'))
 
 sundials_deps = [ cc.find_library('sundials_nvec' + get_option('sundials_vec'), dirs : sundials_dir_lib) ]
-
+sundials_args = []
 sundials_ida = cc.find_library('sundials_ida', required : false, dirs : sundials_dir_lib)
 sundials_cvode = cc.find_library('sundials_cvode', required : false, dirs : sundials_dir_lib)
 sundials_kinsol = cc.find_library('sundials_kinsol', required : false, dirs : sundials_dir_lib)
@@ -35,18 +35,22 @@ endif
 sundials_deps += cc.find_library('sundials_sunlinsolband', dirs : sundials_dir_lib)
 sundials_deps += cc.find_library('sundials_sunlinsoldense', dirs : sundials_dir_lib)
 
-sundials_deps += cc.find_library('sundials_sunlinsollapackband', dirs : sundials_dir_lib)
-sundials_deps += cc.find_library('sundials_sunlinsollapackdense', dirs : sundials_dir_lib)
+if get_option('sundials_lapack')
+  sundials_deps += cc.find_library('sundials_sunlinsollapackband', dirs : sundials_dir_lib)
+  sundials_deps += cc.find_library('sundials_sunlinsollapackdense', dirs : sundials_dir_lib)
+  sundials_args += '-DMPT_WITH_LAPACK'
+endif
 
 sundials_deps += cc.find_library('sundials_sunmatrixdense', dirs : sundials_dir_lib)
 sundials_deps += cc.find_library('sundials_sunmatrixband', dirs : sundials_dir_lib)
 
-# sundials_deps += libm
+sundials_deps += libm
 
 install_data(sources : 'sundials.conf', install_dir : join_paths('etc', 'mpt.conf.d'))
 
 sundials_lib = shared_library('mpt_sundials', sundials_src, 'libinfo.c',
   include_directories : [ solv_mod_inc ],
+  c_args : sundials_args,
   install_rpath : '$ORIGIN' + ':' + sundials_dir_lib,
   dependencies : [ sundials_deps, modules_dep_dae, modules_dep_ode ],
   version : '1.0.0', soversion : '1',

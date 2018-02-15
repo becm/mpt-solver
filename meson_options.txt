@@ -9,3 +9,5 @@ option('sundials', type : 'string', value : '',
        description : 'SUNDIALS install path')
 option('sundials_vec', type : 'string', value : 'serial',
        description : 'SUNDIALS vector implementation')
+option('sundials_lapack', type : 'boolean', value : false,
+       description : 'LAPACK support for SUNDIALS')

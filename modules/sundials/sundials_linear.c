@@ -16,7 +16,7 @@
 #include <cvode/cvode_impl.h>
 #include <cvode/cvode_direct.h>
 
-#ifdef SUNDIALS_BLAS_LAPACK
+#ifdef MPT_WITH_LAPACK
 # include <sunlinsol/sunlinsol_lapackdense.h>
 # include <sunlinsol/sunlinsol_lapackband.h>
 #endif
@@ -38,7 +38,7 @@ static int setLS(MPT_SOLVER_STRUCT(sundials) *sd, SUNLinearSolver LS, SUNMatrix 
 	return 0;
 }
 
-#ifdef SUNDIALS_BLAS_LAPACK
+#ifdef MPT_WITH_LAPACK
 /* set lapack solver jacobian method */
 static int setLapack(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 {
@@ -145,7 +145,7 @@ extern int mpt_sundials_linear(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neq
 		}
 		return setLS(sd, s, 0);
 	}
-#ifdef SUNDIALS_BLAS_LAPACK
+#ifdef MPT_WITH_LAPACK
 	if (type == MPT_SOLVER_SUNDIALS(Lapack)) {
 		return setLapack(sd, neqs);
 	}

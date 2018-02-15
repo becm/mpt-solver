@@ -1,24 +1,27 @@
 # Makefile: SUNDIALS interface library
 LIB ?= mpt_sundials
 #
-# additional build flags
-# DEFINES += SUNDIALS_WITH_LAPACK=1
-DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-3.1.0/build
+# precompiled object location
+DIR_SUNDIALS_OBJ ?= ${MPT_PREFIX}/math/sundials-3.1.0/build
+# include directories
+DIR_SUNDIALS_INC ?= ${MPT_PREFIX}/include
+INC = . ${DIR_SUNDIALS_INC}
+#
+# SUNDIALS modules to include in shared library
 sundials_lapack = sunlinsol_lapackband sunlinsol_lapackdense
-sundials_matrix = sunmat_band sunmat_dense
 sundials_direct = sunlinsol_band sunlinsol_dense ${sundials_lapack}
-sundials_iter   = sunlinsol_pcg sunlinsol_spbcgs
 sundials_elements = cvode ida kinsol ${sundials_iter} ${sundials_direct} nvec_ser
-INC = . ${MPT_PREFIX}/include ${DIR_SUNDIALS}/include/
 #
 # shared library version
 SHLIB_MAJOR = 1
 SHLIB_MINOR = 0
 SHLIB_TEENY = 0
 # linker settings
-LDLIBS += -llapack -lblas
+ifneq (${sundials_lapack},)
+  DEF += MPT_WITH_LAPACK
+  LDLIBS += -llapack -lblas
+endif
 LDLIBS += -lm
-LINK   = ${CC}
 #
 # shared components
 mod_require = ${mod_ivp} ufcn_dae ufcn_ode
@@ -30,9 +33,8 @@ sources = $(wildcard sundials_*.c)
 
 SRCS := ${sources} ${sources_cvode} ${sources_ida}
 
-MATH_OBJS_STATIC != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=static ./sundials_collect.sh ${sundials_elements}
-MATH_OBJS_SHARED != env DIR_SUNDIALS="${DIR_SUNDIALS}" LIBRARY_TYPE=shared ./sundials_collect.sh ${sundials_elements}
-MATH_OBJS = ${MATH_OBJS_STATIC} ${MATH_OBJS_SHARED}
+MATH_OBJS_STATIC != env DIR_SUNDIALS="${DIR_SUNDIALS_OBJ}" LIBRARY_TYPE=static ./sundials_collect.sh ${sundials_elements}
+MATH_OBJS_SHARED != env DIR_SUNDIALS="${DIR_SUNDIALS_OBJ}" LIBRARY_TYPE=shared ./sundials_collect.sh ${sundials_elements}
 #
 # headers to export
 HEADER = sundials.h
