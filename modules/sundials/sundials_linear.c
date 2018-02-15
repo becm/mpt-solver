@@ -57,9 +57,7 @@ static int setLapack(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 	}
 	if (sd->jacobian == SUNDIALS_BAND) {
 		sunindextype smu = sd->mu + sd->ml;
-		if (smu >= neqs) {
-			smu = neqs - 1;
-		}
+		/* direct solver; matrix WILL be factored! */
 		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml, smu))) {
 			return MPT_ERROR(BadValue);
 		}
@@ -91,9 +89,7 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 	}
 	if (sd->jacobian == SUNDIALS_BAND) {
 		sunindextype smu = sd->mu + sd->ml;
-		if (smu >= neqs) {
-			smu = neqs - 1;
-		}
+		/* direct solver; matrix WILL be factored! */
 		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml, smu))) {
 			return MPT_ERROR(BadValue);
 		}
