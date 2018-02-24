@@ -5,6 +5,8 @@
 #include "message.h"
 #include "output.h"
 
+#include "values.h"
+
 #include "solver.h"
 
 /*!
@@ -26,7 +28,7 @@ extern int mpt_output_solver_data(MPT_INTERFACE(output) *out, int state, int dim
 {
 	struct {
 		MPT_STRUCT(msgtype) mt;
-		MPT_STRUCT(msgbind) bnd;
+		MPT_STRUCT(valsrc)  src;
 	} hdr;
 	int ret;
 	
@@ -36,8 +38,8 @@ extern int mpt_output_solver_data(MPT_INTERFACE(output) *out, int state, int dim
 	hdr.mt.cmd = MPT_MESGTYPE(ValueRaw);
 	hdr.mt.arg = (int8_t) MPT_message_value(Float, *val);
 	
-	hdr.bnd.dim = dim;
-	hdr.bnd.state = state & 0xff;
+	hdr.src.dim = dim;
+	hdr.src.state = state & 0xff;
 	
 	if ((ret = out->_vptr->push(out, sizeof(hdr), &hdr))) {
 		return ret;

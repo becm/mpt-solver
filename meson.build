@@ -71,13 +71,16 @@ endif
 
 # create value elements locally
 if with_plot
-  subdir(join_paths('base', 'mptplot', 'values'))
-  plot_src = src + files(
-    join_paths('base', 'mptplot', 'layout_open.c'),
+  plot_src = files(
     join_paths('base', 'mptplot', 'history_push.c'),
     join_paths('base', 'mptplot', 'history_values.c'),
     join_paths('base', 'mptplot', 'output_local.c')
   )
+  subdir(join_paths('base', 'mptplot', 'values'))
+  plot_src += src
+  subdir(join_paths('base', 'mptplot', 'output'))
+  plot_src += src
+  
   base_src += plot_src
   base_dep += declare_dependency(
       include_directories : include_directories(join_paths('base', 'mptplot')))

@@ -9,7 +9,7 @@
 #endif
 
 #include MPT_INCLUDE(solver.h)
-#include MPT_INCLUDE(message.h)
+#include MPT_INCLUDE(values.h)
 
 #ifdef __GLIBC__
 # include <mcheck.h>
@@ -29,9 +29,9 @@ int main()
     std::cout << o.pass() << std::endl;
     
     // use values from mpt::msgbind::DataFlags
-    o.setFlags(mpt::msgbind::All,  0);
-    o.setFlags(mpt::msgbind::Init, 1);
-    o.setFlags(mpt::msgbind::Fini, 2);
+    o.setFlags(mpt::valsrc::All,  0);
+    o.setFlags(mpt::valsrc::Init, 1);
+    o.setFlags(mpt::valsrc::Fini, 2);
     
     for (int a : o.pass()) {
         std::cout << a << ' ';

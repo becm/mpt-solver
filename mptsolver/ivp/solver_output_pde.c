@@ -18,15 +18,15 @@ static void outputTime(MPT_STRUCT(output) *out, int state, double t)
 {
 	struct {
 		MPT_STRUCT(msgtype) mt;
-		MPT_STRUCT(msgbind) bnd;
+		MPT_STRUCT(valsrc)  src;
 	} hdr;
 	
 	hdr.mt.cmd = MPT_MESGTYPE(ValueRaw);
 	hdr.mt.arg = (int8_t) MPT_message_value(Float, t);
 	
 	/* indicate special data */
-	hdr.bnd.dim = state;
-	hdr.bnd.state = 0;
+	hdr.src.dim = state;
+	hdr.src.state = 0;
 	
 	/* push parameter data */
 	if (out->_vptr->push(out, sizeof(hdr), &hdr) < 0) {
