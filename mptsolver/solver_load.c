@@ -2,10 +2,10 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "client.h"
+#include "meta.h"
 #include "config.h"
 
-#include "meta.h"
+#include "loader.h"
 
 #include "solver.h"
 
@@ -131,8 +131,13 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 			cfg->_vptr->conv(cfg, 's', &lpath);
 		}
 		if (!(next = mpt_library_meta(me, conf, lpath, log))) {
+			if (!log) {
+				mpt_log(0, __func__, MPT_LOG(Error), "%s: %s",
+				        MPT_tr("failed to load solver"), conf);
+			}
 			return 0;
 		}
+		mpt_meta_info(next, __func__, MPT_LOG(Info), MPT_tr("create proxy"), log);
 		if (!(sol = mpt_solver_conv(next, match, log))) {
 			next->_vptr->ref.unref((void *) next);
 			return 0;

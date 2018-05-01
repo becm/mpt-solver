@@ -12,10 +12,11 @@
 
 #include "node.h"
 #include "event.h"
-#include "client.h"
 
 #include "config.h"
 #include "meta.h"
+
+#include "loader.h"
 
 #include "solver.h"
 

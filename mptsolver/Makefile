@@ -2,7 +2,7 @@
 LIB = mptsolver
 #
 # additional header directories
-base_inc = . mptcore mptplot
+base_inc = . mptcore mptplot mptloader
 INC = .. $(base_inc:%=${DIR_BASE}%)
 #
 # header to export
