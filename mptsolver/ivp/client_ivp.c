@@ -330,13 +330,13 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	MPT_STRUCT(solver_data) *dat;
 	MPT_INTERFACE(metatype) *mt;
 	MPT_INTERFACE(object) *obj;
-	MPT_INTERFACE(logger) *info;
+	MPT_INTERFACE(logger) *info, *hist;
 	MPT_SOLVER(interface) *sol;
 	const char *val;
 	double t;
 	int ret;
 	
-	info = loggerIVP(0);
+	info = hist = loggerIVP(0);
 	
 	if (!(conf = configIVP(ivp))) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
@@ -346,13 +346,14 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	if ((curr = mpt_node_find(conf, "output", 1))) {
 		MPT_INTERFACE(metatype) *old;
 		mt = mpt_output_local();
+		obj = 0;
 		mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj);
 		mpt_conf_history(obj, curr);
 		if ((old = curr->_meta)) {
 			old->_vptr->ref.unref((void *) old);
 		}
 		curr->_meta = mt;
-		info = loggerIVP(ivp);
+		hist = loggerIVP(ivp);
 	}
 	/* clear/create solver data */
 	if ((dat = ivp->sd)) {
@@ -412,10 +413,10 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	val = mpt_object_typename(obj);
 	if (val) {
-		mpt_log(info, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
+		mpt_log(hist, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
 	
-	if ((ret = ivp->uinit(mt, dat, info)) < 0) {
+	if ((ret = ivp->uinit(mt, dat, hist)) < 0) {
 		return ret;
 	}
 	/* setup PDE time and profile data */
@@ -462,13 +463,13 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	static const char _func[] = "mpt::client<IVP>::prep";
 	
 	const MPT_INTERFACE(metatype) *mt;
-	MPT_INTERFACE(logger) *info;
+	MPT_INTERFACE(logger) *info, *hist;
 	MPT_INTERFACE(object) *obj;
 	MPT_SOLVER(interface) *sol;
 	MPT_STRUCT(node) *cfg;
 	int ret, err;
 	
-	info = loggerIVP(ivp);
+	info = loggerIVP(0);
 	
 	if (!(mt = ivp->sol)) {
 		mpt_log(info, _func, MPT_LOG(Warning), "%s",
@@ -491,10 +492,12 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("solver without object interface"), MPT_tr("type"), err);
 		return MPT_ERROR(BadType);
 	}
+	hist = loggerIVP(ivp);
+	
 	/* set solver parameters from config */
 	if ((cfg = configIVP(ivp))
 	    && (cfg = cfg->children)) {
-		mpt_solver_param(obj, cfg, info);
+		mpt_solver_param(obj, cfg, hist);
 	}
 	/* set solver parameters from args */
 	if (args && (err = mpt_object_args(obj, args)) < 0) {
@@ -503,11 +506,11 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		return err;
 	}
 	ret = obj->_vptr->setProperty(obj, 0, 0);
-	mpt_solver_info(sol, info);
+	mpt_solver_info(sol, hist);
 	
 	/* initial output for PDE mode */
 	if (!ivp->sd || ivp->sd->nval) {
-		mpt_solver_status(sol, info, 0, 0);
+		mpt_solver_status(sol, hist, 0, 0);
 	}
 	else {
 		MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
@@ -520,7 +523,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		}
 		ctx.out = &out;
 		ctx.dat = ivp->sd;
-		mpt_solver_status(sol, info, outPDE, &ctx);
+		mpt_solver_status(sol, hist, outPDE, &ctx);
 		mpt_array_clone(&out._pass, 0);
 	}
 	mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
@@ -534,7 +537,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	
 	MPT_STRUCT(solver_output) out = MPT_SOLVER_OUTPUT_INIT;
 	MPT_INTERFACE(iterator) *steps;
-	MPT_INTERFACE(logger) *info;
+	MPT_INTERFACE(logger) *info, *hist;
 	MPT_INTERFACE(object) *obj;
 	MPT_INTERFACE(metatype) *mt;
 	MPT_SOLVER(interface) *sol;
@@ -545,7 +548,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	
 	ctx.out = &out;
 	
-	info = loggerIVP(ivp);
+	info = loggerIVP(0);
 	
 	if (!(mt = ivp->sol)
 	    || !(ctx.dat = ivp->sd)) {
@@ -569,6 +572,8 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("unable to get solver interface"), ret);
 		return MPT_ERROR(BadOperation);
 	}
+	hist = loggerIVP(ivp);
+	
 	/* execute ODE steps */
 	if (ivp->sd->nval) {
 		int state = MPT_DATASTATE(Step);
@@ -576,7 +581,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		/* current time data */
 		getrusage(RUSAGE_SELF, &pre);
 		/* execute possible steps */
-		ret = mpt_steps_ode(mt, steps, ivp->sd, info);
+		ret = mpt_steps_ode(mt, steps, ivp->sd, hist);
 		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
 		mpt_timeradd_sys(&ivp->ru.sys, &pre, &post);
@@ -594,7 +599,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		mpt_array_clone(&out._pass, 0);
 		
 		if (!ret) {
-			mpt_solver_statistics(sol, info, &ivp->ru.usr, &ivp->ru.sys);
+			mpt_solver_statistics(sol, hist, &ivp->ru.usr, &ivp->ru.sys);
 		}
 		return ret;
 	}
@@ -679,7 +684,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		mpt_solver_status(sol, info, outPDE, &ctx);
 		
 		if (!ret) {
-			mpt_solver_statistics(sol, info, &ivp->ru.usr, &ivp->ru.sys);
+			mpt_solver_statistics(sol, hist, &ivp->ru.usr, &ivp->ru.sys);
 		}
 		if (!args || ret < 1) {
 			break;
