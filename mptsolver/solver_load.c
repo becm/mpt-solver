@@ -125,7 +125,9 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 	else {
 		const MPT_INTERFACE(metatype) *cfg;
 		MPT_INTERFACE(metatype) *next;
+		MPT_STRUCT(property) pr;
 		const char *lpath = 0;
+		int type;
 		
 		if ((cfg = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
 			cfg->_vptr->conv(cfg, 's', &lpath);
@@ -137,7 +139,16 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 			}
 			return 0;
 		}
-		mpt_meta_info(next, __func__, MPT_LOG(Info), MPT_tr("create proxy"), log);
+		if ((type = mpt_meta_info(next, &pr)) >= 0) {
+			const char *msg = MPT_tr("create proxy");
+			if (!pr.desc) {
+				mpt_log(log, __func__, MPT_LOG(Info), "%s: %s (%d)",
+				        msg, pr.name, type);
+			} else {
+				mpt_log(log, __func__, MPT_LOG(Info), "%s: %s: %s",
+				        msg, pr.name, pr.desc);
+			}
+		}
 		if (!(sol = mpt_solver_conv(next, match, log))) {
 			next->_vptr->ref.unref((void *) next);
 			return 0;
