@@ -36,8 +36,11 @@ static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 	struct iovec *vec;
 	const double *t;
 	double *add;
-	size_t take, len;
+	ssize_t len, take;
 	
+	if (!(dat = ctx)) {
+		return 0;
+	}
 	if (!val->fmt
 	    || val->fmt[0] != 'd'
 	    || val->fmt[1] != MPT_value_toVector('d')) {
@@ -48,9 +51,13 @@ static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 	}
 	/* add space for new data */
 	take = dat->nval;
-	if (!(add = mpt_values_prepare(&dat->val, take--))) {
+	if (!(add = mpt_values_prepare(&dat->val, take))) {
 		return MPT_ERROR(BadOperation);
 	}
+	if (take < 0) {
+		take = -take;
+	}
+	--take;
 	take *= sizeof(*add);
 	
 	/* limit accepted size */
@@ -61,7 +68,7 @@ static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 	/* copy current state */
 	*add = *t;
 	if ((t = vec->iov_base)) {
-		memcpy(add+1, t, len);
+		memcpy(add + 1, t, len);
 	}
 	return 2;
 }
@@ -79,22 +86,23 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  * 
  * Execute generic DAE/ODE solver steps.
  * 
- * \param sol  IVP solver descriptor
+ * \param mt   IVP solver descriptor
  * \param src  time step source
+ * \param out  state output output descriptor
  * \param sd   solver data
- * \param info log/error output descriptor
+ * \param info info output descriptor
  * 
  * \return step operation result
  */
-extern int mpt_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *src, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *info)
+extern int mpt_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *src, MPT_INTERFACE(logger) *out, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *info)
 {
 	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;
 	const char *name;
-	double curr, end, *data;
+	double curr, end;
 	int ret;
 	
-	if (!sd || !src) {
+	if (!src) {
 		return MPT_ERROR(BadArgument);
 	}
 	if ((ret = src->_vptr->get(src, 'd', &end)) < 0) {
@@ -102,9 +110,6 @@ extern int mpt_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *s
 	}
 	if (!ret) {
 		return 0;
-	}
-	if (sd->nval < 1 || !(data = mpt_solver_data_grid(sd))) {
-		return MPT_ERROR(BadArgument);
 	}
 	obj = 0;
 	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) < 0
@@ -138,8 +143,8 @@ extern int mpt_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *s
 		ret = sol->_vptr->solve(sol);
 		curr = getTime(sol);
 		if (ret < 0) {
-			if (info) {
-				mpt_solver_status(sol, info, 0, 0);
+			if (out) {
+				mpt_solver_status(sol, out, 0, 0);
 			}
 			mpt_log(info, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
 			        MPT_tr("failed solver step"), curr, end);
@@ -150,9 +155,9 @@ extern int mpt_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *s
 			curr = end;
 			continue;
 		}
-		if (info) {
-			mpt_solver_status(sol, info, updateIvpData, sd);
-		} else {
+		if (out) {
+			mpt_solver_status(sol, out, updateIvpData, sd);
+		} else if (sd) {
 			sol->_vptr->report(sol, MPT_SOLVER_ENUM(Values), updateIvpDataWrap, sd);
 		}
 		/* get next target value */

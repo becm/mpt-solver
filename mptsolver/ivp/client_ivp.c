@@ -578,10 +578,13 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	if (ivp->sd->nval) {
 		int state = MPT_DATASTATE(Step);
 		
+		mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
+		        MPT_tr("attempt solver steps"));
+		
 		/* current time data */
 		getrusage(RUSAGE_SELF, &pre);
 		/* execute possible steps */
-		ret = mpt_steps_ode(mt, steps, ivp->sd, hist);
+		ret = mpt_steps_ode(mt, steps, hist, ivp->sd, info);
 		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
 		mpt_timeradd_sys(&ivp->ru.sys, &pre, &post);
