@@ -14,5 +14,5 @@ src = files(
   'solver_output_ode.c',
   'solver_output_pde.c',
   'solver_setvalue.c',
-  'steps_ode.c',
+  'solver_steps_ode.c',
 )

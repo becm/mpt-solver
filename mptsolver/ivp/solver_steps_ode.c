@@ -2,6 +2,7 @@
 #include <string.h>
 #include <inttypes.h>
 
+#include <math.h>
 #include <sys/uio.h>
 
 #include "array.h"
@@ -25,7 +26,7 @@ static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 
 static double getTime(MPT_SOLVER(interface) *sol)
 {
-	double t;
+	double t = NAN;
 	sol->_vptr->report(sol, MPT_SOLVER_ENUM(Values), setTime, &t);
 	return t;
 }
@@ -94,7 +95,7 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  * 
  * \return step operation result
  */
-extern int mpt_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *src, MPT_INTERFACE(logger) *out, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *info)
+extern int mpt_solver_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *src, MPT_INTERFACE(logger) *out, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *info)
 {
 	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;

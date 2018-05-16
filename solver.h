@@ -611,7 +611,7 @@ extern double *mpt_solver_data_grid (MPT_STRUCT(solver_data) *);
 extern double *mpt_solver_data_param(MPT_STRUCT(solver_data) *);
 
 /* execute specific IVP solver step */
-extern int mpt_steps_ode(MPT_INTERFACE(metatype) *, MPT_INTERFACE(iterator) *,  MPT_INTERFACE(logger) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
+extern int mpt_solver_steps_ode(MPT_INTERFACE(metatype) *, MPT_INTERFACE(iterator) *,  MPT_INTERFACE(logger) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::defaultInstance()));
 
 /* inner node residuals with central differences */
 extern int mpt_residuals_cdiff(void *, double , const double *, double *, const MPT_IVP_STRUCT(parameters) *, MPT_SOLVER_IVP(Rside));
