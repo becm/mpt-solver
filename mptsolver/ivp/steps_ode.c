@@ -131,13 +131,13 @@ extern int mpt_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *s
 	curr = getTime(sol);
 	/* try to complete full run */
 	while(1) {
-		mpt_log(info, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
+		mpt_log(info, __func__, MPT_LOG(Debug2), "%s: t = [%g, %g]",
 		        MPT_tr("attempt solver step"), curr, end);
 		
 		/* set ODE/DAE solver target time */
 		if ((ret = mpt_solver_setvalue(obj, "t", end)) < 0) {
-			mpt_log(info, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
-			        MPT_tr("failed to set target time"), curr, end);
+			mpt_log(info, __func__, MPT_LOG(Debug2), "%s: t = %g (told = %g)",
+			        MPT_tr("failed to set target time"), end, curr);
 			return ret;
 		}
 		ret = sol->_vptr->solve(sol);
@@ -146,13 +146,14 @@ extern int mpt_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *s
 			if (out) {
 				mpt_solver_status(sol, out, 0, 0);
 			}
-			mpt_log(info, __func__, MPT_LOG(Debug2), "%s (t = %g > %g)",
+			mpt_log(info, __func__, MPT_LOG(Debug2), "%s: t = %g (tend = %g)",
 			        MPT_tr("failed solver step"), curr, end);
 			return ret;
 		}
 		/* retry current end time */
 		if (curr < end) {
-			curr = end;
+			mpt_log(info, __func__, MPT_LOG(Debug2), "%s: t = %g (tend = %g)",
+			        MPT_tr("partial solver step"), curr, end);
 			continue;
 		}
 		if (out) {
