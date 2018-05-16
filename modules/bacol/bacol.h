@@ -179,10 +179,8 @@ inline bool bacol_out::set(const bacol &from)
 class Bacol : public IVP, bacol
 {
 public:
-	inline Bacol(const char *t = 0)
-	{
-		mpt_bacol_backend(this, t);
-	}
+	inline Bacol()
+	{ }
 	~Bacol() __MPT_OVERRIDE
 	{ }
 	int solve() __MPT_OVERRIDE
