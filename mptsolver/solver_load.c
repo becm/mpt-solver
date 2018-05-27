@@ -1,9 +1,14 @@
+/*!
+ * MPT solver library
+ *   open/replace solver module
+ */
 
 #include <string.h>
 #include <ctype.h>
 
 #include "meta.h"
 #include "config.h"
+#include "output.h"
 
 #include "loader.h"
 

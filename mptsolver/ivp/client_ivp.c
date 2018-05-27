@@ -1,5 +1,6 @@
 /*!
- * create client for IVP problem types
+ * MPT solver library
+ *   create client for IVP problem types
  */
 
 #define _POSIX_C_SOURCE 200809L /* need for strdup() */
@@ -15,13 +16,14 @@
 #include "message.h"
 #include "array.h"
 #include "meta.h"
-
-#include "values.h"
 #include "output.h"
-#include "parse.h"
 
+#include "parse.h"
 #include "client.h"
 #include "config.h"
+#include "event.h"
+
+#include "values.h"
 
 #include "solver.h"
 

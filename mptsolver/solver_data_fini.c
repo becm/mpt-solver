@@ -1,5 +1,6 @@
 /*!
- * initialize/finalize solver data descriptor.
+ * MPT solver library
+ *   initialize/finalize solver data descriptor
  */
 
 #include <string.h>

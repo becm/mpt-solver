@@ -1,9 +1,14 @@
+/*!
+ * MPT solver library
+ *   set nonlinear solver initial data and user functions
+ */
 
 #include <sys/uio.h>
 #include <inttypes.h>
 
 #include "meta.h"
 #include "array.h"
+#include "output.h"
 
 #include "solver.h"
 

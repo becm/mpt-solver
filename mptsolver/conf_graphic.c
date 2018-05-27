@@ -1,7 +1,12 @@
+/*!
+ * MPT solver library
+ *   use node list data to setup layouts and mapping
+ */
 
 #include <string.h>
 
 #include "node.h"
+#include "output.h"
 
 #include "values.h"
 
@@ -12,7 +17,7 @@
  * \~english
  * \brief set graphic parameters
  * 
- * get graphic parameters from configuration list.
+ * Use graphic parameters from node configuration list.
  * 
  * \param out   output descriptor
  * \param conf  configuration list

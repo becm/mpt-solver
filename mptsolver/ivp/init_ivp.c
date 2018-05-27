@@ -1,8 +1,13 @@
+/*!
+ * MPT solver library
+ *   initialize ODE/DAE problem size and user functions
+ */
 
 #include <inttypes.h>
 #include <sys/uio.h>
 
 #include "meta.h"
+#include "output.h"
 
 #include "solver.h"
 

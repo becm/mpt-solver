@@ -1,13 +1,14 @@
 /*!
- * read config files
+ * MPT solver library
+ *   read config files
  */
 
 #include <string.h>
 
+#include "meta.h"
 #include "node.h"
 #include "parse.h"
-
-#include "meta.h"
+#include "output.h"
 
 #include "solver.h"
 

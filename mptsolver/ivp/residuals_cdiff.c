@@ -1,5 +1,6 @@
 /*!
- * calculate central difference residuals for inner nodes.
+ * MPT solver library
+ *   calculate central difference residuals for inner nodes
  */
 
 #include "solver.h"

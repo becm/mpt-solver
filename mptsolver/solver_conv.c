@@ -1,3 +1,7 @@
+/*!
+ * MPT solver library
+ *   get solver interface from metatype
+ */
 
 #include <string.h>
 #include <ctype.h>
@@ -13,7 +17,7 @@
  * \ingroup mptSolver
  * \brief solver access
  * 
- * Convert reference in metatype element.
+ * Convert metatype element to compatible solver type interface.
  * 
  * \param mt     metatype reference
  * \param match  solver capablities to select

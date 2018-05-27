@@ -1,5 +1,6 @@
 /*!
- * create client for solving nonlinear systems.
+ * MPT solver library
+ *   save nonlinear system parameters
  */
 
 #include <string.h>
@@ -10,6 +11,17 @@
 
 #include "solver.h"
 
+/*!
+ * \ingroup mptSolver
+ * \brief save nonlinear system parameters
+ * 
+ * Save content of first value element to solver data parameters.
+ * 
+ * \param dat  solver data
+ * \param val  current nonlinear solver values
+ * 
+ * \return number of changed elements
+ */
 extern int mpt_solver_data_nls(MPT_STRUCT(solver_data) *dat, const MPT_STRUCT(value) *val)
 {
 	const uint8_t *fmt;

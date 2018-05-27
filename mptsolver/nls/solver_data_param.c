@@ -1,5 +1,6 @@
 /*!
- * get parameter start and dimension.
+ * MPT solver library
+ *   get solver data parameter start
  */
 
 #include <errno.h>

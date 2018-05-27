@@ -1,5 +1,6 @@
 /*!
- * append profile data to buffer
+ * MPT solver library
+ *   create iterator for profiles
  */
 
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 #include "node.h"
 #include "meta.h"
 #include "convert.h"
+#include "output.h"
 
 #include "values.h"
 

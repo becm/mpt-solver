@@ -1,3 +1,7 @@
+/*!
+ * MPT solver library
+ *   execute solver steps for iterator values
+ */
 
 #include <string.h>
 #include <inttypes.h>
@@ -5,8 +9,9 @@
 #include <math.h>
 #include <sys/uio.h>
 
-#include "array.h"
 #include "meta.h"
+#include "array.h"
+#include "output.h"
 
 #include "values.h"
 

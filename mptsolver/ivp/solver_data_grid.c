@@ -1,5 +1,6 @@
 /*!
- * get values start and number of equotations,
+ * MPT solver library
+ *   get PDE grid data
  */
 
 #include <errno.h>
@@ -51,5 +52,5 @@ extern double *mpt_solver_data_grid(MPT_STRUCT(solver_data) *dat)
 			grid[pos/sizeof(double)] = 0.0;
 		}
 	}
-	return (double *) (buf+1);
+	return (double *) (buf + 1);
 }

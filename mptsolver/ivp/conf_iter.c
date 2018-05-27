@@ -1,5 +1,6 @@
 /*!
- * create PDE solver parameter from configuration list.
+ * MPT solver library
+ *   create PDE solver parameter from configuration list.
  */
 
 #include <math.h>
@@ -7,6 +8,7 @@
 #include "meta.h"
 #include "node.h"
 #include "array.h"
+#include "output.h"
 
 #include "values.h"
 

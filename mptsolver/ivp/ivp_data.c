@@ -1,7 +1,12 @@
+/*!
+ * MPT solver library
+ *   set initial ODE/DAE values
+ */
 
 #include <sys/uio.h>
 
 #include "array.h"
+#include "output.h"
 
 #include "solver.h"
 

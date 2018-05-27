@@ -1,5 +1,6 @@
 /*!
- * MPT client library description
+ * MPT solver library
+ *   solver library description
  */
 
 #include "version.h"

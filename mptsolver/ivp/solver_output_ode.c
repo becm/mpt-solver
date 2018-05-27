@@ -1,5 +1,6 @@
 /*!
- * push IVP history header
+ * MPT solver library
+ *   output ODE data
  */
 
 #include "message.h"
@@ -9,14 +10,13 @@
 
 /*!
  * \ingroup mptSolver
- * \brief IVP data header
+ * \brief IVP data output
  * 
- * Push IVP history header data to output.
+ * History and graphic output for ODE data.
  * 
- * \param out  output interface descriptor
- * \param row  data row count
- * \param col  data column count
- * \param time PDE time for data (optional)
+ * \param so     output interface descriptor
+ * \param state  flags for solver data state
+ * \param sd     solver data to send
  * 
  * \return message push result
  */

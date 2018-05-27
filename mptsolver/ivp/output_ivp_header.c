@@ -1,5 +1,6 @@
 /*!
- * push IVP history header
+ * MPT solver library
+ *   push IVP history header
  */
 
 #include "message.h"

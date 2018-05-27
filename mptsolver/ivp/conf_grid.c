@@ -1,5 +1,6 @@
 /*!
- * get grid start and dimension.
+ * MPT solver library
+ *   get grid start and dimension.
  */
 
 #include <errno.h>

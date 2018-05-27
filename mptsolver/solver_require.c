@@ -1,5 +1,6 @@
 /*!
- * initialize and run solver (read, init, prep, cont).
+ * MPT solver library
+ *   load missing solver client config files
  */
 
 #include <stdio.h>
@@ -10,11 +11,11 @@
 
 #include <unistd.h>
 
+#include "meta.h"
 #include "node.h"
 #include "event.h"
-
+#include "output.h"
 #include "config.h"
-#include "meta.h"
 
 #include "loader.h"
 

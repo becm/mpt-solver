@@ -6,6 +6,8 @@
 
 #include "solver_run.h"
 
+#include MPT_INCLUDE(output.h)
+
 /*  non-boundery positions */
 static int rfcn(void *udata, double t, const double *u, double *f, double x, double *d, double *v)
 {

@@ -1,7 +1,12 @@
+/*!
+ * MPT solver library
+ *   initialize PDE grid and user functions
+ */
 
 #include <inttypes.h>
 
 #include "meta.h"
+#include "output.h"
 
 #include "solver.h"
 

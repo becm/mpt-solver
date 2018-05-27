@@ -1,5 +1,6 @@
 /*!
- * create PDE solver parameter from configuration list.
+ * MPT solver library
+ *   create solver data from config
  */
 
 #include <math.h>
@@ -7,6 +8,7 @@
 #include "meta.h"
 #include "node.h"
 #include "array.h"
+#include "output.h"
 
 #include "values.h"
 
@@ -14,15 +16,15 @@
 
 /*!
  * \ingroup mptSolver
- * \brief configure PDE data
+ * \brief configure IVP data
  * 
- * Get data for PDE solver form configuration.
+ * Create data for IVP solver form configuration.
  * 
  * \param md   client data descriptor
  * \param conf client configuration list
  * \param info error log descriptor
  * 
- * \return PDE count
+ * \return PDE grid intervals
  */
 extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *md, MPT_STRUCT(node) *conf, MPT_INTERFACE(iterator) *times, MPT_INTERFACE(logger) *info)
 {

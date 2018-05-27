@@ -1,5 +1,6 @@
 /*!
- * create client for solving nonlinear systems.
+ * MPT solver library
+ *   output nonlinear systems data
  */
 
 #include <sys/uio.h>

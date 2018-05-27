@@ -1,5 +1,6 @@
 /*!
- * set nonlinear solver parameter from configuration list.
+ * MPT solver library
+ *   set nonlinear solver parameter from configuration list
  */
 
 #include <stdio.h>
@@ -8,6 +9,7 @@
 
 #include "array.h"
 #include "convert.h"
+#include "output.h"
 #include "node.h"
 
 #include "values.h"

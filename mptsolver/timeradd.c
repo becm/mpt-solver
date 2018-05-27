@@ -1,5 +1,6 @@
 /*!
- * add usage time difference
+ * MPT solver library
+ *   add usage time difference
  */
 
 #define _DEFAULT_SOURCE

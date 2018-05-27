@@ -1,5 +1,6 @@
 /*!
- * setup event controller for solver events
+ * MPT solver library
+ *   setup event controller for solver events
  */
 
 #include <inttypes.h>

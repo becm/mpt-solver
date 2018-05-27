@@ -1,9 +1,11 @@
 /*!
- * push IVP history header
+ * MPT solver library
+ *   push IVP history header
  */
 
-#include "config.h"
 #include "meta.h"
+#include "config.h"
+#include "output.h"
 
 #include "solver.h"
 

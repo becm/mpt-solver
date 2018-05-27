@@ -1,5 +1,6 @@
 /*!
- * create client for solving nonlinear systems.
+ * MPT solver library
+ *   create client for solving nonlinear systems
  */
 
 #define _POSIX_C_SOURCE 200809L /* need for strdup() */
@@ -16,13 +17,14 @@
 #include "node.h"
 #include "message.h"
 #include "array.h"
-
-#include "values.h"
 #include "output.h"
-#include "parse.h"
 
+#include "parse.h"
 #include "client.h"
 #include "config.h"
+#include "event.h"
+
+#include "values.h"
 
 #include "solver.h"
 

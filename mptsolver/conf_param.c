@@ -1,5 +1,6 @@
 /*!
- * read solver data user parameter from configuration.
+ * MPT solver library
+ *   read solver data user parameter from configuration
  */
 
 #include <string.h>

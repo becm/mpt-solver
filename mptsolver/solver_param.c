@@ -1,13 +1,15 @@
 /*!
- * setting solver parameters
+ * MPT solver library
+ *   setting solver parameters
  */
 
 #include <string.h>
 #include <ctype.h>
 
+#include "meta.h"
 #include "node.h"
 #include "parse.h"
-#include "meta.h"
+#include "output.h"
 
 #include "solver.h"
 

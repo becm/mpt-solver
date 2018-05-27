@@ -1,5 +1,6 @@
 /*!
- * selective output for floating point data.
+ * MPT solver library
+ *   output of floating point data.
  */
 
 #include <string.h>

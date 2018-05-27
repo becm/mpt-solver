@@ -1,5 +1,6 @@
 /*!
- * read output parameter from configuration list.
+ * MPT solver library
+ *   read output parameter from configuration list
  */
 
 #include <stdio.h>
@@ -17,9 +18,9 @@
  * \ingroup mptSolver
  * \brief set history parameters
  * 
- * get history parameters from configuration list.
+ * Use history parameters in node configuration list.
  * 
- * \param out   output descriptor
+ * \param out   output config object
  * \param conf  configuration list
  * 
  * \return combined result of history configuration

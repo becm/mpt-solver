@@ -1,6 +1,6 @@
 /*!
- * \file
- * print structured solver output
+ * MPT solver library
+ *   print structured solver output
  */
 
 #include <stdio.h>

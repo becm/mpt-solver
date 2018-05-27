@@ -1,5 +1,6 @@
 /*!
- * create client for IVP problem types
+ * MPT solver library
+ *   output PDE data
  */
 
 #include <string.h>
@@ -37,14 +38,14 @@ static void outputTime(MPT_STRUCT(output) *out, int state, double t)
 }
 /*!
  * \ingroup mptSolver
- * \brief NLS data output
+ * \brief PDE data output
  * 
- * Push data state message to output.
+ * History and graphic output for PDE data.
  * 
  * \param out    solver output data
  * \param state  state of PDE solver data
  * \param val    current PDE values
- * \param dat    solver data for grid
+ * \param sd     solver data (fallback grid)
  * 
  * \return message push result
  */

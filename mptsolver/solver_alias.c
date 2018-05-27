@@ -1,5 +1,6 @@
 /*!
- * resolve alias to full library description
+ * MPT solver library
+ *   resolve alias to full library description
  */
 
 #include <string.h>

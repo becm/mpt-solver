@@ -1,5 +1,6 @@
 /*!
- * push IVP history header
+ * MPT solver library
+ *   register/get solver metatype code
  */
 
 #include "message.h"

@@ -1,5 +1,6 @@
 /*!
- * set metatype data.
+ * MPT solver library
+ *   set object property
  */
 
 #include <stdlib.h>
