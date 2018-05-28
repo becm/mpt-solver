@@ -120,7 +120,7 @@ public:
 	{
 		return mpt_mebdfi_report(this, what, out, opar);
 	}
-	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
+	int functions(int type, const void *ptr) __MPT_OVERRIDE
 	{
 		return mpt_mebdfi_ufcn(this, &_fcn, type, ptr);
 	}

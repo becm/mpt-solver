@@ -134,7 +134,7 @@ public:
 	{
 		return _lx ? mpt_limex_report(_lx, what, out, opar) : BadOperation;
 	}
-	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
+	int functions(int type, const void *ptr) __MPT_OVERRIDE
 	{
 		return _lx ? mpt_limex_ufcn(_lx, &_fcn, type, ptr) : 0;
 	}

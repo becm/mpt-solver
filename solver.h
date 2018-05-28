@@ -123,7 +123,7 @@ namespace solver {
 
 #endif
 
-enum MPT_SOLVER_ENUM(Flags)
+enum MPT_SOLVER_ENUM(Functions)
 {
 	MPT_SOLVER_ENUM(CapableIvp) = 0xf,
 	MPT_SOLVER_ENUM(IvpRside)   = 0x1,
@@ -157,7 +157,7 @@ public:
 	enum { Type = TypeSolver };
 	
 	virtual int report(int , PropertyHandler , void *) = 0;
-	virtual int setFunctions(int , const void *) = 0;
+	virtual int functions(int , const void *) = 0;
 	virtual int solve() = 0;
 };
 #else
@@ -165,7 +165,7 @@ MPT_SOLVER(interface);
 MPT_INTERFACE_VPTR(solver)
 {
 	int (*report)(MPT_SOLVER(interface) *, int , MPT_TYPE(PropertyHandler) , void *);
-	int (*setFunctions)(MPT_SOLVER(interface) *, int , const void *);
+	int (*functions)(MPT_SOLVER(interface) *, int , const void *);
 	int (*solve)(MPT_SOLVER(interface) *);
 }; MPT_SOLVER(interface) {
 	const MPT_INTERFACE_VPTR(solver) *_vptr;
@@ -187,7 +187,7 @@ public:
 	template <typename T>
 	inline bool set(const T &fcn)
 	{
-		return setFunctions(functionType(fcn), &fcn) >= 0;
+		return functions(T::FunctionType, &fcn) >= 0;
 	}
 };
 
@@ -292,7 +292,7 @@ MPT_IVP_STRUCT(rside)
 #ifdef __cplusplus
 	inline rside(Fcn f, void *p = 0) : fcn(f), par(p)
 	{ }
-	enum { Type = IvpRside };
+	enum { FunctionType = IvpRside };
 #else
 # define MPT_IVP_RSIDE_INIT { 0, 0 }
 #endif
@@ -305,7 +305,7 @@ MPT_IVP_STRUCT(jacobian)
 #ifdef __cplusplus
 	inline jacobian(Jac f, void *p = 0) : fcn(f), par(p)
 	{ }
-	enum { Type = IvpJac };
+	enum { FunctionType = IvpJac };
 #else
 # define MPT_IVP_JAC_INIT { 0, 0 }
 #endif
@@ -318,7 +318,7 @@ MPT_IVP_STRUCT(odefcn)
 #ifdef __cplusplus
 	inline odefcn(Fcn f, void *p = 0, Jac j = 0) : rside(f, p), jac(j, p)
 	{ }
-	enum { Type = ODE };
+	enum { FunctionType = ODE };
 #else
 # define MPT_IVP_ODE_INIT  { MPT_IVP_RSIDE_INIT, MPT_IVP_JAC_INIT }
 #endif
@@ -331,7 +331,7 @@ MPT_IVP_STRUCT(daefcn) : public IVP::odefcn
 {
 	inline daefcn(Fcn f, void *p = 0, Jac j = 0) : IVP::odefcn(f, p, j)
 	{ mas.fcn = 0; mas.par = 0; }
-	enum { Type = DAE };
+	enum { FunctionType = DAE };
 #else
 MPT_IVP_STRUCT(daefcn)
 {
@@ -349,7 +349,7 @@ MPT_IVP_STRUCT(pdefcn)
 #ifdef __cplusplus
 	inline pdefcn(Pde f, void *p = 0) : fcn(f), par(p)
 	{ }
-	enum { Type = IvpRside | PDE };
+	enum { FunctionType = IvpRside | PDE };
 #else
 # define MPT_IVP_PDE_INIT  { 0, 0 }
 #endif
@@ -387,7 +387,7 @@ MPT_NLS_STRUCT(jacobian)
 #ifdef __cplusplus
 	inline jacobian(Jac f, void *p = 0) : fcn(f), par(p)
 	{ }
-	enum { Type = NlsJac };
+	enum { FunctionType = NlsJac };
 #else
 # define MPT_NLS_JAC_INIT  { 0, 0 }
 #endif
@@ -400,7 +400,7 @@ MPT_NLS_STRUCT(functions)
 #ifdef __cplusplus
 	inline functions(Fcn f, void *u = 0, Jac j = 0) : res(f, u), jac(j, u)
 	{ }
-	enum { Type = NlsUser | NlsJac };
+	enum { FunctionType = NlsUser | NlsJac };
 #else
 # define MPT_NLSFCN_INIT  { { 0, 0 }, { 0, 0 } }
 #endif
@@ -413,7 +413,7 @@ MPT_NLS_STRUCT(output)
 #ifdef __cplusplus
 	inline output(Out f, void *u = 0) : fcn(f), par(u)
 	{ }
-	enum { Type = NlsOut };
+	enum { FunctionType = NlsOut };
 #else
 # define MPT_NLSOUT_INIT(r, p)  { (r), (p) }
 #endif
@@ -422,17 +422,6 @@ MPT_NLS_STRUCT(output)
 };
 
 #ifdef __cplusplus
-inline __MPT_CONST_EXPR int functionType(const IVP::rside &)    { return IVP::rside::Type; }
-inline __MPT_CONST_EXPR int functionType(const IVP::jacobian &) { return IVP::jacobian::Type; }
-inline __MPT_CONST_EXPR int functionType(const IVP::odefcn &)   { return IVP::odefcn::Type; }
-inline __MPT_CONST_EXPR int functionType(const IVP::daefcn &)   { return IVP::daefcn::Type; }
-inline __MPT_CONST_EXPR int functionType(const IVP::pdefcn &)   { return IVP::pdefcn::Type; }
-
-inline __MPT_CONST_EXPR int functionType(const NLS::jacobian &)  { return NLS::jacobian::Type; }
-inline __MPT_CONST_EXPR int functionType(const NLS::functions &) { return NLS::functions::Type; }
-inline __MPT_CONST_EXPR int functionType(const NLS::output &)    { return NLS::output::Type; }
-
-
 template <typename T>
 struct vecpar
 {

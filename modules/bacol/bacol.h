@@ -226,7 +226,7 @@ public:
 		mpt_bacol_output_report(&values(), t, context::setProp, &ctx);
 		return ret + 1;
 	}
-	int setFunctions(int , const void *) __MPT_OVERRIDE
+	int functions(int , const void *) __MPT_OVERRIDE
 	{
 		return BadValue;
 	}

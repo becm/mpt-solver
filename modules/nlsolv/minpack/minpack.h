@@ -152,7 +152,7 @@ public:
 		}
 		return mpt_minpack_report(this, what, out, opar);
 	}
-	int setFunctions(int what, const void *ptr) __MPT_OVERRIDE
+	int functions(int what, const void *ptr) __MPT_OVERRIDE
 	{
 		return mpt_minpack_ufcn(this, &_fcn, what, ptr);
 	}

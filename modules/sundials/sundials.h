@@ -271,7 +271,7 @@ public:
 	{
 		return mpt_sundials_cvode_report(this, what, out, opar);
 	}
-	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
+	int functions(int type, const void *ptr) __MPT_OVERRIDE
 	{
 		return mpt_solver_module_ufcn_ode(ivp.pint, &_fcn, type, ptr);
 	}
@@ -313,7 +313,7 @@ public:
 	{
 		return mpt_sundials_ida_report(this, what, out, opar);
 	}
-	int setFunctions(int type, const void *ptr) __MPT_OVERRIDE
+	int functions(int type, const void *ptr) __MPT_OVERRIDE
 	{
 		return mpt_solver_module_ufcn_dae(ivp.pint, &_fcn, type, ptr);
 	}
