@@ -251,11 +251,11 @@ public:
 	~CVode() __MPT_OVERRIDE
 	{ }
 	/* object operations */
-	int property(struct property *pr) const __MPT_OVERRIDE
+	int property_get(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_sundials_cvode_get(this, pr);
 	}
-	int setProperty(const char *pr, const metatype *src) __MPT_OVERRIDE
+	int property_set(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_sundials_cvode_prepare(this);
@@ -293,11 +293,11 @@ public:
 	~IDA() __MPT_OVERRIDE
 	{ }
 	/* object operations */
-	int property(struct property *pr) const __MPT_OVERRIDE
+	int property_get(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_sundials_ida_get(this, pr);
 	}
-	int setProperty(const char *pr, const metatype *src) __MPT_OVERRIDE
+	int property_set(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_sundials_ida_prepare(this);

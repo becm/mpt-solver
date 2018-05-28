@@ -111,11 +111,11 @@ public:
 		if (_lx) mpt_limex_fini(_lx);
 	}
 	/* object operations */
-	int property(struct property *pr) const __MPT_OVERRIDE
+	int property_get(struct property *pr) const __MPT_OVERRIDE
 	{
 		return _lx ? mpt_limex_get(_lx, pr) : BadOperation;
 	}
-	int setProperty(const char *pr, const metatype *src) __MPT_OVERRIDE
+	int property_set(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
 		if (!_lx) {
 			return BadOperation;

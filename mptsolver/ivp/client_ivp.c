@@ -434,7 +434,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 			}
 		}
 		/* process profile data */
-		else if ((ret = obj->_vptr->setProperty(obj, 0, mt)) < 0) {
+		else if ((ret = obj->_vptr->property_set(obj, 0, mt)) < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("PDE init state assignment failed"));
 			return ret;
@@ -507,7 +507,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("failed to apply solver parameters"));
 		return err;
 	}
-	ret = obj->_vptr->setProperty(obj, 0, 0);
+	ret = obj->_vptr->property_set(obj, 0, 0);
 	mpt_solver_info(sol, hist);
 	
 	/* initial output for PDE mode */

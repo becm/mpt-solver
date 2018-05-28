@@ -181,7 +181,7 @@ public:
 	
 	virtual bool prepare()
 	{
-		return setProperty(0, 0) >= 0;
+		return property_set(0, 0) >= 0;
 	}
 	
 	template <typename T>

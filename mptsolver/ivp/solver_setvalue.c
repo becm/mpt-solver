@@ -88,5 +88,5 @@ extern int mpt_solver_setvalue(MPT_INTERFACE(object) *obj, const char *prop, dou
 	v._mt._vptr = &valueMetaCtl;
 	v.val = val;
 	
-	return obj->_vptr->setProperty(obj, prop, &v._mt);
+	return obj->_vptr->property_set(obj, prop, &v._mt);
 }

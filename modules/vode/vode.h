@@ -90,11 +90,11 @@ public:
 	~Vode() __MPT_OVERRIDE
 	{ }
 	/* object operations */
-	int property(struct property *pr) const __MPT_OVERRIDE
+	int property_get(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_vode_get(this, pr);
 	}
-	int setProperty(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
+	int property_set(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_vode_prepare(this);

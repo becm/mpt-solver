@@ -424,7 +424,7 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("failed to apply solver parameters"));
 		return err;
 	}
-	err = obj->_vptr->setProperty(obj, 0, 0);
+	err = obj->_vptr->property_set(obj, 0, 0);
 	if (sol) {
 		mpt_solver_info(sol, hist);
 	}

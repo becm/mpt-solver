@@ -59,15 +59,15 @@ static void info(generic &s)
 	const char *name = "";
 	const char *type = "";
 	const char *ver  = "";
-	s.property(&pr);
+	s.property_get(&pr);
 	if (pr.name) name = pr.name;
 	if (pr.desc) type = pr.desc;
 	pr.name = "version";
-	s.property(&pr);
+	s.property_get(&pr);
 	if (!pr.val.fmt && pr.val.ptr) {
 		ver = reinterpret_cast<const char *>(pr.val.ptr);
 	}
-	int types = s.property(0);
+	int types = s.property_get(0);
 	println("<%s> [0x%x] %s (%s)", name, types, ver, type);
 	
 	s.report(Header | Status | Values | Report, val, 0);
