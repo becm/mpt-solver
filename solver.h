@@ -568,9 +568,6 @@ extern int mpt_solver_dispatch(MPT_INTERFACE(client) *, MPT_STRUCT(event) *);
 /* get input for required config elements */
 extern int mpt_solver_require(MPT_INTERFACE(config) *, MPT_INTERFACE(logger) *);
 
-/* set solver (user data and solver parameter) config files */
-extern int mpt_solver_config(MPT_INTERFACE(object) *, MPT_INTERFACE(iterator) *, MPT_INTERFACE(logger) *);
-
 /* read files to configuration */
 extern int mpt_solver_read(MPT_STRUCT(node) *, MPT_INTERFACE(iterator) *, MPT_INTERFACE(logger) *);
 
@@ -678,7 +675,7 @@ extern int mpt_solver_module_ufcn_dae(long , MPT_IVP_STRUCT(daefcn) *, int , con
 extern int mpt_solver_module_ufcn_nls(const MPT_NLS_STRUCT(parameters) *, MPT_NLS_STRUCT(functions) *, int , const void *);
 
 
-/* id for registered input metatype */
+/* id for registered solver metatype */
 extern int mpt_solver_typeid(void);
 
 __MPT_EXTDECL_END
