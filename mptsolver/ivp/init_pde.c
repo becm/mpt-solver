@@ -100,13 +100,13 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return 0;
 	}
 	types = MPT_SOLVER_ENUM(IvpRside) | MPT_SOLVER_ENUM(PDE);
-	if ((ret = sol->_vptr->setFunctions(sol, types, fcn)) < 0) {
+	if ((ret = sol->_vptr->set_functions(sol, types, fcn)) < 0) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("unable to set PDE user functions"));
 		}
 	}
-	else if ((ret = sol->_vptr->setFunctions(sol, ~types, 0)) < 0) {
+	else if ((ret = sol->_vptr->set_functions(sol, ~types, 0)) < 0) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("unable to set PDE user functions"));

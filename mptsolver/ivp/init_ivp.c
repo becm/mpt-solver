@@ -37,7 +37,7 @@ static int set_fcns(MPT_SOLVER(interface) *sol, const void *fcn, int type, MPT_I
 	if (!fcn) {
 		type = 0;
 	}
-	else if ((ret = sol->_vptr->setFunctions(sol, type, fcn)) < 0) {
+	else if ((ret = sol->_vptr->set_functions(sol, type, fcn)) < 0) {
 		if (info) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s (0x%x)",
 			        MPT_tr("unable to set user functions"), type);
@@ -45,7 +45,7 @@ static int set_fcns(MPT_SOLVER(interface) *sol, const void *fcn, int type, MPT_I
 		return ret;
 	}
 	/* limit user functions to compatible types */
-	if ((ret = sol->_vptr->setFunctions(sol, ~type, 0)) < 0) {
+	if ((ret = sol->_vptr->set_functions(sol, ~type, 0)) < 0) {
 		if (info) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s (0x%x)",
 			        MPT_tr("unable to limit user functions"), type);

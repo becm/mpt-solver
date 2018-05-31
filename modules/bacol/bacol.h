@@ -188,11 +188,11 @@ public:
 		_values.invalidate();
 		return mpt_bacol_step(this, _t);
 	}
-	int property_get(struct property *pr) const __MPT_OVERRIDE
+	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_bacol_get(this, pr);
 	}
-	int property_set(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
+	int set_property(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
 		_values.invalidate();
 		if (!pr && !src) {
@@ -226,7 +226,7 @@ public:
 		mpt_bacol_output_report(&values(), t, context::setProp, &ctx);
 		return ret + 1;
 	}
-	int functions(int , const void *) __MPT_OVERRIDE
+	int set_functions(int , const void *) __MPT_OVERRIDE
 	{
 		return BadValue;
 	}

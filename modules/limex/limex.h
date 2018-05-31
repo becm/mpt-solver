@@ -111,11 +111,11 @@ public:
 		if (_lx) mpt_limex_fini(_lx);
 	}
 	/* object operations */
-	int property_get(struct property *pr) const __MPT_OVERRIDE
+	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return _lx ? mpt_limex_get(_lx, pr) : BadOperation;
 	}
-	int property_set(const char *pr, const metatype *src) __MPT_OVERRIDE
+	int set_property(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
 		if (!_lx) {
 			return BadOperation;
@@ -134,7 +134,7 @@ public:
 	{
 		return _lx ? mpt_limex_report(_lx, what, out, opar) : BadOperation;
 	}
-	int functions(int type, const void *ptr) __MPT_OVERRIDE
+	int set_functions(int type, const void *ptr) __MPT_OVERRIDE
 	{
 		return _lx ? mpt_limex_ufcn(_lx, &_fcn, type, ptr) : 0;
 	}

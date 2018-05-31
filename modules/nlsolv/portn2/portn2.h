@@ -126,11 +126,11 @@ public:
 	~PortN2() __MPT_OVERRIDE
 	{ }
 	/* object operations */
-	int property_get(struct property *pr) const __MPT_OVERRIDE
+	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_portn2_get(this, pr);
 	}
-	int property_set(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
+	int set_property(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_portn2_prepare(this);
@@ -138,7 +138,7 @@ public:
 		return mpt_portn2_set(this, pr, src);
 	}
 	/* nonlinear solver implementation */
-	int functions(int what, const void *ptr) __MPT_OVERRIDE
+	int set_functions(int what, const void *ptr) __MPT_OVERRIDE
 	{
 		return mpt_portn2_ufcn(this, &_fcn, what, ptr);
 	}

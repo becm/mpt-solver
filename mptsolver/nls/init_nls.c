@@ -93,14 +93,14 @@ extern int mpt_init_nls(const MPT_INTERFACE(metatype) *mt, const MPT_NLS_STRUCT(
 	if (!fcn) {
 		type = 0;
 	}
-	else if ((ret = sol->_vptr->setFunctions(sol, type, fcn)) < 0) {
+	else if ((ret = sol->_vptr->set_functions(sol, type, fcn)) < 0) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("unable to set user functions"));
 		}
 		return ret;
 	}
-	if ((ret = sol->_vptr->setFunctions(sol, ~type, 0)) < 0) {
+	if ((ret = sol->_vptr->set_functions(sol, ~type, 0)) < 0) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("unable to set user functions"));

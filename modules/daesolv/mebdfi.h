@@ -100,11 +100,11 @@ public:
 	~Mebdfi() __MPT_OVERRIDE
 	{ }
 	/* object operations */
-	int property_get(struct property *pr) const __MPT_OVERRIDE
+	int property(struct property *pr) const __MPT_OVERRIDE
 	{
 		return mpt_mebdfi_get(this, pr);
 	}
-	int property_set(const char *pr, const metatype *src) __MPT_OVERRIDE
+	int set_property(const char *pr, const metatype *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_mebdfi_prepare(this);
@@ -120,7 +120,7 @@ public:
 	{
 		return mpt_mebdfi_report(this, what, out, opar);
 	}
-	int functions(int type, const void *ptr) __MPT_OVERRIDE
+	int set_functions(int type, const void *ptr) __MPT_OVERRIDE
 	{
 		return mpt_mebdfi_ufcn(this, &_fcn, type, ptr);
 	}

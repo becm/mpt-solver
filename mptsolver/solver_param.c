@@ -64,7 +64,7 @@ extern int mpt_solver_param(MPT_INTERFACE(object) *obj, MPT_STRUCT(node) *base, 
 		pr.name = "";
 		pr.desc = 0;
 		
-		if (obj->_vptr->property_get(obj, &pr) >= 0
+		if (obj->_vptr->property(obj, &pr) >= 0
 		    && pr.name
 		    && (conf = mpt_node_next(sub, pr.name))
 		    && (sub = conf->children)

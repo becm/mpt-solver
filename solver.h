@@ -157,7 +157,7 @@ public:
 	enum { Type = TypeSolver };
 	
 	virtual int report(int , PropertyHandler , void *) = 0;
-	virtual int functions(int , const void *) = 0;
+	virtual int set_functions(int , const void *) = 0;
 	virtual int solve() = 0;
 };
 #else
@@ -165,7 +165,7 @@ MPT_SOLVER(interface);
 MPT_INTERFACE_VPTR(solver)
 {
 	int (*report)(MPT_SOLVER(interface) *, int , MPT_TYPE(PropertyHandler) , void *);
-	int (*functions)(MPT_SOLVER(interface) *, int , const void *);
+	int (*set_functions)(MPT_SOLVER(interface) *, int , const void *);
 	int (*solve)(MPT_SOLVER(interface) *);
 }; MPT_SOLVER(interface) {
 	const MPT_INTERFACE_VPTR(solver) *_vptr;
@@ -181,13 +181,13 @@ public:
 	
 	virtual bool prepare()
 	{
-		return property_set(0, 0) >= 0;
+		return set_property(0, 0) >= 0;
 	}
 	
 	template <typename T>
 	inline bool set(const T &fcn)
 	{
-		return functions(T::FunctionType, &fcn) >= 0;
+		return set_functions(T::FunctionType, &fcn) >= 0;
 	}
 };
 
