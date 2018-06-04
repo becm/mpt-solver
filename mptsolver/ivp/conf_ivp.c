@@ -80,13 +80,15 @@ extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *md, MPT_STRUCT(node) *conf, MPT
 	}
 	/* setup ODE/DAE mode */
 	if (!(curr = mpt_node_next(conf, "grid"))) {
-		if (!mpt_array_append(&md->val, sizeof(t), &t)) {
+		double *dst;
+		if (!(dst = mpt_values_prepare(&md->val, 1))) {
 			if (info) {
 				mpt_log(info, __func__, MPT_LOG(Error), "%s",
 				        MPT_tr("unable to save initial time in history"));
 			}
 			return MPT_ERROR(BadOperation);
 		}
+		*dst = t;
 		if (!(curr = mpt_node_next(conf, "profile"))) {
 			len = 0;
 		}
@@ -94,7 +96,7 @@ extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *md, MPT_STRUCT(node) *conf, MPT
 		else if ((len = mpt_conf_param(&md->val, curr, 1)) < 0) {
 			if (info) {
 				mpt_log(info, __func__, MPT_LOG(Error), "%s",
-				        MPT_tr("failed to reserve initial data"));
+				        MPT_tr("failed to set initial data"));
 			}
 			return len;
 		}

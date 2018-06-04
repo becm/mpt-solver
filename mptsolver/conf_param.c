@@ -41,8 +41,8 @@ extern int mpt_conf_param(MPT_STRUCT(array) *arr, const MPT_STRUCT(node) *param,
 	
 	if (param->children) {
 		const MPT_STRUCT(node) *tmp = param = param->children;
-		double	*addr;
-		int	max = 0;
+		double *addr;
+		int max = 0;
 		
 		while (++max < INT_MAX && tmp->next) {
 			tmp = tmp->next;
@@ -52,7 +52,7 @@ extern int mpt_conf_param(MPT_STRUCT(array) *arr, const MPT_STRUCT(node) *param,
 		}
 		/* auto-detect parameter element count */
 		else if (parts <= 0) {
-			double	tmp;
+			double tmp;
 			int len;
 			parts = 0;
 			
@@ -72,10 +72,10 @@ extern int mpt_conf_param(MPT_STRUCT(array) *arr, const MPT_STRUCT(node) *param,
 				continue;
 			}
 			if ((len = mpt_cdouble(addr, data, 0)) > 0) {
-				int	i = 0;
+				int i = 0;
 				
 				while (++i < parts) {
-					if ((len = mpt_cdouble(addr+i*max, data+=len, 0)) <= 0) {
+					if ((len = mpt_cdouble(addr + i * max, data += len, 0)) <= 0) {
 						break;
 					}
 				}
@@ -85,7 +85,7 @@ extern int mpt_conf_param(MPT_STRUCT(array) *arr, const MPT_STRUCT(node) *param,
 		} while (++npar < max);
 	}
 	else {
-		double	tmp;
+		double tmp;
 		int len;
 		
 		if (!(data = mpt_node_data(param, 0)))
@@ -93,9 +93,14 @@ extern int mpt_conf_param(MPT_STRUCT(array) *arr, const MPT_STRUCT(node) *param,
 		
 		/* add parameters to buffer */
 		while ((len = mpt_cdouble(&tmp, data, 0)) > 0) {
-			if (arr && !mpt_array_append(arr, sizeof(tmp), &tmp)) {
+			double *dst;
+			if (!(dst = mpt_values_prepare(arr, 1))) {
+				if (!npar) {
+					return MPT_ERROR(BadOperation);
+				}
 				break;
 			}
+			*dst = tmp;
 			data += len;
 			npar++;
 		}

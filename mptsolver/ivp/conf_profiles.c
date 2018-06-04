@@ -183,6 +183,7 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 	MPT_STRUCT(iterProfile) *ip;
 	MPT_INTERFACE(metatype) **mptr;
 	MPT_INTERFACE(iterator) **iptr;
+	const MPT_STRUCT(type_traits) *info;
 	const MPT_STRUCT(buffer) *buf;
 	const MPT_STRUCT(node) *prof;
 	const char *desc;
@@ -196,8 +197,9 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 		        MPT_tr("empty buffer"));
 		return 0;
 	}
-	i = buf->_vptr->content(buf);
-	if (i && i != 'd') {
+	if (!(info = buf->_typeinfo)
+	    || (i = info->type) != 'd'
+	    || info->size != sizeof(double)) {
 		mpt_log(out, __func__, MPT_LOG(Error), "%s (%d)",
 		        MPT_tr("bad grid content"), i);
 		return 0;

@@ -47,9 +47,10 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 		return ret;
 	}
 	if ((mt = mpt_config_get(cfg, path + off, sep, 0))) {
+		const MPT_STRUCT(type_traits) *info;
 		MPT_STRUCT(array) a = MPT_ARRAY_INIT;
 		MPT_STRUCT(buffer) *buf;
-		int type;
+		int type = 0;
 		
 		if (!so->_graphic) {
 			mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &so->_graphic);
@@ -65,8 +66,8 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 			return ret;
 		}
 		/* require raw or '(unsigned) byte' */
-		type = buf->_vptr->content(buf);
-		if (!type || (type == 'b') || (type == 'y')) {
+		if ((info = buf->_typeinfo)
+		    && (info->type == 'b' || info->type == 'y')) {
 			so->_pass._buf = buf;
 			ret |= 0x8;
 		} else {

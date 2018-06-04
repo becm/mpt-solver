@@ -50,7 +50,7 @@ MPT_STRUCT(solver_output)
 	{ }
 	inline Slice<const uint8_t> pass() const
 	{
-		return _pass.slice();
+		return _pass.elements();
 	}
 	bool setFlags(int flg, int pos = -1)
 	{

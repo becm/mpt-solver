@@ -26,6 +26,8 @@
 extern int mpt_ivp_data(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *info)
 {
 	static const uint8_t fmt[] = { 'd', MPT_value_toVector('d'), 0 };
+	
+	const MPT_STRUCT(type_traits) *ti;
 	const MPT_STRUCT(buffer) *buf;
 	MPT_STRUCT(value) val;
 	struct {
@@ -48,10 +50,11 @@ extern int mpt_ivp_data(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double
 		}
 		return MPT_ERROR(BadValue);
 	}
-	if ((ret = buf->_vptr->content(buf))
-	    && ret != 'd') {
+	if (!(ti = buf->_typeinfo)
+	    || (ret = ti->type) != 'd'
+	    || ti->size != sizeof(double)) {
 		if (info) {
-			mpt_log(info, __func__, MPT_LOG(Error), "%s ('%d' != 'd')",
+			mpt_log(info, __func__, MPT_LOG(Error), "%s ('%i' != 'd')",
 			        MPT_tr("missing initial value data"), ret);
 		}
 		return MPT_ERROR(BadType);
