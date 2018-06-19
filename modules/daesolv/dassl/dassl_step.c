@@ -17,10 +17,12 @@ extern int mpt_dassl_step(MPT_SOLVER_STRUCT(dassl) *data, double tend)
 	neqs = data->ivp.neqs * (data->ivp.pint + 1);
 	
 	/* set tolerance flags and adresses */
-	if (neqs > 1 && (rtol = data->rtol.base) && (atol = data->atol.base)) {
+	if (neqs > 1 && (rtol = data->rtol._base) && (atol = data->atol._base)) {
 		data->info[1] = 1;
 	} else {
-		data->info[1] = 0; rtol = &data->rtol.d.val; atol = &data->atol.d.val;
+		data->info[1] = 0;
+		rtol = &data->rtol._d.val;
+		atol = &data->atol._d.val;
 	}
 	if (!data->jac) {
 		data->info[4] = 0;

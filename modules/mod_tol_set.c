@@ -21,11 +21,11 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_IN
 	int ret;
 	
 	if (!src) {
-		if ((tol = vec->base)) {
+		if ((tol = vec->_base)) {
 			free(tol);
-			vec->base = 0;
+			vec->_base = 0;
 		}
-		vec->d.val = def;
+		vec->_d.val = def;
 		return 0;
 	}
 	/* values from iterator */
@@ -73,11 +73,11 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_IN
 			}
 			return mpt_solver_module_tol_set(vec, 0, def);
 		}
-		if (vec->base) {
-			free(vec->base);
+		if (vec->_base) {
+			free(vec->_base);
 		}
-		vec->base = tol;
-		vec->d.len = len * sizeof(*tol);
+		vec->_base = tol;
+		vec->_d.len = len * sizeof(*tol);
 		return len;
 	}
 	if ((ret = src->_vptr->conv(src, MPT_value_toVector('d'), &tmp)) < 0) {
@@ -122,12 +122,12 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_IN
 		ret = 0;
 	}
 	/* reserve new tolerance data */
-	tol = vec->base;
+	tol = vec->_base;
 	if (!(tol = realloc(tol, len * sizeof(*tol)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	vec->base = tol;
-	vec->d.len = len * sizeof(*tol);
+	vec->_base = tol;
+	vec->_d.len = len * sizeof(*tol);
 	
 	/* fill required size with default values */
 	if (!tmp.iov_base) {

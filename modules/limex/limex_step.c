@@ -25,12 +25,12 @@ extern int mpt_limex_step(MPT_SOLVER_STRUCT(limex) *lx, double tend)
 	neq.ufcn = lx->ufcn;
 	
 	/* set tolerance flags and adresses */
-	if (neq.neqs > 1 && (rtol = lx->rtol.base) && (atol = lx->atol.base)) {
+	if (neq.neqs > 1 && (rtol = lx->rtol._base) && (atol = lx->atol._base)) {
 		lx->iopt[10] = 1;
 	} else {
 		lx->iopt[10] = 0;
-		rtol = &lx->rtol.d.val;
-		atol = &lx->atol.d.val;
+		rtol = &lx->rtol._d.val;
+		atol = &lx->atol._d.val;
 	}
 	if (!lx->jac) {
 		lx->iopt[6] = 0;

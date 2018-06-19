@@ -20,7 +20,7 @@ extern int mpt_limex_prepare(MPT_SOLVER_STRUCT(limex) *data)
 	if (data->iopt[8] < 0) data->iopt[8] = data->ivp.neqs;
 	
 	/* vector tolerances in sufficent dimension */
-	if (data->ivp.neqs < 2 || (!data->rtol.base && !data->atol.base)) {
+	if (data->ivp.neqs < 2 || (!data->rtol._base && !data->atol._base)) {
 		pdim = 0;
 	}
 	if (mpt_solver_module_tol_check(&data->atol, neqs, pdim, __MPT_IVP_ATOL) < 0) {

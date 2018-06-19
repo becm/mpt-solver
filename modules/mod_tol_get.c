@@ -13,19 +13,22 @@
 
 extern int mpt_solver_module_tol_get(MPT_STRUCT(value) *val, const MPT_SOLVER_TYPE(dvecpar) *tol)
 {
-	int len = tol->base ? tol->d.len/sizeof(double) : 0;
+	int len;
 	
-	if (!val) {
-		return len;
-	}
-	if (tol->base) {
-		static const uint8_t fmt[2] = { MPT_value_toVector('d') };
-		val->fmt = fmt;
-		val->ptr = tol;
+	if (tol->_base) {
+		len = tol->_d.len/sizeof(double);
+		if (val) {
+			static const uint8_t fmt[2] = { MPT_value_toVector('d') };
+			val->fmt = fmt;
+			val->ptr = tol->_base;
+		}
 	} else {
-		static const uint8_t fmt[2] = "d";
-		val->fmt = fmt;
-		val->ptr = &tol->d.val;
+		len = 0;
+		if (val) {
+			static const uint8_t fmt[2] = "d";
+			val->fmt = fmt;
+			val->ptr = &tol->_d.val;
+		}
 	}
 	return len;
 }

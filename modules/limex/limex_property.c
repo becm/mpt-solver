@@ -93,6 +93,19 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, const MPT_INTERFACE(metatyp
 	return ret;
 }
 
+/*!
+ * \ingroup mptLimex
+ * \brief set LIMEX property
+ * 
+ * Assign property of LIMEX solver
+ * 
+ * \param lx   LIMEX data
+ * \param name name of property to change
+ * \param src  data source to change property
+ * 
+ * \retval <0   failure
+ * \retval >=0  used elements
+ */
 extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, const MPT_INTERFACE(metatype) *src)
 {
 	int ret = 0;
@@ -223,7 +236,19 @@ extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *lx, const char *name, const M
 	return MPT_ERROR(BadArgument);
 }
 
-
+/*!
+ * \ingroup mptLimex
+ * \brief get LIMEX property
+ * 
+ * Query property of LIMEX solver
+ * 
+ * \param lx   LIMEX data
+ * \param prop object property
+ * 
+ * \retval 0   default value
+ * \retval <0  failure
+ * \retval >0  changed property
+ */
 extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property) *prop)
 {
 	const char *name;
@@ -258,7 +283,7 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 		if (lx) {
 			return mpt_solver_module_tol_get(&prop->val, &lx->atol);
 		}
-		mpt_solver_module_value_double(&prop->val, &lx->atol.d.val);
+		mpt_solver_module_value_double(&prop->val, &lx->atol._d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == id++) {
@@ -267,7 +292,7 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 		if (lx) {
 			return mpt_solver_module_tol_get(&prop->val, &lx->rtol);
 		}
-		mpt_solver_module_value_double(&prop->val, &lx->rtol.d.val);
+		mpt_solver_module_value_double(&prop->val, &lx->rtol._d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == id++) {

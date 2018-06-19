@@ -14,10 +14,12 @@ extern int mpt_radau_step(MPT_SOLVER_STRUCT(radau) *rd, double tend)
 	}
 	neqs = rd->ivp.neqs * (rd->ivp.pint + 1);
 	
-	if (rd->ivp.neqs > 1 && rd->rtol.base && rd->atol.base) {
-		tvec = 1; rtol = rd->rtol.base; atol = rd->atol.base;
+	if (rd->ivp.neqs > 1 && (rtol = rd->rtol._base) && (atol = rd->atol._base)) {
+		tvec = 1;
 	} else {
-		tvec = 0; rtol = &rd->rtol.d.val; atol = &rd->atol.d.val;
+		tvec = 0;
+		rtol = &rd->rtol._d.val;
+		atol = &rd->atol._d.val;
 	}
 	imas = rd->mas ? 1 : 0;
 	iout = rd->sol ? 1 : 0;

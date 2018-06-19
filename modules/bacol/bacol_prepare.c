@@ -25,7 +25,7 @@ extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *bac)
 	bac->mflag.noinit = -1;
 	
 	/* use vector tolerances if one is set */
-	odim = (npde > 1 && (bac->rtol.base || bac->atol.base)) ? 1 : 0;
+	odim = (npde > 1 && (bac->rtol._base || bac->atol._base)) ? 1 : 0;
 	
 	if (mpt_solver_module_tol_check(&bac->rtol, bac->ivp.neqs, odim, __MPT_IVP_RTOL) < 0) {
 		return MPT_ERROR(BadOperation);

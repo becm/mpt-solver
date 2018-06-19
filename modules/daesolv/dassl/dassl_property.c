@@ -119,7 +119,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, const MPT_INTERFACE(metatyp
 
 
 /*!
- * \ingroup mptSundialsCVode
+ * \ingroup mptDaesolvDassl
  * \brief set DASSL property
  * 
  * Assign property of DASSL solver
@@ -256,7 +256,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 }
 /*!
  * \ingroup mptDaesolvDassl
- * \brief set DASSL property
+ * \brief get DASSL property
  * 
  * Query property of DASSL solver
  * 
@@ -300,7 +300,7 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		if (da) {
 			return mpt_solver_module_tol_get(&prop->val, &da->atol);
 		}
-		mpt_solver_module_value_double(&prop->val, &da->atol.d.val);
+		mpt_solver_module_value_double(&prop->val, &da->atol._d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
@@ -309,7 +309,7 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		if (da) {
 			return mpt_solver_module_tol_get(&prop->val, &da->rtol);
 		}
-		mpt_solver_module_value_double(&prop->val, &da->rtol.d.val);
+		mpt_solver_module_value_double(&prop->val, &da->rtol._d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == ++id) {

@@ -79,24 +79,31 @@ public:
 	bacol_out();
 	~bacol_out();
 	
-	inline Slice<const double> x() const
+	inline span<const double> x() const
 	{
 		const double *val = static_cast<double *>(_val.iov_base);
-		return Slice<const double>(val, nint ? nint + 1 : 0);
+		return span<const double>(val, nint ? nint + 1 : 0);
 	}
-	inline Slice<const double> y() const
+	inline span<const double> y() const
 	{
 		const double *val = static_cast<double *>(_val.iov_base);
-		if (!nint || deriv) return Slice<const double>(0, 0);
-		return Slice<const double>(val + nint + 1, nint + 1);
+		if (!nint || deriv) {
+			return span<const double>(0, 0);
+		}
+		return span<const double>(val + nint + 1, nint + 1);
 	}
 	inline int intervals() const
-	{ return nint; }
+	{
+		return nint;
+	}
 	inline int equotations() const
-	{ return neqs; }
+	{
+		return neqs;
+	}
 	inline void invalidate()
-	{ nint = 0; }
-	
+	{
+		nint = 0;
+	}
 	bool set(const bacol &);
 protected:
 #endif
@@ -165,16 +172,25 @@ __MPT_EXTDECL_END
 
 #ifdef __cplusplus
 inline bacol::bacol()
-{ mpt_bacol_init(this); }
+{
+	mpt_bacol_init(this);
+}
 inline bacol::~bacol()
-{ mpt_bacol_fini(this); }
-
+{
+	mpt_bacol_fini(this);
+}
 inline bacol_out::bacol_out()
-{ mpt_bacol_output_init(this); }
+{
+	mpt_bacol_output_init(this);
+}
 inline bacol_out::~bacol_out()
-{ mpt_bacol_output_fini(this); }
+{
+	mpt_bacol_output_fini(this);
+}
 inline bool bacol_out::set(const bacol &from)
-{ return mpt_bacol_values(this, &from) != 0; }
+{
+	return mpt_bacol_values(this, &from) != 0;
+}
 
 class Bacol : public IVP, bacol
 {

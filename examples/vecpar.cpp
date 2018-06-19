@@ -30,7 +30,7 @@ int main()
 	
 	vecpar<short> vi;
 	vi[0] = 4;
-	std::cout << vi.value().fmt << ": " << *vi.data().base() << std::endl;
+	std::cout << vi.value().fmt << ": " << *vi.data().begin() << std::endl;
 	vi.resize(8);
 	std::cout << "vi[5] = " << vi[5] << std::endl;
 	

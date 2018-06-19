@@ -215,7 +215,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 		if (bac) {
 			return mpt_solver_module_tol_get(&prop->val, &bac->atol);
 		}
-		mpt_solver_module_value_double(&prop->val, &bac->atol.d.val);
+		mpt_solver_module_value_double(&prop->val, &bac->atol._d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
@@ -224,7 +224,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 		if (bac) {
 			return mpt_solver_module_tol_get(&prop->val, &bac->rtol);
 		}
-		mpt_solver_module_value_double(&prop->val, &bac->rtol.d.val);
+		mpt_solver_module_value_double(&prop->val, &bac->rtol._d.val);
 		return id;
 	}
 	/* bacol parameters */

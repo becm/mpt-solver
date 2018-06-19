@@ -18,16 +18,16 @@ extern int mpt_bacol_step(MPT_SOLVER_STRUCT(bacol) *bac, double tend)
 		bac->mflag.noinit = 1;
 		idid = 1;
 	}
-	if (bac->rtol.base && bac->atol.base
+	if (bac->rtol._base && bac->atol._base
 	    && bac->ivp.neqs > 1) {
 		bac->mflag.tvec = 1;
-		rtol = bac->rtol.base;
-		atol = bac->atol.base;
+		rtol = bac->rtol._base;
+		atol = bac->atol._base;
 	}
 	else {
 		bac->mflag.tvec = 0;
-		rtol = &bac->rtol.d.val;
-		atol = &bac->atol.d.val;
+		rtol = &bac->rtol._d.val;
+		atol = &bac->atol._d.val;
 	}
 	kcol = bac->kcol;
 	y = bac->xy + bac->nintmx + 1;

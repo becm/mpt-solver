@@ -227,8 +227,7 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 		if (me) {
 			return mpt_solver_module_tol_get(&prop->val, &me->atol);
 		}
-		mpt_solver_module_value_double(&prop->val, &me->atol.d.val);
-		return id;
+		mpt_solver_module_value_double(&prop->val, &me->atol._d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
@@ -237,7 +236,7 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 		if (me) {
 			return mpt_solver_module_tol_get(&prop->val, &me->rtol);
 		}
-		mpt_solver_module_value_double(&prop->val, &me->rtol.d.val);
+		mpt_solver_module_value_double(&prop->val, &me->rtol._d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == ++id) {

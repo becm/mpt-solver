@@ -38,11 +38,11 @@ extern int mpt_sundials_ewtfcn(N_Vector vy, N_Vector ve, void *data)
 	neq = d->ivp.neqs;
 	
 	/* absolute tolerance is vector */
-	if ((tol = d->atol.base)) {
+	if ((tol = d->atol._base)) {
 		double *rtol;
 		
 		/* both tolerances are vectors */
-		if ((rtol = d->rtol.base)) {
+		if ((rtol = d->rtol._base)) {
 			for (j = 0; j < dim; j++, y += neq, ewt += neq) {
 				for (i = 0; i < neq; i++) {
 					ewt[i] = 1./(tol[i] + rtol[i] * fabs(y[i]));
@@ -51,7 +51,7 @@ extern int mpt_sundials_ewtfcn(N_Vector vy, N_Vector ve, void *data)
 		}
 		/* relative tolerances is scalar */
 		else  {
-			double rt = d->rtol.d.val;
+			double rt = d->rtol._d.val;
 			for (j = 0; j < dim; j++, y += neq, ewt += neq) {
 				for (i = 0; i < neq; i++) {
 					ewt[i] = 1./(tol[i] + rt * fabs(y[i]));
@@ -60,8 +60,8 @@ extern int mpt_sundials_ewtfcn(N_Vector vy, N_Vector ve, void *data)
 		}
 	}
 	/* relative tolerance is vector */
-	else if ((tol = d->rtol.base)) {
-		double at = d->rtol.d.val;
+	else if ((tol = d->rtol._base)) {
+		double at = d->rtol._d.val;
 		
 		for (j = 0; j < dim; j++, y += neq, ewt += neq) {
 			for (i = 0; i < neq ; i++) {
@@ -71,12 +71,15 @@ extern int mpt_sundials_ewtfcn(N_Vector vy, N_Vector ve, void *data)
 	}
 	/* scalar tolerances */
 	else {
-		double rt = d->rtol.d.val, at = d->atol.d.val;
+		double rt, at;
+		
+		rt = d->rtol._d.val;
+		at = d->atol._d.val;
 		
 		dim *= neq;
 		
 		for (i = 0; i < dim; i++) {
-			ewt[i] = 1./(at + rt * fabs(y[i]));
+			ewt[i] = 1. / (at + rt * fabs(y[i]));
 		}
 	}
 	

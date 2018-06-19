@@ -18,7 +18,7 @@ extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *data)
 	neqs = data->ivp.neqs * pdim;
 	
 	/* vector tolerances in sufficent dimension */
-	if (data->ivp.neqs < 2 || (!data->rtol.base && !data->atol.base)) {
+	if (data->ivp.neqs < 2 || (!data->rtol._base && !data->atol._base)) {
 		pdim = 0;
 	}
 	if (mpt_solver_module_tol_check(&data->atol, data->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {

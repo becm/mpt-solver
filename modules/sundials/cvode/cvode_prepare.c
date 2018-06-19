@@ -51,8 +51,8 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 		return err;
 	}
 	/* prepare tolerances */
-	if (!cv->atol.base && !cv->rtol.base) {
-		err = CVodeSStolerances(cv_mem, cv->rtol.d.val, cv->atol.d.val);
+	if (!cv->atol._base && !cv->rtol._base) {
+		err = CVodeSStolerances(cv_mem, cv->rtol._d.val, cv->atol._d.val);
 	} else {
 		if (mpt_solver_module_tol_check(&cv->rtol, cv->ivp.neqs, 1, __MPT_IVP_RTOL) < 0) {
 			return -21;

@@ -77,7 +77,7 @@ static void info(generic &s)
 static void pde(IVP &s)
 {
 	double vec[3] = { 1, 2, 3 };
-	Slice<double> val(vec, 3);
+	span<double> val(vec, 3);
 	// PDE equotations and grid
 	mpt_object_set(&s, "", "iD", 3, val);
 	// PDE time and start values

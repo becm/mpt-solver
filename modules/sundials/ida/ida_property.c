@@ -188,7 +188,7 @@ extern int mpt_sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(pr
 		if (ida) {
 			return mpt_solver_module_tol_get(&prop->val, &ida->atol);
 		}
-		mpt_solver_module_value_double(&prop->val, &ida->atol.d.val);
+		mpt_solver_module_value_double(&prop->val, &ida->atol._d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == id++)) {
@@ -197,7 +197,7 @@ extern int mpt_sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(pr
 		if (ida) {
 			return mpt_solver_module_tol_get(&prop->val, &ida->rtol);
 		}
-		mpt_solver_module_value_double(&prop->val, &ida->rtol.d.val);
+		mpt_solver_module_value_double(&prop->val, &ida->rtol._d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == id++)) {

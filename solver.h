@@ -48,11 +48,11 @@ MPT_STRUCT(solver_output)
 #ifdef __cplusplus
 	inline solver_output() : _data(0), _graphic(0)
 	{ }
-	inline Slice<const uint8_t> pass() const
+	inline span<const uint8_t> pass() const
 	{
 		return _pass.elements();
 	}
-	bool setFlags(int flg, int pos = -1)
+	bool set_flags(int flg, int pos = -1)
 	{
 		if (pos >= 0) {
 			if (pos >= _pass.length()
@@ -213,7 +213,7 @@ public:
 		if (err < 0) _t = save;
 		return err;
 	}
-	inline bool set(double t, Slice<const double> x)
+	inline bool set(double t, span<const double> x)
 	{
 		int ret = mpt_object_set(this, 0, "dD", t, x);
 		if (ret >= 0) _t = t;
@@ -255,7 +255,7 @@ public:
 	struct output;
 	struct functions;
 	
-	inline bool set(Slice<const double> par)
+	inline bool set(span<const double> par)
 	{
 		return mpt_object_set(this, 0, "D", par) >= 0;
 	}
@@ -427,83 +427,104 @@ struct vecpar
 {
 	typedef T* iterator;
 	
-	inline vecpar(T const &val) : base(0)
-	{ d.val = val; }
-	inline vecpar() : base(0)
-	{ d.val = T(); }
-	inline ~vecpar()
-	{ if (base) resize(0); }
-	
-	inline iterator begin() const
-	{ return base ? base : const_cast<T *>(&d.val); }
-	
-	 inline iterator end() const
-	{ return base ? base + d.len/sizeof(*base) : const_cast<T *>(&d.val) + 1; }
-	
-	inline Slice<const T> data() const
+	inline vecpar(T const &val) : _base(0)
 	{
-		if (base) return Slice<const T>(base, d.len / sizeof(T));
-		return Slice<const T>(&d.val, 1);
+		_d.val = val;
+	}
+	inline vecpar() : _base(0)
+	{
+		_d.val = T();
+	}
+	inline ~vecpar()
+	{
+		if (_base) resize(0);
+	}
+	inline iterator begin() const
+	{
+		return _base ? _base : const_cast<T *>(&_d.val);
+	}
+	inline iterator end() const
+	{
+		if (_base) {
+			return _base + _d.len / sizeof(*_base);
+		}
+		return const_cast<T *>(&_d.val) + 1;
+	}
+	
+	inline span<const T> data() const
+	{
+		if (_base) {
+			return span<const T>(_base, _d.len / sizeof(T));
+		}
+		return span<const T>(&_d.val, 1);
 	}
 	inline int type()
-	{ return typeinfo<T>::id(); }
-	
-	bool resize(size_t elem) {
-		T *t = base;
-		size_t l = t ? d.len/sizeof(*base) : 0;
+	{
+		return typeinfo<T>::id();
+	}
+	bool resize(long elem) {
+		T *t = _base;
+		long l = t ? _d.len / sizeof(*_base) : 0;
 		
-		if (l == elem) return true; /* noop */
-		
+		if (l == elem) {
+			return true; /* noop */
+		}
 		/* save/destruct vector data */
-		if (!elem && t) d.val = t[0]; /* vector>scalar transition */
-		for (size_t i = elem; i < l; ++i) t[i].~T();
+		if (!elem && t) {
+			_d.val = t[0]; /* vector>scalar transition */
+		}
+		for (long i = elem; i < l; ++i) t[i].~T();
 		
 		/* free/extend memory */
-		if (!elem) { free(t); t = 0; }
-		else if (!(t = static_cast<T *>(realloc(t, elem * sizeof(*base))))) return false;
-		
+		if (!elem) {
+			free(t);
+			t = 0;
+		}
+		else if (!(t = static_cast<T *>(realloc(t, elem * sizeof(*_base))))) {
+			return false;
+		}
 		/* initialize new elements */
-		for (T &val = base ? t[l - 1] : d.val; l < elem; ++l) t[l] = val;
+		for (T &val = _base ? t[l - 1] : _d.val; l < elem; ++l) t[l] = val;
 		
 		/* save new data */
 		if (elem) {
-			if (!base) d.val.~T(); /* scalar>vector transition */
-			d.len = elem * sizeof(*base);
+			if (!_base) _d.val.~T(); /* scalar>vector transition */
+			_d.len = elem * sizeof(*_base);
 		}
-		base = t;
+		_base = t;
 		
 		return true;
 	}
 	T &operator [](int pos)
 	{
 		static T def;
-		int len = base ? d.len / sizeof(T) : 1;
+		int len = _base ? _d.len / sizeof(T) : 1;
 		if (pos < 0) pos += len;
-		if (!pos && !base) return d.val;
-		return (pos >= 0 && pos < len) ? base[pos] : def;
+		if (!pos && !_base) return _d.val;
+		return (pos >= 0 && pos < len) ? _base[pos] : def;
 	}
 	struct value value() const
 	{
 		struct value v;
-		if (base) {
+		if (_base) {
 			static value::format fmt;
-			fmt.set(typeinfo<Slice<T> >::id());
+			fmt.set(typeinfo<span<T> >::id());
 			v.fmt = fmt;
 			v.ptr = this;
 		} else {
 			static value::format fmt;
 			fmt.set(typeinfo<T>::id());
 			v.fmt = fmt;
-			v.ptr = &d.val;
+			v.ptr = &_d.val;
 		}
 		return v;
 	}
 protected:
-	T *base;
+	T *_base;
 	union {
 		size_t len;
 		T val;
-	} d;
+	} _d;
 private:
 	vecpar & operator =(const vecpar &);
 };
@@ -516,16 +537,16 @@ typedef vecpar<double> dvecpar;
 typedef vecpar<int> ivecpar;
 # endif
 #else
-# define MPT_VECPAR_INIT(p,v)  ((p)->base = 0, (p)->d.val = (v))
+# define MPT_VECPAR_INIT(p,v)  ((p)->_base = 0, (p)->_d.val = (v))
 typedef struct
 {
-	double *base;
-	union { size_t len; double val; } d;
+	double *_base;
+	union { size_t len; double val; } _d;
 } MPT_SOLVER_TYPE(dvecpar);
 typedef struct
 {
-	int *base;
-	union { size_t len; int val; } d;
+	int *_base;
+	union { size_t len; int val; } _d;
 } MPT_SOLVER_TYPE(ivecpar);
 #endif
 

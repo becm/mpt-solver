@@ -22,16 +22,16 @@ int main()
     mpt::solver_output o;
 
     // demo with printable values
-    o.setFlags('x', 0);
-    o.setFlags('y', 1);
-    o.setFlags('z', 2);
+    o.set_flags('x', 0);
+    o.set_flags('y', 1);
+    o.set_flags('z', 2);
 
     std::cout << o.pass() << std::endl;
     
     // use values from mpt::msgbind::DataFlags
-    o.setFlags(mpt::valsrc::All,  0);
-    o.setFlags(mpt::valsrc::Init, 1);
-    o.setFlags(mpt::valsrc::Fini, 2);
+    o.set_flags(mpt::valsrc::All,  0);
+    o.set_flags(mpt::valsrc::Init, 1);
+    o.set_flags(mpt::valsrc::Fini, 2);
     
     for (int a : o.pass()) {
         std::cout << a << ' ';

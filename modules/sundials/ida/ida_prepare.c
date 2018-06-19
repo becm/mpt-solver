@@ -50,8 +50,8 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	err = IDAInit(ida_mem, mpt_sundials_ida_fcn, ida->t, ida->sd.y, ida->yp);
 	
 	/* prepare tolerances */
-	if (!ida->atol.base && !ida->rtol.base) {
-		err = IDASStolerances(ida_mem, ida->rtol.d.val, ida->atol.d.val);
+	if (!ida->atol._base && !ida->rtol._base) {
+		err = IDASStolerances(ida_mem, ida->rtol._d.val, ida->atol._d.val);
 	} else {
 		if (mpt_solver_module_tol_check(&ida->rtol, ida->ivp.neqs, 1, __MPT_IVP_RTOL) < 0) {
 			return -21;

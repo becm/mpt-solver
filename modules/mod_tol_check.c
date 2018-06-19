@@ -18,21 +18,24 @@ extern int mpt_solver_module_tol_check(MPT_SOLVER_TYPE(dvecpar) *tol, long neqs,
 	}
 	if (neqs < 1) post = 0;
 	
-	if (!(tmp = tol->base)) {
+	if (!(tmp = tol->_base)) {
 		len = 0;
-		val = tol->d.val;
-		if (val <= 0.0) tol->d.val = val = def;
+		val = tol->_d.val;
+		if (val <= 0.0) {
+			tol->_d.val = val = def;
+		}
 		if (!post) {
 			return 0;
 		}
 	}
 	else {
-		len = tol->d.len / sizeof(*tmp);
+		len = tol->_d.len / sizeof(*tmp);
 		val = len ? tmp[0] : 0.0;
 		if (val <= 0.0) val = def;
 		if (!post) {
-			free(tmp); tol->base = 0;
-			tol->d.val = val;
+			free(tmp);
+			tol->_base = 0;
+			tol->_d.val = val;
 			return 0;
 		}
 		if (len > neqs) len = neqs;
@@ -41,19 +44,19 @@ extern int mpt_solver_module_tol_check(MPT_SOLVER_TYPE(dvecpar) *tol, long neqs,
 	if (!(tmp = realloc(tmp, neqs * post * sizeof(*tmp)))) {
 		return MPT_ERROR(BadOperation);
 	}
-	tol->d.len = neqs * post * sizeof(*tmp);
+	tol->_d.len = neqs * post * sizeof(*tmp);
 	
 	for (i = 0; i < len; i++) {
 		if (tmp[i] <= 0.0) tmp[i] = def;
 	}
 	for ( ; i < neqs ; i++) tmp[i] = val;
 	
-	len = (tmp == tol->base) ? 1 : 2;
-	tol->base = tmp;
+	len = (tmp == tol->_base) ? 1 : 2;
+	tol->_base = tmp;
 	
 	/* copy values to additional positions */
 	for (i = 1; i < post; i++) {
-		tmp = memcpy(tmp+neqs, tmp, neqs*sizeof(*tmp));
+		tmp = memcpy(tmp + neqs, tmp, neqs * sizeof(*tmp));
 	}
 	return len;
 }

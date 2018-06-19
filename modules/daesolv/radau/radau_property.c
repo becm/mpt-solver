@@ -188,7 +188,7 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 		if (rd) {
 			return mpt_solver_module_tol_get(&prop->val, &rd->atol);
 		}
-		mpt_solver_module_value_double(&prop->val, &rd->atol.d.val);
+		mpt_solver_module_value_double(&prop->val, &rd->atol._d.val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
@@ -197,7 +197,7 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 		if (rd) {
 			return mpt_solver_module_tol_get(&prop->val, &rd->rtol);
 		}
-		mpt_solver_module_value_double(&prop->val, &rd->rtol.d.val);
+		mpt_solver_module_value_double(&prop->val, &rd->rtol._d.val);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jacobian", 3) : pos == ++id) {

@@ -23,7 +23,7 @@ extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *rd)
 	nsmax = (iwork && iwork[11]) ? iwork[11] : 7;
 	
 	/* vector tolerances in sufficent dimension */
-	if (neqs < 2 || (!rd->rtol.base && !rd->atol.base)) {
+	if (neqs < 2 || (!rd->rtol._base && !rd->atol._base)) {
 		pdim = 0;
 	}
 	if (mpt_solver_module_tol_check(&rd->rtol, rd->ivp.neqs, pdim, __MPT_IVP_RTOL) < 0) {

@@ -15,18 +15,20 @@ extern int mpt_mebdfi_step(MPT_SOLVER_STRUCT(mebdfi) *me, double tend)
 	neqs = me->ivp.neqs * (me->ivp.pint + 1);
 	
 	/* set tolerance flags and adresses */
-	if (!(rtol = me->rtol.base)) {
-		if ((atol = me->atol.base)) {
+	if (!(rtol = me->rtol._base)) {
+		if ((atol = me->atol._base)) {
 			itol = 3;
 		} else {
-			itol = 2; atol = &me->atol.d.val;
+			itol = 2;
+			atol = &me->atol._d.val;
 		}
-		rtol = &me->rtol.d.val;
+		rtol = &me->rtol._d.val;
 	}
-	else if ((atol = me->atol.base)) {
+	else if ((atol = me->atol._base)) {
 		itol = 5;
 	} else {
-		itol = 4; atol = &me->atol.d.val;
+		itol = 4;
+		atol = &me->atol._d.val;
 	}
 	if (!me->jac) {
 		me->jnum = 1;

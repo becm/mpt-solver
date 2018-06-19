@@ -18,7 +18,7 @@ extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *me)
 	neqs = me->ivp.neqs * pdim;
 	
 	/* vector tolerances in sufficent dimension */
-	if (neqs < 2 || (!me->rtol.base && !me->atol.base)) {
+	if (neqs < 2 || (!me->rtol._base && !me->atol._base)) {
 		pdim = 0;
 	}
 	if (mpt_solver_module_tol_check(&me->atol, me->ivp.neqs, pdim, __MPT_IVP_ATOL) < 0) {

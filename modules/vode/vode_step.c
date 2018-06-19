@@ -19,17 +19,17 @@ extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *data, double tend)
 	neqs = ivp->neqs * (ivp->pint + 1);
 	
 	/* set tolerance flags and adresses */
-	if (!(rtol = data->rtol.base)) {
-		if (!(atol = data->atol.base)) {
-			itol = 1; atol = &data->atol.d.val;
+	if (!(rtol = data->rtol._base)) {
+		if (!(atol = data->atol._base)) {
+			itol = 1; atol = &data->atol._d.val;
 		}
 		else {
 			itol = 2;
 		}
-		rtol = &data->rtol.d.val;
+		rtol = &data->rtol._d.val;
 	}
-	else if (!(atol = data->atol.base)) {
-		itol = 3; atol = &data->atol.d.val;
+	else if (!(atol = data->atol._base)) {
+		itol = 3; atol = &data->atol._d.val;
 	}
 	else {
 		itol = 4;
