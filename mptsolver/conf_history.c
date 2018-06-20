@@ -35,7 +35,7 @@ extern int mpt_conf_history(MPT_INTERFACE(object) *out, const MPT_STRUCT(node) *
 		return 0;
 	}
 	if (!conf) {
-		out->_vptr->property_set(out, 0, 0);
+		out->_vptr->set_property(out, 0, 0);
 		return 0;
 	}
 	/* process output config */
