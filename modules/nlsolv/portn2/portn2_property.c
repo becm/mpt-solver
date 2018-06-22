@@ -47,10 +47,7 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const
 		if (!(dst = mpt_solver_module_valloc(&n2->pv, len, sizeof(double)))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if ((ret = MPT_SOLVER_MODULE_FCN(data_set)(dst, n2->nls.nval, 0, ret ? it : 0)) < 0) {
-			return ret;
-		}
-		return MPT_ERROR(BadType);
+		return MPT_SOLVER_MODULE_FCN(data_set)(dst, n2->nls.nval, 0, ret ? it : 0);
 	}
 	if (!*name) {
 		MPT_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;

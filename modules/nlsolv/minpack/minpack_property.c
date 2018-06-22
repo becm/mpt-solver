@@ -139,10 +139,7 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, con
 		if (!(par = mpt_solver_module_valloc(&mp->val, all, sizeof(*par)))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if ((ret = MPT_SOLVER_MODULE_FCN(data_set)(par, mp->nls.nval, 0, ret ? it : 0)) < 0) {
-			return ret;
-		}
-		return ret;
+		return MPT_SOLVER_MODULE_FCN(data_set)(par, mp->nls.nval, 0, ret ? it : 0);
 	}
 	if (!*name) {
 		MPT_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;
