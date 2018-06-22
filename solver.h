@@ -330,7 +330,10 @@ MPT_IVP_STRUCT(odefcn)
 MPT_IVP_STRUCT(daefcn) : public IVP::odefcn
 {
 	inline daefcn(Fcn f, void *p = 0, Jac j = 0) : IVP::odefcn(f, p, j)
-	{ mas.fcn = 0; mas.par = 0; }
+	{
+		mas.fcn = 0;
+		mas.par = 0;
+	}
 	enum { FunctionType = DAE };
 #else
 MPT_IVP_STRUCT(daefcn)
@@ -693,7 +696,7 @@ __MPT_EXTDECL_END
 #ifdef __cplusplus
 } /* namespace solver */
 
-template<> inline __MPT_CONST_TYPE int typeinfo<solver::interface *>::id()
+template<> inline __MPT_CONST_TYPE int typeinfo<solver::interface>::id()
 {
 	return solver::interface::Type;
 }
