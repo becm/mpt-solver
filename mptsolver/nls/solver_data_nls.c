@@ -34,7 +34,7 @@ extern int mpt_solver_data_nls(MPT_STRUCT(solver_data) *dat, const MPT_STRUCT(va
 		return MPT_ERROR(BadArgument);
 	}
 	if (!(fmt = val->fmt)
-	    || fmt[0] != MPT_value_toVector('d')) {
+	    || fmt[0] != MPT_type_vector('d')) {
 		return MPT_ERROR(BadType);
 	}
 	if (!(vec = val->ptr)) {

@@ -44,7 +44,7 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 				return MPT_ERROR(BadValue);
 			}
 		}
-		else if (val.fmt[1] == MPT_value_toVector(MPT_SOLVER_MODULE_DATA_ID)) {
+		else if (val.fmt[1] == MPT_type_vector(MPT_SOLVER_MODULE_DATA_ID)) {
 			vec = *((const struct iovec *) ptr);
 		}
 		else {
@@ -53,8 +53,8 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 		ret = 2;
 	}
 	/* require state content */
-	else if ((ret = src->_vptr->conv(src, MPT_value_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
-		if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0
+	else if ((ret = src->_vptr->conv(src, MPT_type_vector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
+		if ((ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0
 		    || !it) {
 			return MPT_ERROR(BadType);
 		}
@@ -71,6 +71,8 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 					return MPT_ERROR(MissingData);
 				}
 				ret = 1;
+			} else {
+				ret = 0;
 			}
 		}
 	}

@@ -16,7 +16,7 @@ static void hybrd_fcn(int *neq, double *x, double *f, int *flag)
 	if (!*flag) {
 		const MPT_NLS_STRUCT(output) *out;
 		if ((out = mp->out) && out->fcn) {
-			static const uint8_t fmt[] = { MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
+			static const uint8_t fmt[] = { MPT_type_vector('d'), MPT_type_vector('d'), 0 };
 			struct iovec vec[2];
 			MPT_STRUCT(value) val;
 			

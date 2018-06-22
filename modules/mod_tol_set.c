@@ -29,7 +29,7 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_IN
 		return 0;
 	}
 	/* values from iterator */
-	if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) >= 0) {
+	if ((ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) >= 0) {
 		double d;
 		long reserved = 0;
 		if (!ret || !it) {
@@ -80,7 +80,7 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_IN
 		vec->_d.len = len * sizeof(*tol);
 		return len;
 	}
-	if ((ret = src->_vptr->conv(src, MPT_value_toVector('d'), &tmp)) < 0) {
+	if ((ret = src->_vptr->conv(src, MPT_type_vector('d'), &tmp)) < 0) {
 		MPT_STRUCT(value) val = MPT_VALUE_INIT;
 		len = 0;
 		/* values from value content */

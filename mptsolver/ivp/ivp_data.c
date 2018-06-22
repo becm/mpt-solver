@@ -25,7 +25,7 @@
  */
 extern int mpt_ivp_data(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *info)
 {
-	static const uint8_t fmt[] = { 'd', MPT_value_toVector('d'), 0 };
+	static const uint8_t fmt[] = { 'd', MPT_type_vector('d'), 0 };
 	
 	const MPT_STRUCT(type_traits) *ti;
 	const MPT_STRUCT(buffer) *buf;

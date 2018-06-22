@@ -28,11 +28,11 @@ extern int MPT_SOLVER_MODULE_FCN(solver_conv)(const MPT_SOLVER(interface) *sol, 
 		}
 		return MPT_ENUM(TypeSolver);
 	}
-	if (type == MPT_ENUM(TypeSolver)) {
+	if (type == MPT_type_pointer(MPT_ENUM(TypeSolver))) {
 		if (ptr) *((const void **) ptr) = sol;
 		return obj ? MPT_ENUM(TypeObject) : 0;
 	}
-	if (type == MPT_ENUM(TypeObject)) {
+	if (type == MPT_type_pointer(MPT_ENUM(TypeObject))) {
 		if (ptr) *((const void **) ptr) = obj;
 		return MPT_ENUM(TypeSolver);
 	}

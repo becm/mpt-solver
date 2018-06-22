@@ -37,7 +37,7 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 		static const char path[] = "mpt.output";
 		
 		if ((mt = mpt_config_get(cfg, path + off, sep, 0))) {
-			mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &so->_data);
+			mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeOutput)), &so->_data);
 			if (so->_data) {
 				ret |= 0x1;
 			}
@@ -53,7 +53,7 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 		int type = 0;
 		
 		if (!so->_graphic) {
-			mt->_vptr->conv(mt, MPT_ENUM(TypeOutput), &so->_graphic);
+			mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeOutput)), &so->_graphic);
 			if (so->_graphic) {
 				ret |= 0x2;
 			}

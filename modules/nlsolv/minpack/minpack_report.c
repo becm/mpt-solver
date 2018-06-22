@@ -46,7 +46,7 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	++line;
 	}
 	if ((show & MPT_SOLVER_ENUM(Values)) && mpack->info >= 0) {
-		static const uint8_t fmt[] = { MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
+		static const uint8_t fmt[] = { MPT_type_vector('d'), MPT_type_vector('d'), 0 };
 		struct {
 			struct iovec x, f;
 		} d;

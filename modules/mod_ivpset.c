@@ -42,11 +42,12 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_I
 		return 0;
 	}
 	/* direct distinct conversions */
+	len = 0;
 	if ((ret = src->_vptr->conv(src, 'i', &neqs)) > 0) {
 		if (neqs < 1) {
 			return MPT_ERROR(BadValue);
 		}
-		if ((len = src->_vptr->conv(src, MPT_value_toVector('d'), &grid)) > 0) {
+		if ((len = src->_vptr->conv(src, MPT_type_vector('d'), &grid)) > 0) {
 			size_t part = grid.iov_len / sizeof(double);
 			if (part < 2 || part >= UINT32_MAX) {
 				return MPT_ERROR(BadValue);
@@ -80,7 +81,7 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_I
 		len = 0;
 	}
 	/* get values from iterator */
-	if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) >= 0) {
+	if ((ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) >= 0) {
 		if (!ret || !it) {
 			ivp->neqs = neqs;
 			ivp->pint = pint;
@@ -102,7 +103,7 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_I
 		}
 		len = 1;
 		/* PDE without grid data */
-		if ((ret = it->_vptr->get(it, MPT_value_toVector('d'), &grid)) < 0) {
+		if ((ret = it->_vptr->get(it, MPT_type_vector('d'), &grid)) < 0) {
 			if ((ret = it->_vptr->get(it, 'u', &pint)) < 0) {
 				int32_t tmp;
 				if ((ret = it->_vptr->get(it, 'i', &tmp)) < 0) {

@@ -27,7 +27,7 @@
  */
 extern int mpt_init_nls(const MPT_INTERFACE(metatype) *mt, const MPT_NLS_STRUCT(functions) *fcn, const MPT_STRUCT(solver_data) *dat, MPT_INTERFACE(logger) *info)
 {
-	static const char fmt[] = { MPT_value_toVector('d'), 0 };
+	static const char fmt[] = { MPT_type_vector('d'), 0 };
 	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;
 	struct iovec vec;
@@ -43,7 +43,7 @@ extern int mpt_init_nls(const MPT_INTERFACE(metatype) *mt, const MPT_NLS_STRUCT(
 		return MPT_ERROR(BadArgument);
 	}
 	sol = 0;
-	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
+	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
@@ -52,7 +52,7 @@ extern int mpt_init_nls(const MPT_INTERFACE(metatype) *mt, const MPT_NLS_STRUCT(
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) < 0
+	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
 	    || !obj) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",

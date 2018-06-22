@@ -79,7 +79,7 @@ extern int mpt_init_dae(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return MPT_ERROR(BadArgument);
 	}
 	sol = 0;
-	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0
+	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
@@ -88,7 +88,7 @@ extern int mpt_init_dae(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if (mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) >= 0) {
+	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) >= 0) {
 		if ((neqs = set_neqs(obj, __func__, neqs, info)) < 0) {
 			return neqs;
 		}
@@ -121,7 +121,7 @@ extern int mpt_init_ode(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return MPT_ERROR(BadArgument);
 	}
 	sol = 0;
-	if (mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol) < 0
+	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
@@ -130,7 +130,7 @@ extern int mpt_init_ode(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if (mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) >= 0) {
+	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) >= 0) {
 		if ((neqs = set_neqs(obj, __func__, neqs, info)) < 0) {
 			return neqs;
 		}

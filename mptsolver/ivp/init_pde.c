@@ -47,7 +47,7 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return MPT_ERROR(BadValue);
 	}
 	sol = 0;
-	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
+	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
@@ -56,7 +56,7 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) < 0
+	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
 	    || !obj) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
@@ -83,7 +83,7 @@ extern int mpt_init_pde(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return MPT_ERROR(BadValue);
 	}
 	else {
-		static const char fmt[] = { 'i', MPT_value_toVector('d'), 0 };
+		static const char fmt[] = { 'i', MPT_type_vector('d'), 0 };
 		struct iovec vec;
 		
 		vec.iov_base = buf + 1;

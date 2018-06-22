@@ -34,7 +34,7 @@ static int getValue(MPT_INTERFACE(metatype) *mt, MPT_STRUCT(value) *val, const v
 	if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeValue), &val)) >= 0) {
 		return 0;
 	}
-	if ((ret = mt->_vptr->conv(mt, type = MPT_ENUM(TypeFile), ptr)) >= 0) {
+	if ((ret = mt->_vptr->conv(mt, type = MPT_type_pointer(MPT_ENUM(TypeFile)), ptr)) >= 0) {
 		return *ptr ? type : MPT_ERROR(BadValue);
 	}
 	if ((ret = mt->_vptr->conv(mt, type = 's', ptr)) >= 0) {

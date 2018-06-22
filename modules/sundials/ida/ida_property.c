@@ -25,7 +25,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, const MPT_INTERFACE(metatype) *src
 	long pos, len;
 	
 	it = 0;
-	if (src && (pos = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0) {
+	if (src && (pos = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
 		return pos;
 	}
 	if ((len = ida->ivp.neqs * (ida->ivp.pint + 1)) < 0) {

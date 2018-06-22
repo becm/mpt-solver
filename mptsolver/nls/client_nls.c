@@ -73,7 +73,7 @@ static MPT_INTERFACE(logger) *loggerNLS(const MPT_STRUCT(NLS) *nls)
 	if (nls
 	    && (mt = nls->cfg)) {
 		MPT_INTERFACE(config) *cfg = 0;
-		if (mt->_vptr->conv(mt, MPT_ENUM(TypeConfig), &cfg) > 0
+		if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeConfig)), &cfg) > 0
 		    && cfg
 		    && (info = mpt_config_logger(cfg))) {
 			return info;
@@ -101,7 +101,7 @@ static MPT_STRUCT(node) *configNLS(MPT_STRUCT(NLS) *nls)
 		nls->cfg = cfg;
 	}
 	n = 0;
-	if (cfg->_vptr->conv(cfg, MPT_ENUM(TypeNode), &n) < 0) {
+	if (cfg->_vptr->conv(cfg, MPT_type_pointer(MPT_ENUM(TypeNode)), &n) < 0) {
 		return 0;
 	}
 	return n;
@@ -252,22 +252,22 @@ static int convNLS(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 	int me = mpt_client_typeid();
 	
 	if (me < 0) {
-		me = MPT_ENUM(TypeMeta);
+		me = MPT_ENUM(_TypeMetaBase);
+	}
+	else if (type == MPT_type_pointer(me)) {
+		if (ptr) *((const void **) ptr) = &nls->_cl;
+		return MPT_ENUM(TypeConfig);
 	}
 	if (!type) {
-		static const uint8_t fmt[] = { MPT_ENUM(TypeMeta), MPT_ENUM(TypeConfig), 0 };
+		static const uint8_t fmt[] = { MPT_ENUM(TypeConfig), 0 };
 		if (ptr) {
 			*((const uint8_t **) ptr) = fmt;
 		}
 		return me;
 	}
-	if (type == MPT_ENUM(TypeConfig)) {
+	if (type == MPT_type_pointer(MPT_ENUM(TypeConfig))) {
 		if (ptr) *((const void **) ptr) = &nls->_cfg;
 		return me;
-	}
-	if (type == me) {
-		if (ptr) *((const void **) ptr) = &nls->_cl;
-		return MPT_ENUM(TypeConfig);
 	}
 	return MPT_ERROR(BadType);
 }
@@ -303,7 +303,7 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		MPT_INTERFACE(metatype) *old;
 		mt = mpt_output_local();
 		obj = 0;
-		mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj);
+		mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj);
 		mpt_conf_history(obj, curr);
 		if ((old = curr->_meta)) {
 			old->_vptr->ref.unref((void *) old);
@@ -367,7 +367,7 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	}
 	obj = 0;
 	if ((mt = nls->sol)
-	    && mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) > 0
+	    && mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) > 0
 	    && obj
 	    && (val = mpt_object_typename(obj))) {
 		mpt_log(hist, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
@@ -401,10 +401,10 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		return MPT_ERROR(BadOperation);
 	}
 	sol = 0;
-	mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol);
+	mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol);
 	
 	obj = 0;
-	if (mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) < 0
+	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) < 0
 	    || !obj) {
 		err = mt->_vptr->conv(mt, 0, 0);
 		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
@@ -462,7 +462,7 @@ static int stepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("solver or data missing"));
 		return MPT_ERROR(BadArgument);
 	}
-	if ((res = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
+	if ((res = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("no solver interface"));

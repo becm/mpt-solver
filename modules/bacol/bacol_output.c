@@ -9,7 +9,7 @@
 
 extern int mpt_bacol_output_report(const MPT_SOLVER_STRUCT(bacol_out) *bo, double t, int (*out)(void *, MPT_STRUCT(value)), void *usr)
 {
-	static const uint8_t fmt[] = { 'd', MPT_value_toVector('d'), MPT_value_toVector('d'), 0 };
+	static const uint8_t fmt[] = { 'd', MPT_type_vector('d'), MPT_type_vector('d'), 0 };
 	MPT_STRUCT(value) val;
 	struct iovec *vec;
 	uint8_t buf[sizeof(t) + 2 * sizeof(*vec)];

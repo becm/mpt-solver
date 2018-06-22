@@ -40,7 +40,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 	mt = 0;
 	if (conf) {
 		/* use existing iterator */
-		if ((ret = conf->_vptr->conv(conf, MPT_ENUM(TypeIterator), &it)) > 0) {
+		if ((ret = conf->_vptr->conv(conf, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) > 0) {
 			if (!it) {
 				return MPT_ERROR(BadValue);
 			}
@@ -58,7 +58,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		}
 	}
 	if (mt) {
-		if ((ret = mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &it)) < 0
+		if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0
 		    || !it) {
 			mt->_vptr->ref.unref((void *) mt);
 			return MPT_ERROR(BadType);

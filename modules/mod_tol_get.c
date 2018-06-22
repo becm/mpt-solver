@@ -16,9 +16,9 @@ extern int mpt_solver_module_tol_get(MPT_STRUCT(value) *val, const MPT_SOLVER_TY
 	int len;
 	
 	if (tol->_base) {
-		len = tol->_d.len/sizeof(double);
+		len = tol->_d.len / sizeof(double);
 		if (val) {
-			static const uint8_t fmt[2] = { MPT_value_toVector('d') };
+			static const uint8_t fmt[2] = { MPT_type_vector('d') };
 			val->fmt = fmt;
 			val->ptr = tol->_base;
 		}

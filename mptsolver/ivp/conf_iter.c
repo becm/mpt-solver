@@ -40,12 +40,12 @@ extern MPT_INTERFACE(iterator) *mpt_conf_iter(MPT_INTERFACE(metatype) **mptr, MP
 			return 0;
 		}
 		*mptr = mt;
-		mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &it);
+		mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it);
 		return it;
 		
 	}
 	/* require valid time source */
-	if (mt->_vptr->conv(mt, MPT_ENUM(TypeIterator), &it) < 0
+	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it) < 0
 	    || !it) {
 		MPT_INTERFACE(metatype) *src;
 		const char *val;
@@ -66,7 +66,7 @@ extern MPT_INTERFACE(iterator) *mpt_conf_iter(MPT_INTERFACE(metatype) **mptr, MP
 		}
 		mt->_vptr->ref.unref((void *) mt);
 		*mptr = src;
-		src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it);
+		src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it);
 		return it;
 	}
 	/* reset existing iterator */

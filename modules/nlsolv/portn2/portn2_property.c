@@ -34,22 +34,21 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const
 	if (!name) {
 		MPT_INTERFACE(iterator) *it;
 		double *dst;
-		int len;
+		int len, ret = 0;
 		
 		if (n2->nls.nval <= 0) {
 			return MPT_ERROR(BadArgument);
+		}
+		if (src && (ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
+			return ret;
 		}
 		len = n2->bnd ? 3 * n2->nls.nval : n2->nls.nval;
 		
 		if (!(dst = mpt_solver_module_valloc(&n2->pv, len, sizeof(double)))) {
 			return MPT_ERROR(BadOperation);
 		}
-		if (!src) {
-			memset(dst, 0, n2->nls.nval * sizeof(double));
-			return 0;
-		}
-		if (src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it) > 0) {
-			return MPT_SOLVER_MODULE_FCN(data_set)(dst, n2->nls.nval, 0, it);
+		if ((ret = MPT_SOLVER_MODULE_FCN(data_set)(dst, n2->nls.nval, 0, ret ? it : 0)) < 0) {
+			return ret;
 		}
 		return MPT_ERROR(BadType);
 	}

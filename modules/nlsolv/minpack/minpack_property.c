@@ -83,7 +83,7 @@ static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, const MPT_INTERFACE(metatyp
 	if (!src) {
 		return data->diag.iov_len / sizeof(double);
 	}
-	if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0) {
+	if ((ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
 		return ret;
 	}
 	nd = data->nls.nval;
@@ -128,7 +128,7 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, con
 		if (all <= 0) {
 			return MPT_ERROR(BadArgument);
 		}
-		if (src && (ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0) {
+		if (src && (ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
 			return ret;
 		}
 		if (mp->nls.nres) {
@@ -306,7 +306,7 @@ extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *mp, MPT_STRUCT(prop
 		return mp->nprint ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "diag") : (pos == ++id)) {
-		static const uint8_t fmt[] = { MPT_value_toVector('d'), 0 };
+		static const uint8_t fmt[] = { MPT_type_vector('d'), 0 };
 		prop->name = "diag";
 		prop->desc = "scale factor for variables";
 		prop->val.fmt = fmt;

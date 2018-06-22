@@ -20,7 +20,7 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_vecset)(const MPT_IVP_STRUCT(parameters) *i
 		return MPT_ERROR(BadArgument);
 	}
 	it = 0;
-	if (src && (ret = src->_vptr->conv(src, MPT_ENUM(TypeIterator), &it)) < 0) {
+	if (src && (ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
 		return ret;
 	}
 	max = ivp->pint + 1;

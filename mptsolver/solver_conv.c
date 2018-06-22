@@ -36,13 +36,13 @@ extern MPT_SOLVER(interface) *mpt_solver_conv(const MPT_INTERFACE(metatype) *mt,
 	obj = 0;
 	name = 0;
 	if (info
-	    && (cap = mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj)) >= 0
+	    && (cap = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) >= 0
 	    && obj) {
 		name = mpt_object_typename(obj);
 	}
 	/* can convert to solver interface */
 	if (!mt
-	    || (cap = mt->_vptr->conv(mt, MPT_ENUM(TypeSolver), &sol)) < 0
+	    || (cap = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
 		if (!info) {
 			return 0;

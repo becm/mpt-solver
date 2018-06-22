@@ -32,21 +32,21 @@ static int valueConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 	if (!type) {
 		static const char fmt[] = { 'd', 'f', 0 };
 		if (ptr) *((const char **) ptr) = fmt;
-		return MPT_ENUM(TypeMeta);
+		return ptr ? 0 : 'd';
 	}
 #ifdef _MPT_FLOAT_EXTENDED_H
 	if (type == 'e') {
 		if (ptr) *((long double *) ptr) = v->val;
-		return MPT_ENUM(TypeMeta);
+		return 'd';
 	}
 #endif
 	if (type == 'd') {
 		if (ptr) *((double *) ptr) = v->val;
-		return MPT_ENUM(TypeMeta);
+		return 'd';
 	}
 	if (type == 'f') {
 		if (ptr) *((float *) ptr) = v->val;
-		return MPT_ENUM(TypeMeta);
+		return 'd';
 	}
 	return MPT_ERROR(BadType);
 }
