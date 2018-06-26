@@ -100,7 +100,7 @@ extern int mpt_portn2_ufcn(MPT_SOLVER_STRUCT(portn2) *, MPT_NLS_STRUCT(functions
 extern int mpt_portn2_prepare(MPT_SOLVER_STRUCT(portn2) *);
 
 /* portdn2 status information */
-extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *, int , MPT_TYPE(property_handler) , void *);
 
 /* get residuals for current parameters */
 extern const double *mpt_portn2_residuals(const MPT_SOLVER_STRUCT(portn2) *);
@@ -146,7 +146,7 @@ public:
 	{
 		return mpt_portn2_solve(this);
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		return mpt_portn2_report(this, what, out, opar);
 	}

@@ -46,7 +46,7 @@ static MPT_INTERFACE(metatype) *meClone(const MPT_INTERFACE(metatype) *mt)
 	return 0;
 }
 /* solver interface */
-static int meReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int meReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(property_handler) out, void *data)
 {
 	const MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, sol, _sol);
 	if (!what && !out && !data) {

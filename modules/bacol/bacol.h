@@ -148,7 +148,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *, const char *, const MPT_INT
 extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *);
 
 /* bacol status information */
-extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *, int , MPT_TYPE(property_handler) , void *);
 
 /* default helper functions */
 extern int mpt_bacol_grid_init(int , const double *, int , double *);
@@ -216,7 +216,7 @@ public:
 		}
 		return mpt_bacol_set(this, pr, src);
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		int ret;
 		if ((ret = mpt_bacol_report(this, what & ~Values, out, opar)) < 0
@@ -225,7 +225,7 @@ public:
 			return ret;
 		}
 		struct context {
-			PropertyHandler out;
+			property_handler_t out;
 			void *par;
 			static int setProp(void *ptr, value val)
 			{

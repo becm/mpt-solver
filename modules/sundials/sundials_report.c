@@ -7,7 +7,7 @@
 
 #include "sundials.h"
 
-extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(property_handler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
 	

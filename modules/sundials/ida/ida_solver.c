@@ -46,7 +46,7 @@ static MPT_INTERFACE(metatype) *idaClone()
 	return 0;
 }
 /* solver interface */
-static int idaReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int idaReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(property_handler) out, void *data)
 {
 	const MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, sol, _sol);
 	if (!what && !out && !data) {

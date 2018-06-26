@@ -90,7 +90,7 @@ extern void mpt_radau_fini(MPT_SOLVER_STRUCT(radau) *);
 extern int mpt_radau_ufcn(MPT_SOLVER_STRUCT(radau) *, MPT_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* radau status information */
-extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *, int , MPT_TYPE(property_handler) , void *);
 
 /* setup generic solver to use radau */
 #ifndef __cplusplus
@@ -132,7 +132,7 @@ public:
 	{
 		return mpt_radau_step(this, _t);
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		return mpt_radau_report(this, what, out, opar);
 	}

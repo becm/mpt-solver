@@ -4,7 +4,7 @@
 
 #include "portn2.h"
 
-extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_TYPE(property_handler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
 	int state, line = 0;

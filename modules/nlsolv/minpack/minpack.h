@@ -106,7 +106,7 @@ extern int mpt_minpack_ufcn(MPT_SOLVER_STRUCT(minpack) *, MPT_NLS_STRUCT(functio
 extern int mpt_minpack_prepare(MPT_SOLVER_STRUCT(minpack) *);
 
 /* minpack status information */
-extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *, int , MPT_TYPE(property_handler) , void *);
 
 /* assign minpack solver to interface */
 #ifndef __cplusplus
@@ -145,7 +145,7 @@ public:
 	{
 		return mpt_minpack_solve(this);
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		if (!what && !out && !opar) {
 			return NlsUser | NlsOverdet;

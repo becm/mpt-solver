@@ -48,7 +48,7 @@ static MPT_INTERFACE(metatype) *cVodeClone(const MPT_INTERFACE(metatype) *mt)
 	return 0;
 }
 /* solver interface */
-static int cVodeReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int cVodeReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(property_handler) out, void *data)
 {
 	const MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, sol, _sol);
 	if (!what && !out && !data) {

@@ -4,7 +4,7 @@
 
 #include "minpack.h"
 
-extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show, MPT_TYPE(property_handler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
 	int line = 0;

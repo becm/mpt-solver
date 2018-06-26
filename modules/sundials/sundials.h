@@ -173,9 +173,9 @@ extern void mpt_sundials_ida_fini(MPT_SOLVER_STRUCT(ida) *);
 extern void mpt_sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *);
 
 /* prepare and report solver state */
-extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *, int , MPT_TYPE(property_handler) , void *);
 /* report solver state */
-extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *, int , MPT_TYPE(property_handler) , void *);
 
 /* prepare CVode */
 extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *);
@@ -205,7 +205,7 @@ extern MPT_INTERFACE(metatype) *mpt_sundials_ida(void);
 /* setup Sundials jacobian parameters */
 extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *, long , const MPT_INTERFACE(metatype) *);
 /* output Sundials jacobian parameters */
-extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *, MPT_TYPE(PropertyHandler) out, void *usr);
+extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *, MPT_TYPE(property_handler) out, void *usr);
 
 #ifndef _SUNDIALS_GENERIC_TYPE
 # define _SUNDIALS_GENERIC_TYPE(x) x
@@ -267,7 +267,7 @@ public:
 	{
 		return mpt_sundials_cvode_step(this, _t);
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		return mpt_sundials_cvode_report(this, what, out, opar);
 	}
@@ -309,7 +309,7 @@ public:
 	{
 		return mpt_sundials_ida_step(this, _t);
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		return mpt_sundials_ida_report(this, what, out, opar);
 	}

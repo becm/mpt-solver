@@ -77,7 +77,7 @@ extern void mpt_mebdfi_fini(MPT_SOLVER_STRUCT(mebdfi) *);
 extern int mpt_mebdfi_ufcn(MPT_SOLVER_STRUCT(mebdfi) *, MPT_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* mebdfi status information */
-extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *, int , MPT_TYPE(property_handler) , void *);
 
 /* setup generic solver to use mebfi */
 #ifndef __cplusplus
@@ -116,7 +116,7 @@ public:
 	{
 		return mpt_mebdfi_step(this, _t);
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		return mpt_mebdfi_report(this, what, out, opar);
 	}

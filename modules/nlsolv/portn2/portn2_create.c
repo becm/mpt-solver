@@ -43,7 +43,7 @@ static MPT_INTERFACE(metatype) *n2Clone(const MPT_INTERFACE(metatype) *mt)
 	return 0;
 }
 /* solver interface */
-static int n2Report(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int n2Report(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(property_handler) out, void *data)
 {
 	const MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, sol, _sol);
 	if (!what && !out && !data) {

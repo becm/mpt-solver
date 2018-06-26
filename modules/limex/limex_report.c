@@ -6,7 +6,7 @@
 
 #include "module_functions.h"
 
-extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TYPE(property_handler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
 	int line = 0;

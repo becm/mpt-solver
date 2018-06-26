@@ -45,7 +45,7 @@ static int lxSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE
 	return mpt_limex_set(&lxGlob, pr, src);
 }
 /* solver interface */
-static int lxReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int lxReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(property_handler) out, void *data)
 {
 	(void) sol;
 	if (!what && !out && !data) {

@@ -67,7 +67,7 @@ extern void mpt_vode_fini(MPT_SOLVER_STRUCT(vode) *);
 extern int mpt_vode_ufcn(MPT_SOLVER_STRUCT(vode) *, MPT_IVP_STRUCT(odefcn) *, int , const void *);
 
 /* vode status information */
-extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *, int , MPT_TYPE(property_handler) , void *);
 
 /* setup generic solver to use vode */
 #ifndef __cplusplus
@@ -106,7 +106,7 @@ public:
 	{
 		return mpt_vode_step(this, _t);
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		return mpt_vode_report(this, what, out, opar);
 	}

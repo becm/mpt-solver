@@ -28,7 +28,7 @@
  * 
  * \return number of reported properties
  */
-extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, MPT_TYPE(property_handler) out, void *usr)
 {
 	static const uint8_t longfmt[] = "l\0";
 	MPT_STRUCT(property) pr;

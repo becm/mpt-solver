@@ -80,7 +80,7 @@ extern void mpt_limex_fini(MPT_SOLVER_STRUCT(limex) *);
 extern int mpt_limex_ufcn(MPT_SOLVER_STRUCT(limex) *, MPT_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* limex report information */
-extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *, int , MPT_TYPE(property_handler) , void *);
 
 /* setup generic solver to use limex */
 #ifndef __cplusplus
@@ -130,7 +130,7 @@ public:
 	{
 		return _lx ? mpt_limex_step(_lx, _t) : BadOperation;
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		return _lx ? mpt_limex_report(_lx, what, out, opar) : BadOperation;
 	}

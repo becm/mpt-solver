@@ -5,7 +5,7 @@
 
 #include "solver_modfcn.h"
 
-extern int MPT_SOLVER_MODULE_FCN(ivp_values)(const MPT_IVP_STRUCT(parameters) *ivp, double t, const MPT_SOLVER_MODULE_DATA_TYPE *y, const char *desc, MPT_TYPE(PropertyHandler) out, void *usr)
+extern int MPT_SOLVER_MODULE_FCN(ivp_values)(const MPT_IVP_STRUCT(parameters) *ivp, double t, const MPT_SOLVER_MODULE_DATA_TYPE *y, const char *desc, MPT_TYPE(property_handler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
 	struct iovec *vec;

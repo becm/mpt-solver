@@ -50,7 +50,7 @@ static MPT_INTERFACE(metatype) *bacClone(const MPT_INTERFACE(metatype) *mt)
 /* solver interface */
 struct outContext
 {
-	MPT_TYPE(PropertyHandler) out;
+	MPT_TYPE(property_handler) out;
 	void *ctx;
 };
 static int outValues(void *ptr, MPT_STRUCT(value) val)
@@ -62,7 +62,7 @@ static int outValues(void *ptr, MPT_STRUCT(value) val)
 	pr.val = val;
 	return ctx->out(ctx->ctx, &pr);
 }
-static int bacReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(PropertyHandler) out, void *data)
+static int bacReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(property_handler) out, void *data)
 {
 	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, sol, _sol);
 	

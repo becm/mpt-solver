@@ -68,7 +68,7 @@ extern void mpt_dassl_fini(MPT_SOLVER_STRUCT(dassl) *);
 extern int mpt_dassl_ufcn(MPT_SOLVER_STRUCT(dassl) *, MPT_IVP_STRUCT(daefcn) *, int , const void *);
 
 /* dassl status information */
-extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *, int , MPT_TYPE(PropertyHandler) , void *);
+extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *, int , MPT_TYPE(property_handler) , void *);
 
 /* handle for generic solver type */
 #ifndef __cplusplus
@@ -106,7 +106,7 @@ public:
 	{
 		return mpt_dassl_step(this, _t);
 	}
-	int report(int what, PropertyHandler out, void *opar) __MPT_OVERRIDE
+	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
 		if (!what && !out && !opar) {
 			return DAE | PDE;
