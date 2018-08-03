@@ -9,14 +9,15 @@
 #include MPT_INCLUDE(client.h)
 #include MPT_INCLUDE(config.h)
 #include MPT_INCLUDE(event.h)
+
 #include MPT_INCLUDE(solver.h)
 
-class MyClient : public mpt::client
+class client : public mpt::client
 {
 public:
-	MyClient()
+	client()
 	{ }
-	virtual ~MyClient()
+	virtual ~client()
 	{ }
 	void unref() __MPT_OVERRIDE
 	{
@@ -55,5 +56,5 @@ int main(int argc, char * const argv[])
 	if (mpt::mpt_init(argc, argv) < 0) {
 		return 1;
 	}
-	return mpt::solver_run(new MyClient);
+	return mpt::solver_run(new client);
 }
