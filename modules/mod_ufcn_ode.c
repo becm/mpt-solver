@@ -69,8 +69,8 @@ extern int mpt_solver_module_ufcn_ode(long pint, MPT_IVP_STRUCT(odefcn) *ufcn, i
 		if (((MPT_IVP_STRUCT(daefcn) *) ptr)->mas.fcn) {
 			return MPT_ERROR(BadValue);
 		}
-		ufcn->rside = ((MPT_IVP_STRUCT(odefcn) *) ptr)->rside;
-		ufcn->jac   = ((MPT_IVP_STRUCT(odefcn) *) ptr)->jac;
+		ufcn->rside = ((MPT_IVP_STRUCT(daefcn) *) ptr)->rside;
+		ufcn->jac   = ((MPT_IVP_STRUCT(daefcn) *) ptr)->jac;
 		break;
 	  default:
 		return MPT_ERROR(BadType);
