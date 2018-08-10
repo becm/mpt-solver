@@ -65,9 +65,9 @@ enum MPT_SOLVER_SUNDIALS(Type) {
 # elif defined(SUNDIALS_EXTENDED_PRECISION)
 	MPT_SOLVER_SUNDIALS(Realtype)  = 'e',
 # endif
-# ifdef SUNDIALS_INT64_T
+# if defined(SUNDIALS_INT64_T)
 	MPT_SOLVER_SUNDIALS(Indextype) = 'x',
-# else
+# elif defined(SUNDIALS_INT32_T)
 	MPT_SOLVER_SUNDIALS(Indextype) = 'i',
 # endif
 #endif
