@@ -60,7 +60,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 	if (mt) {
 		if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0
 		    || !it) {
-			mt->_vptr->ref.unref((void *) mt);
+			mt->_vptr->instance.unref((void *) mt);
 			return MPT_ERROR(BadType);
 		}
 	}
@@ -81,7 +81,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		/* get iterator data */
 		if ((ret = it->_vptr->get(it, 'd', dest)) < 0) {
 			if (mt) {
-				mt->_vptr->ref.unref((void *) mt);
+				mt->_vptr->instance.unref((void *) mt);
 			}
 			buf->_used = old;
 			return ret;
@@ -95,7 +95,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		++dest;
 		if ((ret = it->_vptr->advance(it)) < 0) {
 			if (mt) {
-				mt->_vptr->ref.unref((void *) mt);
+				mt->_vptr->instance.unref((void *) mt);
 			}
 			buf->_used = old;
 			return ret;
@@ -105,7 +105,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		}
 	}
 	if (mt) {
-		mt->_vptr->ref.unref((void *) mt);
+		mt->_vptr->instance.unref((void *) mt);
 	} else {
 		it->_vptr->reset(it);
 	}

@@ -155,11 +155,11 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 			}
 		}
 		if (!(sol = mpt_solver_conv(next, match, log))) {
-			next->_vptr->ref.unref((void *) next);
+			next->_vptr->instance.unref((void *) next);
 			return 0;
 		}
 		if (mt) {
-			mt->_vptr->ref.unref((void *) mt);
+			mt->_vptr->instance.unref((void *) mt);
 		}
 		*ref = next;
 		

@@ -128,7 +128,7 @@ extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *md, MPT_STRUCT(node) *conf, MPT
 			return MPT_ERROR(BadValue);
 		}
 		if ((old = curr->_meta)) {
-			old->_vptr->ref.unref((void *) old);
+			old->_vptr->instance.unref((void *) old);
 		}
 		curr->_meta = mt;
 		if (info) {

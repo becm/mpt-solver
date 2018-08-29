@@ -23,11 +23,11 @@ MPT_STRUCT(VodeData) {
 	double next;
 };
 /* reference interface */
-static void vdFini(MPT_INTERFACE(reference) *ref)
+static void vdFini(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(VodeData) *vd = (void *) ref;
+	MPT_STRUCT(VodeData) *vd = (void *) in;
 	mpt_vode_fini(&vd->d);
-	free(ref);
+	free(vd);
 }
 static uintptr_t vdAddref()
 {

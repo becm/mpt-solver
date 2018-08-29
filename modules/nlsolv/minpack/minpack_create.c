@@ -21,11 +21,11 @@ MPT_STRUCT(MinpackData) {
 	MPT_NLS_STRUCT(functions)  uf;
 };
 /* reference interface */
-static void mpUnref(MPT_INTERFACE(reference) *ref)
+static void mpUnref(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(MinpackData) *mp = (void *) ref;
+	MPT_STRUCT(MinpackData) *mp = (void *) in;
 	mpt_minpack_fini(&mp->d);
-	free(ref);
+	free(mp);
 }
 static uintptr_t mpRef()
 {

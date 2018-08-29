@@ -242,14 +242,14 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	MPT_STRUCT(path) p;
 	
 	if (!porg) {
-		MPT_INTERFACE(reference) *ref;
+		MPT_INTERFACE(instance) *in;
 		if (ivp->sd) {
 			mpt_solver_data_clear(ivp->sd);
 		}
-		if (!(ref = (void *) ivp->sol)) {
+		if (!(in = (void *) ivp->sol)) {
 			return 0;
 		}
-		ref->_vptr->unref(ref);
+		in->_vptr->unref(in);
 		ivp->sol = 0;
 		return 1;
 	}
@@ -270,9 +270,9 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	return 1;
 }
 /* reference interface */
-static void deleteIVP(MPT_INTERFACE(reference) *gen)
+static void deleteIVP(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(IVP) *ivp = (void *) gen;
+	MPT_STRUCT(IVP) *ivp = (void *) in;
 	MPT_INTERFACE(metatype) *mt;
 	
 	if (ivp->sd) {
@@ -280,16 +280,16 @@ static void deleteIVP(MPT_INTERFACE(reference) *gen)
 		free(ivp->sd);
 	}
 	if ((mt = ivp->sol)) {
-		mt->_vptr->ref.unref((void *) mt);
+		mt->_vptr->instance.unref((void *) mt);
 	}
 	if ((mt = ivp->cfg)) {
-		mt->_vptr->ref.unref((void *) mt);
+		mt->_vptr->instance.unref((void *) mt);
 	}
 	free(ivp);
 }
-static uintptr_t addrefIVP(MPT_INTERFACE(reference) *gen)
+static uintptr_t addrefIVP(MPT_INTERFACE(instance) *in)
 {
-	(void) gen;
+	(void) in;
 	return 0;
 }
 /* metatype interface */
@@ -352,7 +352,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj);
 		mpt_conf_history(obj, curr);
 		if ((old = curr->_meta)) {
-			old->_vptr->ref.unref((void *) old);
+			old->_vptr->instance.unref((void *) old);
 		}
 		curr->_meta = mt;
 		hist = loggerIVP(ivp);

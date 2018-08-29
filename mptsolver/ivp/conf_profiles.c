@@ -105,9 +105,9 @@ static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 	return p->len + 1;
 }
 /* reference interface */
-static void iterProfileUnref(MPT_INTERFACE(reference) *ref)
+static void iterProfileUnref(MPT_INTERFACE(instance) *in)
 {
-	const MPT_STRUCT(iterProfile) *p = (void *) ref;
+	const MPT_STRUCT(iterProfile) *p = (void *) in;
 	double *val = (void *) (p + 1);
 	MPT_INTERFACE(metatype) **mptr = (void *) (val  + p->neqs);
 	int i;
@@ -115,14 +115,14 @@ static void iterProfileUnref(MPT_INTERFACE(reference) *ref)
 	for (i = 0; i < p->neqs; ++i) {
 		MPT_INTERFACE(metatype) *mt;
 		if ((mt = mptr[i])) {
-			mt->_vptr->ref.unref((void *) mt);
+			mt->_vptr->instance.unref((void *) mt);
 		}
 	}
-	free(ref);
+	free(in);
 }
-static uintptr_t iterProfileRef(MPT_INTERFACE(reference) *ref)
+static uintptr_t iterProfileRef(MPT_INTERFACE(instance) *in)
 {
-	(void) ref;
+	(void) in;
 	return 0;
 }
 /* metatype interface */

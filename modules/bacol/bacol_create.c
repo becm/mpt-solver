@@ -24,16 +24,16 @@ MPT_STRUCT(BacolData) {
 	double next;
 };
 /* reference interface */
-static void bacFini(MPT_INTERFACE(reference) *ref)
+static void bacFini(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(BacolData) *bac = (void *) ref;
+	MPT_STRUCT(BacolData) *bac = (void *) in;
 	mpt_bacol_fini(&bac->d);
 	mpt_bacol_output_fini(&bac->out);
-	free(ref);
+	free(bac);
 }
-static uintptr_t bacAddref(MPT_INTERFACE(reference) *ref)
+static uintptr_t bacAddref(MPT_INTERFACE(instance) *in)
 {
-	(void) ref;
+	(void) in;
 	return 0;
 }
 /* metatype interface */

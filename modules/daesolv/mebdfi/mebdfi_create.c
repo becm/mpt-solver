@@ -24,9 +24,9 @@ MPT_STRUCT(MebdfiData) {
 	double next;
 };
 /* reference interface */
-static void meFini(MPT_INTERFACE(reference) *ref)
+static void meFini(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(MebdfiData) *md = (void *) ref;
+	MPT_STRUCT(MebdfiData) *md = (void *) in;
 	mpt_mebdfi_fini(&md->d);
 	free(md);
 }

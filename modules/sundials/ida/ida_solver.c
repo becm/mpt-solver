@@ -25,11 +25,11 @@ MPT_STRUCT(SundialsIDA) {
 	double next;
 };
 /* reference interface */
-static void idaUnref(MPT_INTERFACE(reference) *ref)
+static void idaUnref(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(SundialsIDA) *ida = (void *) ref;
+	MPT_STRUCT(SundialsIDA) *ida = (void *) in;
 	mpt_sundials_ida_fini(&ida->d);
-	free(ref);
+	free(ida);
 }
 static uintptr_t idaRef()
 {

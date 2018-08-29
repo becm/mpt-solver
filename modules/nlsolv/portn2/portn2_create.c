@@ -21,11 +21,11 @@ MPT_STRUCT(PortN2Data) {
 	MPT_NLS_STRUCT(functions) uf;
 };
 /* reference interface */
-static void n2Unref(MPT_INTERFACE(reference) *ref)
+static void n2Unref(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(PortN2Data) *n2 = (void *) ref;
+	MPT_STRUCT(PortN2Data) *n2 = (void *) in;
 	mpt_portn2_fini(&n2->d);
-	free(ref);
+	free(n2);
 }
 static uintptr_t n2Ref()
 {

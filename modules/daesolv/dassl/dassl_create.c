@@ -24,11 +24,11 @@ MPT_STRUCT(DasslData) {
 	double next;
 };
 /* reference interface */
-static void ddFini(MPT_INTERFACE(reference) *ref)
+static void ddFini(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(DasslData) *da = (void *) ref;
+	MPT_STRUCT(DasslData) *da = (void *) in;
 	mpt_dassl_fini(&da->d);
-	free(ref);
+	free(in);
 }
 static uintptr_t ddAddref()
 {

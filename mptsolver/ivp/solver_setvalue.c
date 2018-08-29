@@ -16,13 +16,13 @@ struct wrapValue
 	double val;
 };
 
-static void valueUnref(MPT_INTERFACE(reference) *ref)
+static void valueUnref(MPT_INTERFACE(instance) *in)
 {
-	(void) ref;
+	(void) in;
 }
-static uintptr_t valueRef(MPT_INTERFACE(reference) *ref)
+static uintptr_t valueRef(MPT_INTERFACE(instance) *in)
 {
-	(void) ref;
+	(void) in;
 	return 0;
 }
 static int valueConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)

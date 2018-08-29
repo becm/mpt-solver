@@ -24,9 +24,9 @@ MPT_STRUCT(RadauData) {
 	double next;
 };
 /* reference interface */
-static void rdFini(MPT_INTERFACE(reference) *ref)
+static void rdFini(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(RadauData) *rd = (void *) ref;
+	MPT_STRUCT(RadauData) *rd = (void *) in;
 	mpt_radau_fini(&rd->d);
 	free(rd);
 }

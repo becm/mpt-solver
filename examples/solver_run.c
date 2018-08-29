@@ -22,7 +22,7 @@ static int dispatch_client(void *ptr, MPT_STRUCT(event) *ev)
 {
 	MPT_INTERFACE(client) *cl = ptr;
 	if (!ev) {
-		cl->_vptr->meta.ref.unref((void *) cl);
+		cl->_vptr->meta.instance.unref((void *) cl);
 		return 0;
 	}
 	return cl->_vptr->dispatch(cl, ev);

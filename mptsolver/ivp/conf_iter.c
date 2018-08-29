@@ -64,7 +64,7 @@ extern MPT_INTERFACE(iterator) *mpt_conf_iter(MPT_INTERFACE(metatype) **mptr, MP
 			}
 			return 0;
 		}
-		mt->_vptr->ref.unref((void *) mt);
+		mt->_vptr->instance.unref((void *) mt);
 		*mptr = src;
 		src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it);
 		return it;

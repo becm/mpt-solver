@@ -195,14 +195,14 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	MPT_STRUCT(path) p;
 	
 	if (!porg) {
-		MPT_INTERFACE(reference) *ref;
+		MPT_INTERFACE(instance) *in;
 		if (nls->sd) {
 			mpt_solver_data_clear(nls->sd);
 		}
-		if (!(ref = (void *) nls->sol)) {
+		if (!(in = (void *) nls->sol)) {
 			return 0;
 		}
-		ref->_vptr->unref(ref);
+		in->_vptr->unref(in);
 		nls->sol = 0;
 		return 1;
 	}
@@ -223,9 +223,9 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	return 1;
 }
 /* reference interface */
-static void deleteNLS(MPT_INTERFACE(reference) *gen)
+static void deleteNLS(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(NLS) *nls = (void *) gen;
+	MPT_STRUCT(NLS) *nls = (void *) in;
 	MPT_INTERFACE(metatype) *mt;
 	
 	if (nls->sd) {
@@ -233,16 +233,16 @@ static void deleteNLS(MPT_INTERFACE(reference) *gen)
 		free(nls->sd);
 	}
 	if ((mt = nls->sol)) {
-		mt->_vptr->ref.unref((void *) mt);
+		mt->_vptr->instance.unref((void *) mt);
 	}
 	if ((mt = nls->cfg)) {
-		mt->_vptr->ref.unref((void *) mt);
+		mt->_vptr->instance.unref((void *) mt);
 	}
 	free(nls);
 }
-static uintptr_t addrefNLS(MPT_INTERFACE(reference) *gen)
+static uintptr_t addrefNLS(MPT_INTERFACE(instance) *in)
 {
-	(void) gen;
+	(void) in;
 	return 0;
 }
 /* metatype interface */
@@ -306,7 +306,7 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj);
 		mpt_conf_history(obj, curr);
 		if ((old = curr->_meta)) {
-			old->_vptr->ref.unref((void *) old);
+			old->_vptr->instance.unref((void *) old);
 		}
 		curr->_meta = mt;
 		hist = loggerNLS(nls);

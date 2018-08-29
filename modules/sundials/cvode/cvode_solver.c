@@ -25,15 +25,15 @@ MPT_STRUCT(SundialsCVode) {
 	double next;
 };
 /* reference interface */
-static void cVodeUnref(MPT_INTERFACE(reference) *ref)
+static void cVodeUnref(MPT_INTERFACE(instance) *in)
 {
-	MPT_STRUCT(SundialsCVode) *cv = (void *) ref;
+	MPT_STRUCT(SundialsCVode) *cv = (void *) in;
 	mpt_sundials_cvode_fini(&cv->d);
 	free(cv);
 }
-static uintptr_t cVodeRef(MPT_INTERFACE(reference) *ref)
+static uintptr_t cVodeRef(MPT_INTERFACE(instance) *in)
 {
-	(void) ref;
+	(void) in;
 	return 0;
 }
 /* metatype interface */
