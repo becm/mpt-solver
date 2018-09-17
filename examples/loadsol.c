@@ -76,7 +76,7 @@ int main(int argc, char * const argv[])
 		fputs(txt, stdout);
 	}
 	if (mt) {
-		mt->_vptr->ref.unref((void *) mt);
+		mt->_vptr->instance.unref((void *) mt);
 	}
 	
 	return 0;
