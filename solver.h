@@ -677,8 +677,8 @@ extern int mpt_solver_module_nextval(double *, double , const MPT_INTERFACE(meta
 /* set value to scalar type */
 extern int mpt_solver_module_value_ivp(MPT_STRUCT(value) *val, const MPT_IVP_STRUCT(parameters) *);
 extern int mpt_solver_module_value_nls(MPT_STRUCT(value) *val, const MPT_NLS_STRUCT(parameters) *);
-extern int mpt_solver_module_value_ivec(MPT_STRUCT(value) *val, int , const struct iovec *);
-extern int mpt_solver_module_value_rvec(MPT_STRUCT(value) *val, int , const struct iovec *);
+extern int mpt_solver_module_value_ivec(MPT_STRUCT(value) *val, long , const struct iovec *);
+extern int mpt_solver_module_value_rvec(MPT_STRUCT(value) *val, long , const struct iovec *);
 extern void mpt_solver_module_value_double(MPT_STRUCT(value) *val, const double *);
 extern void mpt_solver_module_value_int(MPT_STRUCT(value) *val, const int *);
 
