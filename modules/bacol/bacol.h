@@ -90,7 +90,8 @@ public:
 		if (!nint || deriv) {
 			return span<const double>(0, 0);
 		}
-		return span<const double>(val + nint + 1, nint + 1);
+		val += nint + 1;
+		return span<const double>(val, neqs * (nint + 1));
 	}
 	inline int intervals() const
 	{
