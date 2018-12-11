@@ -49,19 +49,18 @@ static int setLapack(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 		if (!(A = SUNDenseMatrix(neqs, neqs))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (!(LS = SUNLapackDense(sd->y, A))) {
+		if (!(LS = SUNLinSol_LapackDense(sd->y, A))) {
 			SUNMatDestroy(A);
 			return MPT_ERROR(BadOperation);
 		}
 		return setLS(sd, LS, A);
 	}
 	if (sd->jacobian == SUNDIALS_BAND) {
-		sunindextype smu = sd->mu + sd->ml;
-		/* direct solver; matrix WILL be factored! */
-		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml, smu))) {
+		/* direct solver; matrix WILL be LU factored! */
+		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (!(LS = SUNLapackBand(sd->y, A))) {
+		if (!(LS = SUNLinSol_LapackBand(sd->y, A))) {
 			SUNMatDestroy(A);
 			return MPT_ERROR(BadOperation);
 		}
@@ -81,19 +80,18 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 		if (!(A = SUNDenseMatrix(neqs, neqs))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (!(LS = SUNDenseLinearSolver(sd->y, A))) {
+		if (!(LS = SUNLinSol_Dense(sd->y, A))) {
 			SUNMatDestroy(A);
 			return MPT_ERROR(BadOperation);
 		}
 		return setLS(sd, LS, A);
 	}
 	if (sd->jacobian == SUNDIALS_BAND) {
-		sunindextype smu = sd->mu + sd->ml;
-		/* direct solver; matrix WILL be factored! */
-		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml, smu))) {
+		/* direct solver; matrix WILL be LU factored! */
+		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (!(LS = SUNBandLinearSolver(sd->y, A))) {
+		if (!(LS = SUNLinSol_Band(sd->y, A))) {
 			SUNMatDestroy(A);
 			return MPT_ERROR(BadOperation);
 		}
@@ -124,19 +122,19 @@ extern int mpt_sundials_linear(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neq
 		return setDls(sd, neqs);
 	}
 	if (sd->stype == MPT_SOLVER_SUNDIALS(IterGMR)) {
-		if (!(s = SUNSPGMR(sd->y, sd->prec, sd->kmax))) {
+		if (!(s = SUNLinSol_SPGMR(sd->y, sd->prec, sd->kmax))) {
 			return MPT_ERROR(BadOperation);
 		}
 		return setLS(sd, s, 0);
 	}
 	if (sd->stype == MPT_SOLVER_SUNDIALS(IterBCG)) {
-		if (!(s = SUNSPBCGS(sd->y, sd->prec, sd->kmax))) {
+		if (!(s = SUNLinSol_SPBCGS(sd->y, sd->prec, sd->kmax))) {
 			return MPT_ERROR(BadOperation);
 		}
 		return setLS(sd, s, 0);
 	}
 	if (sd->stype == MPT_SOLVER_SUNDIALS(IterTFQMR)) {
-		if (!(s = SUNSPTFQMR(sd->y, sd->prec, sd->kmax))) {
+		if (!(s = SUNLinSol_SPTFQMR(sd->y, sd->prec, sd->kmax))) {
 			return MPT_ERROR(BadOperation);
 		}
 		return setLS(sd, s, 0);

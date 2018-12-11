@@ -2,14 +2,16 @@
  * report for SUNDIALS jacobian operations
  */
 
-#include <stdio.h>
-#include <sundials/sundials_direct.h>
+#include <sundials/sundials_matrix.h>
+#include <sunmatrix/sunmatrix_band.h>
 
 #include "sundials.h"
 
 extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TYPE(property_handler) out, void *usr)
 {
 	MPT_STRUCT(property) pr;
+	SUNMatrix A;
+	SUNMatrix_ID type;
 	
 	pr.name = "jacobian";
 	pr.desc = "type of jacobian matrix";
@@ -19,11 +21,13 @@ extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TY
 		pr.val.ptr = "none";
 		return out(usr, &pr);
 	}
-	if (!sd->jacobian) {
+	if (!(A = sd->A)) {
 		pr.val.ptr = "diagonal";
 		return out(usr, &pr);
 	}
-	if (sd->jacobian == SUNDIALS_DENSE) {
+	type = SUNMatGetID(A);
+	
+	if (type == SUNMATRIX_DENSE) {
 		static const uint8_t fmt[] = "ss";
 		const char *val[2];
 		
@@ -34,13 +38,13 @@ extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TY
 		pr.val.ptr = val;
 		return out(usr, &pr);
 	}
-	if (sd->jacobian == SUNDIALS_BAND) {
+	if (type == SUNMATRIX_BAND) {
 		static const uint8_t fmt[] = "siis";
 		struct { const char *fmt; int32_t mu, ml; const char *jac; } val;
 		
 		val.fmt = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "banded" : "Banded";
-		val.mu  = sd->mu;
-		val.ml  = sd->ml;
+		val.mu  = SUNBandMatrix_UpperBandwidth(A);
+		val.ml  = SUNBandMatrix_LowerBandwidth(A);
 		val.jac = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "numerical": "user";
 		
 		pr.val.fmt = fmt;

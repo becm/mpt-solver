@@ -13,11 +13,14 @@ sundials_kinsol = cc.find_library('sundials_kinsol', required : false, dirs : su
 sundials_deps += declare_dependency(include_directories : sundials_dir_inc)
 
 sundials_src = files(
+  'sundials_data_new.c',
+  'sundials_ewtfcn.c',
   'sundials_finit.c',
+  'sundials_jacobian.c',
+  'sundials_linear.c',
   'sundials_modfcn.c',
-  'sundials_data_new.c', 'sundials_ewtfcn.c',
-  'sundials_jacobian.c', 'sundials_linear.c',
-  'sundials_nvector.c', 'sundials_report.c'
+  'sundials_nvector.c',
+  'sundials_report.c'
 )
 
 if sundials_ida.found()

@@ -5,9 +5,12 @@
 #include <string.h>
 
 #include <stdio.h>
-#include <cvode/cvode_diag.h>
 
-#include <cvode/cvode_direct.h>
+#include <sundials/sundials_nonlinearsolver.h>
+#include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
+
+#include <cvode/cvode_diag.h>
+#include <cvode/cvode_ls.h>
 
 #include <cvode/cvode_impl.h>
 
@@ -66,7 +69,19 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 		return err;
 	}
 	if (!cv->sd.stype) {
-		return CVodeSetIterType(cv_mem, CV_FUNCTIONAL);
+		/* TODO: variable acc. vector count */
+		SUNNonlinearSolver NLS = SUNNonlinSol_FixedPoint(cv->sd.y, 0);
+		if (!NLS) {
+			return MPT_ERROR(BadOperation);
+		}
+		err = CVodeSetNonlinearSolver(cv_mem, NLS);
+		if (err < 0) {
+			SUNNonlinSolFree(NLS);
+			return err;
+		}
+		/* CVode owns nonlinear solver reference */
+		cv_mem->ownNLS = SUNTRUE;
+		return err;
 	}
 	if (cv->sd.stype & MPT_SOLVER_SUNDIALS(Direct)) {
 		if (!cv->sd.jacobian) {
@@ -84,7 +99,7 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	if ((err = mpt_sundials_linear(&cv->sd, neqs)) < 0) {
 		return err;
 	}
-	if ((err = CVDlsSetLinearSolver(cv_mem, cv->sd.LS, cv->sd.A)) < 0) {
+	if ((err = CVodeSetLinearSolver(cv_mem, cv->sd.LS, cv->sd.A)) < 0) {
 		return err;
 	}
 	if (cv->sd.A) {
@@ -92,7 +107,7 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 			cv->sd.stype |= MPT_SOLVER_SUNDIALS(Numeric);
 		}
 		if (!(cv->sd.stype & MPT_SOLVER_SUNDIALS(Numeric))) {
-			CVDlsSetJacFn(cv_mem, mpt_sundials_cvode_jac);
+			CVodeSetJacFn(cv_mem, mpt_sundials_cvode_jac);
 		}
 	}
 	return err;

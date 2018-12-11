@@ -2,12 +2,11 @@
  * set Sundials jacobian parameters
  */
 
-#include <stdio.h>
 #include <sundials/sundials_direct.h>
 
-#include "sundials.h"
-
 #include "meta.h"
+
+#include "sundials.h"
 
 /*!
  * \ingroup mptSundials
@@ -21,7 +20,7 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, con
 {
 	MPT_STRUCT(consumable) val;
 	const char *key;
-	int ret;
+	int ret, ml, mu;
 	char mode;
 	
 	if (!src) {
@@ -46,28 +45,30 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, con
 	}
 	switch (mode) {
 		case 'd': case 'D':
+			sd->stype = MPT_SOLVER_SUNDIALS(Direct);
 			sd->jacobian = 0;
-			sd->stype = MPT_SOLVER_SUNDIALS(Direct);
 			return ret;
-		case 'f':
-			sd->jacobian = SUNDIALS_DENSE;
-			sd->stype = MPT_SOLVER_SUNDIALS(Direct) | MPT_SOLVER_SUNDIALS(Numeric);
-			return ret;
-		case 'F':
-			sd->jacobian = SUNDIALS_DENSE;
+		case 'f': case 'F':
 			sd->stype = MPT_SOLVER_SUNDIALS(Direct);
+			sd->jacobian = SUNDIALS_DENSE;
+			if (mode != 'F') {
+				sd->stype |= MPT_SOLVER_SUNDIALS(Numeric);
+			}
 			return ret;
 		case 'b': case 'B':
-			sd->jacobian = SUNDIALS_BAND;
+			ret = 2;
+			if ((ret = mpt_consume_int(&val, &ml)) <= 0) {
+				ml = mu = neqs - 1;
+				ret = 0;
+			}
+			else if ((ret = mpt_consume_int(&val, &mu)) <= 0) {
+				mu = ml;
+				ret = 1;
+			}
+			sd->ml = ml;
+			sd->mu = mu;
 			sd->stype = MPT_SOLVER_SUNDIALS(Direct);
-			
-			if ((ret = mpt_consume_int(&val, &sd->ml)) <= 0) {
-				sd->ml = sd->mu = neqs;
-			}
-			else if ((ret = mpt_consume_int(&val, &sd->mu)) <= 0) {
-				sd->mu = sd->ml;
-				ret = 2;
-			}
+			sd->jacobian = SUNDIALS_BAND;
 			if (mode != 'B') {
 				sd->stype |= MPT_SOLVER_SUNDIALS(Numeric);
 			}

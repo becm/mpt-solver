@@ -57,7 +57,7 @@ extern void mpt_sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
 extern int mpt_sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *data)
 {
 	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
-	if (!(data->mem = CVodeCreate(CV_ADAMS, CV_NEWTON))) {
+	if (!(data->mem = CVodeCreate(CV_ADAMS))) {
 		return CV_MEM_NULL;
 	}
 	data->ivp = par;

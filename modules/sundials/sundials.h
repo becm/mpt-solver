@@ -41,20 +41,20 @@ MPT_SOLVER_STRUCT(sundials)
 # endif
 	N_Vector y;  /* output container */
 	
-	SUNMatrix A; /* linear solver matrix and backend */
-	SUNLinearSolver LS;
+	SUNLinearSolver LS;  /* linear solver backend */
 	
-	sunindextype mu, ml;   /* band matrix parameters */
+	SUNMatrix A;          /* solver matrix */
+	sunindextype ml, mu;  /* band matrix dimensions */
 	
 	int8_t jacobian,  /* jacobian flags */
 	       step,      /* step strategy control */
 	       stype,     /* type of solver */
 	       prec,      /* preconditioner mode */
 	       kmax;      /* max. Krylov subspace size */
+
 # ifndef __cplusplus
 }; /* sundials */
 # endif
-#endif /* _SUNDIALSTYPES_H */
 
 enum MPT_SOLVER_SUNDIALS(Type) {
 #ifdef _SUNDIALSTYPES_H
@@ -82,9 +82,10 @@ enum MPT_SOLVER_SUNDIALS(Type) {
 	MPT_SOLVER_SUNDIALS(Numeric)   = 0x20
 };
 
-#ifdef __cplusplus
+# ifdef __cplusplus
 }; /* sundials */
-#endif
+# endif
+#endif /* _SUNDIALSTYPES_H */
 
 MPT_SOLVER_STRUCT(cvode)
 #ifdef _SUNDIALSTYPES_H

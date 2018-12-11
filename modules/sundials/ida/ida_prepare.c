@@ -3,8 +3,8 @@
  */
 
 #include <stdio.h>
-#include <ida/ida_direct.h>
 
+#include <ida/ida_ls.h>
 #include <ida/ida_impl.h>
 
 #define _SUNDIALS_GENERIC_TYPE(x) void
@@ -83,7 +83,7 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	if ((err = mpt_sundials_linear(&ida->sd, neqs)) < 0) {
 		return err;
 	}
-	if ((err = IDADlsSetLinearSolver(ida_mem, ida->sd.LS, ida->sd.A)) < 0) {
+	if ((err = IDASetLinearSolver(ida_mem, ida->sd.LS, ida->sd.A)) < 0) {
 		return err;
 	}
 	if (ida->sd.A) {
@@ -91,7 +91,7 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 			ida->sd.stype |= MPT_SOLVER_SUNDIALS(Numeric);
 		}
 		if (!(ida->sd.stype & MPT_SOLVER_SUNDIALS(Numeric))) {
-			IDADlsSetJacFn(ida_mem, mpt_sundials_ida_jac);
+			IDASetJacFn(ida_mem, mpt_sundials_ida_jac);
 		}
 	}
 	return err;
