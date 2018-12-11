@@ -19,7 +19,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	if (show & MPT_SOLVER_ENUM(Header)) {
 	static const uint8_t fmt_ss[] = "ss";
 	static const uint8_t fmt_band[] = "siis";
-	struct { const char *fmt, *val; int32_t ml, mu; const char *jac; } d;
+	struct { const char *type; int32_t ml, mu; const char *jac; } d;
 	const char *val[2];
 	
 	pr.name = "method";
@@ -43,7 +43,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	
 	val[0] = "Full";
 	val[1] = "user";
-	d.fmt = "Banded";
+	d.type = "Banded";
 	if (li > 1) {
 		d.ml = iwk[0];
 		d.mu = iwk[1];
@@ -72,7 +72,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 				break;
 			}
 		case 5:
-			d.fmt = "banded";
+			d.type = "banded";
 			d.jac = "numerical";
 			pr.val.fmt = fmt_band;
 			pr.val.ptr = &d;
