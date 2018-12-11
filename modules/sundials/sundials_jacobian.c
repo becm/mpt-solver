@@ -18,7 +18,7 @@
  */
 extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, const MPT_INTERFACE(metatype) *src)
 {
-	MPT_STRUCT(consumable) val;
+	MPT_STRUCT(consumable) val = MPT_CONSUMABLE_INIT;
 	const char *key;
 	int ret, ml, mu;
 	char mode;
@@ -58,7 +58,7 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, con
 		case 'b': case 'B':
 			ret = 2;
 			if ((ret = mpt_consume_int(&val, &ml)) <= 0) {
-				ml = mu = neqs - 1;
+				ml = mu = neqs;
 				ret = 0;
 			}
 			else if ((ret = mpt_consume_int(&val, &mu)) <= 0) {
