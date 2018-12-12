@@ -90,7 +90,7 @@ extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name
 		return mpt_solver_module_tol_set(&cv->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
-		return mpt_sundials_jacobian(&cv->sd, cv->ivp.neqs, src);
+		return mpt_sundials_jacobian(&cv->sd, src);
 	}
 	if (!strcasecmp(name, "method")) {
 		return setMethod(cv, src);

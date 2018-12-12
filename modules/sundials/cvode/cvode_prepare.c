@@ -87,14 +87,12 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 		if (!cv->sd.jacobian) {
 			return CVDiag(cv_mem);
 		}
-		if (cv->sd.jacobian == SUNDIALS_BAND) {
-			if (cv->sd.mu < 0) {
-				cv->sd.mu = cv->ivp.neqs;
-			}
-			if (cv->sd.ml < 0) {
-				cv->sd.ml = cv->ivp.neqs;
-			}
-		}
+	}
+	if (cv->sd.mu < 0) {
+		cv->sd.mu = cv->ivp.pint ? cv->ivp.neqs : cv->ivp.neqs - 1;
+	}
+	if (cv->sd.ml < 0) {
+		cv->sd.ml = cv->ivp.pint ? cv->ivp.neqs : cv->ivp.neqs - 1;
 	}
 	if ((err = mpt_sundials_linear(&cv->sd, neqs)) < 0) {
 		return err;

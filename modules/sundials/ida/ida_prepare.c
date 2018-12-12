@@ -68,17 +68,17 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 		ida->sd.stype = MPT_SOLVER_SUNDIALS(Direct);
 	}
 	if (!ida->sd.jacobian) {
-		if (!ida->ivp.pint) {
+		if (!ida->ivp.pint || ida->sd.ml >= neqs || ida->sd.mu >= neqs) {
 			ida->sd.jacobian = SUNDIALS_DENSE;
 		} else {
 			ida->sd.jacobian = SUNDIALS_BAND;
-			if (ida->sd.mu < 0) {
-				ida->sd.mu = ida->ivp.neqs;
-			}
-			if (ida->sd.ml < 0) {
-				ida->sd.ml = ida->ivp.neqs;
-			}
 		}
+	}
+	if (ida->sd.mu < 0) {
+		ida->sd.mu = ida->ivp.pint ? ida->ivp.neqs : ida->ivp.neqs - 1;
+	}
+	if (ida->sd.ml < 0) {
+		ida->sd.ml = ida->ivp.pint ? ida->ivp.neqs : ida->ivp.neqs - 1;
 	}
 	if ((err = mpt_sundials_linear(&ida->sd, neqs)) < 0) {
 		return err;

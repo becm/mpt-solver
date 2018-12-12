@@ -204,9 +204,9 @@ extern MPT_INTERFACE(metatype) *mpt_sundials_ida(void);
 #endif
 
 /* setup Sundials jacobian parameters */
-extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *, long , const MPT_INTERFACE(metatype) *);
+extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *, const MPT_INTERFACE(metatype) *);
 /* output Sundials jacobian parameters */
-extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *, MPT_TYPE(property_handler) out, void *usr);
+extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *, MPT_TYPE(property_handler) , void *);
 
 #ifndef _SUNDIALS_GENERIC_TYPE
 # define _SUNDIALS_GENERIC_TYPE(x) x

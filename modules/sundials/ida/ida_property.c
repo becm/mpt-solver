@@ -83,7 +83,7 @@ extern int mpt_sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, c
 		return mpt_solver_module_tol_set(&ida->rtol, src, __MPT_IVP_RTOL);
 	}
 	if (!strncasecmp(name, "jac", 3)) {
-		return mpt_sundials_jacobian(&ida->sd, ida->ivp.neqs, src);
+		return mpt_sundials_jacobian(&ida->sd, src);
 	}
 	if (!strcasecmp(name, "maxord")) {
 		long val = 0;

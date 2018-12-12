@@ -16,7 +16,7 @@
  * 
  * \return number of consumed values
  */
-extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, const MPT_INTERFACE(metatype) *src)
+extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, const MPT_INTERFACE(metatype) *src)
 {
 	MPT_STRUCT(consumable) val = MPT_CONSUMABLE_INIT;
 	const char *key;
@@ -56,14 +56,20 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, con
 			}
 			return ret;
 		case 'b': case 'B':
-			ret = 2;
+			mu = -1;
+			ml = -1;
 			if ((ret = mpt_consume_int(&val, &ml)) <= 0) {
-				ml = mu = neqs;
 				ret = 0;
 			}
-			else if ((ret = mpt_consume_int(&val, &mu)) <= 0) {
+			else if ((ret = mpt_consume_int(&val, &mu)) < 0) {
+				return MPT_ERROR(BadType);
+			}
+			else if (!ret) {
 				mu = ml;
 				ret = 1;
+			}
+			else {
+				ret = 2;
 			}
 			sd->ml = ml;
 			sd->mu = mu;
@@ -72,7 +78,7 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, long neqs, con
 			if (mode != 'B') {
 				sd->stype |= MPT_SOLVER_SUNDIALS(Numeric);
 			}
-			return ret;
+			return ret + 1;
 		default:
 			return MPT_ERROR(BadValue);
 	}
