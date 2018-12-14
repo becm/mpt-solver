@@ -68,6 +68,7 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	if (err < 0) {
 		return err;
 	}
+	/* CVodeInit() assigns Newton (rootfind) nonlinear solver by default */
 	if (!cv->sd.stype) {
 		/* TODO: variable acc. vector count */
 		SUNNonlinearSolver NLS = SUNNonlinSol_FixedPoint(cv->sd.y, 0);
@@ -79,7 +80,9 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 			SUNNonlinSolFree(NLS);
 			return err;
 		}
-		/* CVode owns nonlinear solver reference */
+		/* WARNING: CVodeSetNonlinearSolver() ALWAYS calls SUNNonlinSolFree() for previous solver.
+		 * Make CVODE own nonlinear solver reference for consistency.
+		 */
 		cv_mem->ownNLS = SUNTRUE;
 		return err;
 	}
