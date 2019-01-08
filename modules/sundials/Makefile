@@ -2,7 +2,7 @@
 LIB ?= mpt_sundials
 #
 # precompiled object location
-sundials_version = 4.0.0
+sundials_version = 4.0.1
 DIR_SUNDIALS_OBJ ?= ${MPT_PREFIX}/math/sundials-${sundials_version}/build
 # include directories
 DIR_SUNDIALS_INC ?= ${MPT_PREFIX}/include
