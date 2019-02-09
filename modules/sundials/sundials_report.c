@@ -3,6 +3,7 @@
  */
 
 #include <sundials/sundials_matrix.h>
+
 #include <sunmatrix/sunmatrix_band.h>
 
 #include "sundials.h"

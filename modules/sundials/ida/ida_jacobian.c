@@ -3,11 +3,7 @@
  */
 
 #include <stdio.h>
-#include <sundials/sundials_direct.h>
 
-#include <sundials/sundials_nvector.h>
-
-#include <sundials/sundials_matrix.h>
 #include <sunmatrix/sunmatrix_dense.h>
 #include <sunmatrix/sunmatrix_band.h>
 

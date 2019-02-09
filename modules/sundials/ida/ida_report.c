@@ -5,9 +5,7 @@
 #include <sys/uio.h>
 
 #include <stdio.h>
-#include <ida/ida_direct.h>
 
-#include <ida/ida_spils.h>
 #include <ida/ida.h>
 
 #include "sundials.h"
@@ -85,7 +83,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	}
 	/* direct solver type */
 	if (ida->sd.stype & MPT_SOLVER_SUNDIALS(Direct)) {
-		if (IDADlsGetNumJacEvals(ida->mem, &lval) == IDA_SUCCESS) {
+		if (IDAGetNumJacEvals(ida->mem, &lval) == IDA_SUCCESS) {
 		pr.name = "jeval";
 		pr.desc = MPT_tr("jacobian evaluations");
 		pr.val.fmt = longfmt;
@@ -96,7 +94,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	}
 	/* iterative solver type */
 	else if (ida->sd.stype) {
-		if (IDASpilsGetNumLinIters(ida->mem, &lval) == IDA_SUCCESS) {
+		if (IDAGetNumLinIters(ida->mem, &lval) == IDA_SUCCESS) {
 		pr.name = "liter";
 		pr.desc = MPT_tr("linear iterations");
 		pr.val.fmt = longfmt;

@@ -10,7 +10,6 @@
 #include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
 
 #include <cvode/cvode_diag.h>
-#include <cvode/cvode_ls.h>
 
 #include <cvode/cvode_impl.h>
 

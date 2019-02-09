@@ -3,18 +3,14 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunlinsol/sunlinsol_spbcgs.h>
 #include <sunlinsol/sunlinsol_sptfqmr.h>
 
-#include <stdio.h>
 #include <sunlinsol/sunlinsol_dense.h>
 #include <sunlinsol/sunlinsol_band.h>
-
-#include <cvode/cvode_diag.h>
-#include <cvode/cvode_impl.h>
-#include <cvode/cvode_direct.h>
 
 #ifdef MPT_WITH_LAPACK
 # include <sunlinsol/sunlinsol_lapackdense.h>

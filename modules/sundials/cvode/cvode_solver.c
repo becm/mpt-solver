@@ -7,9 +7,10 @@
 #include <ctype.h>
 
 #include "cvode/cvode_impl.h"
-#include "sundials.h"
 
 #include "meta.h"
+
+#include "sundials.h"
 
 #include "module_functions.h"
 

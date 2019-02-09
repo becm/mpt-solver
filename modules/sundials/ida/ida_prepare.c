@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 
-#include <ida/ida_ls.h>
 #include <ida/ida_impl.h>
 
 #define _SUNDIALS_GENERIC_TYPE(x) void

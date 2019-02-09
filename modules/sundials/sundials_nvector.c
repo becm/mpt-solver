@@ -2,7 +2,6 @@
  * Sundials N_Vector creation
  */
 
-#include <stdio.h>
 #include <nvector/nvector_serial.h>
 
 #include "sundials.h"
