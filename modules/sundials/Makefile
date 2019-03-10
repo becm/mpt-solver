@@ -2,7 +2,7 @@
 LIB ?= mpt_sundials
 #
 # precompiled object location
-sundials_version = 4.0.2
+sundials_version = 4.1.0
 DIR_SUNDIALS_OBJ ?= ${MPT_PREFIX}/math/sundials-${sundials_version}/build
 # include directories
 DIR_SUNDIALS_INC ?= ${MPT_PREFIX}/include
@@ -11,7 +11,7 @@ INC = . ${DIR_SUNDIALS_INC}
 # SUNDIALS modules to include in shared library
 sundials_lapack = sunlinsol_lapackband sunlinsol_lapackdense
 sundials_direct = sunlinsol_band sunlinsol_dense ${sundials_lapack}
-sundials_elements = cvode ida kinsol ${sundials_iter} ${sundials_direct} nvec_ser
+sundials_elements = cvode ida kinsol ${sundials_iter} ${sundials_direct} nvector_serial
 #
 # shared library version
 SHLIB_MAJOR = 1

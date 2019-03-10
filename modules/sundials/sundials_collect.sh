@@ -25,9 +25,8 @@ COLLISIONS=
 # loop over sundials modules
 (cd "${DIR_SUNDIALS}/src/" && for d in "$@"; do \
   case "$d" in
-    nvec_ser)    s="nvecserial";;
-    nvec_*)      s="nvec${d#nvec_}";;
-    sunlinsol_*) s="sunlinsol${d#sunlinsol_}";;
+    nvector_*)   s="nvec${d#nvector_}"; d="nvector/${d#nvector_}";;
+    sunlinsol_*) s="sunlinsol${d#sunlinsol_}"; d="sunlinsol/${d#sunlinsol_}";;
     *) s="$d";;
   esac
   # loop over module objects
