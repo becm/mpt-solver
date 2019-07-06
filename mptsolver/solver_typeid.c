@@ -5,6 +5,7 @@
 
 #include "message.h"
 #include "output.h"
+#include "types.h"
 
 #include "solver.h"
 
