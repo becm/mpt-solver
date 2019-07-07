@@ -16,7 +16,7 @@
  * 
  * \return number of consumed values
  */
-extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, const MPT_INTERFACE(metatype) *src)
+extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(consumable) val = MPT_CONSUMABLE_INIT;
 	const char *key;
@@ -29,7 +29,7 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, const MPT_INTE
 	}
 	key = 0;
 	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;

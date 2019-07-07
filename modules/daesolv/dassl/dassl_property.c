@@ -44,7 +44,7 @@ static int setReal(MPT_SOLVER_STRUCT(dassl) *da, size_t pos, double val)
 	return 1;
 }
 
-static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, const MPT_INTERFACE(metatype) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(consumable) val;
 	const char *key;
@@ -60,7 +60,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, const MPT_INTERFACE(metatyp
 	}
 	key = 0;
 	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
@@ -131,7 +131,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, const MPT_INTERFACE(metatyp
  * \retval <0   failure
  * \retval >=0  used elements
  */
-extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, MPT_INTERFACE(convertable) *src)
 {
 	int ret = 0;
 	
@@ -162,7 +162,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 	}
 	if (!strcasecmp(name, "info3")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0 || val > 1) {
@@ -173,7 +173,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 	}
 	if (!strcasecmp(name, "tstop")) {
 		double val;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) {
 			return ret;
 		}
 		if (!ret) {
@@ -188,7 +188,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 	}
 	if (!strcasecmp(name, "maxstep") || !strcasecmp(name, "hmax")) {
 		double val;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) {
 			return ret;
 		}
 		if (!ret) {
@@ -203,7 +203,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 	}
 	if (!strcasecmp(name, "h0") || !strcasecmp(name, "initstep") || !strcasecmp(name, "stepinit")) {
 		double val;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) {
 			return ret;
 		}
 		if (!ret) {
@@ -218,7 +218,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 	}
 	if (!strcasecmp(name, "maxord")) {
 		int32_t val;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) {
 			return ret;
 		}
 		if (!ret) {
@@ -236,7 +236,7 @@ extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *da, const char *name, const M
 	}
 	if (!strcasecmp(name, "info10") || !strncasecmp(name, "nonnegative", 6)) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0 || val > 1) {

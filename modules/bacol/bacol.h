@@ -144,7 +144,7 @@ extern int mpt_bacol_backend(MPT_SOLVER_STRUCT(bacol) *, const char *);
 
 /* get/set bacol parameter */
 extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *, MPT_STRUCT(property) *);
-extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *, const char *, MPT_INTERFACE(convertable) *);
 /* validate settings and working space for use */
 extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *);
 
@@ -209,7 +209,7 @@ public:
 	{
 		return mpt_bacol_get(this, pr);
 	}
-	int set_property(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
+	int set_property(const char *pr, convertable *src = 0) __MPT_OVERRIDE
 	{
 		_values.invalidate();
 		if (!pr && !src) {

@@ -18,14 +18,14 @@
  * 
  * Set parameter for NLS solver form data.
  * 
- * \param mt    nonlinear solver metatype
+ * \param val   nonlinear solver dispatcher
  * \param fcn   NLS user functions 
  * \param dat   solver data 
  * \param info  log/error output descriptor
  * 
  * \return pointer to nonlinear user funtions
  */
-extern int mpt_init_nls(const MPT_INTERFACE(metatype) *mt, const MPT_NLS_STRUCT(functions) *fcn, const MPT_STRUCT(solver_data) *dat, MPT_INTERFACE(logger) *info)
+extern int mpt_init_nls(MPT_INTERFACE(convertable) *val, const MPT_NLS_STRUCT(functions) *fcn, const MPT_STRUCT(solver_data) *dat, MPT_INTERFACE(logger) *info)
 {
 	static const char fmt[] = { MPT_type_vector('d'), 0 };
 	MPT_SOLVER(interface) *sol;
@@ -43,20 +43,20 @@ extern int mpt_init_nls(const MPT_INTERFACE(metatype) *mt, const MPT_NLS_STRUCT(
 		return MPT_ERROR(BadArgument);
 	}
 	sol = 0;
-	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	if ((ret = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
-			        MPT_tr("failed to get solver interface"), mt);
+			        MPT_tr("failed to get solver interface"), val);
 		}
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
+	if ((ret = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
 	    || !obj) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
-			        MPT_tr("solver without object interface"), mt);
+			        MPT_tr("solver without object interface"), val);
 		}
 		return MPT_ERROR(BadArgument);
 	}

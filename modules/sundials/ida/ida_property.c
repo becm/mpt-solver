@@ -17,7 +17,7 @@
 
 #include "module_functions.h"
 
-static int setYP(MPT_SOLVER_STRUCT(ida) *ida, const MPT_INTERFACE(metatype) *src)
+static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(convertable) *src)
 {
 	MPT_INTERFACE(iterator) *it;
 	N_Vector yprime;
@@ -25,7 +25,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, const MPT_INTERFACE(metatype) *src
 	long pos, len;
 	
 	it = 0;
-	if (src && (pos = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
+	if (src && (pos = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
 		return pos;
 	}
 	if ((len = ida->ivp.neqs * (ida->ivp.pint + 1)) < 0) {
@@ -58,7 +58,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, const MPT_INTERFACE(metatype) *src
  * \retval <0   failure
  * \retval >=0  used values
  */
-extern int mpt_sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, MPT_INTERFACE(convertable) *src)
 {
 	IDAMem ida_mem;
 	int ret = 0;
@@ -87,13 +87,13 @@ extern int mpt_sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, c
 	}
 	if (!strcasecmp(name, "maxord")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) return ret;
 		if (IDASetMaxOrd(ida_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "maxnumsteps") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "mxstep")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0) {
@@ -109,7 +109,7 @@ extern int mpt_sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, c
 	}
 	if (!strcasecmp(name, "tstop")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (ret && val) {
 			if (IDASetStopTime(ida_mem, val) < 0) return MPT_ERROR(BadValue);
 		} else {
@@ -119,13 +119,13 @@ extern int mpt_sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, c
 	}
 	if (!strcasecmp(name, "stepinit") || !strcasecmp(name, "hin") || !strcasecmp(name, "h") || !strcasecmp(name, "h0")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (IDASetInitStep(ida_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (IDASetMaxStep(ida_mem, val) < 0) return MPT_ERROR(BadValue);
 		ida->hmax = val;
 		return ret ? 1 : 0;

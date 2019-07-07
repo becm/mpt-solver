@@ -42,7 +42,7 @@ static int setReal(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, double val)
 	rwk[pos] = val;
 	return 1;
 }
-static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(consumable) val;
 	const char *key;
@@ -57,7 +57,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 	}
 	key = 0;
 	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
@@ -112,7 +112,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 	
 	return ret;
 }
-static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype) *src)
+static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(consumable) val;
 	const char *key;
@@ -126,7 +126,7 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 	}
 	key = 0;
 	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
@@ -166,7 +166,7 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, const MPT_INTERFACE(metatype
 	
 	return 2;
 }
-static int setMethod(MPT_SOLVER_STRUCT(vode) *data, const MPT_INTERFACE(metatype) *src)
+static int setMethod(MPT_SOLVER_STRUCT(vode) *data, MPT_INTERFACE(convertable) *src)
 {
 	char *key;
 	int ret;
@@ -175,7 +175,7 @@ static int setMethod(MPT_SOLVER_STRUCT(vode) *data, const MPT_INTERFACE(metatype
 		data->meth = 1;
 		return 0;
 	}
-	if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+	if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 		return ret;
 	}
 	if (!ret || !key) {
@@ -191,7 +191,7 @@ static int setMethod(MPT_SOLVER_STRUCT(vode) *data, const MPT_INTERFACE(metatype
 	}
 }
 
-extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTERFACE(convertable) *src)
 {
 	int ret = 0;
 	
@@ -228,38 +228,38 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, const MPT
 	/* integer array parameter */
 	if (!strcasecmp(name, "maxord") || !strcasecmp(name, "iwork5")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) return ret;
 		if (setInt(vd, 4, val) < 0) return MPT_ERROR(BadOperation);
 		return 0;
 	}
 	if (!strcasecmp(name, "mxstep") || !strcasecmp(name, "iwork6")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) return ret;
 		if (setInt(vd, 5, val) < 0) return MPT_ERROR(BadOperation);
 		return 0;
 	}
 	if (!strcasecmp(name, "mxhnil") || !strcasecmp(name, "iwork7")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) return ret;
 		if (setInt(vd, 6, val) < 0) return MPT_ERROR(BadOperation);
 		return 0;
 	}
 	/* real array parameter */
 	if (!strcasecmp(name, "h0") || !strcasecmp(name, "rwork5")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (setReal(vd, 4, val) < 0) return MPT_ERROR(BadOperation);
 		return 0;
 	}
 	if (!strcasecmp(name, "hmax") || !strcasecmp(name, "rwork6")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (setReal(vd, 5, val) < 0) return MPT_ERROR(BadOperation);
 		return 0;
 	}
 	if (!strcasecmp(name, "hmin") || !strcasecmp(name, "rwork7")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (setReal(vd, 6, val) < 0) return MPT_ERROR(BadOperation);
 		return 0;
 	}

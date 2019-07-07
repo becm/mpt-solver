@@ -22,7 +22,7 @@
 extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTERFACE(config) *cfg)
 {
 	static const char path[] = "mpt.graphic";
-	const MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(convertable) *val;
 	int sep, off, ret;
 	
 	if (cfg) {
@@ -36,8 +36,8 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 	if (!so->_data) {
 		static const char path[] = "mpt.output";
 		
-		if ((mt = mpt_config_get(cfg, path + off, sep, 0))) {
-			mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeOutput)), &so->_data);
+		if ((val = mpt_config_get(cfg, path + off, sep, 0))) {
+			val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeOutput)), &so->_data);
 			if (so->_data) {
 				ret |= 0x1;
 			}
@@ -46,14 +46,14 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 	if (so->_graphic && so->_pass._buf) {
 		return ret;
 	}
-	if ((mt = mpt_config_get(cfg, path + off, sep, 0))) {
+	if ((val = mpt_config_get(cfg, path + off, sep, 0))) {
 		const MPT_STRUCT(type_traits) *info;
 		MPT_STRUCT(array) a = MPT_ARRAY_INIT;
 		MPT_STRUCT(buffer) *buf;
 		int type = 0;
 		
 		if (!so->_graphic) {
-			mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeOutput)), &so->_graphic);
+			val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeOutput)), &so->_graphic);
 			if (so->_graphic) {
 				ret |= 0x2;
 			}
@@ -61,7 +61,7 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 		if (so->_pass._buf) {
 			return ret;
 		}
-		if (mt->_vptr->conv(mt, MPT_ENUM(TypeArray), &a) < 0
+		if (val->_vptr->convert(val, MPT_ENUM(TypeArray), &a) < 0
 		    || !(buf = a._buf)) {
 			return ret;
 		}

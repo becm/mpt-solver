@@ -59,14 +59,14 @@ static int set_fcns(MPT_SOLVER(interface) *sol, const void *fcn, int type, MPT_I
  * 
  * Initial solver setup for DAE problems.
  * 
- * \param mt    solver metatype
+ * \param val   solver dispatcher
  * \param fcn   DAE user functions
  * \param neqs  number of equotations
  * \param info  log/error output descriptor
  * 
  * \return init result
  */
-extern int mpt_init_dae(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(daefcn) *fcn, int neqs, MPT_INTERFACE(logger) *info)
+extern int mpt_init_dae(MPT_INTERFACE(convertable) *val, const MPT_IVP_STRUCT(daefcn) *fcn, int neqs, MPT_INTERFACE(logger) *info)
 {
 	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;
@@ -79,16 +79,16 @@ extern int mpt_init_dae(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return MPT_ERROR(BadArgument);
 	}
 	sol = 0;
-	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol) < 0
+	if (val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
-			        MPT_tr("failed to get solver interface"), mt);
+			        MPT_tr("failed to get solver interface"), val);
 		}
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) >= 0) {
+	if (val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) >= 0) {
 		if ((neqs = set_neqs(obj, __func__, neqs, info)) < 0) {
 			return neqs;
 		}
@@ -101,14 +101,14 @@ extern int mpt_init_dae(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
  * 
  * Initial solver setup for ODE problems.
  * 
- * \param mt    solver metatype
+ * \param val   solver dispatcher
  * \param fcn   ODE user functions
  * \param neqs  number of equotations
  * \param info  log/error output descriptor
  * 
  * \return init result
  */
-extern int mpt_init_ode(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(odefcn) *fcn, int neqs, MPT_INTERFACE(logger) *info)
+extern int mpt_init_ode(MPT_INTERFACE(convertable) *val, const MPT_IVP_STRUCT(odefcn) *fcn, int neqs, MPT_INTERFACE(logger) *info)
 {
 	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;
@@ -121,16 +121,16 @@ extern int mpt_init_ode(const MPT_INTERFACE(metatype) *mt, const MPT_IVP_STRUCT(
 		return MPT_ERROR(BadArgument);
 	}
 	sol = 0;
-	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol) < 0
+	if (val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
-			        MPT_tr("failed to get solver interface"), mt);
+			        MPT_tr("failed to get solver interface"), val);
 		}
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) >= 0) {
+	if (val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) >= 0) {
 		if ((neqs = set_neqs(obj, __func__, neqs, info)) < 0) {
 			return neqs;
 		}

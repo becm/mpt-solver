@@ -14,7 +14,7 @@
 #include "solver_run.h"
 
 /* solver/client setup for PDE run */
-static int bacol_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
+static int bacol_init(MPT_INTERFACE(convertable) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
 {
 	int ret, npde = 4;
 	

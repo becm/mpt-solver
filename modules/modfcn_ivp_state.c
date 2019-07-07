@@ -13,7 +13,7 @@
 
 #include "../solver.h"
 
-extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *ivp, MPT_SOLVER_MODULE_DATA_TYPE *t, MPT_SOLVER_MODULE_DATA_CONTAINER *y, const MPT_INTERFACE(metatype) *src)
+extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *ivp, MPT_SOLVER_MODULE_DATA_TYPE *t, MPT_SOLVER_MODULE_DATA_CONTAINER *y, MPT_INTERFACE(convertable) *src)
 {
 	MPT_INTERFACE(iterator) *it;
 	MPT_STRUCT(value) val = MPT_VALUE_INIT;
@@ -28,7 +28,7 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 	vec.iov_base = 0;
 	vec.iov_len = 0;
 	it = 0;
-	if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeValue), &val)) >= 0) {
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeValue), &val)) >= 0) {
 		const double *ptr;
 		if (!val.fmt || !(ptr = val.ptr)) {
 			return MPT_ERROR(BadValue);
@@ -53,8 +53,8 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 		ret = 2;
 	}
 	/* require state content */
-	else if ((ret = src->_vptr->conv(src, MPT_type_vector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
-		if ((ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0
+	else if ((ret = src->_vptr->convert(src, MPT_type_vector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
+		if ((ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0
 		    || !it) {
 			return MPT_ERROR(BadType);
 		}
@@ -62,7 +62,7 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 		/* require time value */
 		if (t) {
 			tmp = *t;
-			if ((ret = src->_vptr->conv(src, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
+			if ((ret = src->_vptr->convert(src, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
 				/* get time value from iterator */
 				if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
 					return MPT_ERROR(BadType);

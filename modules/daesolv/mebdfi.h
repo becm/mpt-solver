@@ -65,7 +65,7 @@ extern int mpt_mebdfi_step(MPT_SOLVER_STRUCT(mebdfi) *, double);
 
 /* set mebdfi parameter */
 extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *, MPT_STRUCT(property) *);
-extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *, const char *, MPT_INTERFACE(convertable) *);
 
 /* validate settings and working space for use */
 extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *);
@@ -104,7 +104,7 @@ public:
 	{
 		return mpt_mebdfi_get(this, pr);
 	}
-	int set_property(const char *pr, const metatype *src) __MPT_OVERRIDE
+	int set_property(const char *pr, convertable *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_mebdfi_prepare(this);

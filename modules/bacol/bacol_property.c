@@ -13,12 +13,12 @@
 
 #include "bacol.h"
 
-static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, const MPT_INTERFACE(metatype) *src)
+static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, MPT_INTERFACE(convertable) *src)
 {
 	char *val = 0;
 	int len = 0;
 	
-	if (src && (len = src->_vptr->conv(src, 'k', &val)) < 0) {
+	if (src && (len = src->_vptr->convert(src, 'k', &val)) < 0) {
 		return len;
 	}
 	if (mpt_bacol_backend(data, val) < 0) {
@@ -40,13 +40,13 @@ static int setBackend(MPT_SOLVER_STRUCT(bacol) *data, const MPT_INTERFACE(metaty
  * \retval <0  failure
  * \retval >=0 consumed value count
  */
-extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, MPT_INTERFACE(convertable) *src)
 {
 	int ret = 0;
 	
 	if (!name) {
 		double t = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &t)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'd', &t)) < 0) {
 			return ret;
 		}
 		bac->t = t;
@@ -79,7 +79,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 	if (!strcasecmp(name, "kcol")) {
 		int32_t kcol = 2;
 	
-		if (src && (ret = src->_vptr->conv(src, 'i', &kcol)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &kcol)) < 0) {
 			return ret;
 		}
 		else if (kcol < 2 || kcol > 10) {
@@ -95,7 +95,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 		if (bac->xy) {
 			return MPT_ERROR(BadOperation);
 		}
-		if (src && (ret = src->_vptr->conv(src, 'i', &nint)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &nint)) < 0) {
 			return ret;
 		}
 		if (nint < 2 || nint > bac->nintmx) {
@@ -107,7 +107,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 	if (!strcasecmp(name, "nintmx")) {
 		int32_t nintmx = 127;
 		
-		if (src && (ret = src->_vptr->conv(src, 'i', &nintmx)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &nintmx)) < 0) {
 			return ret;
 		}
 		if (nintmx < bac->nint) {
@@ -118,7 +118,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 	}
 	if (!strncasecmp(name, "dirichlet", 3)) {
 		int32_t bdir = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &bdir) < 0)) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &bdir) < 0)) {
 			return ret;
 		}
 		bac->mflag.bdir = bdir;
@@ -126,7 +126,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 	}
 	/* ode parameter */
 	if (!strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) {
-		if (src && (ret = src->_vptr->conv(src, 'd', &bac->initstep)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'd', &bac->initstep)) < 0) {
 			return ret;
 		}
 		bac->mflag.step = ret ? 1 : 0;
@@ -140,7 +140,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 	/* dassl parameter */
 	if (bac->_backend == 'd' || bac->_backend == 'D') {
 	if (!strcasecmp(name, "tstop")) {
-		if (src && (ret = src->_vptr->conv(src, 'd', &bac->bd.tstop)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'd', &bac->bd.tstop)) < 0) {
 			return ret;
 		}
 		bac->mflag.tstop = ret ? 1 : 0;
@@ -149,7 +149,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 	/* dassl parameter */
 	if (!strcasecmp(name, "maxstep")) {
 		int32_t ms = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &ms)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &ms)) < 0) {
 			return ret;
 		}
 		bac->mflag.mstep = ms;
@@ -157,7 +157,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *bac, const char *name, const 
 	}
 	if (!strcasecmp(name, "dasslbdf") || !strcasecmp(name, "bdf")) {
 		int32_t dbmax = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &dbmax)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &dbmax)) < 0) {
 			return ret;
 		}
 		bac->mflag.dbmax = dbmax;

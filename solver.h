@@ -553,7 +553,7 @@ typedef struct
 } MPT_SOLVER_TYPE(ivecpar);
 #endif
 
-typedef int (MPT_SOLVER_TYPE(UserInit))(const MPT_INTERFACE(metatype) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
+typedef int (MPT_SOLVER_TYPE(UserInit))(MPT_INTERFACE(convertable) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *);
 
 
 __MPT_EXTDECL_BEGIN
@@ -567,12 +567,12 @@ extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) *);
 /* initialize IVP solver states */
 extern int mpt_ivp_data(MPT_INTERFACE(object) *, const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
 
-extern int mpt_init_dae(const MPT_INTERFACE(metatype) *, const MPT_IVP_STRUCT(daefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
-extern int mpt_init_ode(const MPT_INTERFACE(metatype) *, const MPT_IVP_STRUCT(odefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
-extern int mpt_init_pde(const MPT_INTERFACE(metatype) *, const MPT_IVP_STRUCT(pdefcn) *, int , const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
+extern int mpt_init_dae(MPT_INTERFACE(convertable) *, const MPT_IVP_STRUCT(daefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
+extern int mpt_init_ode(MPT_INTERFACE(convertable) *, const MPT_IVP_STRUCT(odefcn) *, int , MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
+extern int mpt_init_pde(MPT_INTERFACE(convertable) *, const MPT_IVP_STRUCT(pdefcn) *, int , const _MPT_ARRAY_TYPE(double) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
 
 /* initialize NLS solver states */
-extern int mpt_init_nls(const MPT_INTERFACE(metatype) *, const MPT_NLS_STRUCT(functions) *, const MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
+extern int mpt_init_nls(MPT_INTERFACE(convertable) *, const MPT_NLS_STRUCT(functions) *, const MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
 
 
 /* register events on notifier */
@@ -621,7 +621,7 @@ extern double *mpt_solver_data_grid (MPT_STRUCT(solver_data) *);
 extern double *mpt_solver_data_param(MPT_STRUCT(solver_data) *);
 
 /* execute specific IVP solver step */
-extern int mpt_solver_steps_ode(MPT_INTERFACE(metatype) *, MPT_INTERFACE(iterator) *,  MPT_INTERFACE(logger) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
+extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *, MPT_INTERFACE(iterator) *,  MPT_INTERFACE(logger) *, MPT_STRUCT(solver_data) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
 
 /* inner node residuals with central differences */
 extern int mpt_residuals_cdiff(void *, double , const double *, double *, const MPT_IVP_STRUCT(parameters) *, MPT_SOLVER_IVP(Rside));
@@ -631,7 +631,7 @@ extern const char *mpt_solver_alias(const char *);
 /* load solver of specific type */
 extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **, int , const char *, MPT_INTERFACE(logger) *);
 /* get solver interface from metatype */
-extern MPT_SOLVER(interface) *mpt_solver_conv(const MPT_INTERFACE(metatype) *, int , MPT_INTERFACE(logger) *);
+extern MPT_SOLVER(interface) *mpt_solver_conv(MPT_INTERFACE(convertable) *, int , MPT_INTERFACE(logger) *);
 
 /* set solver parameter */
 extern int mpt_solver_param(MPT_INTERFACE(object) *, MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
@@ -661,18 +661,18 @@ extern int mpt_output_solver_history(MPT_INTERFACE(output) *, const double *, in
 
 /* solver module tolerance handling */
 extern int mpt_solver_module_tol_get(MPT_STRUCT(value) *, const MPT_SOLVER_TYPE(dvecpar) *);
-extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *, const MPT_INTERFACE(metatype) *, double);
+extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *, MPT_INTERFACE(convertable) *, double);
 extern int mpt_solver_module_tol_check(MPT_SOLVER_TYPE(dvecpar) *, long , long , double);
 
 /* solver module memory management */
 extern void *mpt_solver_module_valloc(struct iovec *, size_t len, size_t size);
 
 /* solver module parameter assignment */
-extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
-extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *, const MPT_INTERFACE(metatype) *);
+extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *, MPT_INTERFACE(convertable) *);
+extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *, MPT_INTERFACE(convertable) *);
 
 /* solver module generic type conversion */
-extern int mpt_solver_module_nextval(double *, double , const MPT_INTERFACE(metatype) *);
+extern int mpt_solver_module_nextval(double *, double , MPT_INTERFACE(convertable) *);
 
 /* set value to scalar type */
 extern int mpt_solver_module_value_ivp(MPT_STRUCT(value) *val, const MPT_IVP_STRUCT(parameters) *);

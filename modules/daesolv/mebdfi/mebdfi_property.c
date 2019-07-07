@@ -22,7 +22,7 @@ static int setInt(MPT_SOLVER_STRUCT(mebdfi) *me, size_t pos, int val)
 	return 0;
 }
 
-static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_INTERFACE(metatype) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(consumable) val;
 	const char *key;
@@ -37,7 +37,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_INTERFACE(metaty
 	}
 	key = 0;
 	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
@@ -94,7 +94,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, const MPT_INTERFACE(metaty
 	return ret;
 }
 
-extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, MPT_INTERFACE(convertable) *src)
 {
 	long maxval;
 	int ret = 0;
@@ -127,7 +127,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 	}
 	if (!strcasecmp(name, "h0") || !strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0) {
@@ -138,7 +138,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 	}
 	if (!strcasecmp(name, "maxstp") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "iwork14")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0) {
@@ -152,7 +152,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 	maxval = me->ivp.neqs * (me->ivp.pint + 1);
 	if (!strcasecmp(name, "nind1")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0 || val > maxval) {
@@ -165,7 +165,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 	}
 	if (!strcasecmp(name, "nind2")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0 || val > maxval) {
@@ -178,7 +178,7 @@ extern int mpt_mebdfi_set(MPT_SOLVER_STRUCT(mebdfi) *me, const char *name, const
 	}
 	if (!strcasecmp(name, "nind3")) {
 		int32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'i', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0 || val > maxval) {

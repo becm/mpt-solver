@@ -51,7 +51,7 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 			}
 			return 0;
 		}
-		return mpt_solver_conv(mt, match, log);
+		return mpt_solver_conv((MPT_INTERFACE(convertable) *) mt, match, log);
 	}
 	if (!*conf) {
 		if (!(conf = mpt_solver_alias(0))) {
@@ -121,21 +121,21 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 	}
 	/* identical to current instance */
 	if (mt
-	    && (old = mpt_meta_data(mt, 0))
+	    && (old = mpt_convertable_data((MPT_INTERFACE(convertable) *) mt, 0))
 	    && !strcmp(conf, old)
-	    && (sol = mpt_solver_conv(mt, match, log))) {
+	    && (sol = mpt_solver_conv((MPT_INTERFACE(convertable) *) mt, match, log))) {
 		return sol;
 	}
 	/* change library symbol */
 	else {
-		const MPT_INTERFACE(metatype) *cfg;
+		MPT_INTERFACE(convertable) *cfg;
 		MPT_INTERFACE(metatype) *next;
 		MPT_STRUCT(property) pr;
 		const char *lpath = 0;
 		int type;
 		
 		if ((cfg = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
-			cfg->_vptr->conv(cfg, 's', &lpath);
+			cfg->_vptr->convert(cfg, 's', &lpath);
 		}
 		if (!(next = mpt_library_meta(me, conf, lpath, log))) {
 			if (!log) {
@@ -144,7 +144,7 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 			}
 			return 0;
 		}
-		if ((type = mpt_meta_info(next, &pr)) >= 0) {
+		if ((type = mpt_convertable_info((MPT_INTERFACE(convertable) *) next, &pr)) >= 0) {
 			const char *msg = MPT_tr("create proxy");
 			if (!pr.desc) {
 				mpt_log(log, __func__, MPT_LOG(Info), "%s: %s (%d)",
@@ -154,12 +154,12 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 				        msg, pr.name, pr.desc);
 			}
 		}
-		if (!(sol = mpt_solver_conv(next, match, log))) {
-			next->_vptr->instance.unref((void *) next);
+		if (!(sol = mpt_solver_conv((MPT_INTERFACE(convertable) *) next, match, log))) {
+			next->_vptr->unref(next);
 			return 0;
 		}
 		if (mt) {
-			mt->_vptr->instance.unref((void *) mt);
+			mt->_vptr->unref(mt);
 		}
 		*ref = next;
 		

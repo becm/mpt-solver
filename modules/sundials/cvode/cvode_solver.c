@@ -25,23 +25,23 @@ MPT_STRUCT(SundialsCVode) {
 	
 	double next;
 };
-/* reference interface */
-static void cVodeUnref(MPT_INTERFACE(instance) *in)
-{
-	MPT_STRUCT(SundialsCVode) *cv = (void *) in;
-	mpt_sundials_cvode_fini(&cv->d);
-	free(cv);
-}
-static uintptr_t cVodeRef(MPT_INTERFACE(instance) *in)
-{
-	(void) in;
-	return 0;
-}
 /* metatype interface */
-static int cVodeConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+static int cVodeConv(MPT_INTERFACE(convertable) *mt, int type, void *ptr)
 {
 	const MPT_STRUCT(SundialsCVode) *cv = (void *) mt;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&cv->_sol, &cv->_obj, type, ptr);
+}
+/* reference interface */
+static void cVodeUnref(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(SundialsCVode) *cv = (void *) mt;
+	mpt_sundials_cvode_fini(&cv->d);
+	free(cv);
+}
+static uintptr_t cVodeRef(MPT_INTERFACE(metatype) *mt)
+{
+	(void) mt;
+	return 0;
 }
 static MPT_INTERFACE(metatype) *cVodeClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -79,7 +79,7 @@ static int cVodeGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	const MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _obj);
 	return mpt_sundials_cvode_get(&cv->d, pr);
 }
-static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int cVodeSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(SundialsCVode) *cv = MPT_baseaddr(SundialsCVode, obj, _obj);
 	
@@ -116,8 +116,9 @@ extern MPT_INTERFACE(metatype) *mpt_sundials_cvode()
 		cVodeSolve
 	};
 	static const MPT_INTERFACE_VPTR(metatype) cVodeMeta = {
-		{ cVodeUnref, cVodeRef },
-		cVodeConv,
+		{ cVodeConv },
+		cVodeUnref,
+		cVodeRef,
 		cVodeClone
 	};
 	MPT_STRUCT(SundialsCVode) *cv;

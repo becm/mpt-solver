@@ -73,7 +73,7 @@ static MPT_INTERFACE(logger) *loggerNLS(const MPT_STRUCT(NLS) *nls)
 	if (nls
 	    && (mt = nls->cfg)) {
 		MPT_INTERFACE(config) *cfg = 0;
-		if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeConfig)), &cfg) > 0
+		if (MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeConfig)), &cfg) > 0
 		    && cfg
 		    && (info = mpt_config_logger(cfg))) {
 			return info;
@@ -101,26 +101,26 @@ static MPT_STRUCT(node) *configNLS(MPT_STRUCT(NLS) *nls)
 		nls->cfg = cfg;
 	}
 	n = 0;
-	if (cfg->_vptr->conv(cfg, MPT_type_pointer(MPT_ENUM(TypeNode)), &n) < 0) {
+	if (MPT_metatype_convert(cfg, MPT_type_pointer(MPT_ENUM(TypeNode)), &n) < 0) {
 		return 0;
 	}
 	return n;
 }
 /* config interface */
-static const MPT_INTERFACE(metatype) *queryNLS(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
+static MPT_INTERFACE(convertable) *queryNLS(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 {
 	MPT_STRUCT(NLS) *nls = MPT_baseaddr(NLS, gen, _cfg);
 	MPT_STRUCT(node) *conf;
 	MPT_STRUCT(path) p;
 	
 	if (!porg) {
-		return nls->sol;
+		return (MPT_INTERFACE(convertable) *) nls->sol;
 	}
 	if (!(conf = configNLS(nls))) {
 		return 0;
 	}
 	if (!porg->len) {
-		return conf->_meta;
+		return (MPT_INTERFACE(convertable) *) conf->_meta;
 	}
 	if (!(conf = conf->children)) {
 		return 0;
@@ -132,9 +132,9 @@ static const MPT_INTERFACE(metatype) *queryNLS(const MPT_INTERFACE(config) *gen,
 		return 0;
 	}
 	if (!conf->_meta) {
-		return mpt_metatype_default();
+		return (MPT_INTERFACE(convertable) *) mpt_metatype_default();
 	}
-	return conf->_meta;
+	return (MPT_INTERFACE(convertable) *) conf->_meta;
 }
 static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, const MPT_STRUCT(value) *val)
 {
@@ -195,14 +195,14 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	MPT_STRUCT(path) p;
 	
 	if (!porg) {
-		MPT_INTERFACE(instance) *in;
+		MPT_INTERFACE(metatype) *mt;
 		if (nls->sd) {
 			mpt_solver_data_clear(nls->sd);
 		}
-		if (!(in = (void *) nls->sol)) {
+		if (!(mt = nls->sol)) {
 			return 0;
 		}
-		in->_vptr->unref(in);
+		mt->_vptr->unref(mt);
 		nls->sol = 0;
 		return 1;
 	}
@@ -222,33 +222,10 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	mpt_node_clear(conf);
 	return 1;
 }
-/* reference interface */
-static void deleteNLS(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int convNLS(MPT_INTERFACE(convertable) *val, int type, void *ptr)
 {
-	MPT_STRUCT(NLS) *nls = (void *) in;
-	MPT_INTERFACE(metatype) *mt;
-	
-	if (nls->sd) {
-		mpt_solver_data_fini(nls->sd);
-		free(nls->sd);
-	}
-	if ((mt = nls->sol)) {
-		mt->_vptr->instance.unref((void *) mt);
-	}
-	if ((mt = nls->cfg)) {
-		mt->_vptr->instance.unref((void *) mt);
-	}
-	free(nls);
-}
-static uintptr_t addrefNLS(MPT_INTERFACE(instance) *in)
-{
-	(void) in;
-	return 0;
-}
-/* metatype interface */
-static int convNLS(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	MPT_STRUCT(NLS) *nls = (void *) mt;
+	MPT_STRUCT(NLS) *nls = (void *) val;
 	int me = mpt_client_typeid();
 	
 	if (me < 0) {
@@ -270,6 +247,28 @@ static int convNLS(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 		return me;
 	}
 	return MPT_ERROR(BadType);
+}
+/* metatype interface */
+static void deleteNLS(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(NLS) *nls = (void *) mt;
+	
+	if (nls->sd) {
+		mpt_solver_data_fini(nls->sd);
+		free(nls->sd);
+	}
+	if ((mt = nls->sol)) {
+		mt->_vptr->unref(mt);
+	}
+	if ((mt = nls->cfg)) {
+		mt->_vptr->unref(mt);
+	}
+	free(nls);
+}
+static uintptr_t addrefNLS(MPT_INTERFACE(metatype) *mt)
+{
+	(void) mt;
+	return 0;
 }
 static MPT_INTERFACE(metatype) *cloneNLS(const MPT_INTERFACE(metatype) *mt)
 {
@@ -303,10 +302,10 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		MPT_INTERFACE(metatype) *old;
 		mt = mpt_output_local();
 		obj = 0;
-		mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj);
+		MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj);
 		mpt_conf_history(obj, curr);
 		if ((old = curr->_meta)) {
-			old->_vptr->instance.unref((void *) old);
+			old->_vptr->unref(old);
 		}
 		curr->_meta = mt;
 		hist = loggerNLS(nls);
@@ -367,12 +366,12 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	}
 	obj = 0;
 	if ((mt = nls->sol)
-	    && mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) > 0
+	    && MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) > 0
 	    && obj
 	    && (val = mpt_object_typename(obj))) {
 		mpt_log(hist, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
-	if ((ret = nls->uinit(mt, nls->sd, hist)) < 0) {
+	if ((ret = nls->uinit((MPT_INTERFACE(convertable) *) mt, nls->sd, hist)) < 0) {
 		return ret;
 	}
 	memset(&nls->ru, 0, sizeof(nls->ru));
@@ -401,12 +400,12 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		return MPT_ERROR(BadOperation);
 	}
 	sol = 0;
-	mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol);
+	MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol);
 	
 	obj = 0;
-	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) < 0
+	if (MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) < 0
 	    || !obj) {
-		err = mt->_vptr->conv(mt, 0, 0);
+		err = MPT_metatype_convert(mt, 0, 0);
 		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
 		        MPT_tr("solver without object interface"), MPT_tr("type"), err);
 		return MPT_ERROR(BadOperation);
@@ -462,7 +461,7 @@ static int stepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("solver or data missing"));
 		return MPT_ERROR(BadArgument);
 	}
-	if ((res = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	if ((res = MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("no solver interface"));
@@ -629,7 +628,7 @@ extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) uinit)
 		queryNLS, assignNLS, removeNLS
 	};
 	static MPT_INTERFACE_VPTR(client) clientNLS = {
-		{ { deleteNLS, addrefNLS }, convNLS, cloneNLS },
+		{ { convNLS }, deleteNLS, addrefNLS, cloneNLS },
 		dispatchNLS,
 		processNLS
 	};

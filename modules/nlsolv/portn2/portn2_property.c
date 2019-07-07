@@ -29,7 +29,7 @@
  * \retval <0   failure
  * \retval >=0  used values
  */
-extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, MPT_INTERFACE(convertable) *src)
 {
 	if (!name) {
 		MPT_INTERFACE(iterator) *it;
@@ -39,7 +39,7 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, const
 		if (n2->nls.nval <= 0) {
 			return MPT_ERROR(BadArgument);
 		}
-		if (src && (ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
 			return ret;
 		}
 		len = n2->bnd ? 3 * n2->nls.nval : n2->nls.nval;

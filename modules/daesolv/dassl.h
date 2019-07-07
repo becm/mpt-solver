@@ -54,7 +54,7 @@ extern int mpt_dassl_step(MPT_SOLVER_STRUCT(dassl) *, double);
 
 /* set dassl parameter */
 extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *, MPT_STRUCT(property) *);
-extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int mpt_dassl_set(MPT_SOLVER_STRUCT(dassl) *, const char *, MPT_INTERFACE(convertable) *);
 
 /* validate settings and working space for use */
 extern int mpt_dassl_prepare(MPT_SOLVER_STRUCT(dassl) *);
@@ -94,7 +94,7 @@ public:
 	{
 		return mpt_dassl_get(this, pr);
 	}
-	int set_property(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
+	int set_property(const char *pr, convertable *src = 0) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_dassl_prepare(this);

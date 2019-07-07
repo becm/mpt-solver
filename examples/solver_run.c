@@ -22,7 +22,7 @@ static int dispatch_client(void *ptr, MPT_STRUCT(event) *ev)
 {
 	MPT_INTERFACE(client) *cl = ptr;
 	if (!ev) {
-		cl->_vptr->meta.instance.unref((void *) cl);
+		cl->_vptr->meta.unref((void *) cl);
 		return 0;
 	}
 	return cl->_vptr->dispatch(cl, ev);
@@ -62,7 +62,7 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 	
 	/* set solver client config */
 	cfg = 0;
-	if ((ret = c->_vptr->meta.conv((void *) c, MPT_type_pointer(MPT_ENUM(TypeConfig)), &cfg)) > 0
+	if ((ret = c->_vptr->meta.convertable.convert((void *) c, MPT_type_pointer(MPT_ENUM(TypeConfig)), &cfg)) > 0
 	    && cfg) {
 		MPT_STRUCT(value) val = MPT_VALUE_INIT;
 		

@@ -23,24 +23,24 @@ MPT_STRUCT(BacolData) {
 	
 	double next;
 };
-/* reference interface */
-static void bacFini(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int bacConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
 {
-	MPT_STRUCT(BacolData) *bac = (void *) in;
+	MPT_STRUCT(BacolData) *bac = (void *) sol;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&bac->_sol, &bac->_obj, type, ptr);
+}
+/* metatype interface */
+static void bacFini(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(BacolData) *bac = (void *) mt;
 	mpt_bacol_fini(&bac->d);
 	mpt_bacol_output_fini(&bac->out);
 	free(bac);
 }
-static uintptr_t bacAddref(MPT_INTERFACE(instance) *in)
+static uintptr_t bacAddref(MPT_INTERFACE(metatype) *in)
 {
 	(void) in;
 	return 0;
-}
-/* metatype interface */
-static int bacConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	MPT_STRUCT(BacolData) *bac = (void *) mt;
-	return MPT_SOLVER_MODULE_FCN(solver_conv)(&bac->_sol, &bac->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *bacClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -103,7 +103,7 @@ static int bacGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _obj);
 	return mpt_bacol_get(&bac->d, pr);
 }
-static int bacSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int bacSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, obj, _obj);
 	if (!pr) {
@@ -137,8 +137,9 @@ extern MPT_INTERFACE(metatype) *mpt_bacol_create()
 		bacSolve
 	};
 	static const MPT_INTERFACE_VPTR(metatype) bacolMeta = {
-		{ bacFini, bacAddref },
-		bacConv,
+		{ bacConv },
+		bacFini,
+		bacAddref,
 		bacClone
 	};
 	MPT_STRUCT(BacolData) *bac;

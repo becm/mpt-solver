@@ -9,7 +9,7 @@
 
 #include "solver_modfcn.h"
 
-extern int MPT_SOLVER_MODULE_FCN(ivp_vecset)(const MPT_IVP_STRUCT(parameters) *ivp, MPT_SOLVER_MODULE_DATA_CONTAINER *val, const MPT_INTERFACE(metatype) *src)
+extern int MPT_SOLVER_MODULE_FCN(ivp_vecset)(const MPT_IVP_STRUCT(parameters) *ivp, MPT_SOLVER_MODULE_DATA_CONTAINER *val, MPT_INTERFACE(convertable) *src)
 {
 	MPT_INTERFACE(iterator) *it;
 	MPT_SOLVER_MODULE_DATA_TYPE *ptr;
@@ -20,7 +20,7 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_vecset)(const MPT_IVP_STRUCT(parameters) *i
 		return MPT_ERROR(BadArgument);
 	}
 	it = 0;
-	if (src && (ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
+	if (src && (ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
 		return ret;
 	}
 	max = ivp->pint + 1;

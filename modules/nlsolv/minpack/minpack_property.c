@@ -16,7 +16,7 @@
 
 #include "module_functions.h"
 
-static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metatype) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(consumable) val;
 	const char *key;
@@ -29,7 +29,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metat
 	}
 	key = 0;
 	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
@@ -74,7 +74,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, const MPT_INTERFACE(metat
 	mp->mu = mu;
 	return 3;
 }
-static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, const MPT_INTERFACE(metatype) *src)
+static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, MPT_INTERFACE(convertable) *src)
 {
 	MPT_INTERFACE(iterator) *it = 0;
 	double *diag;
@@ -83,7 +83,7 @@ static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, const MPT_INTERFACE(metatyp
 	if (!src) {
 		return data->diag.iov_len / sizeof(double);
 	}
-	if ((ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
+	if ((ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
 		return ret;
 	}
 	nd = data->nls.nval;
@@ -116,7 +116,7 @@ static int setDiag(MPT_SOLVER_STRUCT(minpack) *data, const MPT_INTERFACE(metatyp
  * \retval <0   failure
  * \retval >=0  used values
  */
-extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, MPT_INTERFACE(convertable) *src)
 {
 	int ret;
 	
@@ -128,7 +128,7 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, con
 		if (all <= 0) {
 			return MPT_ERROR(BadArgument);
 		}
-		if (src && (ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
 			return ret;
 		}
 		if (mp->nls.nres) {
@@ -154,19 +154,19 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, con
 	}
 	if (!strcasecmp(name, "xtol")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		mp->xtol = val;
 		return 0;
 	}
 	if (!strcasecmp(name, "ftol")) {
 		double val = 1e-7;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		mp->ftol = val;
 		return 0;
 	}
 	if (!strcasecmp(name, "gtol")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		mp->gtol = val;
 		return 0;
 	}
@@ -175,25 +175,25 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, con
 	}
 	if (!strcasecmp(name, "maxfev")) {
 		uint32_t val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'u', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'u', &val)) < 0) return ret;
 		mp->maxfev = val;
 		return 0;
 	}
 	if (!strncasecmp(name, "fac", 3)) {
 		double val = 200;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		mp->factor = val;
 		return 0;
 	}
 	if (!strncasecmp(name, "eps", 3)) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		mp->epsfcn = val;
 		return 0;
 	}
 	if (!strncasecmp(name, "nprint", 3)) {
 		char val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'c', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'c', &val)) < 0) return ret;
 		mp->nprint = val;
 		return 0;
 	}

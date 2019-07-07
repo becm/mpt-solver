@@ -20,22 +20,22 @@ MPT_STRUCT(MinpackData) {
 	MPT_SOLVER_STRUCT(minpack) d;
 	MPT_NLS_STRUCT(functions)  uf;
 };
-/* reference interface */
-static void mpUnref(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int mpConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
 {
-	MPT_STRUCT(MinpackData) *mp = (void *) in;
+	const MPT_STRUCT(MinpackData) *mp = (void *) sol;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&mp->_sol, &mp->_obj, type, ptr);
+}
+/* metatype interface */
+static void mpUnref(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(MinpackData) *mp = (void *) mt;
 	mpt_minpack_fini(&mp->d);
 	free(mp);
 }
 static uintptr_t mpRef()
 {
 	return 0;
-}
-/* metatype interface */
-static int mpConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	const MPT_STRUCT(MinpackData) *mp = (void *) mt;
-	return MPT_SOLVER_MODULE_FCN(solver_conv)(&mp->_sol, &mp->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *mpClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -67,7 +67,7 @@ static int mpGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	const MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, obj, _obj);
 	return mpt_minpack_get(&mp->d, pr);
 }
-static int mpSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int mpSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(MinpackData) *mp = MPT_baseaddr(MinpackData, obj, _obj);
 	if (!pr && !src) {
@@ -95,8 +95,9 @@ extern MPT_INTERFACE(metatype) *mpt_minpack_create()
 		mpSolve
 	};
 	static const MPT_INTERFACE_VPTR(metatype) mpMeta = {
-		{ mpUnref, mpRef },
-		mpConv,
+		{ mpConv },
+		mpUnref,
+		mpRef,
 		mpClone
 	};
 	MPT_STRUCT(MinpackData) *mp;

@@ -24,22 +24,22 @@ MPT_STRUCT(SundialsIDA) {
 	
 	double next;
 };
-/* reference interface */
-static void idaUnref(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int idaConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
 {
-	MPT_STRUCT(SundialsIDA) *ida = (void *) in;
+	const MPT_STRUCT(SundialsIDA) *ida = (void *) sol;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&ida->_sol, &ida->_obj, type, ptr);
+}
+/* metatype interface */
+static void idaUnref(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(SundialsIDA) *ida = (void *) mt;
 	mpt_sundials_ida_fini(&ida->d);
 	free(ida);
 }
 static uintptr_t idaRef()
 {
 	return 0;
-}
-/* metatype interface */
-static int idaConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	const MPT_STRUCT(SundialsIDA) *ida = (void *) mt;
-	return MPT_SOLVER_MODULE_FCN(solver_conv)(&ida->_sol, &ida->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *idaClone()
 {
@@ -76,7 +76,7 @@ static int idaGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	const MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _obj);
 	return mpt_sundials_ida_get(&ida->d, pr);
 }
-static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int idaSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(SundialsIDA) *ida = MPT_baseaddr(SundialsIDA, obj, _obj);
 	
@@ -113,8 +113,9 @@ extern MPT_INTERFACE(metatype) *mpt_sundials_ida()
 		idaSolve
 	};
 	static const MPT_INTERFACE_VPTR(metatype) idaMeta = {
-		{ idaUnref, idaRef },
-		idaConv,
+		{ idaConv },
+		idaUnref,
+		idaRef,
 		idaClone
 	};
 	MPT_STRUCT(SundialsIDA) *ida;

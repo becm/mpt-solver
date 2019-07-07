@@ -52,7 +52,7 @@ static MPT_INTERFACE(logger) *loggerIVP(const MPT_STRUCT(IVP) *ivp)
 	if (ivp
 	    && (mt = ivp->cfg)) {
 		MPT_INTERFACE(config) *cfg = 0;
-		if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeConfig)), &cfg) > 0
+		if (MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeConfig)), &cfg) > 0
 		    && cfg
 		    && (info = mpt_config_logger(cfg))) {
 			return info;
@@ -150,12 +150,12 @@ static MPT_STRUCT(node) *configIVP(MPT_STRUCT(IVP) *ivp)
 		ivp->cfg = cfg;
 	}
 	n = 0;
-	if (cfg->_vptr->conv(cfg, MPT_type_pointer(MPT_ENUM(TypeNode)), &n) < 0) {
+	if (MPT_metatype_convert(cfg, MPT_type_pointer(MPT_ENUM(TypeNode)), &n) < 0) {
 		return 0;
 	}
 	return n;
 }
-static const MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
+static MPT_INTERFACE(convertable) *queryIVP(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 {
 	MPT_STRUCT(IVP) *ivp = MPT_baseaddr(IVP, gen, _cfg);
 	MPT_STRUCT(node) *conf;
@@ -165,10 +165,10 @@ static const MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen,
 		return 0;
 	}
 	if (!porg) {
-		return ivp->sol;
+		return (MPT_INTERFACE(convertable) *) ivp->sol;
 	}
 	if (!porg->len) {
-		return conf->_meta;
+		return (MPT_INTERFACE(convertable) *) conf->_meta;
 	}
 	if (!(conf = conf->children)) {
 		return 0;
@@ -180,9 +180,9 @@ static const MPT_INTERFACE(metatype) *queryIVP(const MPT_INTERFACE(config) *gen,
 		return 0;
 	}
 	if (!conf->_meta) {
-		return mpt_metatype_default();
+		return (MPT_INTERFACE(convertable) *) mpt_metatype_default();
 	}
-	return conf->_meta;
+	return (MPT_INTERFACE(convertable) *) conf->_meta;
 }
 static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, const MPT_STRUCT(value) *val)
 {
@@ -242,14 +242,14 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	MPT_STRUCT(path) p;
 	
 	if (!porg) {
-		MPT_INTERFACE(instance) *in;
+		MPT_INTERFACE(metatype) *mt;
 		if (ivp->sd) {
 			mpt_solver_data_clear(ivp->sd);
 		}
-		if (!(in = (void *) ivp->sol)) {
+		if (!(mt = ivp->sol)) {
 			return 0;
 		}
-		in->_vptr->unref(in);
+		mt->_vptr->unref(mt);
 		ivp->sol = 0;
 		return 1;
 	}
@@ -269,33 +269,10 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	mpt_node_clear(conf);
 	return 1;
 }
-/* reference interface */
-static void deleteIVP(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int convIVP(MPT_INTERFACE(convertable) *val, int type, void *ptr)
 {
-	MPT_STRUCT(IVP) *ivp = (void *) in;
-	MPT_INTERFACE(metatype) *mt;
-	
-	if (ivp->sd) {
-		mpt_solver_data_fini(ivp->sd);
-		free(ivp->sd);
-	}
-	if ((mt = ivp->sol)) {
-		mt->_vptr->instance.unref((void *) mt);
-	}
-	if ((mt = ivp->cfg)) {
-		mt->_vptr->instance.unref((void *) mt);
-	}
-	free(ivp);
-}
-static uintptr_t addrefIVP(MPT_INTERFACE(instance) *in)
-{
-	(void) in;
-	return 0;
-}
-/* metatype interface */
-static int convIVP(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	MPT_STRUCT(IVP) *ivp = (void *) mt;
+	MPT_STRUCT(IVP) *ivp = (void *) val;
 	int me = mpt_client_typeid();
 	
 	if (me < 0) {
@@ -317,6 +294,28 @@ static int convIVP(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 		return me;
 	}
 	return MPT_ERROR(BadType);
+}
+/* metatype interface */
+static void deleteIVP(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(IVP) *ivp = (void *) mt;
+	
+	if (ivp->sd) {
+		mpt_solver_data_fini(ivp->sd);
+		free(ivp->sd);
+	}
+	if ((mt = ivp->sol)) {
+		mt->_vptr->unref(mt);
+	}
+	if ((mt = ivp->cfg)) {
+		mt->_vptr->unref(mt);
+	}
+	free(ivp);
+}
+static uintptr_t addrefIVP(MPT_INTERFACE(metatype) *mt)
+{
+	(void) mt;
+	return 0;
 }
 static MPT_INTERFACE(metatype) *cloneIVP(const MPT_INTERFACE(metatype) *mt)
 {
@@ -349,10 +348,10 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		MPT_INTERFACE(metatype) *old;
 		mt = mpt_output_local();
 		obj = 0;
-		mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj);
+		MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj);
 		mpt_conf_history(obj, curr);
 		if ((old = curr->_meta)) {
-			old->_vptr->instance.unref((void *) old);
+			old->_vptr->unref(old);
 		}
 		curr->_meta = mt;
 		hist = loggerIVP(ivp);
@@ -377,7 +376,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	if (!args
 	    && (curr = mpt_node_next(conf->children, "times"))
 	    && (mt = curr->_meta)) {
-		ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &args);
+		ret = MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &args);
 	}
 	/* query and advance time source */
 	t = 0.0;
@@ -407,7 +406,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	obj = 0;
 	if (!(mt = ivp->sol)
-	    || mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) < 0
+	    || MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) < 0
 	    || !obj) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		        MPT_tr("solver without object interface"), sol);
@@ -418,7 +417,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		mpt_log(hist, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
 	}
 	
-	if ((ret = ivp->uinit(mt, dat, hist)) < 0) {
+	if ((ret = ivp->uinit((MPT_INTERFACE(convertable) *) mt, dat, hist)) < 0) {
 		return ret;
 	}
 	/* setup PDE time and profile data */
@@ -434,7 +433,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 			}
 		}
 		/* process profile data */
-		else if ((ret = obj->_vptr->set_property(obj, 0, mt)) < 0) {
+		else if ((ret = obj->_vptr->set_property(obj, 0, (MPT_INTERFACE(convertable) *) mt)) < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("PDE init state assignment failed"));
 			return ret;
@@ -479,17 +478,17 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		return MPT_ERROR(BadOperation);
 	}
 	sol = 0;
-	if ((err = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	if ((err = MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
-		err = mt->_vptr->conv(mt, 0, 0);
+		err = MPT_metatype_convert(mt, 0, 0);
 		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
 		        MPT_tr("no solver interface"), MPT_tr("type"), err);
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if ((err = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
+	if ((err = MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
 	    || !obj) {
-		err = mt->_vptr->conv(mt, 0, 0);
+		err = MPT_metatype_convert(mt, 0, 0);
 		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
 		        MPT_tr("solver without object interface"), MPT_tr("type"), err);
 		return MPT_ERROR(BadType);
@@ -507,6 +506,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("failed to apply solver parameters"));
 		return err;
 	}
+	/* trigger configuration completion */
 	ret = obj->_vptr->set_property(obj, 0, 0);
 	mpt_solver_info(sol, hist);
 	
@@ -559,16 +559,16 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		return MPT_ERROR(BadOperation);
 	}
 	if (!(steps = args)) {
-		const MPT_INTERFACE(metatype) *src;
+		MPT_INTERFACE(convertable) *src;
 		if (!(src = mpt_config_get(&ivp->_cfg, "times", 0, 0))
-		    || (ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &steps)) < 0
+		    || (ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &steps)) < 0
 		    || !steps) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("no default time step source"));
 			return MPT_ERROR(BadArgument);
 		}
 	}
-	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	if ((ret = MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s (%d)",
 		        MPT_tr("unable to get solver interface"), ret);
@@ -586,7 +586,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		/* current time data */
 		getrusage(RUSAGE_SELF, &pre);
 		/* execute possible steps */
-		ret = mpt_solver_steps_ode(mt, steps, hist, ivp->sd, info);
+		ret = mpt_solver_steps_ode((MPT_INTERFACE(convertable) *) mt, steps, hist, ivp->sd, info);
 		/* add time difference */
 		getrusage(RUSAGE_SELF, &post);
 		mpt_timeradd_sys(&ivp->ru.sys, &pre, &post);
@@ -609,7 +609,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		return ret;
 	}
 	obj = 0;
-	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
+	if ((ret = MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
 	    || !obj) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		        MPT_tr("no object interface for solver"), sol);
@@ -803,7 +803,7 @@ extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit)
 		queryIVP, assignIVP, removeIVP
 	};
 	static const MPT_INTERFACE_VPTR(client) clientIVP = {
-		{ { deleteIVP, addrefIVP }, convIVP, cloneIVP },
+		{ { convIVP }, deleteIVP, addrefIVP, cloneIVP },
 		dispatchIVP,
 		processIVP
 	};

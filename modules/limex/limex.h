@@ -67,7 +67,7 @@ extern int mpt_limex_step(MPT_SOLVER_STRUCT(limex) *, double);
 
 /* limex parameter */
 extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *, MPT_STRUCT(property) *);
-extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int mpt_limex_set(MPT_SOLVER_STRUCT(limex) *, const char *, MPT_INTERFACE(convertable) *);
 
 /* validate settings and working space for use */
 extern int mpt_limex_prepare(MPT_SOLVER_STRUCT(limex) *);
@@ -115,7 +115,7 @@ public:
 	{
 		return _lx ? mpt_limex_get(_lx, pr) : BadOperation;
 	}
-	int set_property(const char *pr, const metatype *src) __MPT_OVERRIDE
+	int set_property(const char *pr, convertable *src) __MPT_OVERRIDE
 	{
 		if (!_lx) {
 			return BadOperation;

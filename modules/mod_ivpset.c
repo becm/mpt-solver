@@ -21,7 +21,7 @@ extern int mpt_solver_module_value_ivp(MPT_STRUCT(value) *val, const MPT_IVP_STR
 	return par && (par->neqs != 1 || par->pint) ? 1 : 0;
 }
 
-extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_INTERFACE(metatype) *src)
+extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFACE(convertable) *src)
 {
 	MPT_INTERFACE(iterator) *it;
 	struct iovec grid;
@@ -43,11 +43,11 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_I
 	}
 	/* direct distinct conversions */
 	len = 0;
-	if ((ret = src->_vptr->conv(src, 'i', &neqs)) > 0) {
+	if ((ret = src->_vptr->convert(src, 'i', &neqs)) > 0) {
 		if (neqs < 1) {
 			return MPT_ERROR(BadValue);
 		}
-		if ((len = src->_vptr->conv(src, MPT_type_vector('d'), &grid)) > 0) {
+		if ((len = src->_vptr->convert(src, MPT_type_vector('d'), &grid)) > 0) {
 			size_t part = grid.iov_len / sizeof(double);
 			if (part < 2 || part >= UINT32_MAX) {
 				return MPT_ERROR(BadValue);
@@ -81,7 +81,7 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, const MPT_I
 		len = 0;
 	}
 	/* get values from iterator */
-	if ((ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) >= 0) {
+	if ((ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) >= 0) {
 		if (!ret || !it) {
 			ivp->neqs = neqs;
 			ivp->pint = pint;

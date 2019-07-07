@@ -21,7 +21,7 @@
  * 
  * \return size of grid
  */
-extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) *conf)
+extern int mpt_conf_grid(MPT_STRUCT(array) *grid, MPT_INTERFACE(convertable) *conf)
 {
 	MPT_INTERFACE(iterator) *it;
 	MPT_INTERFACE(metatype) *mt;
@@ -40,13 +40,13 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 	mt = 0;
 	if (conf) {
 		/* use existing iterator */
-		if ((ret = conf->_vptr->conv(conf, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) > 0) {
+		if ((ret = conf->_vptr->convert(conf, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) > 0) {
 			if (!it) {
 				return MPT_ERROR(BadValue);
 			}
 		}
 		/* use default grid settings */
-		else if (!(desc = mpt_meta_data(conf, 0))) {
+		else if (!(desc = mpt_convertable_data(conf, 0))) {
 			if (!(mt = mpt_iterator_linear(10, 0, 1))) {
 				return MPT_ERROR(BadOperation);
 			}
@@ -58,9 +58,9 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		}
 	}
 	if (mt) {
-		if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0
+		if ((ret = MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0
 		    || !it) {
-			mt->_vptr->instance.unref((void *) mt);
+			mt->_vptr->unref(mt);
 			return MPT_ERROR(BadType);
 		}
 	}
@@ -81,7 +81,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		/* get iterator data */
 		if ((ret = it->_vptr->get(it, 'd', dest)) < 0) {
 			if (mt) {
-				mt->_vptr->instance.unref((void *) mt);
+				mt->_vptr->unref(mt);
 			}
 			buf->_used = old;
 			return ret;
@@ -95,7 +95,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		++dest;
 		if ((ret = it->_vptr->advance(it)) < 0) {
 			if (mt) {
-				mt->_vptr->instance.unref((void *) mt);
+				mt->_vptr->unref(mt);
 			}
 			buf->_used = old;
 			return ret;
@@ -105,7 +105,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, const MPT_INTERFACE(metatype) 
 		}
 	}
 	if (mt) {
-		mt->_vptr->instance.unref((void *) mt);
+		mt->_vptr->unref(mt);
 	} else {
 		it->_vptr->reset(it);
 	}

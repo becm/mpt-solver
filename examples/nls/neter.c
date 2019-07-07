@@ -44,7 +44,7 @@ static int deriv(void *udata, const double *x, double *jac, const int *lj, const
 	return 0;
 }
 /* solver/client setup for nonlinear equotations */
-static int neter_init(const MPT_INTERFACE(metatype) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
+static int neter_init(MPT_INTERFACE(convertable) *sol, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *log)
 {
 	MPT_NLS_STRUCT(functions) usr = MPT_NLSFCN_INIT;
 	double *u;

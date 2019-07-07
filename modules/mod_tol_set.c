@@ -12,7 +12,7 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_INTERFACE(metatype) *src, double def)
+extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFACE(convertable) *src, double def)
 {
 	MPT_INTERFACE(iterator) *it;
 	struct iovec tmp;
@@ -29,7 +29,7 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_IN
 		return 0;
 	}
 	/* values from iterator */
-	if ((ret = src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) >= 0) {
+	if ((ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) >= 0) {
 		double d;
 		long reserved = 0;
 		if (!ret || !it) {
@@ -80,13 +80,13 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, const MPT_IN
 		vec->_d.len = len * sizeof(*tol);
 		return len;
 	}
-	if ((ret = src->_vptr->conv(src, MPT_type_vector('d'), &tmp)) < 0) {
+	if ((ret = src->_vptr->convert(src, MPT_type_vector('d'), &tmp)) < 0) {
 		MPT_STRUCT(value) val = MPT_VALUE_INIT;
 		len = 0;
 		/* values from value content */
-		if ((ret = src->_vptr->conv(src, MPT_ENUM(TypeValue), &val)) < 0) {
+		if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeValue), &val)) < 0) {
 			double d;
-			if ((ret = src->_vptr->conv(src, 'd', &d)) < 0) {
+			if ((ret = src->_vptr->convert(src, 'd', &d)) < 0) {
 				return ret;
 			}
 			return mpt_solver_module_tol_set(vec, 0, ret ? def : d);

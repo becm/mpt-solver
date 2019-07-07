@@ -12,7 +12,7 @@
 
 #include "module_functions.h"
 
-static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatype) *src)
+static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(consumable) val;
 	const char *key;
@@ -27,7 +27,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatyp
 	}
 	key = 0;
 	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->conv(src, 'k', &key)) < 0) {
+		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 			return ret;
 		}
 		ret = 0;
@@ -89,7 +89,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, const MPT_INTERFACE(metatyp
 	return len;
 }
 
-extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *name, MPT_INTERFACE(convertable) *src)
 {
 	int ret = 0;
 	
@@ -121,7 +121,7 @@ extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *rd, const char *name, const M
 	/* set initial stepsize */
 	if (!strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) {
 		double val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0) {

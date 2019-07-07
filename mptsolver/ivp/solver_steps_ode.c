@@ -100,7 +100,7 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  * 
  * \return step operation result
  */
-extern int mpt_solver_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(iterator) *src, MPT_INTERFACE(logger) *out, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *info)
+extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *val, MPT_INTERFACE(iterator) *src, MPT_INTERFACE(logger) *out, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *info)
 {
 	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;
@@ -118,20 +118,20 @@ extern int mpt_solver_steps_ode(MPT_INTERFACE(metatype) *mt, MPT_INTERFACE(itera
 		return 0;
 	}
 	obj = 0;
-	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
+	if ((ret = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
 	    || !obj) {
 		mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
-		        MPT_tr("missing object interface"), mt);
+		        MPT_tr("missing object interface"), val);
 		return MPT_ERROR(BadArgument);
 	}
 	if (!(name = mpt_object_typename(obj))) {
 		name = "solver";
 	}
 	sol = 0;
-	if ((ret = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	if ((ret = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
 		mpt_log(info, __func__, MPT_LOG(Error), "%s: %s (%" PRIxPTR ")",
-		        name, MPT_tr("missing solver interface"), mt);
+		        name, MPT_tr("missing solver interface"), val);
 		return MPT_ERROR(BadArgument);
 	}
 	curr = getTime(sol);

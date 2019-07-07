@@ -159,10 +159,10 @@ extern int mpt_sundials_vector_set(N_Vector *, long , long , MPT_INTERFACE(itera
 
 /* set CVode parameter */
 extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *, MPT_STRUCT(property) *);
-extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *, const char *, MPT_INTERFACE(convertable) *);
 /* set IDA solver parameter */
 extern int mpt_sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *, MPT_STRUCT(property) *);
-extern int mpt_sundials_ida_set(MPT_SOLVER_STRUCT(ida) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int mpt_sundials_ida_set(MPT_SOLVER_STRUCT(ida) *, const char *, MPT_INTERFACE(convertable) *);
 
 /* initialize/finalize Sundials CVode solver */
 extern int  mpt_sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *);
@@ -204,7 +204,7 @@ extern MPT_INTERFACE(metatype) *mpt_sundials_ida(void);
 #endif
 
 /* setup Sundials jacobian parameters */
-extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *, const MPT_INTERFACE(metatype) *);
+extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *, MPT_INTERFACE(convertable) *);
 /* output Sundials jacobian parameters */
 extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *, MPT_TYPE(property_handler) , void *);
 
@@ -256,7 +256,7 @@ public:
 	{
 		return mpt_sundials_cvode_get(this, pr);
 	}
-	int set_property(const char *pr, const metatype *src) __MPT_OVERRIDE
+	int set_property(const char *pr, convertable *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_sundials_cvode_prepare(this);
@@ -298,7 +298,7 @@ public:
 	{
 		return mpt_sundials_ida_get(this, pr);
 	}
-	int set_property(const char *pr, const metatype *src) __MPT_OVERRIDE
+	int set_property(const char *pr, convertable *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_sundials_ida_prepare(this);

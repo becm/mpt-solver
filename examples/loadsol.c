@@ -66,7 +66,7 @@ int main(int argc, char * const argv[])
 		if ((s = mpt_solver_load(&mt, 0, buf, log))) {
 			MPT_INTERFACE(object) *obj = 0;
 			const char *n;
-			if (mt->_vptr->conv(mt, MPT_ENUM(TypeObject), &obj) > 0
+			if (MPT_metatype_convert(mt, MPT_ENUM(TypeObject), &obj) > 0
 			    && obj
 			    && (n = mpt_object_typename(obj))) {
 				puts(n);
@@ -76,7 +76,7 @@ int main(int argc, char * const argv[])
 		fputs(txt, stdout);
 	}
 	if (mt) {
-		mt->_vptr->instance.unref((void *) mt);
+		mt->_vptr->unref(mt);
 	}
 	
 	return 0;

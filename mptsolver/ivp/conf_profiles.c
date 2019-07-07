@@ -104,31 +104,10 @@ static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 	p->pos = -1;
 	return p->len + 1;
 }
-/* reference interface */
-static void iterProfileUnref(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int iterProfileConv(MPT_INTERFACE(convertable) *val, int type, void *ptr)
 {
-	const MPT_STRUCT(iterProfile) *p = (void *) in;
-	double *val = (void *) (p + 1);
-	MPT_INTERFACE(metatype) **mptr = (void *) (val  + p->neqs);
-	int i;
-	
-	for (i = 0; i < p->neqs; ++i) {
-		MPT_INTERFACE(metatype) *mt;
-		if ((mt = mptr[i])) {
-			mt->_vptr->instance.unref((void *) mt);
-		}
-	}
-	free(in);
-}
-static uintptr_t iterProfileRef(MPT_INTERFACE(instance) *in)
-{
-	(void) in;
-	return 0;
-}
-/* metatype interface */
-static int iterProfileConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	const MPT_STRUCT(iterProfile) *p = (void *) mt;
+	const MPT_STRUCT(iterProfile) *p = (void *) val;
 	
 	if (!type) {
 		static const uint8_t fmt[] = { MPT_ENUM(TypeIterator), 'd', 0 };
@@ -151,6 +130,27 @@ static int iterProfileConv(const MPT_INTERFACE(metatype) *mt, int type, void *pt
 		return 'd';
 	}
 	return MPT_ERROR(BadType);
+}
+/* metatype interface */
+static void iterProfileUnref(MPT_INTERFACE(metatype) *mt)
+{
+	const MPT_STRUCT(iterProfile) *p = (void *) mt;
+	double *val = (void *) (p + 1);
+	MPT_INTERFACE(metatype) **mptr = (void *) (val  + p->neqs);
+	int i;
+	
+	for (i = 0; i < p->neqs; ++i) {
+		MPT_INTERFACE(metatype) *mt;
+		if ((mt = mptr[i])) {
+			mt->_vptr->unref(mt);
+		}
+	}
+	free(mt);
+}
+static uintptr_t iterProfileRef(MPT_INTERFACE(metatype) *mt)
+{
+	(void) mt;
+	return 0;
 }
 static MPT_INTERFACE(metatype) *iterProfileClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -178,7 +178,7 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 		iterProfileGet, iterProfileAdvance, iterProfileReset
 	};
 	static const MPT_INTERFACE_VPTR(metatype) iterProfileMeta = {
-		{ iterProfileUnref, iterProfileRef }, iterProfileConv, iterProfileClone
+		{ iterProfileConv }, iterProfileUnref, iterProfileRef, iterProfileClone
 	};
 	MPT_STRUCT(iterProfile) *ip;
 	MPT_INTERFACE(metatype) **mptr;
@@ -287,7 +287,7 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 		}
 		*mptr++ = mt;
 		/* skip bad iterator implementations */
-		if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), iptr++) < 0) {
+		if (MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), iptr++) < 0) {
 			if (out) {
 				mpt_log(out, __func__, MPT_LOG(Warning), "%s (%d): %s",
 				        MPT_tr("invalid profile iterator"), i, desc);

@@ -32,7 +32,7 @@ static int lxGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	(void) obj;
 	return mpt_limex_get(&lxGlob, pr);
 }
-static int lxSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int lxSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	(void) obj;
 	if (!pr) {
@@ -73,7 +73,7 @@ static uintptr_t lxAddref()
 	return 0;
 }
 /* metatype interface */
-static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
+static int lxConv(MPT_INTERFACE(convertable) *val, int type, void *ptr)
 {
 	static const MPT_INTERFACE_VPTR(object) limexObj = {
 		lxGet, lxSet
@@ -83,7 +83,7 @@ static int lxConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 		lxFcn,
 		lxSolve
 	};
-	(void) mt;
+	(void) val;
 	static MPT_INTERFACE(object) lxGlobObj    = { &limexObj };
 	static MPT_SOLVER(interface) lxGlobSolver = { &limexSol };
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&lxGlobSolver, &lxGlobObj, type, ptr);
@@ -104,8 +104,9 @@ static MPT_INTERFACE(metatype) *lxClone()
 extern MPT_INTERFACE(metatype) *mpt_limex_create()
 {
 	static const MPT_INTERFACE_VPTR(metatype) limexMeta = {
-		{ lxFini, lxAddref },
-		lxConv,
+		{ lxConv },
+		lxFini,
+		lxAddref,
 		lxClone
 	};
 	static MPT_INTERFACE(metatype) lxGlob = { &limexMeta };

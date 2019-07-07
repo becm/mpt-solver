@@ -17,7 +17,7 @@
 
 static const char bdfText[] = "BDF", adamsText[] = "Adams";
 
-static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, const MPT_INTERFACE(metatype) *src)
+static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(convertable) *src)
 {
 	char *val;
 	int len;
@@ -25,7 +25,7 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, const MPT_INTERFACE(metatype)
 	if (!src) {
 		return 0;
 	}
-	if ((len = src->_vptr->conv(src, 'k', &val)) < 0) {
+	if ((len = src->_vptr->convert(src, 'k', &val)) < 0) {
 		return len;
 	}
 	if (!val) {
@@ -64,7 +64,7 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, const MPT_INTERFACE(metatype)
  * \retval <0   failure
  * \retval >=0  used values
  */
-extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, const MPT_INTERFACE(metatype) *src)
+extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MPT_INTERFACE(convertable) *src)
 {
 	CVodeMem cv_mem;
 	int ret = 0;
@@ -97,13 +97,13 @@ extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name
 	}
 	if (!strcasecmp(name, "maxord")) {
 		long val = cv_mem->cv_qmax;
-		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) return ret;
 		else if (CVodeSetMaxOrd(cv_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) {
 			return ret;
 		}
 		if (val < 0) {
@@ -118,25 +118,25 @@ extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name
 	}
 	if (!strcasecmp(name, "hnilwarns")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->conv(src, 'l', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) return ret;
 		if (CVodeSetMaxHnilWarns(cv_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "hin") || !strcasecmp(name, "h0")) {
 		double val = 0.0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (CVodeSetInitStep(cv_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hmin") || !strcasecmp(name, "stepmin")) {
 		double val = 0.0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (CVodeSetMinStep(cv_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) {
 		double val = 0.0;
-		if (src && (ret = src->_vptr->conv(src, 'd', &val)) < 0) return ret;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (CVodeSetMaxStep(cv_mem, val) < 0) return MPT_ERROR(BadValue);
 		return ret ? 1 : 0;
 	}

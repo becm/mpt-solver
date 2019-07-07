@@ -23,22 +23,22 @@ MPT_STRUCT(RadauData) {
 	
 	double next;
 };
-/* reference interface */
-static void rdFini(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int rdConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
 {
-	MPT_STRUCT(RadauData) *rd = (void *) in;
+	MPT_STRUCT(RadauData) *rd = (void *) sol;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&rd->_sol, &rd->_obj, type, ptr);
+}
+/* metatype interface */
+static void rdFini(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(RadauData) *rd = (void *) mt;
 	mpt_radau_fini(&rd->d);
 	free(rd);
 }
 static uintptr_t rdAddref()
 {
 	return 0;
-}
-/* metatype interface */
-static int rdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	MPT_STRUCT(RadauData) *rd = (void *) mt;
-	return MPT_SOLVER_MODULE_FCN(solver_conv)(&rd->_sol, &rd->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *rdClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -70,7 +70,7 @@ static int rdGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	const MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _obj);
 	return mpt_radau_get(&rd->d, pr);
 }
-static int rdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int rdSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(RadauData) *rd = MPT_baseaddr(RadauData, obj, _obj);
 	if (!pr) {
@@ -106,8 +106,9 @@ extern MPT_INTERFACE(metatype) *mpt_radau_create()
 		rdSolve
 	};
 	static const MPT_INTERFACE_VPTR(metatype) radauMeta = {
-		{ rdFini, rdAddref },
-		rdConv,
+		{ rdConv },
+		rdFini,
+		rdAddref,
 		rdClone
 	};
 	MPT_STRUCT(RadauData) *rd;

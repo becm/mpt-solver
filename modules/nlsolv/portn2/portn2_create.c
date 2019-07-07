@@ -20,22 +20,22 @@ MPT_STRUCT(PortN2Data) {
 	MPT_SOLVER_STRUCT(portn2) d;
 	MPT_NLS_STRUCT(functions) uf;
 };
-/* reference interface */
-static void n2Unref(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int n2Conv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
 {
-	MPT_STRUCT(PortN2Data) *n2 = (void *) in;
+	const MPT_STRUCT(PortN2Data) *n2 = (void *) sol;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&n2->_sol, &n2->_obj, type, ptr);
+}
+/* metatype interface */
+static void n2Unref(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(PortN2Data) *n2 = (void *) mt;
 	mpt_portn2_fini(&n2->d);
 	free(n2);
 }
 static uintptr_t n2Ref()
 {
 	return 0;
-}
-/* metatype interface */
-static int n2Conv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	const MPT_STRUCT(PortN2Data) *n2 = (void *) mt;
-	return MPT_SOLVER_MODULE_FCN(solver_conv)(&n2->_sol, &n2->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *n2Clone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -67,7 +67,7 @@ static int n2Get(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, obj, _obj);
 	return mpt_portn2_get(&n2->d, pr);
 }
-static int n2Set(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int n2Set(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(PortN2Data) *n2 = MPT_baseaddr(PortN2Data, obj, _obj);
 	if (!pr && !src) {
@@ -95,8 +95,9 @@ extern MPT_INTERFACE(metatype) *mpt_portn2_create()
 		n2Solve
 	};
 	static const MPT_INTERFACE_VPTR(metatype) n2Meta = {
-		{ n2Unref, n2Ref },
-		n2Conv,
+		{ n2Conv },
+		n2Unref,
+		n2Ref,
 		n2Clone
 	};
 	MPT_STRUCT(PortN2Data) *n2;

@@ -22,22 +22,22 @@ MPT_STRUCT(VodeData) {
 	
 	double next;
 };
-/* reference interface */
-static void vdFini(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int vdConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
 {
-	MPT_STRUCT(VodeData) *vd = (void *) in;
+	MPT_STRUCT(VodeData) *vd = (void *) sol;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&vd->_sol, &vd->_obj, type, ptr);
+}
+/* metatype interface */
+static void vdFini(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(VodeData) *vd = (void *) mt;
 	mpt_vode_fini(&vd->d);
 	free(vd);
 }
 static uintptr_t vdAddref()
 {
 	return 0;
-}
-/* metatype interface */
-static int vdConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	MPT_STRUCT(VodeData) *vd = (void *) mt;
-	return MPT_SOLVER_MODULE_FCN(solver_conv)(&vd->_sol, &vd->_obj, type, ptr);
 }
 MPT_INTERFACE(metatype) *vdClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -69,7 +69,7 @@ static int vdGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	const MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, obj, _obj);
 	return mpt_vode_get(&vd->d, pr);
 }
-static int vdSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int vdSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(VodeData) *vd = MPT_baseaddr(VodeData, obj, _obj);
 	if (!pr) {
@@ -105,8 +105,9 @@ extern MPT_INTERFACE(metatype) *mpt_vode_create()
 		vdSolve
 	};
 	static const MPT_INTERFACE_VPTR(metatype) vodeMeta = {
-		{ vdFini, vdAddref },
-		vdConv,
+		{ vdConv },
+		vdFini,
+		vdAddref,
 		vdClone
 	};
 	MPT_STRUCT(VodeData) *vd;

@@ -23,22 +23,22 @@ MPT_STRUCT(DasslData) {
 	
 	double next;
 };
-/* reference interface */
-static void ddFini(MPT_INTERFACE(instance) *in)
+/* convertable interface */
+static int ddConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
 {
-	MPT_STRUCT(DasslData) *da = (void *) in;
+	MPT_STRUCT(DasslData) *da = (void *) sol;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&da->_sol, &da->_obj, type, ptr);
+}
+/* metatype interface */
+static void ddFini(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(DasslData) *da = (void *) mt;
 	mpt_dassl_fini(&da->d);
-	free(in);
+	free(mt);
 }
 static uintptr_t ddAddref()
 {
 	return 0;
-}
-/* metatype interface */
-static int ddConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	MPT_STRUCT(DasslData) *da = (void *) mt;
-	return MPT_SOLVER_MODULE_FCN(solver_conv)(&da->_sol, &da->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *ddClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -70,7 +70,7 @@ static int ddGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	const MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _obj);
 	return mpt_dassl_get(&da->d, pr);
 }
-static int ddSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int ddSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(DasslData) *da = MPT_baseaddr(DasslData, obj, _obj);
 	if (!pr) {
@@ -106,8 +106,9 @@ extern MPT_INTERFACE(metatype) *mpt_dassl_create()
 		ddSolve
 	};
 	static const MPT_INTERFACE_VPTR(metatype) dasslMeta = {
-		{ ddFini, ddAddref },
-		ddConv,
+		{ ddConv },
+		ddFini,
+		ddAddref,
 		ddClone
 	};
 	MPT_STRUCT(DasslData) *da;

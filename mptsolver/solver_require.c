@@ -71,18 +71,18 @@ extern int mpt_solver_require(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(logger) 
 {
 	/* problem config filename from configuration/terminal */
 	static const char defExt[] = "conf\0";
-	const MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(convertable) *val;
 	const char *fname, *cname;
 	char *rname, buf[128];
 	int ret;
 	
 	/* check for existing config file */
-	mt = mpt_config_get(cfg, 0, 0, 0);
-	fname = mt ? mpt_meta_data(mt, 0) : 0;
+	val = mpt_config_get(cfg, 0, 0, 0);
+	fname = val ? mpt_convertable_data(val, 0) : 0;
 	
 	cname = 0;
-	if ((mt = mpt_config_get(0, "mpt", 0, 0))
-	    && mt->_vptr->conv(mt, 's', &cname) > 0
+	if ((val = mpt_config_get(0, "mpt", 0, 0))
+	    && val->_vptr->convert(val, 's', &cname) > 0
 	    && cname) {
 		const char *sep = strrchr(cname, '/');
 		if (sep) {
@@ -113,9 +113,9 @@ extern int mpt_solver_require(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(logger) 
 		}
 	}
 	/* config file has solver settings */
-	mt = mpt_config_get(cfg, "solconf", 0, 0);
+	val = mpt_config_get(cfg, "solconf", 0, 0);
 	
-	if (!mt) {
+	if (!val) {
 		static const char defName[] = "solver\0", defPost[] = "sol\0";
 		const char *sol = cname ? cname : defName;
 		snprintf(buf, sizeof(buf), "%s [%s_%s.%s]: ",

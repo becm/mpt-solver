@@ -17,7 +17,7 @@ extern int mpt_solver_module_value_nls(MPT_STRUCT(value) *val, const MPT_NLS_STR
 	return par && (par->nval != 1 || par->nres) ? 1 : 0;
 }
 
-extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *nls, const MPT_INTERFACE(metatype) *src)
+extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *nls, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(consumable) val;
 	int32_t nv = 1, nr = 0;
@@ -29,7 +29,7 @@ extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *nls, const MPT_I
 		return 0;
 	}
 	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->conv(src, 'i', &nv)) < 0) {
+		if ((ret = src->_vptr->convert(src, 'i', &nv)) < 0) {
 			return ret;
 		}
 		ret = 0;

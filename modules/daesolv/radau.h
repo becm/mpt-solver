@@ -78,7 +78,7 @@ extern int mpt_radau_step(MPT_SOLVER_STRUCT(radau) *, double);
 
 /* set bacol functions/parameters */
 extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *, MPT_STRUCT(property) *);
-extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int mpt_radau_set(MPT_SOLVER_STRUCT(radau) *, const char *, MPT_INTERFACE(convertable) *);
 
 /* validate settings and working space for use */
 extern int mpt_radau_prepare(MPT_SOLVER_STRUCT(radau) *);
@@ -120,7 +120,7 @@ public:
 	{
 		return mpt_radau_get(this, pr);
 	}
-	int set_property(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
+	int set_property(const char *pr, convertable *src = 0) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_radau_prepare(this);

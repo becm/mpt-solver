@@ -88,7 +88,7 @@ extern int lmstr1(lmstr_fcn_t *fcn, int m, int n, double *x, double *fvec,
 
 /* set hybrd parameter */
 extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *, MPT_STRUCT(property) *);
-extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *, const char *, MPT_INTERFACE(convertable) *);
 
 /* call minpack solver routine */
 extern int mpt_minpack_solve(MPT_SOLVER_STRUCT(minpack) *);
@@ -133,7 +133,7 @@ public:
 	{
 		return mpt_minpack_get(this, pr);
 	}
-	int set_property(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
+	int set_property(const char *pr, convertable *src = 0) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_minpack_prepare(this);

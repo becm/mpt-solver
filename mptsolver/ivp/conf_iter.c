@@ -40,17 +40,17 @@ extern MPT_INTERFACE(iterator) *mpt_conf_iter(MPT_INTERFACE(metatype) **mptr, MP
 			return 0;
 		}
 		*mptr = mt;
-		mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it);
+		MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it);
 		return it;
 		
 	}
 	/* require valid time source */
-	if (mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it) < 0
+	if (MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it) < 0
 	    || !it) {
 		MPT_INTERFACE(metatype) *src;
 		const char *val;
 		
-		if (!(val = mpt_meta_data(mt, 0))) {
+		if (!(val = mpt_convertable_data((MPT_INTERFACE(convertable) *) mt, 0))) {
 			if (info) {
 				mpt_log(info, __func__, MPT_LOG(Error), "%s",
 				        MPT_tr("no iteratior description"));
@@ -64,9 +64,9 @@ extern MPT_INTERFACE(iterator) *mpt_conf_iter(MPT_INTERFACE(metatype) **mptr, MP
 			}
 			return 0;
 		}
-		mt->_vptr->instance.unref((void *) mt);
+		mt->_vptr->unref(mt);
 		*mptr = src;
-		src->_vptr->conv(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it);
+		MPT_metatype_convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it);
 		return it;
 	}
 	/* reset existing iterator */

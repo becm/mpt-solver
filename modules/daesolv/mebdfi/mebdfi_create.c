@@ -23,22 +23,22 @@ MPT_STRUCT(MebdfiData) {
 	
 	double next;
 };
-/* reference interface */
-static void meFini(MPT_INTERFACE(instance) *in)
+/* metatype interface */
+static int meConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
 {
-	MPT_STRUCT(MebdfiData) *md = (void *) in;
+	MPT_STRUCT(MebdfiData) *md = (void *) sol;
+	return MPT_SOLVER_MODULE_FCN(solver_conv)(&md->_sol, &md->_obj, type, ptr);
+}
+/* metatype interface */
+static void meFini(MPT_INTERFACE(metatype) *mt)
+{
+	MPT_STRUCT(MebdfiData) *md = (void *) mt;
 	mpt_mebdfi_fini(&md->d);
 	free(md);
 }
 static uintptr_t meAddref()
 {
 	return 0;
-}
-/* metatype interface */
-static int meConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	MPT_STRUCT(MebdfiData) *md = (void *) mt;
-	return MPT_SOLVER_MODULE_FCN(solver_conv)(&md->_sol, &md->_obj, type, ptr);
 }
 static MPT_INTERFACE(metatype) *meClone(const MPT_INTERFACE(metatype) *mt)
 {
@@ -70,7 +70,7 @@ static int meGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property) *pr)
 	const MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _obj);
 	return mpt_mebdfi_get(&md->d, pr);
 }
-static int meSet(MPT_INTERFACE(object) *obj, const char *pr, const MPT_INTERFACE(metatype) *src)
+static int meSet(MPT_INTERFACE(object) *obj, const char *pr, MPT_INTERFACE(convertable) *src)
 {
 	MPT_STRUCT(MebdfiData) *md = MPT_baseaddr(MebdfiData, obj, _obj);
 	if (!pr) {
@@ -106,8 +106,9 @@ extern MPT_INTERFACE(metatype) *mpt_mebdfi_create()
 		meSolve
 	};
 	static const MPT_INTERFACE_VPTR(metatype) mebdfiMeta = {
-		{ meFini, meAddref },
-		meConv,
+		{ meConv },
+		meFini,
+		meAddref,
 		meClone
 	};
 	MPT_STRUCT(MebdfiData) *md;

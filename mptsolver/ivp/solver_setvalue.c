@@ -10,24 +10,9 @@
 
 #include "object.h"
 
-struct wrapValue
+static int valueConv(MPT_INTERFACE(convertable) *val, int type, void *ptr)
 {
-	MPT_INTERFACE(metatype) _mt;
-	double val;
-};
-
-static void valueUnref(MPT_INTERFACE(instance) *in)
-{
-	(void) in;
-}
-static uintptr_t valueRef(MPT_INTERFACE(instance) *in)
-{
-	(void) in;
-	return 0;
-}
-static int valueConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
-{
-	const struct wrapValue *v = (void *) mt;
+	const double *v = (void *) (val + 1);
 	
 	if (!type) {
 		static const char fmt[] = { 'd', 'f', 0 };
@@ -36,37 +21,19 @@ static int valueConv(const MPT_INTERFACE(metatype) *mt, int type, void *ptr)
 	}
 #ifdef _MPT_FLOAT_EXTENDED_H
 	if (type == 'e') {
-		if (ptr) *((long double *) ptr) = v->val;
+		if (ptr) *((long double *) ptr) = *v;
 		return 'd';
 	}
 #endif
 	if (type == 'd') {
-		if (ptr) *((double *) ptr) = v->val;
+		if (ptr) *((double *) ptr) = *v;
 		return 'd';
 	}
 	if (type == 'f') {
-		if (ptr) *((float *) ptr) = v->val;
+		if (ptr) *((float *) ptr) = *v;
 		return 'd';
 	}
 	return MPT_ERROR(BadType);
-}
-static MPT_INTERFACE(metatype) *valueClone(const MPT_INTERFACE(metatype) *mt);
-
-static const MPT_INTERFACE_VPTR(metatype) valueMetaCtl = {
-	{ valueUnref, valueRef },
-	valueConv,
-	valueClone
-};
-static MPT_INTERFACE(metatype) *valueClone(const MPT_INTERFACE(metatype) *mt)
-{
-	struct wrapValue *cp, *v = (void *) mt;
-	if (!(cp = malloc(sizeof(*cp)))) {
-		return 0;
-	}
-	cp->_mt._vptr = &valueMetaCtl;
-	cp->val = v->val;
-	
-	return &cp->_mt;
 }
 
 /*!
@@ -83,10 +50,15 @@ static MPT_INTERFACE(metatype) *valueClone(const MPT_INTERFACE(metatype) *mt)
  */
 extern int mpt_solver_setvalue(MPT_INTERFACE(object) *obj, const char *prop, double val)
 {
-	struct wrapValue v;
+	static const MPT_INTERFACE_VPTR(convertable) valueConvCtl = { valueConv };
+	struct
+	{
+		MPT_INTERFACE(convertable) _ctl;
+		double val;
+	} v;
 	
-	v._mt._vptr = &valueMetaCtl;
+	v._ctl._vptr = &valueConvCtl;
 	v.val = val;
 	
-	return obj->_vptr->set_property(obj, prop, &v._mt);
+	return obj->_vptr->set_property(obj, prop, &v._ctl);
 }

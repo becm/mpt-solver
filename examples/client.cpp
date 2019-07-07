@@ -19,19 +19,26 @@ public:
 	{ }
 	virtual ~client()
 	{ }
-	void unref() __MPT_OVERRIDE
-	{
-		std::cout << __func__ << std::endl;
-		delete this;
-	}
-	int conv(int type, void *ptr) const __MPT_OVERRIDE
+	
+	int convert(int type, void *ptr) __MPT_OVERRIDE
 	{
 		std::cout << __func__ << " " << type << std::endl;
 		if (type == mpt::typeinfo<mpt::config *>::id()) {
 			return mpt::BadType;
 		}
-		return client::conv(type, ptr);
+		return client::convert(type, ptr);
 	}
+	
+	void unref() __MPT_OVERRIDE
+	{
+		std::cout << __func__ << std::endl;
+		delete this;
+	}
+	client *clone() const __MPT_OVERRIDE
+	{
+		return nullptr;
+	}
+	
 	int dispatch(mpt::event *ev) __MPT_OVERRIDE
 	{
 		if (!ev) {

@@ -84,7 +84,7 @@ extern int dn2pb_(const int *n, const int *nd, const int *p, double *x, const do
 
 /* set solver parameter */
 extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *, MPT_STRUCT(property) *);
-extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *, const char *, const MPT_INTERFACE(metatype) *);
+extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *, const char *, MPT_INTERFACE(convertable) *);
 
 /* call solver routine */
 extern int mpt_portn2_solve(MPT_SOLVER_STRUCT(portn2) *);
@@ -130,7 +130,7 @@ public:
 	{
 		return mpt_portn2_get(this, pr);
 	}
-	int set_property(const char *pr, const metatype *src = 0) __MPT_OVERRIDE
+	int set_property(const char *pr, convertable *src = 0) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
 			return mpt_portn2_prepare(this);

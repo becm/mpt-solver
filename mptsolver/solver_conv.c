@@ -25,7 +25,7 @@
  * 
  * \return solver interface
  */
-extern MPT_SOLVER(interface) *mpt_solver_conv(const MPT_INTERFACE(metatype) *mt, int match, MPT_INTERFACE(logger) *info)
+extern MPT_SOLVER(interface) *mpt_solver_conv(MPT_INTERFACE(convertable) *val, int match, MPT_INTERFACE(logger) *info)
 {
 	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;
@@ -36,19 +36,19 @@ extern MPT_SOLVER(interface) *mpt_solver_conv(const MPT_INTERFACE(metatype) *mt,
 	obj = 0;
 	name = 0;
 	if (info
-	    && (cap = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) >= 0
+	    && (cap = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) >= 0
 	    && obj) {
 		name = mpt_object_typename(obj);
 	}
 	/* can convert to solver interface */
-	if (!mt
-	    || (cap = mt->_vptr->conv(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	if (!val
+	    || (cap = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
 	    || !sol) {
 		if (!info) {
 			return 0;
 		}
 		msg = MPT_tr("no valid solver");
-		cap = mt->_vptr->conv(mt, 0, 0);
+		cap = val->_vptr->convert(val, 0, 0);
 		if (name) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s: %s (%d)",
 			        msg, name, cap);
@@ -64,7 +64,7 @@ extern MPT_SOLVER(interface) *mpt_solver_conv(const MPT_INTERFACE(metatype) *mt,
 			return 0;
 		}
 		msg = MPT_tr("no solver capabilities");
-		cap = mt->_vptr->conv(mt, 0, 0);
+		cap = val->_vptr->convert(val, 0, 0);
 		if (name) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s: %s (%d)",
 			        msg, name, cap);

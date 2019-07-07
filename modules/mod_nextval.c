@@ -7,7 +7,7 @@
 
 #include "meta.h"
 
-extern int mpt_solver_module_nextval(double *next, double min, const MPT_INTERFACE(metatype) *src)
+extern int mpt_solver_module_nextval(double *next, double min, MPT_INTERFACE(convertable) *src)
 {
 	double end = *next;
 	int ret;
@@ -17,7 +17,7 @@ extern int mpt_solver_module_nextval(double *next, double min, const MPT_INTERFA
 		}
 		return 0;
 	}
-	if ((ret = src->_vptr->conv(src, 'd', &end)) < 0) {
+	if ((ret = src->_vptr->convert(src, 'd', &end)) < 0) {
 		return ret;
 	}
 	if (end < min) {
