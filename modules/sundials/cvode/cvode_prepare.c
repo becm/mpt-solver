@@ -79,8 +79,8 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 			SUNNonlinSolFree(NLS);
 			return err;
 		}
-		/* WARNING: CVodeSetNonlinearSolver() ALWAYS calls SUNNonlinSolFree() for previous solver.
-		 * Make CVODE own nonlinear solver reference for consistency.
+		/* Make CVODE owner of nonlinear solver reference.
+		 * WARNING: before 4.1, call to SUNNonlinSolFree() was unguarded
 		 */
 		cv_mem->ownNLS = SUNTRUE;
 		return err;

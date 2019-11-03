@@ -1,11 +1,14 @@
 # Makefile: SUNDIALS interface library
 LIB ?= mpt_sundials
 #
-# precompiled object location
+# base location of SUNDIALS artifacts
 sundials_version = 4.1.0
-DIR_SUNDIALS_OBJ ?= ${MPT_PREFIX}/math/sundials-${sundials_version}/build
-# include directories
-DIR_SUNDIALS_INC ?= ${MPT_PREFIX}/include
+DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-${sundials_version}
+#
+# precompiled object location
+DIR_SUNDIALS_OBJ ?= ${DIR_SUNDIALS}/build
+# include directories (generated, public, internal)
+DIR_SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}/include ${DIR_SUNDIALS}/include ${DIR_SUNDIALS}/src
 INC = . ${DIR_SUNDIALS_INC}
 #
 # SUNDIALS modules to include in shared library
