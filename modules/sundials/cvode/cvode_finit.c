@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cvode/cvode_impl.h"
+#include "cvode/cvode.h"
 
 #include "sundials.h"
 

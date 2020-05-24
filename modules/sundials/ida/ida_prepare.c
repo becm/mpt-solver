@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#include <ida/ida_impl.h>
+#include <ida/ida.h>
 
 #define _SUNDIALS_GENERIC_TYPE(x) void
 #include "sundials.h"
@@ -22,7 +22,7 @@
  */
 extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 {
-	IDAMem ida_mem;
+	void *ida_mem;
 	long neqs;
 	int err;
 	

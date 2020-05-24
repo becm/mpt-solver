@@ -2,14 +2,21 @@
 LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
-sundials_version = 5.0.0
+sundials_version = 5.3.0
 DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-${sundials_version}
 #
 # precompiled object location
 DIR_SUNDIALS_OBJ ?= ${DIR_SUNDIALS}/build
 # include directories (generated, public, internal)
-DIR_SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}/include ${DIR_SUNDIALS}/include ${DIR_SUNDIALS}/src
+DIR_SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}/include ${DIR_SUNDIALS}/include
 INC = . ${DIR_SUNDIALS_INC}
+
+objects_internal = \
+	cvode/cvode_property.o \
+	cvode/cvode_prepare.o \
+	cvode/cvode_report.o \
+	ida/ida_property.o
+${objects_internal} : INC+=${DIR_SUNDIALS}/src
 #
 # SUNDIALS modules to include in shared library
 sundials_lapack = sunlinsol_lapackband sunlinsol_lapackdense
