@@ -230,37 +230,43 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTER
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) return ret;
 		if (setInt(vd, 4, val) < 0) return MPT_ERROR(BadOperation);
+		vd->iopt |= 1 << 0;
 		return 0;
 	}
 	if (!strcasecmp(name, "mxstep") || !strcasecmp(name, "iwork6")) {
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) return ret;
 		if (setInt(vd, 5, val) < 0) return MPT_ERROR(BadOperation);
+		vd->iopt |= 1 << 1;
 		return 0;
 	}
 	if (!strcasecmp(name, "mxhnil") || !strcasecmp(name, "iwork7")) {
 		int32_t val = 0;
 		if (src && (ret = src->_vptr->convert(src, 'i', &val)) < 0) return ret;
 		if (setInt(vd, 6, val) < 0) return MPT_ERROR(BadOperation);
+		vd->iopt |= 1 << 2;
 		return 0;
 	}
 	/* real array parameter */
-	if (!strcasecmp(name, "h0") || !strcasecmp(name, "rwork5")) {
+	if (!strcasecmp(name, "h0") || !strcasecmp(name, "stepinit") || !strcasecmp(name, "rwork5")) {
 		double val = 0;
 		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (setReal(vd, 4, val) < 0) return MPT_ERROR(BadOperation);
+		vd->iopt |= 1 << 4;
 		return 0;
 	}
 	if (!strcasecmp(name, "hmax") || !strcasecmp(name, "rwork6")) {
 		double val = 0;
 		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (setReal(vd, 5, val) < 0) return MPT_ERROR(BadOperation);
+		vd->iopt |= 1 << 5;
 		return 0;
 	}
 	if (!strcasecmp(name, "hmin") || !strcasecmp(name, "rwork7")) {
 		double val = 0;
 		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
 		if (setReal(vd, 6, val) < 0) return MPT_ERROR(BadOperation);
+		vd->iopt |= 1 << 6;
 		return 0;
 	}
 	return MPT_ERROR(BadArgument);
