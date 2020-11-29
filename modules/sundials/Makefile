@@ -2,7 +2,7 @@
 LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
-sundials_version = 5.3.0
+sundials_version = 5.4.0
 DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-${sundials_version}
 #
 # precompiled object location
@@ -12,9 +12,10 @@ DIR_SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}/include ${DIR_SUNDIALS}/include
 INC = . ${DIR_SUNDIALS_INC}
 #
 # SUNDIALS modules to include in shared library
-sundials_lapack = sunlinsol_lapackband sunlinsol_lapackdense
-sundials_direct = sunlinsol_band sunlinsol_dense ${sundials_lapack}
-sundials_elements = cvode ida kinsol ${sundials_iter} ${sundials_direct} nvector_serial
+sundials_lapack = lapackband lapackdense
+sundials_direct = band dense ${sundials_lapack}
+sundials_linsol = ${sundials_direct:%=sunlinsol_%}
+sundials_elements = cvode ida kinsol ${sundials_linsol} nvector_serial
 #
 # shared library version
 SHLIB_MAJOR = 1

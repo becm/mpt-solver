@@ -35,17 +35,11 @@ if sundials_cvode.found()
   sundials_deps += sundials_cvode
 endif
 
-sundials_deps += cc.find_library('sundials_sunlinsolband', dirs : sundials_dir_lib)
-sundials_deps += cc.find_library('sundials_sunlinsoldense', dirs : sundials_dir_lib)
-
 if get_option('sundials_lapack')
   sundials_deps += cc.find_library('sundials_sunlinsollapackband', dirs : sundials_dir_lib)
   sundials_deps += cc.find_library('sundials_sunlinsollapackdense', dirs : sundials_dir_lib)
   sundials_args += '-DMPT_WITH_LAPACK'
 endif
-
-sundials_deps += cc.find_library('sundials_sunmatrixdense', dirs : sundials_dir_lib)
-sundials_deps += cc.find_library('sundials_sunmatrixband', dirs : sundials_dir_lib)
 
 sundials_deps += libm
 
