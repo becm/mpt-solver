@@ -2,7 +2,7 @@
 LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
-sundials_version = 5.4.0
+sundials_version = 5.5.0
 DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-${sundials_version}
 #
 # precompiled object location
@@ -14,8 +14,11 @@ INC = . ${DIR_SUNDIALS_INC}
 # SUNDIALS modules to include in shared library
 sundials_lapack = lapackband lapackdense
 sundials_direct = band dense ${sundials_lapack}
-sundials_linsol = ${sundials_direct:%=sunlinsol_%}
-sundials_elements = cvode ida kinsol ${sundials_linsol} nvector_serial
+sundials_iterative = spgmr spbcgs sptfqmr
+sundials_nonlinear = fixedpoint newton
+sundials_solvers = $(sundials_nonlinear:%=sunnonlinsol_%) $(sundials_direct:%=sunlinsol_%) $(sundials_iterative:%=sunlinsol_%)
+sundials_matrix = band dense
+sundials_elements = cvode ida kinsol ${sundials_solvers} ${sundials_matrix:%=sunmatrix_%} nvector_serial generic
 #
 # shared library version
 SHLIB_MAJOR = 1
@@ -49,5 +52,5 @@ CONFIG = sundials.conf
 include ../mpt.solver.mk
 #
 # object dependencies
-${OBJS} : sundials.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h ${MAKEFILE_LIST}
+${OBJS} : sundials.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h sundials_collect.sh ${MAKEFILE_LIST}
 ida/ida_property.o cvode/cvode_property.o libinfo.o : ${DIR_BASE}version.h

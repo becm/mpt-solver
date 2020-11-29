@@ -25,12 +25,15 @@ COLLISIONS=
 # loop over sundials modules
 (cd "${DIR_SUNDIALS}/src/" && for d in "$@"; do \
   case "$d" in
-    nvector_*)   s="nvec${d#nvector_}"; d="nvector/${d#nvector_}";;
-    sunlinsol_*) s="sunlinsol${d#sunlinsol_}"; d="sunlinsol/${d#sunlinsol_}";;
+    nvector_*)      s="nvec${d#nvector_}";              d="nvector/${d#nvector_}";;
+    sunmatrix_*)    s="sunmatrix${d#sunmatrix_}";       d="sunmatrix/${d#sunmatrix_}";;
+    sunlinsol_*)    s="sunlinsol${d#sunlinsol_}";       d="sunlinsol/${d#sunlinsol_}";;
+    sunnonlinsol_*) s="sunnonlinsol${d#sunnonlinsol_}"; d="sunnonlinsol/${d#sunnonlinsol_}";;
+    generic)        s="generic";                        d="sundials";;
     *) s="$d";;
   esac
   # loop over module objects
-  for f in `find ${d}/CMakeFiles/sundials_${s}_${LIBRARY_TYPE}.dir -name '*.c.o'`; do \
+  for f in `find ${d}/CMakeFiles/sundials_${s}_obj_${LIBRARY_TYPE}.dir -name '*.c.o'`; do \
     # object name and hash
     o="${f##*/}"
     h=
