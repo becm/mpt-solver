@@ -24,7 +24,7 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, MPT_INTERFACE(
 	char mode;
 	
 	if (!src) {
-		sd->stype = 0;
+		sd->linsol = 0;
 		return 0;
 	}
 	key = 0;
@@ -40,19 +40,19 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, MPT_INTERFACE(
 		ret = 1;
 	}
 	if (!key || !(mode = *key)) {
-		sd->stype = 0;
+		sd->linsol = 0;
 		return ret;
 	}
 	switch (mode) {
 		case 'd': case 'D':
-			sd->stype = MPT_SOLVER_SUNDIALS(Direct);
+			sd->linsol = MPT_SOLVER_SUNDIALS(Direct);
 			sd->jacobian = 0;
 			return ret;
 		case 'f': case 'F':
-			sd->stype = MPT_SOLVER_SUNDIALS(Direct);
+			sd->linsol = MPT_SOLVER_SUNDIALS(Direct);
 			sd->jacobian = SUNDIALS_DENSE;
 			if (mode != 'F') {
-				sd->stype |= MPT_SOLVER_SUNDIALS(Numeric);
+				sd->linsol |= MPT_SOLVER_SUNDIALS(Numeric);
 			}
 			return ret;
 		case 'b': case 'B':
@@ -73,10 +73,10 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, MPT_INTERFACE(
 			}
 			sd->ml = ml;
 			sd->mu = mu;
-			sd->stype = MPT_SOLVER_SUNDIALS(Direct);
+			sd->linsol = MPT_SOLVER_SUNDIALS(Direct);
 			sd->jacobian = SUNDIALS_BAND;
 			if (mode != 'B') {
-				sd->stype |= MPT_SOLVER_SUNDIALS(Numeric);
+				sd->linsol |= MPT_SOLVER_SUNDIALS(Numeric);
 			}
 			return ret + 1;
 		default:

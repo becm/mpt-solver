@@ -110,35 +110,30 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 extern int mpt_sundials_linear(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 {
 	SUNLinearSolver s;
-	int type;
 	
-	type = sd->stype & ~MPT_SOLVER_SUNDIALS(Numeric);
-	
-	if (type == MPT_SOLVER_SUNDIALS(Direct)) {
-		return setDls(sd, neqs);
-	}
-	if (sd->stype == MPT_SOLVER_SUNDIALS(IterGMR)) {
-		if (!(s = SUNLinSol_SPGMR(sd->y, sd->prec, sd->kmax))) {
-			return MPT_ERROR(BadOperation);
-		}
-		return setLS(sd, s, 0);
-	}
-	if (sd->stype == MPT_SOLVER_SUNDIALS(IterBCG)) {
-		if (!(s = SUNLinSol_SPBCGS(sd->y, sd->prec, sd->kmax))) {
-			return MPT_ERROR(BadOperation);
-		}
-		return setLS(sd, s, 0);
-	}
-	if (sd->stype == MPT_SOLVER_SUNDIALS(IterTFQMR)) {
-		if (!(s = SUNLinSol_SPTFQMR(sd->y, sd->prec, sd->kmax))) {
-			return MPT_ERROR(BadOperation);
-		}
-		return setLS(sd, s, 0);
-	}
+	switch (sd->linsol & ~MPT_SOLVER_SUNDIALS(Numeric)) {
+		case MPT_SOLVER_SUNDIALS(Direct):
+			return setDls(sd, neqs);
+		case MPT_SOLVER_SUNDIALS(IterGMR):
+			if (!(s = SUNLinSol_SPGMR(sd->y, sd->prec, sd->kmax))) {
+				return MPT_ERROR(BadOperation);
+			}
+			return setLS(sd, s, 0);
+		case MPT_SOLVER_SUNDIALS(IterBCG):
+			if (!(s = SUNLinSol_SPBCGS(sd->y, sd->prec, sd->kmax))) {
+				return MPT_ERROR(BadOperation);
+			}
+			return setLS(sd, s, 0);
+		case MPT_SOLVER_SUNDIALS(IterTFQMR):
+			if (!(s = SUNLinSol_SPTFQMR(sd->y, sd->prec, sd->kmax))) {
+				return MPT_ERROR(BadOperation);
+			}
+			return setLS(sd, s, 0);
 #ifdef MPT_WITH_LAPACK
-	if (type == MPT_SOLVER_SUNDIALS(Lapack)) {
-		return setLapack(sd, neqs);
-	}
+		case MPT_SOLVER_SUNDIALS(Lapack):
+			return setLapack(sd, neqs);
 #endif
-	return MPT_ERROR(BadArgument);
+		default:
+			return MPT_ERROR(BadArgument);
+	}
 }

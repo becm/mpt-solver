@@ -11,6 +11,9 @@
 # include <sundials/sundials_nvector.h>
 # include <sundials/sundials_matrix.h>
 # include <sundials/sundials_linearsolver.h>
+#  define MPT_SOLVER_SUNDIALS(x) x
+# else
+#  define MPT_SOLVER_SUNDIALS(x) MPT_SOLVER_ENUM(Sundials##x)
 #endif
 
 __MPT_SOLVER_BEGIN
@@ -26,35 +29,6 @@ typedef void * SUNMatrix;
 #ifndef _SUNLINEARSOLVER_H
 typedef void * SUNLinearSolver;
 #endif
-
-#ifndef _SUNDIALSTYPES_H
-MPT_SOLVER_STRUCT(sundials);
-#else
-MPT_SOLVER_STRUCT(sundials)
-{
-# ifdef __cplusplus
-	sundials();
-	~sundials();
-#  define MPT_SOLVER_SUNDIALS(x) x
-# else
-#  define MPT_SOLVER_SUNDIALS(x) MPT_SOLVER_ENUM(Sundials##x)
-# endif
-	N_Vector y;  /* output container */
-	
-	SUNLinearSolver LS;  /* linear solver backend */
-	
-	SUNMatrix A;          /* solver matrix */
-	sunindextype ml, mu;  /* band matrix dimensions */
-	
-	int8_t jacobian,  /* jacobian flags */
-	       step,      /* step strategy control */
-	       stype,     /* type of solver */
-	       prec,      /* preconditioner mode */
-	       kmax;      /* max. Krylov subspace size */
-
-# ifndef __cplusplus
-}; /* sundials */
-# endif
 
 enum MPT_SOLVER_SUNDIALS(Type) {
 #ifdef _SUNDIALSTYPES_H
@@ -82,10 +56,48 @@ enum MPT_SOLVER_SUNDIALS(Type) {
 	MPT_SOLVER_SUNDIALS(Numeric)   = 0x20
 };
 
+MPT_SOLVER_STRUCT(sundials)
+#ifdef _SUNDIALSTYPES_H
+{
 # ifdef __cplusplus
-}; /* sundials */
+	sundials();
+	~sundials();
 # endif
+	N_Vector y;  /* output container */
+	
+	SUNLinearSolver LS;  /* linear solver backend */
+	
+	SUNMatrix A;          /* solver matrix */
+	sunindextype ml, mu;  /* band matrix dimensions */
+	
+	int8_t jacobian,  /* jacobian flags */
+	       linsol,    /* linear solver type */
+	       prec,      /* preconditioner mode */
+	       kmax;      /* max. Krylov subspace size */
+}
 #endif /* _SUNDIALSTYPES_H */
+;
+
+MPT_SOLVER_STRUCT(sundials_step)
+#ifdef _SUNDIALSTYPES_H
+{
+# ifdef _MATH_H
+#  ifdef __cplusplus
+	inline sundials_step() : tstop(INFINITY), hin(0.0), hmin(0.0), hmax(0.0)
+	{ }
+#  else
+#   define MPT_SOLVER_SUNDIALS_STEP_INIT { INFINITY, 0.0, 0.0, 0.0 }
+#  endif
+# endif
+	realtype tstop; /* final limit of independent variable */
+	
+	realtype hin;   /* initial stepsize */
+	
+	realtype hmin;  /* minimal stapsize */
+	realtype hmax;  /* maximal stapsize */
+}
+#endif  /* _SUNDIALSTYPES_H */
+;
 
 MPT_SOLVER_STRUCT(cvode)
 #ifdef _SUNDIALSTYPES_H
@@ -103,12 +115,18 @@ public:
 	MPT_SOLVER_STRUCT(sundials) sd; /* general sundials data */
 	void *mem;                      /* CVode memory block */
 	
-	realtype t;     /* current time step */
-	realtype hmax;  /* CVode only saves inverse */
+	realtype t;      /* current time step */
+	
+	MPT_SOLVER_STRUCT(sundials_step) step;
+	long    mxstep;  /* maximum iterations per solver step call */
+	int     mxhnil;  /* threshold for (t + h = t) warnings */
+	
+	int     maxord;  /* maximum order of method */
+	uint8_t method;  /* history array adjustment mode */
 	
 	const MPT_IVP_STRUCT(odefcn) *ufcn;
 }
-#endif
+#endif /* _SUNDIALSTYPES_H */
 ;
 
 MPT_SOLVER_STRUCT(ida)
@@ -129,7 +147,11 @@ protected:
 	void *mem;                      /* IDA memory block */
 	
 	realtype t;     /* current time step */
-	realtype hmax;  /* IDA only saves inverse */
+	
+	MPT_SOLVER_STRUCT(sundials_step) step;
+	long mxstep;    /* maximum iterations per solver step call */
+	
+	int  maxord;    /* maximum order of method */
 	
 	const MPT_IVP_STRUCT(daefcn) *ufcn;
 	

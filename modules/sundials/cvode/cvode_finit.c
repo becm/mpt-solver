@@ -5,9 +5,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <math.h>
+
 #include "cvode/cvode.h"
 
 #include "sundials.h"
+
+static void resetValues(MPT_SOLVER_STRUCT(cvode) *data) {
+	static const MPT_SOLVER_STRUCT(sundials_step) step = MPT_SOLVER_SUNDIALS_STEP_INIT;
+	
+	data->t = 0.0;
+	
+	data->step = step;
+	data->mxstep = -1;
+	data->mxhnil = -1;
+	
+	data->method = CV_ADAMS;
+	data->maxord = 0;
+}
 
 /*!
  * \ingroup mptSundialsCVode
@@ -23,6 +38,12 @@ extern void mpt_sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
 	
 	mpt_solver_module_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
 	mpt_solver_module_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	
+	if (data->mem) {
+		CVodeFree(&data->mem);
+		data->mem = NULL;
+	}
+	resetValues(data);
 }
 
 /*!
@@ -38,11 +59,6 @@ extern void mpt_sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
 	mpt_solver_module_ivpset(&data->ivp, 0);
 	
 	mpt_sundials_cvode_reset(data);
-	
-	if (data->mem) {
-		CVodeFree(&data->mem);
-		data->mem = NULL;
-	}
 }
 
 /*!
@@ -58,9 +74,8 @@ extern void mpt_sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
 extern int mpt_sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *data)
 {
 	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
-	if (!(data->mem = CVodeCreate(CV_ADAMS))) {
-		return CV_MEM_NULL;
-	}
+	
+	data->mem = NULL;
 	data->ivp = par;
 	
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
@@ -68,8 +83,7 @@ extern int mpt_sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *data)
 	
 	memset(&data->sd, 0, sizeof(data->sd));
 	
-	data->t = 0.0;
-	data->hmax = 0.0;
+	resetValues(data);
 	
 	data->ufcn = NULL;
 	

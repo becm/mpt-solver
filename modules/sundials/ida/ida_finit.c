@@ -5,9 +5,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <math.h>
+
 #include <ida/ida.h>
 
 #include "sundials.h"
+
+static void resetValues(MPT_SOLVER_STRUCT(ida) *data) {
+	static const MPT_SOLVER_STRUCT(sundials_step) step = MPT_SOLVER_SUNDIALS_STEP_INIT;
+	
+	data->t = 0.0;
+	
+	data->step = step;
+	data->mxstep = -1;
+}
 
 /*!
  * \ingroup mptSundialsIda
@@ -33,6 +44,7 @@ extern void mpt_sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
 		data->tmp.base = 0;
 		data->tmp.size = 0;
 	}
+	resetValues(data);
 }
 
 /*!
@@ -69,19 +81,15 @@ extern int mpt_sundials_ida_init(MPT_SOLVER_STRUCT(ida) *data)
 {
 	const MPT_IVP_STRUCT(parameters) par = MPT_IVPPAR_INIT;
 	
-	if (!(data->mem = IDACreate())) {
-		return IDA_MEM_NULL;
-	}
-	IDASetUserData(data->mem, data);
-	
+	data->mem = NULL;
 	data->ivp = par;
+	
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);
 	
 	memset(&data->sd, 0, sizeof(data->sd));
 	
-	data->t = 0.0;
-	data->hmax = 0.0;
+	resetValues(data);
 	
 	data->ufcn = 0;
 	

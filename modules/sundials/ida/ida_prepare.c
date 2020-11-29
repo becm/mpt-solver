@@ -26,9 +26,20 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	long neqs;
 	int err;
 	
-	if (!ida || !(ida_mem = ida->mem)) {
+	if (!ida) {
 		return MPT_ERROR(BadArgument);
 	}
+	if (!(ida_mem = ida->mem)) {
+		if (!(ida_mem = IDACreate())) {
+			return MPT_ERROR(BadOperation);
+		}
+		if (IDASetUserData(ida_mem, ida) != IDA_SUCCESS) {
+			IDAFree(&ida_mem);
+			return MPT_ERROR(BadOperation);
+		}
+		ida->mem = ida_mem;
+	}
+	
 	if ((neqs = ida->ivp.neqs) < 1 || (neqs *= (ida->ivp.pint + 1)) <= 0) {
 		return MPT_ERROR(BadArgument);
 	}
@@ -63,8 +74,8 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	if (err < 0) {
 		return err;
 	}
-	if (!ida->sd.stype) {
-		ida->sd.stype = MPT_SOLVER_SUNDIALS(Direct);
+	if (!ida->sd.linsol) {
+		ida->sd.linsol = MPT_SOLVER_SUNDIALS(Direct);
 	}
 	if (!ida->sd.jacobian) {
 		if (!ida->ivp.pint || ida->sd.ml >= neqs || ida->sd.mu >= neqs) {
@@ -87,9 +98,9 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	}
 	if (ida->sd.A) {
 		if (!ida->ufcn || !ida->ufcn->jac.fcn) {
-			ida->sd.stype |= MPT_SOLVER_SUNDIALS(Numeric);
+			ida->sd.linsol |= MPT_SOLVER_SUNDIALS(Numeric);
 		}
-		if (!(ida->sd.stype & MPT_SOLVER_SUNDIALS(Numeric))) {
+		if (!(ida->sd.linsol & MPT_SOLVER_SUNDIALS(Numeric))) {
 			IDASetJacFn(ida_mem, mpt_sundials_ida_jac);
 		}
 	}

@@ -43,6 +43,9 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	MPT_SOLVER_MODULE_FCN(ivp_values)(&ida->ivp, ida->t, val, MPT_tr("IDA solver state"), out, usr);
 	}
 	
+	if (!ida->mem) {
+		return line;
+	}
 	
 	if ((show & MPT_SOLVER_ENUM(Status))
 	    && (IDAGetCurrentTime(ida->mem, &dval) == IDA_SUCCESS)) {
@@ -62,13 +65,15 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	++line;
 	}
 	
-	if ((show & MPT_SOLVER_ENUM(Status))
-	    && (IDAGetLastStep(ida->mem, &dval) == IDA_SUCCESS)) {
+	if (show & MPT_SOLVER_ENUM(Status)) {
+	dval = ida->step.hin;  /* use initial value if no solver steps were performed */
+	if (!lval || (IDAGetLastStep(ida->mem, &dval) == IDA_SUCCESS)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
 	mpt_solver_module_value_double(&pr.val, &dval);
 	out(usr, &pr);
 	++line;
+	}
 	}
 	
 	if (!(show & MPT_SOLVER_ENUM(Report))) return line;
@@ -82,7 +87,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	++line;
 	}
 	/* direct solver type */
-	if (ida->sd.stype & MPT_SOLVER_SUNDIALS(Direct)) {
+	if (ida->sd.linsol >= MPT_SOLVER_SUNDIALS(Direct)) {
 		if (IDAGetNumJacEvals(ida->mem, &lval) == IDA_SUCCESS) {
 		pr.name = "jeval";
 		pr.desc = MPT_tr("jacobian evaluations");
@@ -93,7 +98,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 		}
 	}
 	/* iterative solver type */
-	else if (ida->sd.stype) {
+	else if (ida->sd.linsol) {
 		if (IDAGetNumLinIters(ida->mem, &lval) == IDA_SUCCESS) {
 		pr.name = "liter";
 		pr.desc = MPT_tr("linear iterations");

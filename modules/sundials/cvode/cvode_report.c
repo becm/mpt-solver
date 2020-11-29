@@ -4,7 +4,7 @@
 
 #include <sys/uio.h>
 
-#include <cvode/cvode_impl.h>
+#include <cvode/cvode.h>
 
 #include "sundials.h"
 
@@ -31,7 +31,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	long int lval;
 	double dval;
 	int line = 0;
-	CVodeMem cv_mem = cv->mem;
+	void *cv_mem = cv->mem;
 	
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -40,7 +40,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	pr.desc = MPT_tr("method for solver step");
 	pr.val.fmt = 0;
 	
-	switch (cv_mem->cv_lmm) {
+	switch (cv->method) {
 	  case CV_ADAMS: pr.val.ptr = "Adams"; break;
 	  case CV_BDF:   pr.val.ptr = "BDF";   break;
 	  default:       pr.val.ptr = "";
@@ -49,6 +49,10 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	
 	if (mpt_sundials_report_jac(&cv->sd, out, usr) >= 0) ++line;
 	
+	}
+	
+	if (!(cv_mem = cv->mem)) {
+		return line;
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)) {
@@ -75,13 +79,15 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	++line;
 	}
 	
-	if ((show & MPT_SOLVER_ENUM(Status))
-	    && (CVodeGetLastStep(cv_mem, &dval) == CV_SUCCESS)) {
+	if (show & MPT_SOLVER_ENUM(Status)) {
+	dval = cv->step.hin;  /* use initial value if no solver steps were performed */
+	if (!lval || (CVodeGetLastStep(cv_mem, &dval) == CV_SUCCESS)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
 	mpt_solver_module_value_double(&pr.val, &dval);
 	out(usr, &pr);
 	++line;
+	}
 	}
 	
 	if (!(show & MPT_SOLVER_ENUM(Report))) return line;
@@ -95,7 +101,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	++line;
 	}
 	
-	if ((cv->sd.stype & MPT_SOLVER_SUNDIALS(Direct))
+	if ((cv->sd.linsol >= MPT_SOLVER_SUNDIALS(Direct))
 	    && (CVodeGetNumLinSolvSetups(cv_mem, &lval) == CV_SUCCESS)) {
 	pr.name = "lsetup";
 	pr.desc = MPT_tr("linear solver setups");

@@ -10,13 +10,6 @@ DIR_SUNDIALS_OBJ ?= ${DIR_SUNDIALS}/build
 # include directories (generated, public, internal)
 DIR_SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}/include ${DIR_SUNDIALS}/include
 INC = . ${DIR_SUNDIALS_INC}
-
-objects_internal = \
-	cvode/cvode_property.o \
-	cvode/cvode_prepare.o \
-	cvode/cvode_report.o \
-	ida/ida_property.o
-${objects_internal} : INC+=${DIR_SUNDIALS}/src
 #
 # SUNDIALS modules to include in shared library
 sundials_lapack = sunlinsol_lapackband sunlinsol_lapackdense
@@ -55,5 +48,5 @@ CONFIG = sundials.conf
 include ../mpt.solver.mk
 #
 # object dependencies
-${OBJS} : sundials.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
+${OBJS} : sundials.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h ${MAKEFILE_LIST}
 ida/ida_property.o cvode/cvode_property.o libinfo.o : ${DIR_BASE}version.h

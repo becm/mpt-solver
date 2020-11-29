@@ -128,7 +128,7 @@ extern MPT_INTERFACE(metatype) *mpt_sundials_ida()
 		return 0;
 	}
 	memset(&ida->uf, 0, sizeof(ida->uf));
-	IDASetUserData(ida->d.mem, &ida->d);
+	
 	ida->next = 0.0;
 	
 	ida->_mt._vptr = &idaMeta;

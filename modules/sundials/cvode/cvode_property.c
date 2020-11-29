@@ -5,7 +5,9 @@
 #include <string.h>
 #include <strings.h>
 
-#include <cvode/cvode_impl.h>
+#include <math.h>
+
+#include <cvode/cvode.h>
 
 #include "version.h"
 
@@ -21,7 +23,10 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(convertable) *s
 {
 	char *val;
 	int len;
-	CVodeMem cv_mem = cv->mem;
+	
+	if (cv->mem) {
+		return MPT_ERROR(BadOperation);
+	}
 	if (!src) {
 		return 0;
 	}
@@ -34,21 +39,31 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(convertable) *s
 	if (*val && !len) {
 		len = strlen(val);
 	}
-	if (!len || !strncasecmp(adamsText, val, len)) {
-		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_ADAMS) {
-			return MPT_ERROR(BadOperation);
-		}
-		cv_mem->cv_lmm  = CV_ADAMS;
-		cv_mem->cv_qmax = ADAMS_Q_MAX;
+	if (!len || !strncasecmp(adamsText, val, sizeof(adamsText))) {
+		cv->method = CV_ADAMS;
 	}
 	else if (!strncasecmp(bdfText, val, len)) {
-		if (cv_mem->cv_MallocDone && cv_mem->cv_lmm != CV_BDF) {
-			return MPT_ERROR(BadOperation);
-		}
-		cv_mem->cv_lmm  = CV_BDF;
-		cv_mem->cv_qmax = BDF_Q_MAX;
+		cv->method = CV_BDF;
 	}
 	return len;
+}
+
+static void *getSolverData(MPT_SOLVER_STRUCT(cvode) *cv) {
+	void *cv_mem;
+	
+	if ((cv_mem = cv->mem)) {
+		return cv_mem;
+	}
+	if (!(cv_mem = CVodeCreate(cv->method))) {
+		return NULL;
+	}
+	if (CVodeSetUserData(cv_mem, cv) != CV_SUCCESS) {
+		CVodeFree(&cv_mem);
+		return NULL;
+	}
+	cv->mem = cv_mem;
+	
+	return cv_mem;
 }
 
 /*!
@@ -66,10 +81,9 @@ static int setMethod(MPT_SOLVER_STRUCT(cvode) *cv, MPT_INTERFACE(convertable) *s
  */
 extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name, MPT_INTERFACE(convertable) *src)
 {
-	CVodeMem cv_mem;
 	int ret = 0;
 	
-	if (!cv || !(cv_mem = cv->mem)) {
+	if (!cv) {
 		return MPT_ERROR(BadArgument);
 	}
 	if (!name) {
@@ -96,9 +110,14 @@ extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name
 		return setMethod(cv, src);
 	}
 	if (!strcasecmp(name, "maxord")) {
-		long val = cv_mem->cv_qmax;
-		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) return ret;
-		else if (CVodeSetMaxOrd(cv_mem, val) < 0) return MPT_ERROR(BadValue);
+		long val = 0;
+		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) {
+			return ret;
+		}
+		else if (CVodeSetMaxOrd(getSolverData(cv), val) != CV_SUCCESS) {
+			return MPT_ERROR(BadValue);
+		}
+		cv->maxord = val;
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) {
@@ -106,38 +125,65 @@ extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name
 		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) {
 			return ret;
 		}
-		if (val < 0) {
-			cv->sd.step = CV_ONE_STEP;
-		}
-		else if (CVodeSetMaxNumSteps(cv_mem, val) < 0) {
+		if ((val != 0) && (CVodeSetMaxNumSteps(getSolverData(cv), val) != CV_SUCCESS)) {
 			return MPT_ERROR(BadValue);
-		} else {
-			cv->sd.step = CV_NORMAL;
 		}
+		cv->mxstep = val;
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hnilwarns")) {
 		long val = 0;
-		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) return ret;
-		if (CVodeSetMaxHnilWarns(cv_mem, val) < 0) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->convert(src, 'l', &val)) < 0) {
+			return ret;
+		}
+		if (CVodeSetMaxHnilWarns(getSolverData(cv), val) != CV_SUCCESS) {
+			return MPT_ERROR(BadValue);
+		}
+		cv->mxhnil = val;
 		return ret ? 1 : 0;
 	}
-	if (!strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "hin") || !strcasecmp(name, "h0")) {
+	if (!strcasecmp(name, "tstop")) {
+		double val = INFINITY;
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) {
+			return ret;
+		}
+		if (CVodeSetStopTime(getSolverData(cv), val) != CV_SUCCESS) {
+			return MPT_ERROR(BadValue);
+		}
+		cv->step.tstop = val;
+		return ret ? 1 : 0;
+	}
+	if (!strcasecmp(name, "hin") || !strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "h0")) {
 		double val = 0.0;
-		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
-		if (CVodeSetInitStep(cv_mem, val) < 0) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) {
+			return ret;
+		}
+		if (CVodeSetInitStep(getSolverData(cv), val) != CV_SUCCESS) {
+			return MPT_ERROR(BadValue);
+		}
+		cv->step.hin = val;
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hmin") || !strcasecmp(name, "stepmin")) {
 		double val = 0.0;
-		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
-		if (CVodeSetMinStep(cv_mem, val) < 0) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) {
+			return ret;
+		}
+		if (CVodeSetMinStep(getSolverData(cv), val) != CV_SUCCESS) {
+			return MPT_ERROR(BadValue);
+		}
+		cv->step.hmin = val;
 		return ret ? 1 : 0;
 	}
 	if (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) {
 		double val = 0.0;
-		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) return ret;
-		if (CVodeSetMaxStep(cv_mem, val) < 0) return MPT_ERROR(BadValue);
+		if (src && (ret = src->_vptr->convert(src, 'd', &val)) < 0) {
+			return ret;
+		}
+		if (CVodeSetMaxStep(getSolverData(cv), val) != CV_SUCCESS) {
+			return MPT_ERROR(BadValue);
+		}
+		cv->step.hmax = val;
 		return ret ? 1 : 0;
 	}
 	return MPT_ERROR(BadArgument);
@@ -161,7 +207,6 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 	static const uint8_t realfmt[] = { MPT_SOLVER_SUNDIALS(Realtype), 0 };
 	const char *name;
 	intptr_t pos = 0, id;
-	CVodeMem cv_mem = cv ? cv->mem : 0;
 	
 	if (!prop) {
 		return MPT_SOLVER_ENUM(ODE) | MPT_SOLVER_ENUM(PDE);
@@ -217,8 +262,8 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 		prop->desc = "solver method";
 		prop->val.fmt = 0;
 		prop->val.ptr = 0;
-		if (!cv_mem) return id;
-		switch (cv_mem->cv_lmm) {
+		if (!cv) return id;
+		switch (cv->method) {
 		  case CV_BDF: prop->val.ptr = bdfText; break;
 		  case CV_ADAMS: prop->val.ptr = adamsText; break;
 		  default: prop->val.ptr = "";
@@ -226,54 +271,64 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 		return id;
 	}
 	if (name ? !strcasecmp(name, "maxord") : (pos == ++id)) {
-		const int *ptr = cv_mem ? &cv_mem->cv_qmax : 0;
 		prop->name = "maxord";
 		prop->desc = "maximum order of steps";
-		mpt_solver_module_value_int(&prop->val, ptr);
-		if (!cv_mem) return id;
-		return *ptr == ADAMS_Q_MAX ? 0 : 1;
+		mpt_solver_module_value_int(&prop->val, &cv->maxord);
+		if (!cv) return id;
+		return (cv->maxord >= 0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) : (pos == ++id)) {
-		const long *ptr = cv_mem ? &cv_mem->cv_mxstep : 0;
+		const long *ptr = &cv->mxstep;
 		prop->name = "mxstep";
 		prop->desc = "allowed function evaluations per call";
 		prop->val.fmt = longfmt;
 		prop->val.ptr = ptr;
-		if (!cv_mem) return id;
-		return *ptr ? 1 : 0;
+		if (!cv) return id;
+		return (cv->mxstep >= 0) ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "hnilwarns") : (pos == ++id)) {
-		const int *ptr = cv_mem ? &cv_mem->cv_mxhnil : 0;
+		const int *ptr = &cv->mxhnil;
 		prop->name = "hnilwarns";
-		prop->desc = "max. warnings for 't + h == t'";
+		prop->desc = "threshold for 't + h == t' warnings";
 		mpt_solver_module_value_int(&prop->val, ptr);
-		if (!cv_mem) return id;
-		return *ptr ? 1 : 0;
+		if (!cv) return id;
+		return (cv->mxhnil >= 0) ? 1 : 0;
+	}
+	if (name ? (!strcasecmp(name, "tstop") || !strcasecmp(name, "tend")) : (pos == ++id)) {
+		const realtype *ptr = &cv->step.tstop;
+		prop->name = "tstop";
+		prop->desc = "final independent variable value";
+		prop->val.fmt = realfmt;
+		prop->val.ptr = ptr;
+		if (!cv) return id;
+		return (cv->step.tstop != INFINITY) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "hin") || !strcasecmp(name, "h0")) : (pos == ++id)) {
-		const double *ptr = cv_mem ? &cv_mem->cv_hin : 0;
+		const realtype *ptr = &cv->step.hin;
 		prop->name = "hin";
 		prop->desc = "initial stepsize";
-		mpt_solver_module_value_double(&prop->val, ptr);
-		if (!cv_mem) return id;
-		return *ptr ? 1 : 0;
+		prop->val.fmt = realfmt;
+		prop->val.ptr = ptr;
+		if (!cv) return id;
+		return (cv->step.hin != 0.0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "stepmin")) : (pos == ++id)) {
-		const double *ptr = cv_mem ? &cv_mem->cv_hmin : 0;
+		const realtype *ptr = &cv->step.hmin;
 		prop->name = "hmin";
 		prop->desc = "minimal stepsize";
-		mpt_solver_module_value_double(&prop->val, ptr);
-		if (!cv_mem) return id;
-		return cv_mem->cv_hmin ? 1 : 0;
+		prop->val.fmt = realfmt;
+		prop->val.ptr = ptr;
+		if (!cv) return id;
+		return (cv->step.hmin != 0.0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) : (pos == ++id)) {
-		const realtype *ptr = &cv->hmax;
+		const realtype *ptr = &cv->step.hmax;
 		prop->name = "hmax";
 		prop->desc = "maximal stepsize";
 		prop->val.fmt = realfmt;
 		prop->val.ptr = ptr;
 		if (!cv) return id;
-		return *ptr ? 1 : 0;
+		return (cv->step.hmax != 0.0) ? 1 : 0;
 	}
 	return MPT_ERROR(BadArgument);
 }

@@ -11,7 +11,7 @@
 
 #include <cvode/cvode_diag.h>
 
-#include <cvode/cvode_impl.h>
+#include <cvode/cvode.h>
 
 #define _SUNDIALS_GENERIC_TYPE(x) void
 #include "sundials.h"
@@ -29,13 +29,24 @@
  */
 extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 {
-	CVodeMem cv_mem;
+	void *cv_mem;
 	long neqs;
 	int err;
 	
-	if (!cv || !(cv_mem = cv->mem)) {
+	if (!cv) {
 		return MPT_ERROR(BadArgument);
 	}
+	if (!(cv_mem = cv->mem)) {
+		if (!(cv_mem = CVodeCreate(cv->method))) {
+			return MPT_ERROR(BadOperation);
+		}
+		if (CVodeSetUserData(cv_mem, cv) != CV_SUCCESS) {
+			CVodeFree(&cv_mem);
+			return MPT_ERROR(BadOperation);
+		}
+		cv->mem = cv_mem;
+	}
+	
 	if ((neqs = cv->ivp.neqs) < 1 || (neqs *= (cv->ivp.pint + 1)) <= 0) {
 		return MPT_ERROR(BadArgument);
 	}
@@ -67,25 +78,10 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	if (err < 0) {
 		return err;
 	}
-	/* CVodeInit() assigns Newton (rootfind) nonlinear solver by default */
-	if (!cv->sd.stype) {
-		/* TODO: variable acc. vector count */
-		SUNNonlinearSolver NLS = SUNNonlinSol_FixedPoint(cv->sd.y, 0);
-		if (!NLS) {
-			return MPT_ERROR(BadOperation);
-		}
-		err = CVodeSetNonlinearSolver(cv_mem, NLS);
-		if (err < 0) {
-			SUNNonlinSolFree(NLS);
-			return err;
-		}
-		/* Make CVODE owner of nonlinear solver reference.
-		 * WARNING: before 4.1, call to SUNNonlinSolFree() was unguarded
-		 */
-		cv_mem->ownNLS = SUNTRUE;
-		return err;
+	if (!cv->sd.linsol) {
+		cv->sd.linsol = MPT_SOLVER_SUNDIALS(Direct);
 	}
-	if (cv->sd.stype & MPT_SOLVER_SUNDIALS(Direct)) {
+	if (cv->sd.linsol & MPT_SOLVER_SUNDIALS(Direct)) {
 		if (!cv->sd.jacobian) {
 			return CVDiag(cv_mem);
 		}
@@ -104,9 +100,9 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	}
 	if (cv->sd.A) {
 		if (!cv->ufcn || !cv->ufcn->jac.fcn) {
-			cv->sd.stype |= MPT_SOLVER_SUNDIALS(Numeric);
+			cv->sd.linsol |= MPT_SOLVER_SUNDIALS(Numeric);
 		}
-		if (!(cv->sd.stype & MPT_SOLVER_SUNDIALS(Numeric))) {
+		if (!(cv->sd.linsol & MPT_SOLVER_SUNDIALS(Numeric))) {
 			CVodeSetJacFn(cv_mem, mpt_sundials_cvode_jac);
 		}
 	}

@@ -131,7 +131,7 @@ extern MPT_INTERFACE(metatype) *mpt_sundials_cvode()
 		return 0;
 	}
 	memset(&cv->uf, 0, sizeof(cv->uf));
-	CVodeSetUserData(cv->d.mem, &cv->d);
+	
 	cv->next = 0.0;
 	
 	cv->_mt._vptr = &cVodeMeta;

@@ -18,7 +18,7 @@ extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TY
 	pr.desc = "type of jacobian matrix";
 	pr.val.fmt = 0;
 	
-	if (sd->stype < MPT_SOLVER_SUNDIALS(Direct)) {
+	if (sd->linsol < MPT_SOLVER_SUNDIALS(Direct)) {
 		pr.val.ptr = "none";
 		return out(usr, &pr);
 	}
@@ -32,8 +32,8 @@ extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TY
 		static const uint8_t fmt[] = "ss";
 		const char *val[2];
 		
-		val[0] = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "full" : "Full";
-		val[1] = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "numerical": "user";
+		val[0] = sd->linsol & MPT_SOLVER_SUNDIALS(Numeric) ? "full" : "Full";
+		val[1] = sd->linsol & MPT_SOLVER_SUNDIALS(Numeric) ? "numerical": "user";
 		
 		pr.val.fmt = fmt;
 		pr.val.ptr = val;
@@ -43,10 +43,10 @@ extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TY
 		static const uint8_t fmt[] = "siis";
 		struct { const char *fmt; int32_t mu, ml; const char *jac; } val;
 		
-		val.fmt = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "banded" : "Banded";
+		val.fmt = sd->linsol & MPT_SOLVER_SUNDIALS(Numeric) ? "banded" : "Banded";
 		val.mu  = SUNBandMatrix_UpperBandwidth(A);
 		val.ml  = SUNBandMatrix_LowerBandwidth(A);
-		val.jac = sd->stype & MPT_SOLVER_SUNDIALS(Numeric) ? "numerical": "user";
+		val.jac = sd->linsol & MPT_SOLVER_SUNDIALS(Numeric) ? "numerical": "user";
 		
 		pr.val.fmt = fmt;
 		pr.val.ptr = &val;
