@@ -40,6 +40,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("type of jacobian");
 	pr.val.fmt = fmt_ss;
+	pr.val.ptr = val;
 	
 	val[0] = "Full";
 	val[1] = "user";
