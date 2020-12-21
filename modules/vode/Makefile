@@ -24,4 +24,4 @@ CONFIG = vode.conf
 # solver rules
 include ../mpt.solver.mk
 vode_*.o : vode.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
-vode_property.o libinfo.o : ${DIR_BASE}version.h
+vode_property.o : ${DIR_BASE}version.h

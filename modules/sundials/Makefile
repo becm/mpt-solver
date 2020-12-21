@@ -7,7 +7,7 @@ DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-${sundials_version}
 #
 # precompiled object location
 DIR_SUNDIALS_OBJ ?= ${DIR_SUNDIALS}/build
-# include directories (generated, public, internal)
+# include directories (generated, public)
 DIR_SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}/include ${DIR_SUNDIALS}/include
 INC = . ${DIR_SUNDIALS_INC}
 #
@@ -58,5 +58,7 @@ CONFIG = sundials.conf
 include ../mpt.solver.mk
 #
 # object dependencies
-${OBJS} : sundials.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h sundials_collect.sh ${MAKEFILE_LIST}
-ida/ida_property.o cvode/cvode_property.o libinfo.o : ${DIR_BASE}version.h
+${OBJS} : sundials.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
+ida/ida_property.o cvode/cvode_property.o : ${DIR_BASE}version.h
+# target dependencies
+${LIB_STATIC} ${LIB_SHARED} : sundials_collect.sh

@@ -44,7 +44,6 @@ ${DIR_MATH}/mebdfi.o : FFLAGS=-O0 -fpic -Wall
 #
 # object dependencies
 ${OBJS} : module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
-libinfo.o : ${HEADER} ${DIR_BASE}version.h
 */*_property.o : ${DIR_BASE}version.h
 dassl/*.o : dassl.h
 radau/*.o : radau.h

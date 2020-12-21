@@ -7,8 +7,6 @@
 
 #include "../solver.h"
 
-#include <sys/uio.h>
-
 __MPT_SOLVER_BEGIN
 
 typedef void limex_fcn_t(int *, int *, double *, double *, double *, double *, int *, int *, int *);

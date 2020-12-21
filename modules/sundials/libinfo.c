@@ -4,7 +4,6 @@
 
 #include <sundials/sundials_config.h>
 
-#include "version.h"
 #include "libinfo.h"
 
 extern void _start()

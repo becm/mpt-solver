@@ -48,7 +48,7 @@ FFLAGS ?= -fpic -O5 -Wall -fstack-protector
 #
 # additional object dependancies
 $(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o) \
-${OBJS} : ${DIR_SOLVER_MODULES}../solver.h ${DIR_BASE}mptcore/meta.h
+${OBJS} : ${DIR_SOLVER_MODULES}../solver.h ${DIR_BASE}mptcore/meta.h ${MAKEFILE_LIST}
 libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
 #
 # solver module configuration

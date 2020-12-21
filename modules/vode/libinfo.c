@@ -2,7 +2,6 @@
  * VODE solver library description
  */
 
-#include "version.h"
 #include "libinfo.h"
 
 extern void _start()
