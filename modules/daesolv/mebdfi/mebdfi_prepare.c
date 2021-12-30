@@ -63,7 +63,13 @@ extern int mpt_mebdfi_prepare(MPT_SOLVER_STRUCT(mebdfi) *me)
 	me->state = 1; /* initial call for mebdfi() */
 	
 	/* reset counter on reinitialisation */
-	for (liw = 0; liw < 7; liw++) iwk[4+liw] = 0;
+	for (liw = 0; liw < 7; liw++) {
+		iwk[4 + liw] = 0;
+	}
+	/* set default step count per call */
+	if (iwk[13] == 0) {
+		iwk[13] = 1000;
+	}
 	
 	return neqs;
 }

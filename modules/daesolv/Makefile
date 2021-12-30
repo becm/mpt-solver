@@ -39,9 +39,6 @@ CONFIG = daesolv.conf
 # general library rules
 include ../mpt.solver.mk
 #
-# special compiler flags for MEBDFI
-${DIR_MATH}/mebdfi.o : FFLAGS=-O0 -fpic -Wall
-#
 # object dependencies
 ${OBJS} : module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
 */*_property.o : ${DIR_BASE}version.h

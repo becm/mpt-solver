@@ -1,13 +1,15 @@
 Source Information
-  ddassl.f and mebdfi.f from www.netlib.org/ode
+  ddassl: https://www.netlib.org/ode/ddassl.f
+  mebdfi: https://archimede.dm.uniba.it/~testset/solvers/mebdfi.php
+  radau:  https://archimede.dm.uniba.it/~testset/solvers/radau.php
+  
   auxiliary files from www.netlib.org/linpack
 
-Local Changes
-  remove dec() and sol() from mebdfi.f
-  use versions in radaua.f
-  
-  compile mebdfi.f without opimization
-  because of broken implementation
+Local 'mebdfi.f' Changes
+  fix initialization of EPSJAC (not saved)
+  drop INTERP() call in 8000 block (no access to actual Y0)
+  remove DEC() and SOL() -> use versions in radaua.f
+  remove LINPACK and BLAS routines
 
 Comment
-  successor to DASSL in sundials (IDA)
+  successor to DASSL in sundials module (IDA)
