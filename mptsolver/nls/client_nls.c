@@ -13,6 +13,7 @@
 #include <sys/resource.h>
 #include <sys/uio.h>
 
+#include "types.h"
 #include "meta.h"
 #include "node.h"
 #include "message.h"
@@ -73,7 +74,7 @@ static MPT_INTERFACE(logger) *loggerNLS(const MPT_STRUCT(NLS) *nls)
 	if (nls
 	    && (mt = nls->cfg)) {
 		MPT_INTERFACE(config) *cfg = 0;
-		if (MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeConfig)), &cfg) > 0
+		if (MPT_metatype_convert(mt, MPT_ENUM(TypeConfigPtr), &cfg) > 0
 		    && cfg
 		    && (info = mpt_config_logger(cfg))) {
 			return info;
@@ -101,7 +102,7 @@ static MPT_STRUCT(node) *configNLS(MPT_STRUCT(NLS) *nls)
 		nls->cfg = cfg;
 	}
 	n = 0;
-	if (MPT_metatype_convert(cfg, MPT_type_pointer(MPT_ENUM(TypeNode)), &n) < 0) {
+	if (MPT_metatype_convert(cfg, MPT_ENUM(TypeNodePtr), &n) < 0) {
 		return 0;
 	}
 	return n;
@@ -226,23 +227,21 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 static int convNLS(MPT_INTERFACE(convertable) *val, int type, void *ptr)
 {
 	MPT_STRUCT(NLS) *nls = (void *) val;
-	int me = mpt_client_typeid();
+	const MPT_STRUCT(named_traits) *traits = mpt_client_type_traits();
+	int me = traits ? traits->type : MPT_ENUM(TypeMetaPtr);
 	
-	if (me < 0) {
-		me = MPT_ENUM(_TypeMetaBase);
-	}
-	else if (type == MPT_type_pointer(me)) {
+	if (traits && (int) traits->type == type) {
 		if (ptr) *((const void **) ptr) = &nls->_cl;
-		return MPT_ENUM(TypeConfig);
+		return MPT_ENUM(TypeConfigPtr);
 	}
 	if (!type) {
-		static const uint8_t fmt[] = { MPT_ENUM(TypeConfig), 0 };
+		static const uint8_t fmt[] = { MPT_ENUM(TypeConfigPtr), 0 };
 		if (ptr) {
 			*((const uint8_t **) ptr) = fmt;
 		}
 		return me;
 	}
-	if (type == MPT_type_pointer(MPT_ENUM(TypeConfig))) {
+	if (type == MPT_ENUM(TypeConfigPtr)) {
 		if (ptr) *((const void **) ptr) = &nls->_cfg;
 		return me;
 	}
@@ -302,7 +301,7 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		MPT_INTERFACE(metatype) *old;
 		mt = mpt_output_local();
 		obj = 0;
-		MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj);
+		MPT_metatype_convert(mt, MPT_ENUM(TypeObjectPtr), &obj);
 		mpt_conf_history(obj, curr);
 		if ((old = curr->_meta)) {
 			old->_vptr->unref(old);
@@ -366,7 +365,7 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	}
 	obj = 0;
 	if ((mt = nls->sol)
-	    && MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) > 0
+	    && MPT_metatype_convert(mt, MPT_ENUM(TypeObjectPtr), &obj) > 0
 	    && obj
 	    && (val = mpt_object_typename(obj))) {
 		mpt_log(hist, 0, MPT_LOG(Message), "%s: %s", MPT_tr("solver"), val);
@@ -400,10 +399,10 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		return MPT_ERROR(BadOperation);
 	}
 	sol = 0;
-	MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol);
+	MPT_metatype_convert(mt, MPT_ENUM(TypeSolverPtr), &sol);
 	
 	obj = 0;
-	if (MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) < 0
+	if (MPT_metatype_convert(mt, MPT_ENUM(TypeObjectPtr), &obj) < 0
 	    || !obj) {
 		err = MPT_metatype_convert(mt, 0, 0);
 		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
@@ -461,7 +460,7 @@ static int stepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		        MPT_tr("solver or data missing"));
 		return MPT_ERROR(BadArgument);
 	}
-	if ((res = MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	if ((res = MPT_metatype_convert(mt, MPT_ENUM(TypeSolverPtr), &sol)) < 0
 	    || !sol) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("no solver interface"));

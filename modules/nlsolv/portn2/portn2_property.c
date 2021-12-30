@@ -8,7 +8,7 @@
 #include <limits.h>
 #include <float.h>
 
-#include "meta.h"
+#include "types.h"
 
 #include "version.h"
 
@@ -39,7 +39,7 @@ extern int mpt_portn2_set(MPT_SOLVER_STRUCT(portn2) *n2, const char *name, MPT_I
 		if (n2->nls.nval <= 0) {
 			return MPT_ERROR(BadArgument);
 		}
-		if (src && (ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
+		if (src && (ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) < 0) {
 			return ret;
 		}
 		len = n2->bnd ? 3 * n2->nls.nval : n2->nls.nval;

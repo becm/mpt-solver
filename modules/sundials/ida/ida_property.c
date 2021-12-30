@@ -11,6 +11,7 @@
 
 #include "version.h"
 
+#include "types.h"
 #include "meta.h"
 
 #include "sundials.h"
@@ -25,7 +26,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(convertable) *src)
 	long pos, len;
 	
 	it = 0;
-	if (src && (pos = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0) {
+	if (src && (pos = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) < 0) {
 		return pos;
 	}
 	if ((len = ida->ivp.neqs * (ida->ivp.pint + 1)) < 0) {

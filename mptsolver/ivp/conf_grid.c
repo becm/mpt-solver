@@ -6,6 +6,7 @@
 #include <errno.h>
 
 #include "array.h"
+#include "types.h"
 #include "meta.h"
 
 #include "values.h"
@@ -40,7 +41,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, MPT_INTERFACE(convertable) *co
 	mt = 0;
 	if (conf) {
 		/* use existing iterator */
-		if ((ret = conf->_vptr->convert(conf, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) > 0) {
+		if ((ret = conf->_vptr->convert(conf, MPT_ENUM(TypeIteratorPtr), &it)) > 0) {
 			if (!it) {
 				return MPT_ERROR(BadValue);
 			}
@@ -58,7 +59,7 @@ extern int mpt_conf_grid(MPT_STRUCT(array) *grid, MPT_INTERFACE(convertable) *co
 		}
 	}
 	if (mt) {
-		if ((ret = MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0
+		if ((ret = MPT_metatype_convert(mt, MPT_ENUM(TypeIteratorPtr), &it)) < 0
 		    || !it) {
 			mt->_vptr->unref(mt);
 			return MPT_ERROR(BadType);

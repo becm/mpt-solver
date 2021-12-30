@@ -83,15 +83,15 @@ static int cakzo_init(MPT_INTERFACE(convertable) *sol, MPT_STRUCT(solver_data) *
 	
 	switch (sd->npar) {
 	  default:;
-	  case 9: H    = param[8];
-	  case 8: pco2 = param[7];
-	  case 7: Ks   = param[6];
-	  case 6: klA  = param[5];
-	  case 5: K    = param[4];
-	  case 4: k4   = param[3];
-	  case 3: k3   = param[2];
-	  case 2: k2   = param[1];
-	  case 1: k1   = param[0];
+	  case 9: H    = param[8]; /* fall through */
+	  case 8: pco2 = param[7]; /* fall through */
+	  case 7: Ks   = param[6]; /* fall through */
+	  case 6: klA  = param[5]; /* fall through */
+	  case 5: K    = param[4]; /* fall through */
+	  case 4: k4   = param[3]; /* fall through */
+	  case 3: k3   = param[2]; /* fall through */
+	  case 2: k2   = param[1]; /* fall through */
+	  case 1: k1   = param[0]; /* fall through */
 	  case 0:;
 	}
 	return neqs;

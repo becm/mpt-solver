@@ -23,7 +23,7 @@ public:
 	int convert(int type, void *ptr) __MPT_OVERRIDE
 	{
 		std::cout << __func__ << " " << type << std::endl;
-		if (type == mpt::typeinfo<mpt::config *>::id()) {
+		if (type == mpt::type_properties<mpt::config *>::id(true)) {
 			return mpt::BadType;
 		}
 		return client::convert(type, ptr);

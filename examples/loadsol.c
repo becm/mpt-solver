@@ -19,6 +19,7 @@
 
 #include MPT_INCLUDE(convert.h)
 #include MPT_INCLUDE(client.h)
+#include MPT_INCLUDE(types.h)
 #include MPT_INCLUDE(config.h)
 #include MPT_INCLUDE(meta.h)
 
@@ -66,7 +67,7 @@ int main(int argc, char * const argv[])
 		if ((s = mpt_solver_load(&mt, 0, buf, log))) {
 			MPT_INTERFACE(object) *obj = 0;
 			const char *n;
-			if (MPT_metatype_convert(mt, MPT_ENUM(TypeObject), &obj) > 0
+			if (MPT_metatype_convert(mt, MPT_ENUM(TypeObjectPtr), &obj) > 0
 			    && obj
 			    && (n = mpt_object_typename(obj))) {
 				puts(n);

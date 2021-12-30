@@ -2,6 +2,8 @@
  * get status information for PORT N2 instance
  */
 
+#include "types.h"
+
 #include "portn2.h"
 
 extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_TYPE(property_handler) out, void *usr)
@@ -24,7 +26,7 @@ extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_
 	}
 	state = ((int *) n2->iv.iov_base)[0];
 	if ((show & MPT_SOLVER_ENUM(Values)) && state >= 0) {
-		static const uint8_t fmt[] = { MPT_type_vector('d'), MPT_type_vector('d'), 0 };
+		static const uint8_t fmt[] = { MPT_type_toVector('d'), MPT_type_toVector('d'), 0 };
 		struct {
 			struct iovec x, f;
 		} d;

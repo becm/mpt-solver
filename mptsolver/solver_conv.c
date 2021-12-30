@@ -6,6 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "types.h"
 #include "client.h"
 #include "config.h"
 
@@ -36,13 +37,13 @@ extern MPT_SOLVER(interface) *mpt_solver_conv(MPT_INTERFACE(convertable) *val, i
 	obj = 0;
 	name = 0;
 	if (info
-	    && (cap = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) >= 0
+	    && (cap = val->_vptr->convert(val, MPT_ENUM(TypeObjectPtr), &obj)) >= 0
 	    && obj) {
 		name = mpt_object_typename(obj);
 	}
 	/* can convert to solver interface */
 	if (!val
-	    || (cap = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	    || (cap = val->_vptr->convert(val, MPT_ENUM(TypeSolverPtr), &sol)) < 0
 	    || !sol) {
 		if (!info) {
 			return 0;

@@ -17,12 +17,12 @@
  * 
  * \return solver interface ID
  */
-extern int mpt_solver_typeid(void)
+extern const MPT_STRUCT(named_traits) *mpt_solver_type_traits(void)
 {
-	static int id = 0;
+	static const MPT_STRUCT(named_traits) *traits = 0;
 	
-	if (!id && (id = mpt_type_meta_new("solver")) < 0) {
-		id = mpt_type_meta_new(0);
+	if (!traits && !(traits = mpt_type_metatype_add("solver"))) {
+		traits = mpt_type_metatype_add(0);
 	}
-	return id;
+	return traits;
 }

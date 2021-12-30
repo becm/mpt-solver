@@ -33,7 +33,7 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 	}
 	if (!parts) {
 		/* get complete data segment */
-		if ((ret = it->_vptr->get(it, MPT_type_vector(MPT_SOLVER_MODULE_DATA_ID), &vec)) >= 0) {
+		if ((ret = it->_vptr->get(it, MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) >= 0) {
 			if (!ret) {
 				parts = 0;
 			}
@@ -83,7 +83,7 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 	while (len < parts) {
 		long curr;
 		/* get profile segment */
-		if ((ret = it->_vptr->get(it, MPT_type_vector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
+		if ((ret = it->_vptr->get(it, MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
 			/* read constant profile values */
 			for (curr = 0; curr < elem; ++curr) {
 				if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, dest + curr)) <= 0

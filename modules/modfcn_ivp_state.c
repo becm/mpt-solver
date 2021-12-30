@@ -9,6 +9,7 @@
 
 #include <sys/uio.h>
 
+#include "types.h"
 #include "meta.h"
 
 #include "../solver.h"
@@ -39,12 +40,12 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 		}
 		tmp = *ptr++;
 		/* allow data or iterator for state */
-		if (val.fmt[1] == MPT_ENUM(TypeIterator)) {
+		if (val.fmt[1] == MPT_ENUM(TypeIteratorPtr)) {
 			if (!(it = *((void **) ptr))) {
 				return MPT_ERROR(BadValue);
 			}
 		}
-		else if (val.fmt[1] == MPT_type_vector(MPT_SOLVER_MODULE_DATA_ID)) {
+		else if (val.fmt[1] == MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID)) {
 			vec = *((const struct iovec *) ptr);
 		}
 		else {
@@ -53,8 +54,8 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 		ret = 2;
 	}
 	/* require state content */
-	else if ((ret = src->_vptr->convert(src, MPT_type_vector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
-		if ((ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) < 0
+	else if ((ret = src->_vptr->convert(src, MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
+		if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) < 0
 		    || !it) {
 			return MPT_ERROR(BadType);
 		}

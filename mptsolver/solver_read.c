@@ -5,6 +5,7 @@
 
 #include <string.h>
 
+#include "types.h"
 #include "meta.h"
 #include "node.h"
 #include "parse.h"
@@ -34,7 +35,7 @@ static int getValue(MPT_INTERFACE(metatype) *mt, MPT_STRUCT(value) *val, const v
 	if ((ret = MPT_metatype_convert(mt, MPT_ENUM(TypeValue), &val)) >= 0) {
 		return 0;
 	}
-	if ((ret = MPT_metatype_convert(mt, type = MPT_type_pointer(MPT_ENUM(TypeFile)), ptr)) >= 0) {
+	if ((ret = MPT_metatype_convert(mt, type = MPT_ENUM(TypeFilePtr), ptr)) >= 0) {
 		return *ptr ? type : MPT_ERROR(BadValue);
 	}
 	if ((ret = MPT_metatype_convert(mt, type = 's', ptr)) >= 0) {

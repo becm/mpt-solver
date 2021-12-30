@@ -40,10 +40,10 @@ extern int mpt_vode_step(MPT_SOLVER_STRUCT(vode) *data, double tend)
 	
 	/* setup iteration method */
 	switch (mf = data->miter) {
-		case 1: if (data->jac) break;
+		case 1: if (data->jac) break; /* fall through */
 		case 2: mf = 2; break;
 		case 3: break;
-		case 4: if (data->jac) break;
+		case 4: if (data->jac) break; /* fall through */
 		case 5: mf = 5; break;
 		default: mf = 0;
 	}

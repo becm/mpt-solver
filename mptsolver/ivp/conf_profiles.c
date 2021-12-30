@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <ctype.h>
 
+#include "types.h"
 #include "node.h"
 #include "meta.h"
 #include "convert.h"
@@ -35,14 +36,14 @@ static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 	struct iovec *vec;
 	int i;
 	
-	if (type != MPT_type_vector('d')) {
+	if (type != MPT_type_toVector('d')) {
 		return MPT_ERROR(BadType);
 	}
 	if (p->pos >= p->len) {
 		return 0;
 	}
 	if (!(vec = dest)) {
-		return MPT_type_vector('d');
+		return MPT_type_toVector('d');
 	}
 	for (i = 0; i < p->neqs; ++i) {
 		MPT_INTERFACE(iterator) *curr;
@@ -61,7 +62,7 @@ static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 	vec->iov_base = val;
 	vec->iov_len = i * sizeof(*val);
 	
-	return MPT_type_vector('d');
+	return MPT_type_toVector('d');
 }
 static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 {
@@ -84,7 +85,7 @@ static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 			return ret;
 		}
 	}
-	return MPT_type_vector('d');
+	return MPT_type_toVector('d');
 }
 static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 {
@@ -110,22 +111,22 @@ static int iterProfileConv(MPT_INTERFACE(convertable) *val, int type, void *ptr)
 	const MPT_STRUCT(iterProfile) *p = (void *) val;
 	
 	if (!type) {
-		static const uint8_t fmt[] = { MPT_ENUM(TypeIterator), 'd', 0 };
+		static const uint8_t fmt[] = { MPT_ENUM(TypeIteratorPtr), 'd', 0 };
 		if (ptr) {
 			*((const uint8_t **) ptr) = fmt;
-			return MPT_type_vector('d');
+			return MPT_type_toVector('d');
 		}
-		return MPT_ENUM(TypeIterator);
+		return MPT_ENUM(TypeIteratorPtr);
 	}
 	if (type == 'd') {
 		if (ptr) *((double *) ptr) = p->t;
-		return MPT_ENUM(TypeIterator);
+		return MPT_ENUM(TypeIteratorPtr);
 	}
 	if (type == MPT_ENUM(TypeMetaPtr)) {
 		if (ptr) *((const void **) ptr) = &p->_mt;
-		return MPT_ENUM(TypeIterator);
+		return MPT_ENUM(TypeIteratorPtr);
 	}
-	if (type == MPT_type_pointer(MPT_ENUM(TypeIterator))) {
+	if (type == MPT_ENUM(TypeIteratorPtr)) {
 		if (ptr) *((const void **) ptr) = &p->_it;
 		return 'd';
 	}
@@ -197,11 +198,10 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 		        MPT_tr("empty buffer"));
 		return 0;
 	}
-	if (!(info = buf->_typeinfo)
-	    || (i = info->type) != 'd'
-	    || info->size != sizeof(double)) {
-		mpt_log(out, __func__, MPT_LOG(Error), "%s (%d)",
-		        MPT_tr("bad grid content"), i);
+	if (!(info = buf->_content_traits)
+	    || (info != mpt_type_traits('d'))) {
+		mpt_log(out, __func__, MPT_LOG(Error), "%s ('d')",
+		        MPT_tr("bad grid content"));
 		return 0;
 	}
 	if ((neqs = dat->nval) < 0) {
@@ -287,7 +287,7 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 		}
 		*mptr++ = mt;
 		/* skip bad iterator implementations */
-		if (MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), iptr++) < 0) {
+		if (MPT_metatype_convert(mt, MPT_ENUM(TypeIteratorPtr), iptr++) < 0) {
 			if (out) {
 				mpt_log(out, __func__, MPT_LOG(Warning), "%s (%d): %s",
 				        MPT_tr("invalid profile iterator"), i, desc);

@@ -3,6 +3,7 @@
  *   push IVP history header
  */
 
+#include "types.h"
 #include "meta.h"
 #include "config.h"
 #include "output.h"
@@ -37,7 +38,7 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 		static const char path[] = "mpt.output";
 		
 		if ((val = mpt_config_get(cfg, path + off, sep, 0))) {
-			val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeOutput)), &so->_data);
+			val->_vptr->convert(val, MPT_ENUM(TypeOutputPtr), &so->_data);
 			if (so->_data) {
 				ret |= 0x1;
 			}
@@ -53,7 +54,7 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 		int type = 0;
 		
 		if (!so->_graphic) {
-			val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeOutput)), &so->_graphic);
+			val->_vptr->convert(val, MPT_ENUM(TypeOutputPtr), &so->_graphic);
 			if (so->_graphic) {
 				ret |= 0x2;
 			}
@@ -66,8 +67,9 @@ extern int mpt_solver_output_query(MPT_STRUCT(solver_output) *so, const MPT_INTE
 			return ret;
 		}
 		/* require raw or '(unsigned) byte' */
-		if ((info = buf->_typeinfo)
-		    && (info->type == 'b' || info->type == 'y')) {
+		if ((info = buf->_content_traits)
+		 && ((info == mpt_type_traits('b'))
+		  || (info == mpt_type_traits('y')))) {
 			so->_pass._buf = buf;
 			ret |= 0x8;
 		} else {

@@ -9,6 +9,7 @@
 #include <math.h>
 #include <sys/uio.h>
 
+#include "types.h"
 #include "meta.h"
 #include "array.h"
 #include "output.h"
@@ -49,7 +50,7 @@ static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 	}
 	if (!val->fmt
 	    || val->fmt[0] != 'd'
-	    || val->fmt[1] != MPT_type_vector('d')) {
+	    || val->fmt[1] != MPT_type_toVector('d')) {
 		return MPT_ERROR(BadType);
 	}
 	if (!(t = val->ptr)) {
@@ -118,7 +119,7 @@ extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *val, MPT_INTERFACE(i
 		return 0;
 	}
 	obj = 0;
-	if ((ret = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
+	if ((ret = val->_vptr->convert(val, MPT_ENUM(TypeObjectPtr), &obj)) < 0
 	    || !obj) {
 		mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		        MPT_tr("missing object interface"), val);
@@ -128,7 +129,7 @@ extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *val, MPT_INTERFACE(i
 		name = "solver";
 	}
 	sol = 0;
-	if ((ret = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	if ((ret = val->_vptr->convert(val, MPT_ENUM(TypeSolverPtr), &sol)) < 0
 	    || !sol) {
 		mpt_log(info, __func__, MPT_LOG(Error), "%s: %s (%" PRIxPTR ")",
 		        name, MPT_tr("missing solver interface"), val);

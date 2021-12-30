@@ -8,6 +8,7 @@
 
 #include <sys/uio.h>
 
+#include "types.h"
 #include "meta.h"
 
 #include "../solver.h"
@@ -29,7 +30,7 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFAC
 		return 0;
 	}
 	/* values from iterator */
-	if ((ret = src->_vptr->convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it)) >= 0) {
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
 		double d;
 		long reserved = 0;
 		if (!ret || !it) {
@@ -80,7 +81,7 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFAC
 		vec->_d.len = len * sizeof(*tol);
 		return len;
 	}
-	if ((ret = src->_vptr->convert(src, MPT_type_vector('d'), &tmp)) < 0) {
+	if ((ret = src->_vptr->convert(src, MPT_type_toVector('d'), &tmp)) < 0) {
 		MPT_STRUCT(value) val = MPT_VALUE_INIT;
 		len = 0;
 		/* values from value content */

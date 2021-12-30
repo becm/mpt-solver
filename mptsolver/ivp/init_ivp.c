@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <sys/uio.h>
 
+#include "types.h"
 #include "meta.h"
 #include "output.h"
 
@@ -79,7 +80,7 @@ extern int mpt_init_dae(MPT_INTERFACE(convertable) *val, const MPT_IVP_STRUCT(da
 		return MPT_ERROR(BadArgument);
 	}
 	sol = 0;
-	if (val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol) < 0
+	if (val->_vptr->convert(val, MPT_ENUM(TypeSolverPtr), &sol) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
@@ -88,7 +89,7 @@ extern int mpt_init_dae(MPT_INTERFACE(convertable) *val, const MPT_IVP_STRUCT(da
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if (val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) >= 0) {
+	if (val->_vptr->convert(val, MPT_ENUM(TypeObjectPtr), &obj) >= 0) {
 		if ((neqs = set_neqs(obj, __func__, neqs, info)) < 0) {
 			return neqs;
 		}
@@ -121,7 +122,7 @@ extern int mpt_init_ode(MPT_INTERFACE(convertable) *val, const MPT_IVP_STRUCT(od
 		return MPT_ERROR(BadArgument);
 	}
 	sol = 0;
-	if (val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol) < 0
+	if (val->_vptr->convert(val, MPT_ENUM(TypeSolverPtr), &sol) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
@@ -130,7 +131,7 @@ extern int mpt_init_ode(MPT_INTERFACE(convertable) *val, const MPT_IVP_STRUCT(od
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if (val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj) >= 0) {
+	if (val->_vptr->convert(val, MPT_ENUM(TypeObjectPtr), &obj) >= 0) {
 		if ((neqs = set_neqs(obj, __func__, neqs, info)) < 0) {
 			return neqs;
 		}

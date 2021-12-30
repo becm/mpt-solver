@@ -6,6 +6,7 @@
 #include <sys/uio.h>
 #include <inttypes.h>
 
+#include "types.h"
 #include "meta.h"
 #include "array.h"
 #include "output.h"
@@ -27,7 +28,7 @@
  */
 extern int mpt_init_nls(MPT_INTERFACE(convertable) *val, const MPT_NLS_STRUCT(functions) *fcn, const MPT_STRUCT(solver_data) *dat, MPT_INTERFACE(logger) *info)
 {
-	static const char fmt[] = { MPT_type_vector('d'), 0 };
+	static const char fmt[] = { MPT_type_toVector('d'), 0 };
 	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;
 	struct iovec vec;
@@ -43,7 +44,7 @@ extern int mpt_init_nls(MPT_INTERFACE(convertable) *val, const MPT_NLS_STRUCT(fu
 		return MPT_ERROR(BadArgument);
 	}
 	sol = 0;
-	if ((ret = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeSolver)), &sol)) < 0
+	if ((ret = val->_vptr->convert(val, MPT_ENUM(TypeSolverPtr), &sol)) < 0
 	    || !sol) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
@@ -52,7 +53,7 @@ extern int mpt_init_nls(MPT_INTERFACE(convertable) *val, const MPT_NLS_STRUCT(fu
 		return MPT_ERROR(BadType);
 	}
 	obj = 0;
-	if ((ret = val->_vptr->convert(val, MPT_type_pointer(MPT_ENUM(TypeObject)), &obj)) < 0
+	if ((ret = val->_vptr->convert(val, MPT_ENUM(TypeObjectPtr), &obj)) < 0
 	    || !obj) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",

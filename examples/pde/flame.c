@@ -68,10 +68,10 @@ static int flame_init(MPT_INTERFACE(convertable) *sol, MPT_STRUCT(solver_data) *
 	param = mpt_solver_data_param(sd);
 	
 	switch (sd->npar) {
-	    default: R = param[3];
-	    case 3: de = param[2];
-	    case 2: a  = param[1];
-	    case 1: L  = param[0];
+	    default: R = param[3]; /* fall through */
+	    case 3: de = param[2]; /* fall through */
+	    case 2: a  = param[1]; /* fall through */
+	    case 1: L  = param[0]; /* fall through */
 	    case 0:;
 	}
 	

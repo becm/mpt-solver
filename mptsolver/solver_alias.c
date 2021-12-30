@@ -27,11 +27,10 @@ extern const char *mpt_solver_alias(const char *descr)
 {
 	static const char base[] = "mpt.loader.alias\0";
 	MPT_INTERFACE(convertable) *val;
+	const MPT_STRUCT(named_traits) *sol;
 	const char *id;
-	int type, sol;
 	
-	if ((sol = mpt_solver_typeid()) < 0) {
-		errno = EINVAL;
+	if (!(sol = mpt_solver_type_traits())) {
 		return 0;
 	}
 	if (!descr) {
@@ -60,7 +59,7 @@ extern const char *mpt_solver_alias(const char *descr)
 	if (!(id = mpt_convertable_data(val, 0))) {
 		return 0;
 	}
-	if ((type = mpt_alias_typeid(id, &id)) != sol) {
+	if (mpt_alias_typeid(id, &id) != (int) sol->type) {
 		errno = EINVAL;
 		return 0;
 	}

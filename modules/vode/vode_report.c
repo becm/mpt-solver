@@ -58,6 +58,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 			if (vd->jac) {
 				break;
 			}
+			/* fall through */
 		case 2:
 			val[0] = "full";
 			val[1] = "numerical";
@@ -72,6 +73,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 				pr.val.ptr = &d;
 				break;
 			}
+			/* fall through */
 		case 5:
 			d.type = "banded";
 			d.jac = "numerical";

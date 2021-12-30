@@ -5,6 +5,8 @@
 
 #include "solver_modfcn.h"
 
+#include "types.h"
+
 /*!
  * \ingroup mptSolver
  * \brief generic converion
@@ -21,20 +23,20 @@
 extern int MPT_SOLVER_MODULE_FCN(solver_conv)(const MPT_SOLVER(interface) *sol, const MPT_INTERFACE(object) *obj, int type, void *ptr)
 {
 	if (!type) {
-		static const uint8_t fmt[] = { MPT_ENUM(TypeSolver), MPT_ENUM(TypeObject), 0 };
+		static const uint8_t fmt[] = { MPT_ENUM(TypeSolverPtr), MPT_ENUM(TypeObjectPtr), 0 };
 		if (ptr) {
 			*((const uint8_t **) ptr) = obj ? fmt : fmt + 1;
 			return 0;
 		}
-		return MPT_ENUM(TypeSolver);
+		return MPT_ENUM(TypeSolverPtr);
 	}
-	if (type == MPT_type_pointer(MPT_ENUM(TypeSolver))) {
+	if (type == MPT_ENUM(TypeSolverPtr)) {
 		if (ptr) *((const void **) ptr) = sol;
-		return obj ? MPT_ENUM(TypeObject) : 0;
+		return obj ? MPT_ENUM(TypeObjectPtr) : 0;
 	}
-	if (type == MPT_type_pointer(MPT_ENUM(TypeObject))) {
+	if (type == MPT_ENUM(TypeObjectPtr)) {
 		if (ptr) *((const void **) ptr) = obj;
-		return MPT_ENUM(TypeSolver);
+		return MPT_ENUM(TypeSolverPtr);
 	}
 	return MPT_ERROR(BadType);
 }

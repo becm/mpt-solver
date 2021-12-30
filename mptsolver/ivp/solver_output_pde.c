@@ -7,6 +7,7 @@
 
 #include <sys/uio.h>
 
+#include "types.h"
 #include "message.h"
 #include "array.h"
 
@@ -76,7 +77,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 		vec = (void *) (t + 1);
 		++fmt;
 	}
-	if (*fmt != MPT_type_vector('d')) {
+	if (*fmt != MPT_type_toVector('d')) {
 		return MPT_ERROR(BadType);
 	}
 	y = vec->iov_base;
@@ -84,7 +85,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 	
 	++fmt;
 	
-	if (*fmt == MPT_type_vector('d')) {
+	if (*fmt == MPT_type_toVector('d')) {
 		grid = y;
 		
 		if (!(glen = ylen)) {

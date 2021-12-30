@@ -9,6 +9,7 @@
 #include "meta.h"
 #include "config.h"
 #include "output.h"
+#include "types.h"
 
 #include "loader.h"
 
@@ -32,10 +33,10 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 {
 	MPT_INTERFACE(metatype) *mt;
 	MPT_SOLVER(interface) *sol;
+	const MPT_STRUCT(named_traits) *traits;
 	const char *old;
-	int me;
 	
-	if ((me = mpt_solver_typeid()) < 0) {
+	if (!(traits = mpt_solver_type_traits())) {
 		if (log) {
 			mpt_log(log, __func__, MPT_LOG(Critical), "%s",
 		                MPT_tr("no registration for solver interface"));
@@ -137,7 +138,7 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 		if ((cfg = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
 			cfg->_vptr->convert(cfg, 's', &lpath);
 		}
-		if (!(next = mpt_library_meta(me, conf, lpath, log))) {
+		if (!(next = mpt_library_meta(traits->type, conf, lpath, log))) {
 			if (!log) {
 				mpt_log(0, __func__, MPT_LOG(Error), "%s: %s",
 				        MPT_tr("failed to load solver"), conf);

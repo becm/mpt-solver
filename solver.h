@@ -9,6 +9,10 @@
 #include "object.h"
 #include "array.h"
 
+#ifdef __cplusplus
+# include "types.h"
+#endif
+
 #include <sys/uio.h>
 
 #ifdef __cplusplus
@@ -154,8 +158,6 @@ class interface
 protected:
 	inline ~interface() {}
 public:
-	enum { Type = TypeSolver };
-	
 	virtual int report(int , property_handler_t , void *) = 0;
 	virtual int set_functions(int , const void *) = 0;
 	virtual int solve() = 0;
@@ -463,7 +465,7 @@ struct vecpar
 	}
 	inline int type()
 	{
-		return typeinfo<T>::id();
+		return type_properties<T>::id(true);
 	}
 	bool resize(long elem) {
 		T *t = _base;
@@ -511,12 +513,12 @@ struct vecpar
 		struct value v;
 		if (_base) {
 			static value::format fmt;
-			fmt.set(typeinfo<span<T> >::id());
+			fmt.set(type_properties<span<const T> >::id(true));
 			v.fmt = fmt;
 			v.ptr = this;
 		} else {
 			static value::format fmt;
-			fmt.set(typeinfo<T>::id());
+			fmt.set(type_properties<T>::id(true));
 			v.fmt = fmt;
 			v.ptr = &_d.val;
 		}
@@ -689,16 +691,18 @@ extern int mpt_solver_module_ufcn_nls(const MPT_NLS_STRUCT(parameters) *, MPT_NL
 
 
 /* id for registered solver metatype */
-extern int mpt_solver_typeid(void);
+extern const MPT_STRUCT(named_traits) *mpt_solver_type_traits(void);
 
 __MPT_EXTDECL_END
 
 #ifdef __cplusplus
 } /* namespace solver */
 
-template<> inline __MPT_CONST_TYPE int typeinfo<solver::interface>::id()
-{
-	return solver::interface::Type;
+template<> inline __MPT_CONST_TYPE int type_properties<solver::interface *>::id(bool) {
+	return TypeSolverPtr;
+}
+template <> inline const struct type_traits *type_properties<solver::interface *>::traits() {
+	return type_traits::get(id(true));
 }
 #endif
 

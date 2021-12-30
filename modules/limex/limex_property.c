@@ -48,12 +48,14 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, MPT_INTERFACE(convertable) 
 	switch (mode) {
 		case 'F':
 			usr = 1;
+			/* fall through */
 		case 'f':
 			lb = max;
 			ub = lb;
 			break;
 		case 'B':
 			usr = 1;
+			/* fall through */
 		case 'b':
 			if (!ret) {
 				lb = ub = lx->ivp.neqs;

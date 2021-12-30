@@ -5,6 +5,7 @@
 
 #include <sys/uio.h>
 
+#include "types.h"
 #include "message.h"
 #include "array.h"
 
@@ -109,7 +110,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		return MPT_ERROR(BadArgument);
 	}
 	if (!(fmt = val->fmt)
-	    || fmt[0] != MPT_type_vector('d')) {
+	    || fmt[0] != MPT_type_toVector('d')) {
 		return MPT_ERROR(BadType);
 	}
 	if (!(vec = val->ptr)) {
@@ -122,7 +123,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	np  = vec->iov_len / sizeof (*par);
 	
 	res = 0;
-	if (fmt[1] == MPT_type_vector('d')) {
+	if (fmt[1] == MPT_type_toVector('d')) {
 		res = vec[1].iov_base;
 		nr  = vec[1].iov_len / sizeof(*res);
 	}

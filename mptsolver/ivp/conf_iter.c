@@ -5,6 +5,7 @@
 
 #include <math.h>
 
+#include "types.h"
 #include "meta.h"
 #include "node.h"
 #include "array.h"
@@ -40,12 +41,12 @@ extern MPT_INTERFACE(iterator) *mpt_conf_iter(MPT_INTERFACE(metatype) **mptr, MP
 			return 0;
 		}
 		*mptr = mt;
-		MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it);
+		MPT_metatype_convert(mt, MPT_ENUM(TypeIteratorPtr), &it);
 		return it;
 		
 	}
 	/* require valid time source */
-	if (MPT_metatype_convert(mt, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it) < 0
+	if (MPT_metatype_convert(mt, MPT_ENUM(TypeIteratorPtr), &it) < 0
 	    || !it) {
 		MPT_INTERFACE(metatype) *src;
 		const char *val;
@@ -66,7 +67,7 @@ extern MPT_INTERFACE(iterator) *mpt_conf_iter(MPT_INTERFACE(metatype) **mptr, MP
 		}
 		mt->_vptr->unref(mt);
 		*mptr = src;
-		MPT_metatype_convert(src, MPT_type_pointer(MPT_ENUM(TypeIterator)), &it);
+		MPT_metatype_convert(src, MPT_ENUM(TypeIteratorPtr), &it);
 		return it;
 	}
 	/* reset existing iterator */

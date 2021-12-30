@@ -48,10 +48,12 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, MPT_INTERFACE(convertable) 
 	switch (mode) {
 		case 'f':
 			rd->ijac = 0;
+			/* fall through */
 		case 'F':
 			break;
 		case 'b':
 			rd->ijac = 0;
+			/* fall through */
 		case 'B':
 			if ((ret = mpt_consume_int(&val, &ld)) < 0) {
 				return ret;

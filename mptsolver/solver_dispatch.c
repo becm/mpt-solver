@@ -7,6 +7,7 @@
 
 #include <string.h>
 
+#include "types.h"
 #include "array.h"
 #include "message.h"
 #include "event.h"
@@ -21,7 +22,7 @@
 static MPT_INTERFACE(config) *getConfig(MPT_INTERFACE(client) *cl, MPT_INTERFACE(reply_context) *rc)
 {
 	MPT_INTERFACE(config) *cfg = 0;
-	if (cl->_vptr->meta.convertable.convert((void *) cl, MPT_ENUM(TypeConfig), &cfg) > 0
+	if (cl->_vptr->meta.convertable.convert((void *) cl, MPT_ENUM(TypeConfigPtr), &cfg) > 0
 	    && cfg) {
 		return cfg;
 	}

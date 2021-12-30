@@ -4,6 +4,7 @@
 
 #include "solver_run.h"
 
+#include MPT_INCLUDE(types.h)
 #include MPT_INCLUDE(client.h)
 #include MPT_INCLUDE(message.h)
 #include MPT_INCLUDE(config.h)
@@ -62,7 +63,7 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 	
 	/* set solver client config */
 	cfg = 0;
-	if ((ret = c->_vptr->meta.convertable.convert((void *) c, MPT_type_pointer(MPT_ENUM(TypeConfig)), &cfg)) > 0
+	if ((ret = c->_vptr->meta.convertable.convert((void *) c, MPT_ENUM(TypeConfigPtr), &cfg)) > 0
 	    && cfg) {
 		MPT_STRUCT(value) val = MPT_VALUE_INIT;
 		
