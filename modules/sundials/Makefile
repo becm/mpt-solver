@@ -2,7 +2,7 @@
 LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
-sundials_version = 5.6.1
+sundials_version = 5.8.0
 DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-${sundials_version}
 #
 # precompiled object location
@@ -12,7 +12,7 @@ DIR_SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}/include ${DIR_SUNDIALS}/include
 INC = . ${DIR_SUNDIALS_INC}
 #
 # SUNDIALS modules to include in shared library
-sundials_direct = band dense 
+sundials_direct = band dense
 sundials_lapack = lapackband lapackdense
 sundials_iterative = spgmr spbcgs sptfqmr
 sundials_linear = ${sundials_direct} ${sundials_lapack} ${sundials_iterative}
