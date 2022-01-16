@@ -4,6 +4,7 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 
 #include "types.h"
 #include "meta.h"
@@ -14,34 +15,69 @@
 #include "solver.h"
 
 
-static int getArg(MPT_INTERFACE(iterator) *args, MPT_STRUCT(value) *val, const char **fname, MPT_INTERFACE(logger) *log, const char *_func)
+static int getArg(MPT_INTERFACE(iterator) *args, FILE **file, const char **fname, MPT_INTERFACE(logger) *log, const char *_func)
 {
 	int ret;
-	if ((ret = args->_vptr->get(args, MPT_ENUM(TypeValue), val)) < 0) {
-		if ((ret = args->_vptr->get(args, 's', fname)) < 0
-		    || !*fname) {
-			ret = args->_vptr->get(args, 0, 0);
-			mpt_log(log, _func, MPT_LOG(Error), "%s (%d)",
-			        MPT_tr("invalid argument type"), ret);
-			return MPT_ERROR(BadValue);
+	/* get client config file parameters from argument */
+	if ((ret = mpt_iterator_consume(args, MPT_ENUM(TypeFilePtr), file)) > 0) {
+		if (*file) {
+			return ret;
 		}
+		if (log) {
+			mpt_log(log, _func, MPT_LOG(Error), "%s",
+			        MPT_tr("invalid file pointer"));
+		}
+		return MPT_ERROR(MissingData);
 	}
-	return args->_vptr->advance(args);
+	if ((ret = mpt_iterator_consume(args, 's', fname)) < 0) {
+		const MPT_STRUCT(value) *val = args->_vptr->value(args);
+		int type = args ? val->type : 0;
+		if (log) {
+			mpt_log(log, _func, MPT_LOG(Error), "%s (%d)",
+			        MPT_tr("invalid file argument type"), type);
+			
+		}
+		return ret;
+	}
+	if (!*fname) {
+		if (log) {
+			mpt_log(log, _func, MPT_LOG(Error), "%s",
+			        MPT_tr("missing file name"));
+			
+		}
+		return MPT_ERROR(BadValue);
+		
+	}
+	if (!(*file = fopen(*fname, "r"))) {
+		if (log) {
+			mpt_log(log, _func, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("failed to open file"), *fname);
+			
+		}
+		return MPT_ERROR(BadArgument);
+	}
+	return ret;
 }
-static int getValue(MPT_INTERFACE(metatype) *mt, MPT_STRUCT(value) *val, const void **ptr)
+static int getValue(MPT_INTERFACE(metatype) *mt, FILE **file, const char **fname)
 {
 	int ret, type;
 	
-	if ((ret = MPT_metatype_convert(mt, MPT_ENUM(TypeValue), &val)) >= 0) {
-		return 0;
+	if ((ret = MPT_metatype_convert(mt, type = MPT_ENUM(TypeFilePtr), file)) >= 0) {
+		if (*file) {
+			*fname = 0;
+			return type;
+		}
+		return MPT_ERROR(MissingData);
 	}
-	if ((ret = MPT_metatype_convert(mt, type = MPT_ENUM(TypeFilePtr), ptr)) >= 0) {
-		return *ptr ? type : MPT_ERROR(BadValue);
+	if ((ret = MPT_metatype_convert(mt, type = 's', fname)) >= 0) {
+		if (!*fname) {
+			return MPT_ERROR(BadValue);
+		}
 	}
-	if ((ret = MPT_metatype_convert(mt, type = 's', ptr)) >= 0) {
-		return *ptr ? type : MPT_ERROR(BadValue);
+	if (!(*file = fopen(*fname, "r"))) {
+		return MPT_ERROR(BadValue);
 	}
-	return MPT_ERROR(BadType);
+	return type;
 }
 
 void replaceConfig(MPT_STRUCT(node) *conf, MPT_STRUCT(node) *from)
@@ -70,56 +106,57 @@ void replaceConfig(MPT_STRUCT(node) *conf, MPT_STRUCT(node) *from)
 extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, MPT_INTERFACE(logger) *info)
 {
 	static const char solconfName[] = "solconf";
-	static const char fmt_cl[]  = "{*} = !#";
-	static const char fmt_sol[] = "[ ] = !#";
+	static const char fmt_client[]  = "{*} = !#";
+	static const char fmt_solver[] = "[ ] = !#";
 	MPT_STRUCT(node) *sol, cfg = MPT_NODE_INIT;
-	MPT_STRUCT(value) val;
-	uint8_t fmt[] = "ss";
-	const char *dat[2];
-	int ret;
-	
-	/* default setup for client config */
-	val.fmt = fmt;
-	val.ptr = dat;
-	dat[0] = 0;
-	dat[1] = fmt_cl;
+	const char *fname = 0;
+	FILE *file = 0;
+	int ret = 2, err;
 	
 	if (args) {
-		int err;
-		
-		/* get client config file parameters from argument */
-		if ((ret = getArg(args, &val, &dat[0], info, __func__)) < 0) {
-			return ret;
-		}
 		/* create new config */
-		if ((err = mpt_node_parse(&cfg, &val, info)) < 0) {
+		if ((err = getArg(args, &file, &fname, info, __func__)) < 0) {
 			return err;
 		}
+		err = mpt_node_parse(&cfg, file, fmt_client, 0, info);
+		if (fname) {
+			fclose(file);
+		}
+		if (err < 0) {
+			return err;
+		}
+		else if (fname) {
+			MPT_STRUCT(value) val = MPT_VALUE_INIT('s', &fname);
+			mpt_meta_set(&conf->_meta, &val);
+		}
 		/* get new solver config */
-		dat[0] = 0;
-		dat[1] = fmt_sol;
 		sol = mpt_node_next(cfg.children, solconfName);
 		
+		fname = 0;
 		/* no further data */
-		if (!ret) {
+		if (!args->_vptr->value(args)) {
 			if (!sol || !sol->_meta) {
 				replaceConfig(conf, &cfg);
 				return 1;
 			}
 			args = 0;
+			ret = 1; /* no 2nd argument */
 		}
 		/* get solver config file parameters from argument */
-		else if ((ret = getArg(args, &val, &dat[0], info, __func__)) < 0) {
+		else if ((ret = getArg(args, &file, &fname, info, __func__)) < 0) {
 			mpt_node_clear(&cfg);
 			return ret;
 		}
 		/* invalid trailing data */
-		else if (ret) {
+		else if (args->_vptr->value(args)) {
 			if (info) {
 				mpt_log(info, __func__, MPT_LOG(Critical), "%s",
 				        MPT_tr("excessive config argument(s)"));
 			}
 			return MPT_ERROR(BadArgument);
+		}
+		else {
+			ret = 2;
 		}
 	}
 	/* use config value to get content source */
@@ -131,20 +168,21 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 		return MPT_ERROR(BadType);
 	}
 	/* use config value to get content source */
-	else if ((ret = getValue(conf->_meta, &val, (const void **) &dat[0])) < 0) {
+	else if ((err = getValue(conf->_meta, &file, &fname)) < 0) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("bad client config source"));
 		}
-		return MPT_ERROR(BadType);
+		return err;
 	}
 	/* create new config */
 	else {
-		if (ret) {
-			fmt[0] = ret;
+		err = mpt_node_parse(&cfg, file, fmt_client, 0, info);
+		if (fname) {
+			fclose(file);
 		}
-		if ((ret = mpt_node_parse(&cfg, &val, info)) < 0) {
-			return ret;
+		if (err < 0) {
+			return err;
 		}
 		/* no indirect source */
 		if (!(sol = mpt_node_next(cfg.children, solconfName))
@@ -156,23 +194,15 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 	
 	/* get solver config file parameters from data */
 	if (!args) {
-		/* default setup for solver config */
-		val.fmt = fmt;
-		val.ptr = dat;
-		dat[0] = 0;
-		dat[1] = fmt_sol;
-		
 		/* bad source in config */
-		if ((ret = getValue(sol->_meta, &val, (const void **) &dat[0])) < 0) {
+		fname = 0;
+		if ((ret = getValue(sol->_meta, &file, &fname)) < 0) {
 			if (info) {
 				mpt_log(info, __func__, MPT_LOG(Error), "%s",
 				        MPT_tr("bad solver config source"));
 			}
 			mpt_node_clear(&cfg);
 			return MPT_ERROR(BadType);
-		}
-		if (ret) {
-			fmt[0] = ret;
 		}
 	}
 	/* require new config node */
@@ -190,15 +220,22 @@ extern int mpt_solver_read(MPT_STRUCT(node) *conf, MPT_STRUCT(iterator) *args, M
 		mpt_gnode_insert(&cfg, 0, sol);
 	}
 	/* add solver config to new/existing data */
-	ret = mpt_node_parse(sol, &val, info);
+	err = mpt_node_parse(sol, file, fmt_solver, 0, info);
+	if (fname) {
+		fclose(file);
+	}
 	
 	/* clear created elements */
-	if (ret < 0) {
+	if (err < 0) {
 		mpt_node_clear(&cfg);
-		return ret;
+		return err;
+	}
+	else if (args && fname) {
+		MPT_STRUCT(value) val = MPT_VALUE_INIT('s', &fname);
+		mpt_meta_set(&sol->_meta, &val);
 	}
 	/* replace client configuration witch created data */
 	replaceConfig(conf, &cfg);
 	
-	return 2;
+	return ret;
 }

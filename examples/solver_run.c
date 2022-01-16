@@ -65,10 +65,10 @@ extern int solver_run(MPT_INTERFACE(client) *c)
 	cfg = 0;
 	if ((ret = c->_vptr->meta.convertable.convert((void *) c, MPT_ENUM(TypeConfigPtr), &cfg)) > 0
 	    && cfg) {
-		MPT_STRUCT(value) val = MPT_VALUE_INIT;
+		const char *path = "mpt.client";
+		MPT_STRUCT(value) val = MPT_VALUE_INIT('s', &path);
 		
 		/* set global config root */
-		val.ptr = "mpt.client";
 		if ((ret = cfg->_vptr->assign(cfg, 0, &val)) < 0) {
 			mpt_log(0, __func__, MPT_LOG(Warning), "%s",
 			        "failed to set client config root");

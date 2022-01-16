@@ -2,10 +2,11 @@
 # build definition for SUNDIALS module library
 
 modules_src_gen = files(
+  'mod_consume_value.c',
   'mod_valloc.c',
   'mod_value.c',
-  join_paths('..', 'base', 'mptcore', 'meta', 'consume.c'),
-  join_paths('..', 'base', 'mptcore', 'meta', 'consumable_setup.c')
+  'mod_report_properties.c',
+  join_paths('..', 'base', 'mptcore', 'misc', 'value_copy.c')
 )
 modules_src_tol = files(
   'mod_tol_set.c',

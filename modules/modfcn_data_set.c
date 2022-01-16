@@ -13,6 +13,7 @@
 
 extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, int32_t elem, long parts, MPT_INTERFACE(iterator) *it)
 {
+	const MPT_STRUCT(value) *val;
 	struct iovec vec;
 	uint32_t len;
 	int ret;
@@ -31,20 +32,18 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 		memset(dest, 0, total * sizeof(*dest));
 		return 0;
 	}
+	/* get complete data segment */
+	if (!(val = it->_vptr->value(it))
+	 || !val->ptr) {
+		return MPT_ERROR(MissingData);
+	}
 	if (!parts) {
-		/* get complete data segment */
-		if ((ret = it->_vptr->get(it, MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) >= 0) {
-			if (!ret) {
-				parts = 0;
-			}
-			else if ((ret = it->_vptr->advance(it)) < 0) {
-				return ret;
-			}
-			else {
-				if ((parts = vec.iov_len / sizeof(MPT_SOLVER_MODULE_DATA_TYPE)) > elem) {
-					parts = elem;
-				}
-				ret = 1;
+		if (val->type == MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID)) {
+			vec = *((const struct iovec *) val->ptr);
+			
+			parts = vec.iov_len / sizeof(MPT_SOLVER_MODULE_DATA_TYPE);
+			if (parts > elem) {
+				parts = elem;
 			}
 			if (parts) {
 				if (vec.iov_base) {
@@ -53,15 +52,27 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 					parts = 0;
 				}
 			}
+			
 			for ( ; parts < elem; ++parts) {
 				dest[parts] = 0;
 			}
-			return ret;
+			if ((ret = it->_vptr->advance(it)) < 0) {
+				return 0;
+			}
+			return 1;
 		}
 		len = 0;
 		/* get single elements */
 		while (parts < elem) {
-			if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, dest + parts)) <= 0) {
+			MPT_INTERFACE(convertable) *conv = *((void * const *) val->ptr);
+			
+			if (val->type == MPT_SOLVER_MODULE_DATA_ID) {
+				dest[parts] = *((const MPT_SOLVER_MODULE_DATA_TYPE *) val->ptr);
+			}
+			else if (!MPT_type_isConvertable(val->type)) {
+				break;
+			}
+			else if ((ret = conv->_vptr->convert(conv, MPT_SOLVER_MODULE_DATA_ID, dest + parts)) < 0) {
 				break;
 			}
 			++parts;
@@ -69,7 +80,7 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 				break;
 			}
 			++len;
-			if (!ret) {
+			if (!ret || !(val = it->_vptr->value(it)) || !val->ptr) {
 				break;
 			}
 		}
@@ -83,24 +94,34 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 	while (len < parts) {
 		long curr;
 		/* get profile segment */
-		if ((ret = it->_vptr->get(it, MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
+		if (val->type != MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID)) {
 			/* read constant profile values */
 			for (curr = 0; curr < elem; ++curr) {
-				if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, dest + curr)) <= 0
-				 || (ret = it->_vptr->advance(it)) <= 0) {
+				MPT_INTERFACE(convertable) *conv = *((void * const *) val->ptr);
+				if (val->type == MPT_SOLVER_MODULE_DATA_ID) {
+					dest[curr] = *((const MPT_SOLVER_MODULE_DATA_TYPE *) val->ptr);
+				}
+				else if (!MPT_type_isConvertable(val->type)) {
+					break;
+				}
+				else if ((ret = conv->_vptr->convert(conv, MPT_SOLVER_MODULE_DATA_ID, dest + parts)) < 0) {
+					break;
+				}
+				if ((ret = it->_vptr->advance(it)) <= 0) {
+					break;
+				}
+				if (!(val = it->_vptr->value(it)) || !val->ptr) {
 					break;
 				}
 			}
 			dest += elem;
-			ret = curr;
-			len = 1;
-			break;
-		}
-		if (!ret || (ret = it->_vptr->advance(it)) < 0) {
-			ret = len;
+			ret += curr;
+			len++;
 			break;
 		}
 		/* copy profile segment data */
+		vec = *((const struct iovec *) val->ptr);
+		
 		if (!vec.iov_base) {
 			curr = 0;
 		}
@@ -114,12 +135,13 @@ extern int MPT_SOLVER_MODULE_FCN(data_set)(MPT_SOLVER_MODULE_DATA_TYPE *dest, in
 			dest[curr] = 0;
 		}
 		dest += elem;
-		++len;
-		if (!ret) {
-			ret = len;
+		ret = ++len;
+		/* no further data expected/available */
+		if (it->_vptr->advance(it) <= 0
+		 || !(val = it->_vptr->value(it))
+		 || !val->ptr) {
 			break;
 		}
-		ret = len;
 	}
 	/* repeat last profile segment */
 	if (len) {

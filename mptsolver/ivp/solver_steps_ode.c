@@ -13,6 +13,7 @@
 #include "meta.h"
 #include "array.h"
 #include "output.h"
+#include "convert.h"
 
 #include "values.h"
 
@@ -20,14 +21,27 @@
 
 static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 {
-	if (!pr || pr->name) {
+	if (!pr || pr->name || !pr->val.ptr) {
 		return 0;
 	}
-	if (!pr->val.fmt || *pr->val.fmt != 'd') {
-		return MPT_ERROR(BadValue);
+	if (pr->val.type == 'd') {
+		*((double *) ptr) = *((double *) pr->val.ptr);
+		return pr->val.type;
 	}
-	*((double *) ptr) = *((double *) pr->val.ptr);
-	return 1;
+	if (pr->val.type == MPT_ENUM(TypeObjectPtr)) {
+		MPT_STRUCT(property) pt;
+		const MPT_INTERFACE(object) *obj = *((void * const *) pr->val.ptr);
+		pt.name = "t";
+		if (obj && obj->_vptr->property(obj, &pt) >= 0) {
+			if (mpt_value_convert(&pt.val, 'd', ptr) >= 0) {
+				return 0;
+			}
+		}
+	}
+	if (mpt_value_convert(&pr->val, 'd', ptr) >= 0) {
+		return pr->val.type;
+	}
+	return MPT_ERROR(BadType);
 }
 
 static double getTime(MPT_SOLVER(interface) *sol)
@@ -39,21 +53,22 @@ static double getTime(MPT_SOLVER(interface) *sol)
 
 static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 {
+	MPT_STRUCT(property) pr = MPT_PROPERTY_INIT;
+	const MPT_INTERFACE(object) *obj;
 	MPT_STRUCT(solver_data) *dat = ctx;
-	struct iovec *vec;
-	const double *t;
 	double *add;
-	ssize_t len, take;
+	ssize_t take;
 	
 	if (!(dat = ctx)) {
 		return 0;
 	}
-	if (!val->fmt
-	    || val->fmt[0] != 'd'
-	    || val->fmt[1] != MPT_type_toVector('d')) {
+	if (!val->ptr) {
+		return MPT_ERROR(BadValue);
+	}
+	if (val->type != MPT_ENUM(TypeObjectPtr)) {
 		return MPT_ERROR(BadType);
 	}
-	if (!(t = val->ptr)) {
+	if (!(obj = *(void * const *) val->ptr)) {
 		return MPT_ERROR(BadValue);
 	}
 	/* add space for new data */
@@ -67,15 +82,26 @@ static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 	--take;
 	take *= sizeof(*add);
 	
-	/* limit accepted size */
-	vec = (void *) (t + 1);
-	if ((len = vec->iov_len) > take) {
-		len = take;
+	pr.name = "t";
+	if (obj->_vptr->property(obj, &pr) >= 0) {
+		if (pr.val.type == 'd' && pr.val.ptr) {
+			*add = *((const double *) pr.val.ptr);
+		}
 	}
-	/* copy current state */
-	*add = *t;
-	if ((t = vec->iov_base)) {
-		memcpy(add + 1, t, len);
+	pr.name = "y";
+	if (obj->_vptr->property(obj, &pr) >= 0) {
+		if (pr.val.type == MPT_type_toVector('d') && pr.val.ptr) {
+			const struct iovec *vec = pr.val.ptr;
+			ssize_t len = vec->iov_len;
+			if (len > take) {
+				len = take;
+			}
+			if (vec->iov_base) {
+				memcpy(add + 1, vec->iov_base, len);
+			} else {
+				memset(add + 1, 0, len);
+			}
+		}
 	}
 	return 2;
 }
@@ -103,6 +129,7 @@ static int updateIvpDataWrap(void *ctx, const MPT_STRUCT(property) *pr)
  */
 extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *val, MPT_INTERFACE(iterator) *src, MPT_INTERFACE(logger) *out, MPT_STRUCT(solver_data) *sd, MPT_INTERFACE(logger) *info)
 {
+	const MPT_STRUCT(value) *t;
 	MPT_SOLVER(interface) *sol;
 	MPT_INTERFACE(object) *obj;
 	const char *name;
@@ -112,11 +139,11 @@ extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *val, MPT_INTERFACE(i
 	if (!src) {
 		return MPT_ERROR(BadArgument);
 	}
-	if ((ret = src->_vptr->get(src, 'd', &end)) < 0) {
+	if (!(t = src->_vptr->value(src))) {
 		return MPT_ERROR(MissingData);
 	}
-	if (!ret) {
-		return 0;
+	if ((ret = mpt_value_convert(t, 'd', &end)) < 0) {
+		return ret;
 	}
 	obj = 0;
 	if ((ret = val->_vptr->convert(val, MPT_ENUM(TypeObjectPtr), &obj)) < 0
@@ -178,14 +205,14 @@ extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *val, MPT_INTERFACE(i
 			if (!ret) {
 				return ret;
 			}
-			if ((ret = src->_vptr->get(src, 'd', &end)) < 0) {
+			if (!(t = src->_vptr->value(src))) {
 				mpt_log(info, __func__, MPT_LOG(Warning), "%s",
-				        MPT_tr("bad time step data"));
-				return ret;
-			}
-			if (!ret) {
-				mpt_log(info, __func__, MPT_LOG(Error), "%s",
 				        MPT_tr("bad time step state"));
+				return MPT_ERROR(BadOperation);
+			}
+			if ((ret = mpt_value_convert(t, 'd', &end)) < 0) {
+				mpt_log(info, __func__, MPT_LOG(Warning), "%s: %d",
+				        MPT_tr("bad time step type"), t->type);
 				return ret;
 			}
 		} while (end <= curr);

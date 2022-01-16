@@ -6,9 +6,9 @@
 
 #include "bacol.h"
 
-extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_TYPE(property_handler) out, void *usr)
+extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, const MPT_SOLVER_STRUCT(bacol_out) *od, int show, MPT_TYPE(property_handler) out, void *usr)
 {
-	MPT_STRUCT(property) pr;
+	MPT_STRUCT(property) pr = MPT_PROPERTY_INIT;
 	int lines = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -23,8 +23,7 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_T
 	
 	pr.name = "backend";
 	pr.desc = "used single step backend";
-	pr.val.fmt = 0;
-	pr.val.ptr = backend;
+	mpt_solver_module_value_string(&pr.val, backend);
 	out(usr, &pr);
 	++lines;
 	
@@ -51,10 +50,34 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, int show, MPT_T
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)) {
-		pr.name = 0;
-		pr.desc = MPT_tr("BACOL solver state");
+	pr.name = 0;
+	pr.desc = MPT_tr("BACOL solver state");
+	if (!od) {
 		mpt_solver_module_value_double(&pr.val, &bac->t);
 		out(usr, &pr);
+	}
+	else {
+		MPT_STRUCT(property) val[3] = { MPT_PROPERTY_INIT, MPT_PROPERTY_INIT, MPT_PROPERTY_INIT };
+		int ret;
+		
+		val[0].name = "t";
+		val[0].desc = MPT_tr("current time");
+		mpt_solver_module_value_double(&val[0].val, &bac->t);
+		
+		val[1].name = "grid";
+		val[1].desc = MPT_tr("user-defined output grid data");
+		
+		val[2].name = "y";
+		val[2].desc = MPT_tr("data interpolation for output grid");
+		
+		if ((ret = mpt_bacol_output_grid(od, &val[1].val) < 0)
+		 || (ret = mpt_bacol_output_values(od, &val[2].val) < 0)) {
+			out(usr, &val[0]);
+		}
+		else {
+			mpt_solver_module_report_properties(val, 3, pr.name, pr.desc, out, usr);
+		}
+	}
 	}
 	return lines;
 }

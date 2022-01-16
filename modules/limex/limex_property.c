@@ -10,13 +10,14 @@
 #include "limex.h"
 
 #include "version.h"
+#include "types.h"
 #include "meta.h"
 
 #include "module_functions.h"
 
 static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, MPT_INTERFACE(convertable) *src)
 {
-	MPT_STRUCT(consumable) val;
+	MPT_INTERFACE(iterator) *it;
 	const char *key;
 	int ret, usr;
 	int32_t lb, ub;
@@ -28,16 +29,11 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, MPT_INTERFACE(convertable) 
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
-			return ret;
-		}
-		ret = 0;
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
+		ret = mpt_solver_module_consume_value(it, 'k', &key, 0);
 	}
-	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
+	if (ret < 0 && (ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 		return ret;
-	} else {
-		ret = 1;
 	}
 	if (!key || !(mode = *key)) {
 		lx->iopt[6] = 0;
@@ -57,24 +53,20 @@ static int setJacobian(MPT_SOLVER_STRUCT(limex) *lx, MPT_INTERFACE(convertable) 
 			usr = 1;
 			/* fall through */
 		case 'b':
-			if (!ret) {
-				lb = ub = lx->ivp.neqs;
-			}
-			else if ((ret = mpt_consume_int(&val, &lb)) < 0) {
-				return ret;
-			}
-			else if (!ret) {
-				lb = ub = lx->ivp.neqs;
-				ret = 1;
-				break;
-			}
-			else if ((ret = mpt_consume_int(&val, &ub)) < 0) {
-				return ret;
+			if (!it || !ret || (ret = mpt_solver_module_consume_value(it, 'i', &lb, sizeof(lb))) < 0) {
+				lb = lx->ivp.neqs;
+				if (!lx->ivp.pint) {
+					--lb;
+				}
+				ub = lb;
 			}
 			else if (!ret) {
 				ub = lb;
 				ret = 2;
 				break;
+			}
+			else if ((ret = mpt_solver_module_consume_value(it, 'i', &ub, sizeof(ub))) < 0) {
+				return ret;
 			}
 			else {
 				ret = 3;
@@ -273,8 +265,7 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version";
 		prop->desc = "solver release information";
-		prop->val.fmt = 0;
-		prop->val.ptr = version;
+		mpt_solver_module_value_string(&prop->val, version);
 		return 0;
 	}
 	
@@ -298,12 +289,18 @@ extern int mpt_limex_get(const MPT_SOLVER_STRUCT(limex) *lx, MPT_STRUCT(property
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == id++) {
-		static const uint8_t fmt[] = "iii";
+		const char *type;
 		prop->name = "jacobian";
 		prop->desc = "(user) jacobian settings";
-		prop->val.fmt = fmt;
-		prop->val.ptr = lx->iopt + 6;
+		prop->val.type = 's';
+		prop->val.ptr = 0;
 		if (!lx) return id;
+		if (lx->iopt[7] != lx->ivp.neqs) {
+			type = !lx->iopt[6] ? "Banded" : "banded";
+		} else {
+			type = !lx->iopt[6] ? "Full" : "full";
+		}
+		mpt_solver_module_value_string(&prop->val, type);
 		return lx->iopt[6] || lx->iopt[7] != lx->ivp.neqs || lx->iopt[8] != lx->ivp.neqs;
 	}
 	if (name ? (!strcasecmp(name, "h") || !strcasecmp(name, "initstep")) : pos == id++) {

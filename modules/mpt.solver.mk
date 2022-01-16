@@ -15,12 +15,9 @@ INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
 #
 # vecpar and other shared operations
 mod_tol = tol_check tol_set tol_get
-mod_ivp = ivpset nextval ${mod_tol} valloc value
-mod_nls = nlsset valloc value
+mod_ivp = ivpset nextval ${mod_tol} valloc value consume_value report_properties
+mod_nls = nlsset valloc value consume_value report_properties
 mod_sol = nlsset ${mod_ivp}
-#
-# base module includes
-mod_val ?= consume consumable_setup
 #
 # module function templates
 src_modfcn = \
@@ -37,8 +34,7 @@ MATH_OBJS_SHARED ?= ${MATH_OBJS}
 STATIC_OBJS ?= ${OBJS} ${MATH_OBJS_STATIC}
 SHLIB_OBJS ?= libinfo.o \
 	${OBJS} ${MATH_OBJS_SHARED} \
-	$(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o) \
-	$(mod_val:%=${DIR_BASE}mptcore/meta/%.o)
+	$(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o)
 #
 # import library creation
 include ${DIR_BASE}/mpt.lib.mk

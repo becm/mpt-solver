@@ -100,36 +100,45 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 {
 	const MPT_STRUCT(buffer) *buf;
 	const uint8_t *pass;
-	const uint8_t *fmt;
 	const struct iovec *vec;
 	const double *res, *par;
 	size_t passlen;
 	int nr, np;
 	
-	if (!val) {
+	if (!val || !(vec = val->ptr)) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (!(fmt = val->fmt)
-	    || fmt[0] != MPT_type_toVector('d')) {
-		return MPT_ERROR(BadType);
+	par = 0;
+	res = 0;
+	
+	if (val->type == MPT_type_toVector('d')) {
+		par = vec->iov_base;
+		np  = vec->iov_len / sizeof (*par);
 	}
-	if (!(vec = val->ptr)) {
+	else if (val->type == MPT_ENUM(TypeObjectPtr)) {
+		MPT_STRUCT(property) pr;
+		const MPT_INTERFACE(object) *obj = *((void * const *) val->ptr);
+		
+		pr.name = "param";
+		if (obj->_vptr->property(obj, &pr) >= 0
+		 && pr.val.type == MPT_type_toVector('d')) {
+			vec = pr.val.ptr;
+			par = vec->iov_base;
+			np  = vec->iov_len / sizeof (*par);
+		}
+		pr.name = "res";
+		if (obj->_vptr->property(obj, &pr) >= 0
+		 && pr.val.type == MPT_type_toVector('d')) {
+			vec = pr.val.ptr;
+			res = vec->iov_base;
+			nr  = vec->iov_len / sizeof (*par);
+		}
+	}
+	if (!par) {
 		return MPT_ERROR(BadValue);
 	}
 	if (!out->_data && !out->_graphic) {
 		return 0;
-	}
-	par = vec->iov_base;
-	np  = vec->iov_len / sizeof (*par);
-	
-	res = 0;
-	if (fmt[1] == MPT_type_toVector('d')) {
-		res = vec[1].iov_base;
-		nr  = vec[1].iov_len / sizeof(*res);
-	}
-	else if (fmt[1] == 'd') {
-		res = (void *) (vec + 1);
-		nr  = 1;
 	}
 	/* output parameters */
 	if (par &&

@@ -26,9 +26,10 @@ public:
 	
 	MPT_SOLVER_TYPE(dvecpar) rtol, atol;  /* tolerances */
 	
-	char meth, miter, /* method flags */
-	     jsv,         /* save jacobian iteration */
-	     iopt;        /* flag for optional input */
+	int8_t meth,
+	       miter,     /* method flags */
+	       jsv,       /* save jacobian iteration */
+	       iopt;      /* flag for optional input */
 	
 	short istate;     /* dvode state */
 	short itask;      /* type of integration step */

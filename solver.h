@@ -269,7 +269,7 @@ public:
 #endif
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Fcn))(void *rpar, const double *p, double *res, const int *lres);
 typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Jac))(void *jpar, const double *p, double *jac, const int *ld, const double *res);
-typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Out))(void *opar, const MPT_STRUCT(value) *val);
+typedef int (*_MPT_SOLVER_NLS_TYPEDEF(Out))(void *opar, const MPT_STRUCT(value) *par, const MPT_STRUCT(value) *res);
 #ifdef __cplusplus
 };
 #endif
@@ -512,15 +512,9 @@ struct vecpar
 	{
 		struct value v;
 		if (_base) {
-			static value::format fmt;
-			fmt.set(type_properties<span<const T> >::id(true));
-			v.fmt = fmt;
-			v.ptr = this;
+			v.set(type_properties<span<const T> >::id(true), this);
 		} else {
-			static value::format fmt;
-			fmt.set(type_properties<T>::id(true));
-			v.fmt = fmt;
-			v.ptr = &_d.val;
+			v.set(type_properties<T>::id(true), &_d.val);
 		}
 		return v;
 	}
@@ -602,7 +596,7 @@ extern MPT_INTERFACE(iterator) *mpt_conf_iter(MPT_INTERFACE(metatype) **, MPT_IN
 
 /* set problem specific parameters */
 extern int mpt_conf_nls(MPT_STRUCT(solver_data) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
-extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *, MPT_STRUCT(node) *, MPT_INTERFACE(iterator) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
+extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *, MPT_STRUCT(node) *, const MPT_STRUCT(value) *, MPT_INTERFACE(logger) *__MPT_DEFPAR(logger::default_instance()));
 
 /* configure graphic output and bindings */
 extern int mpt_conf_graphic(MPT_INTERFACE(output) *, const MPT_STRUCT(node) *, MPT_INTERFACE(logger) *);
@@ -667,7 +661,7 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *, MPT_INTERFACE(c
 extern int mpt_solver_module_tol_check(MPT_SOLVER_TYPE(dvecpar) *, long , long , double);
 
 /* solver module memory management */
-extern void *mpt_solver_module_valloc(struct iovec *, size_t len, size_t size);
+extern void *mpt_solver_module_valloc(struct iovec *, size_t , size_t);
 
 /* solver module parameter assignment */
 extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *, MPT_INTERFACE(convertable) *);
@@ -683,12 +677,18 @@ extern int mpt_solver_module_value_ivec(MPT_STRUCT(value) *val, long , const str
 extern int mpt_solver_module_value_rvec(MPT_STRUCT(value) *val, long , const struct iovec *);
 extern void mpt_solver_module_value_double(MPT_STRUCT(value) *val, const double *);
 extern void mpt_solver_module_value_int(MPT_STRUCT(value) *val, const int *);
+extern void mpt_solver_module_value_long(MPT_STRUCT(value) *val, const long *);
+extern void mpt_solver_module_value_string(MPT_STRUCT(value) *val, const char *);
 
 /* assign user functions */
 extern int mpt_solver_module_ufcn_ode(long , MPT_IVP_STRUCT(odefcn) *, int , const void *);
 extern int mpt_solver_module_ufcn_dae(long , MPT_IVP_STRUCT(daefcn) *, int , const void *);
 extern int mpt_solver_module_ufcn_nls(const MPT_NLS_STRUCT(parameters) *, MPT_NLS_STRUCT(functions) *, int , const void *);
 
+/* wrap multiple proprties in intermediate object */
+extern int mpt_solver_module_report_properties(const MPT_STRUCT(property) *, int , const char *, const char *, MPT_TYPE(property_handler) , void *);
+/* consume value from iterator, allow primitive copy on non-zero size */
+extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, int , void * , size_t);
 
 /* id for registered solver metatype */
 extern const MPT_STRUCT(named_traits) *mpt_solver_type_traits(void);

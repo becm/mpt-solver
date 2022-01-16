@@ -26,15 +26,12 @@
  */
 extern int mpt_ivp_data(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double) *arr, MPT_INTERFACE(logger) *info)
 {
-	static const uint8_t fmt[] = { 'd', MPT_type_toVector('d'), 0 };
+	static const char fmt[] = { 'd', MPT_type_toVector('d'), 0 };
 	
 	const MPT_STRUCT(type_traits) *traits;
 	const MPT_STRUCT(buffer) *buf;
-	MPT_STRUCT(value) val;
-	struct {
-		double t;
-		struct iovec y;
-	} data;
+	double t;
+	struct iovec y;
 	double *src;
 	size_t len;
 	int ret;
@@ -59,13 +56,11 @@ extern int mpt_ivp_data(MPT_INTERFACE(object) *sol, const _MPT_ARRAY_TYPE(double
 	}
 	/* initial value setup */
 	src = (void *) (buf + 1);
-	data.t = *src;
-	data.y.iov_base = src + 1;
-	data.y.iov_len  = (len - 1) * sizeof(double);
-	val.fmt = fmt;
-	val.ptr = &data;
+	t = *src;
+	y.iov_base = src + 1;
+	y.iov_len  = (len - 1) * sizeof(*src);
 	
-	if ((ret = mpt_object_set_value(sol, 0, &val)) < 0) {
+	if ((ret = mpt_object_set(sol, 0, fmt, t, y)) < 0) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("failed to set initial values"));

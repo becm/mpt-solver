@@ -203,8 +203,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version";
 		prop->desc = "solver release information";
-		prop->val.fmt = 0;
-		prop->val.ptr = version;
+		mpt_solver_module_value_string(&prop->val, version);
 		return 0;
 	}
 	
@@ -229,12 +228,14 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	}
 	/* bacol parameters */
 	if (name ? !strcasecmp(name, "kcol") : pos == ++id) {
-		static const uint8_t fmt[] = "n";
 		prop->name = "kcol";
 		prop->desc = "collocations per interval";
-		prop->val.fmt = fmt;
+		prop->val.type = 'n';
 		prop->val.ptr = &bac->kcol;
 		if (!bac) return id;
+		if (prop->val._bufsize >= sizeof(bac->kcol)) {
+			prop->val.ptr = memcpy(prop->val._buf, &bac->kcol, sizeof(bac->kcol));
+		}
 		return bac->kcol == 2 ? 0 : 1;
 	}
 	if (name ? !strcasecmp(name, "nint") : pos == ++id) {
@@ -245,12 +246,14 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 		return bac->nint == 10 ? 0 : 1;
 	}
 	if (name ? (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) : pos == ++id) {
-		static const uint8_t fmt[] = "u";
 		prop->name = "iout";
 		prop->desc = "number of output intervals";
-		prop->val.fmt = fmt;
+		prop->val.type = 'u';
 		prop->val.ptr = &bac->ivp.pint;
 		if (!bac) return id;
+		if (prop->val._bufsize >= sizeof(bac->ivp.pint)) {
+			prop->val.ptr = memcpy(prop->val._buf, &bac->ivp.pint, sizeof(bac->ivp.pint));
+		}
 		return bac->ivp.pint != 10 ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "nintmx") : pos == ++id) {
@@ -277,20 +280,22 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	}
 	/* solving backend */
 	if (name ? !strcasecmp(name, "backend") : pos == ++id) {
+		const char *val;
 		prop->name = "backend";
 		prop->desc = "solver step backend";
-		prop->val.fmt = 0;
+		prop->val.type = 's';
 		prop->val.ptr = 0;
 		if (!bac) return id;
 		switch (bac->_backend) {
 #ifdef MPT_BACOL_DASSL
-		  case 'd': case 'D': prop->val.ptr = "dassl"; break;
+		  case 'd': case 'D': val = "dassl"; break;
 #endif
 #ifdef MPT_BACOL_RADAU
-		  case 'r': case 'R': prop->val.ptr = "radau"; break;
+		  case 'r': case 'R': val = "radau"; break;
 #endif
-		  default: prop->val.ptr = "<unknown>";
+		  default: val = "<unknown>";
 		}
+		mpt_solver_module_value_string(&prop->val, val);
 		return id;
 	}
 #ifdef MPT_BACOL_DASSL

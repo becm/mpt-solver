@@ -98,10 +98,10 @@ extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *n2, MPT_STRUCT(proper
 	
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
+		const char *ptr = version;
 		prop->name = "version";
 		prop->desc = "solver release information";
-		prop->val.fmt = 0;
-		prop->val.ptr = version;
+		mpt_solver_module_value_string(&prop->val, ptr);
 		return 0;
 	}
 	return MPT_ERROR(BadArgument);

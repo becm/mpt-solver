@@ -11,7 +11,7 @@ include ../solver.example.mk
 
 ${PROGS} ${STATIC} : ${DIR_EXAMPLES}solver_run.o
 
-${DIR_EXAMPLES}*.o *.o : ${DIR_EXAMPLES}solver_run.h
+$(PROGS:%=%.o) : ${DIR_EXAMPLES}solver_run.h
 
 sys4 : sys4.o sys4_fcn.o
 sys4 : LDLIBS+=-lmptcore

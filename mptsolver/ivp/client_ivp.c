@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <sys/resource.h>
 #include <sys/uio.h>
@@ -19,6 +20,7 @@
 #include "meta.h"
 #include "output.h"
 
+#include "convert.h"
 #include "parse.h"
 #include "client.h"
 #include "config.h"
@@ -69,13 +71,28 @@ static MPT_INTERFACE(logger) *loggerIVP(const MPT_STRUCT(IVP) *ivp)
 
 static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 {
+	int ret;
+	
 	if (!pr || pr->name) {
 		return 0;
 	}
-	if (!pr->val.fmt || *pr->val.fmt != 'd') {
-		return MPT_ERROR(BadValue);
+	if (!pr->val.ptr) {
+		return MPT_ERROR(MissingData);
 	}
-	*((double *) ptr) = *((double *) pr->val.ptr);
+	if ((ret = mpt_value_convert(&pr->val, 'd', ptr)) >= 0) {
+		return 0;
+	}
+	else if (pr->val.type == MPT_ENUM(TypeObjectPtr)) {
+		MPT_INTERFACE(object) *obj = *((void * const *) pr->val.ptr);
+		MPT_STRUCT(property) tmp = MPT_PROPERTY_INIT;
+		tmp.name = "t";
+		if (!obj || (ret = obj->_vptr->property(obj, &tmp)) < 0) {
+			return MPT_ERROR(BadValue);
+		}
+		if ((ret = mpt_value_convert(&tmp.val, 'd', ptr)) < 0) {
+			return ret;
+		}
+	}
 	return 1;
 }
 static int getTime(MPT_SOLVER(interface) *sol, double *t)
@@ -88,34 +105,37 @@ static int nextTime(MPT_INTERFACE(iterator) *src, double *end, const char *fcn, 
 	double ref = *end;
 	
 	while (1) {
+		const MPT_STRUCT(value) *curr;
 		double next;
-		int ret, adv;
-		if ((ret = src->_vptr->get(src, 'd', &next)) < 0) {
+		int ret;
+		
+		if (!(curr = src->_vptr->value(src))) {
 			mpt_log(info, fcn, MPT_LOG(Error), "%s (%s)",
 			        MPT_tr("bad value on time source"),
 			        arg ? MPT_tr("argument") : MPT_tr("internal"));
-			return ret;
+			return MPT_ERROR(MissingData);
 		}
-		if (!ret) {
-			mpt_log(info, fcn, MPT_LOG(Info), "%s (%s)",
-			        MPT_tr("no further data in time source"),
-			        arg ? MPT_tr("argument") : MPT_tr("internal"));
-			return 0;
+		if ((ret = mpt_value_convert(curr, 'd', &next)) < 0) {
+			mpt_log(info, fcn, MPT_LOG(Error), "%s (%s): %d",
+			        MPT_tr("bad type on time source"),
+			        arg ? MPT_tr("argument") : MPT_tr("internal"),
+			        curr->type);
+			return ret;
 		}
 		if (ref < next) {
 			*end = next;
-			return ret;
+			return curr->type;
 		}
 		mpt_log(info, fcn, MPT_LOG(Info), "%s (%g <= %g)",
 		        MPT_tr("skip time value argument"), next, ref);
 		
-		if ((adv = src->_vptr->advance(src)) < 0) {
+		if ((ret = src->_vptr->advance(src)) < 0) {
 			mpt_log(info, fcn, MPT_LOG(Error), "%s (%s)",
 			        MPT_tr("bad time source state"),
 			        arg ? MPT_tr("argument") : MPT_tr("internal"));
-			return adv;
+			return ret;
 		}
-		if (!adv) {
+		if (!ret) {
 			mpt_log(info, fcn, MPT_LOG(Warning), "%s (%s)",
 			        MPT_tr("no further data in time source"),
 			        arg ? MPT_tr("argument") : MPT_tr("internal"));
@@ -190,6 +210,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	static const char _func[] = "mpt::client<IVP>::assign";
 	MPT_STRUCT(IVP) *ivp = MPT_baseaddr(IVP, gen, _cfg);
 	MPT_STRUCT(node) *conf;
+	const char *path;
 	
 	if (!porg) {
 		MPT_STRUCT(path) p = MPT_PATH_INIT;
@@ -199,11 +220,11 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		if (!val) {
 			return configIVP(ivp) ? 0 : MPT_ERROR(BadOperation);
 		}
-		if (val->fmt) {
+		path = 0;
+		if (mpt_value_convert(val, 's', &path) < 0) {
 			return MPT_ERROR(BadType);
 		}
-		if (!val->ptr
-		    || !mpt_path_set(&p, val->ptr, -1)) {
+		if (!mpt_path_set(&p, path, -1)) {
 			return MPT_ERROR(BadValue);
 		}
 		if (!(ivp->cfg = mpt_config_global(&p))) {
@@ -216,16 +237,36 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	}
 	if (!porg->len) {
 		MPT_INTERFACE(logger) *info;
+		FILE *file;
 		int ret;
 		
 		/* external log target only */
 		info = loggerIVP(0);
-		if ((ret = mpt_node_parse(conf, val, info)) < 0) {
+		
+		path = 0;
+		if (mpt_value_convert(val, 's', &path) < 0 || path == 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("invalid file name type"),
+			        val->type);
+			return MPT_ERROR(BadType);
+		}
+		if (!(file = fopen(path, "r"))) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("failed to open client config"),
+			        path);
+			return MPT_ERROR(BadValue);
+		}
+		ret = mpt_node_parse(conf, file, 0, 0, info);
+		fclose(file);
+		if (ret < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("failed to load client config"));
-		} else {
-			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
-			        MPT_tr("loaded client config file"));
+		}
+		else {
+			MPT_STRUCT(value) val = MPT_VALUE_INIT('s', &path);
+			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
+			        MPT_tr("loaded client config file"), path);
+			mpt_meta_set(&conf->_meta, &val);
 		}
 		return ret;
 	}
@@ -368,7 +409,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		return MPT_ERROR(BadOperation);
 	}
 	/* set data and adapt config elements */
-	if ((ret = mpt_conf_ivp(dat, conf->children, args, info)) < 0) {
+	if ((ret = mpt_conf_ivp(dat, conf->children, args ? args->_vptr->value(args) : 0, info)) < 0) {
 		return ret;
 	}
 	/* get time source from config */
@@ -380,8 +421,7 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	/* query and advance time source */
 	t = 0.0;
 	if (args) {
-		ret = args->_vptr->get(args, 'd', &t);
-		if ((ret = args->_vptr->advance(args)) < 0) {
+		if ((ret = mpt_iterator_consume(args, 'd', &t)) < 0) {
 			mpt_log(info, __func__, MPT_LOG(Warning), "%s: %s",
 			        MPT_tr("unable to advance iterator"), MPT_tr("time steps"));
 		}

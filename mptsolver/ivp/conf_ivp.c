@@ -9,6 +9,7 @@
 #include "node.h"
 #include "array.h"
 #include "output.h"
+#include "convert.h"
 
 #include "values.h"
 
@@ -26,35 +27,37 @@
  * 
  * \return PDE grid intervals
  */
-extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *md, MPT_STRUCT(node) *conf, MPT_INTERFACE(iterator) *times, MPT_INTERFACE(logger) *info)
+extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *md, MPT_STRUCT(node) *conf, const MPT_STRUCT(value) *time, MPT_INTERFACE(logger) *info)
 {
-	MPT_STRUCT(node) *curr;
+	MPT_STRUCT(node) *curr = 0;
 	MPT_STRUCT(buffer) *buf;
 	double t;
 	int len;
 	
 	/* create/reset config time source */
-	if ((curr = mpt_node_next(conf, "times"))) {
+	curr = 0;
+	if (!time) {
 		MPT_INTERFACE(iterator) *src;
+		
+		if (!(curr = mpt_node_next(conf, "times"))) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			        MPT_tr("no default time source"));
+			return MPT_ERROR(MissingData);
+		}
 		/* create/reset time source */
 		if (!(src = mpt_conf_iter(&curr->_meta, info))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (!times) {
-			times = src;
-		} else {
-			curr = 0;
+		/* require default time info */
+		if (!(time = src->_vptr->value(src))) {
+			mpt_log(info, __func__, MPT_LOG(Error), "%s",
+			        MPT_tr("no default time source"));
+			return MPT_ERROR(MissingData);
 		}
-	}
-	/* require arg on non-existing time info */
-	else if (!times) {
-		mpt_log(info, __func__, MPT_LOG(Error), "%s",
-		        MPT_tr("no default time source"));
-		return MPT_ERROR(MissingData);
 	}
 	/* require valid time source */
 	t = 0.0;
-	if ((len = times->_vptr->get(times, 'd', &t)) < 0) {
+	if ((len = mpt_value_convert(time, 'd', &t)) < 0) {
 		if (info) {
 			const char *src = curr ? MPT_tr("config") : MPT_tr("argument");
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%s)",

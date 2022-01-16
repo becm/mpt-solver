@@ -9,6 +9,7 @@
 #include "dassl.h"
 
 #include "version.h"
+#include "types.h"
 #include "meta.h"
 
 #include "module_functions.h"
@@ -46,7 +47,7 @@ static int setReal(MPT_SOLVER_STRUCT(dassl) *da, size_t pos, double val)
 
 static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, MPT_INTERFACE(convertable) *src)
 {
-	MPT_STRUCT(consumable) val;
+	MPT_INTERFACE(iterator) *it;
 	const char *key;
 	int32_t ld, ud;
 	int ret, ujac;
@@ -59,16 +60,12 @@ static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, MPT_INTERFACE(convertable) 
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
-			return ret;
-		}
-		ret = 0;
+	it = 0;
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
+		ret = mpt_solver_module_consume_value(it, 'k', &key, 0);
 	}
-	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
+	if (ret < 0 && (ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 		return ret;
-	} else {
-		ret = 1;
 	}
 	if (!key || !(mode = *key)) {
 		da->info[4] = 1;
@@ -83,19 +80,20 @@ static int setJacobian(MPT_SOLVER_STRUCT(dassl) *da, MPT_INTERFACE(convertable) 
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_consume_int(&val, &ld)) < 0) {
-		return ret;
+	
+	if (!it || (ret = mpt_solver_module_consume_value(it, 'i', &ld, sizeof(ld))) < 0) {
+		ld = da->ivp.neqs;
+		if (!da->ivp.pint) {
+			--ld;
+		}
+		ud = ld;
 	}
 	else if (!ret) {
 		ld = ud = da->ivp.neqs;
-		ret = 1;
-	}
-	else if ((ret = mpt_consume_int(&val, &ud)) < 0) {
-		return ret;
-	}
-	else if (!ret) {
-		ud = ld;
 		ret = 2;
+	}
+	else if ((ret = mpt_solver_module_consume_value(it, 'i', &ud, sizeof(ud))) < 0) {
+		return ret;
 	}
 	else {
 		ret = 3;
@@ -288,8 +286,9 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
-		prop->name = "version"; prop->desc = "solver release information";
-		prop->val.fmt = 0; prop->val.ptr = version;
+		prop->name = "version";
+		prop->desc = "solver release information";
+		mpt_solver_module_value_string(&prop->val, version);
 		return 0;
 	}
 	
@@ -300,7 +299,8 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		if (da) {
 			return mpt_solver_module_tol_get(&prop->val, &da->atol);
 		}
-		mpt_solver_module_value_double(&prop->val, &da->atol._d.val);
+		prop->val.type = 'd';
+		prop->val.ptr = &da->atol._d.val;
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
@@ -309,28 +309,32 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		if (da) {
 			return mpt_solver_module_tol_get(&prop->val, &da->rtol);
 		}
-		mpt_solver_module_value_double(&prop->val, &da->rtol._d.val);
+		prop->val.type = 'd';
+		prop->val.ptr = &da->rtol._d.val;
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == ++id) {
-		static const uint8_t fmt[] = "ii";
-		size_t len;
+		const char *type;
 		prop->name = "jacobian";
 		prop->desc = "(user) jacobian parameters";
-		prop->val.fmt = fmt;
+		prop->val.type = 's';
 		prop->val.ptr = 0;
 		if (!da) return id;
-		len = da->iwork.iov_len / sizeof(int);
-		if (len > 1) prop->val.ptr = da->iwork.iov_base;
+		if (da->info[5]) {
+			type = da->jac ? "Banded" : "banded";
+		} else {
+			type = da->jac ? "Full" : "full";
+		}
+		mpt_solver_module_value_string(&prop->val, type);
 		return da->info[5] ? 1 :  0;
 	}
 	if (name ? !strcasecmp(name, "info3") : pos == ++id) {
-		static const uint8_t fmt[] = "i";
 		prop->name = "info3";
 		prop->desc = "output only at tout";
-		prop->val.fmt = fmt;
-		prop->val.ptr = da ? da->info + 2 : 0;
+		prop->val.type = 'i';
+		prop->val.ptr = da->info + 2;
 		if (!da) return id;
+		mpt_solver_module_value_int(&prop->val, da->info + 2);
 		return da->info[2] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "info4") || !strcasecmp(name, "tstop")) : pos == ++id) {
@@ -362,12 +366,12 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		return da->info[8] ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "info10") || !strncasecmp(name, "nonnegative", 6)) : pos == ++id) {
-		static const uint8_t fmt[] = "i";
 		prop->name = "nonnegative";
 		prop->desc = "restrict to nonnegative solutions";
-		prop->val.fmt = fmt;
+		prop->val.type = 'i';
 		prop->val.ptr = da ? da->info + 9 : 0;
 		if (!da) return id;
+		mpt_solver_module_value_int(&prop->val, da->info + 9);
 		return da->info[9] ? 1 : 0;
 	}
 	/* state properties */
@@ -375,12 +379,20 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 		return MPT_ERROR(BadArgument);
 	}
 	if (!strncasecmp(name, "yp", 2)) {
-		static const uint8_t fmt[] = "d";
+		struct iovec *vec;
 		prop->name = "yprime";
 		prop->desc = "current deviation vector";
-		prop->val.fmt = fmt;
-		prop->val.ptr = da->yp;
-		return da->info[10] ? da->ivp.neqs * (da->ivp.pint + 1) : 0;
+		prop->val.type = MPT_type_toVector('d');
+		prop->val.ptr = 0;
+		if (!da) {
+			return id;
+		}
+		else if (prop->val._bufsize >= sizeof(*vec)) {
+			prop->val.ptr = vec = (void *) prop->val._buf;
+			vec->iov_base = da->yp;
+			vec->iov_len  = da->ivp.neqs * (da->ivp.pint + 1) * sizeof(double);
+		}
+		return da->info[10] ? 1 : 0;
 	}
 	return MPT_ERROR(BadArgument);
 }

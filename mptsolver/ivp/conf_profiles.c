@@ -21,13 +21,15 @@
 MPT_STRUCT(iterProfile) {
 	MPT_INTERFACE(metatype) _mt;
 	MPT_INTERFACE(iterator) _it;
+	
+	MPT_STRUCT(value) val;
 	double t;
 	long pos;
 	long len;
 	int neqs;
 };
 /* iterator interface */
-static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
+static const MPT_STRUCT(value) *iterProfileValue(MPT_INTERFACE(iterator) *it)
 {
 	MPT_STRUCT(iterProfile) *p = MPT_baseaddr(iterProfile, it, _it);
 	double *val = (void *) (p + 1);
@@ -36,33 +38,34 @@ static int iterProfileGet(MPT_INTERFACE(iterator) *it, int type, void *dest)
 	struct iovec *vec;
 	int i;
 	
-	if (type != MPT_type_toVector('d')) {
-		return MPT_ERROR(BadType);
-	}
 	if (p->pos >= p->len) {
 		return 0;
 	}
-	if (!(vec = dest)) {
-		return MPT_type_toVector('d');
-	}
+	
+	p->val.type = MPT_type_toVector('d');
+	p->val.ptr = p->val._buf;
+	vec = (struct iovec *) p->val._buf;
+	
+	vec->iov_base = val;
+	vec->iov_len = p->neqs * sizeof(double);
+	
 	for (i = 0; i < p->neqs; ++i) {
-		MPT_INTERFACE(iterator) *curr;
+		MPT_INTERFACE(iterator) *it;
+		const MPT_STRUCT(value) *curr;
 		int ret;
 		
-		if (!(curr = iptr[i])) {
+		if (!(it = iptr[i]) || !(curr = it->_vptr->value(it))) {
 			continue;
 		}
-		if ((ret = curr->_vptr->get(curr, 'd', val + i)) < 0) {
-			return ret;
-		}
-		if (!ret) {
-			val[i] = 0;
+		if ((ret = mpt_value_convert(curr, 'd', val + i)) < 0) {
+			errno = EINVAL;
+			return 0;
 		}
 	}
 	vec->iov_base = val;
 	vec->iov_len = i * sizeof(*val);
 	
-	return MPT_type_toVector('d');
+	return &p->val;
 }
 static int iterProfileAdvance(MPT_INTERFACE(iterator) *it)
 {
@@ -176,7 +179,7 @@ static MPT_INTERFACE(metatype) *iterProfileClone(const MPT_INTERFACE(metatype) *
 extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) *dat, double t, const MPT_STRUCT(node) *conf, MPT_INTERFACE(logger) *out)
 {
 	static const MPT_INTERFACE_VPTR(iterator) iterProfileIter = {
-		iterProfileGet, iterProfileAdvance, iterProfileReset
+		iterProfileValue, iterProfileAdvance, iterProfileReset
 	};
 	static const MPT_INTERFACE_VPTR(metatype) iterProfileMeta = {
 		{ iterProfileConv }, iterProfileUnref, iterProfileRef, iterProfileClone

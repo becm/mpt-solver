@@ -48,20 +48,6 @@ static MPT_INTERFACE(metatype) *bacClone(const MPT_INTERFACE(metatype) *mt)
 	return 0;
 }
 /* solver interface */
-struct outContext
-{
-	MPT_TYPE(property_handler) out;
-	void *ctx;
-};
-static int outValues(void *ptr, MPT_STRUCT(value) val)
-{
-	struct outContext *ctx = ptr;
-	MPT_STRUCT(property) pr;
-	pr.name = 0;
-	pr.desc = MPT_tr("solver state");
-	pr.val = val;
-	return ctx->out(ctx->ctx, &pr);
-}
 static int bacReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(property_handler) out, void *data)
 {
 	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, sol, _sol);
@@ -73,15 +59,8 @@ static int bacReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(property_han
 		if (!bac->out.nint && !mpt_bacol_values(&bac->out, &bac->d)) {
 			return MPT_ERROR(BadOperation);
 		}
-		if (out) {
-			struct outContext ctx;
-			ctx.out = out;
-			ctx.ctx = data;
-			mpt_bacol_output_report(&bac->out, bac->d.t, outValues, &ctx);
-		}
-		what &= ~MPT_SOLVER_ENUM(Values);
 	}
-	return mpt_bacol_report(&bac->d, what, out, data);
+	return mpt_bacol_report(&bac->d, &bac->out, what, out, data);
 }
 static int bacFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {

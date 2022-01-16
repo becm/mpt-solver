@@ -19,6 +19,7 @@
 #include "message.h"
 #include "array.h"
 #include "output.h"
+#include "convert.h"
 
 #include "parse.h"
 #include "client.h"
@@ -143,6 +144,7 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	
 	MPT_STRUCT(NLS) *nls = MPT_baseaddr(NLS, gen, _cfg);
 	MPT_STRUCT(node) *conf;
+	const char *path;
 	
 	if (!porg) {
 		MPT_STRUCT(path) p = MPT_PATH_INIT;
@@ -152,11 +154,11 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		if (!val) {
 			return configNLS(nls) ? 0 : MPT_ERROR(BadOperation);
 		}
-		if (val->fmt) {
+		path = 0;
+		if (mpt_value_convert(val, 's', &path) < 0) {
 			return MPT_ERROR(BadType);
 		}
-		if (!val->ptr
-		    || !mpt_path_set(&p, val->ptr, -1)) {
+		if (!mpt_path_set(&p, path, -1)) {
 			return MPT_ERROR(BadValue);
 		}
 		if (!(nls->cfg = mpt_config_global(&p))) {
@@ -169,16 +171,34 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	}
 	if (!porg->len) {
 		MPT_INTERFACE(logger) *info;
+		FILE *file;
 		int ret;
 		
 		/* external log target only */
 		info = loggerNLS(0);
-		if ((ret = mpt_node_parse(conf, val, info)) < 0) {
+		path = 0;
+		if (mpt_value_convert(val, 's', &path) < 0 || path == 0) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("invalid file name type"),
+			        val->type);
+			return MPT_ERROR(BadType);
+		}
+		if (!(file = fopen(path, "r"))) {
+			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("failed to open client config"),
+			        path);
+			return MPT_ERROR(BadValue);
+		}
+		ret = mpt_node_parse(conf, file, 0, 0, info);
+		fclose(file);
+		if (ret < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("failed to load client config"));
 		} else {
-			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s",
-			        MPT_tr("loaded client config file"));
+			MPT_STRUCT(value) val = MPT_VALUE_INIT('s', &path);
+			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
+			        MPT_tr("loaded client config file"), path);
+			mpt_meta_set(&conf->_meta, &val);
 		}
 		return ret;
 	}
@@ -349,7 +369,8 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		double *par = (void *) (dat->param._buf + 1);
 		int i;
 		for (i = 0; i < dat->npar; ++i) {
-			if ((ret = args->_vptr->get(args, 'd', par + i)) < 0) {
+			const MPT_STRUCT(value) *val = args->_vptr->value(args);
+			if (!val || (ret = mpt_value_convert(val, 'd', par + i)) < 0) {
 				mpt_log(info, _func, MPT_LOG(Warning), "%s: %d",
 				        MPT_tr("bad initial value"), i + 1);
 			}

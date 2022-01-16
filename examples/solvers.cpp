@@ -64,9 +64,7 @@ static void info(generic &s)
 	if (pr.desc) type = pr.desc;
 	pr.name = "version";
 	s.property(&pr);
-	if (!pr.val.fmt && pr.val.ptr) {
-		ver = reinterpret_cast<const char *>(pr.val.ptr);
-	}
+	ver = pr.val.string();
 	int types = s.property(0);
 	println("<%s> [0x%x] %s (%s)", name, types, ver, type);
 	
@@ -89,6 +87,7 @@ static void pde(IVP &s)
 	s.prepare();
 }
 
+#ifdef with_nlsolv
 static void nls(NLS &s)
 {
 	// equotation count
@@ -100,6 +99,7 @@ static void nls(NLS &s)
 	
 	s.prepare();
 }
+#endif
 
 int main()
 {

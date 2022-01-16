@@ -8,13 +8,14 @@
 #include "radau.h"
 
 #include "version.h"
+#include "types.h"
 #include "meta.h"
 
 #include "module_functions.h"
 
 static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, MPT_INTERFACE(convertable) *src)
 {
-	MPT_STRUCT(consumable) val;
+	MPT_INTERFACE(iterator) *it;
 	const char *key;
 	int32_t ld, ud;
 	long len;
@@ -26,16 +27,12 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, MPT_INTERFACE(convertable) 
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
-			return ret;
-		}
-		ret = 0;
+	it = 0;
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
+		ret = mpt_solver_module_consume_value(it, 'k', &key, 0);
 	}
-	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
+	if (ret < 0 && (ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 		return ret;
-	} else {
-		ret = 1;
 	}
 	if (!key || (mode = *key)) {
 		rd->ijac = 0;
@@ -55,19 +52,19 @@ static int setJacobian(MPT_SOLVER_STRUCT(radau) *rd, MPT_INTERFACE(convertable) 
 			rd->ijac = 0;
 			/* fall through */
 		case 'B':
-			if ((ret = mpt_consume_int(&val, &ld)) < 0) {
-				return ret;
-			}
-			if (!ret) {
-				ld = ud = rd->ivp.neqs;
-				ret = 1;
-			}
-			else if ((ret = mpt_consume_int(&val, &ud)) < 0) {
-				return ret;
+			if (!it || (ret = mpt_solver_module_consume_value(it, 'i', &ld, sizeof(ld))) < 0) {
+				ld = rd->ivp.neqs;
+				if (!rd->ivp.pint) {
+					--ld;
+				}
+				ud = ld;
 			}
 			else if (!ret) {
 				ud = ld;
 				ret = 2;
+			}
+			else if ((ret = mpt_solver_module_consume_value(it, 'i', &ud, sizeof(ud))) < 0) {
+				return ret;
 			}
 			else {
 				ret = 3;
@@ -178,8 +175,9 @@ extern int mpt_radau_get(const MPT_SOLVER_STRUCT(radau) *rd, MPT_STRUCT(property
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
-		prop->name = "version"; prop->desc = "solver release information";
-		prop->val.fmt = 0; prop->val.ptr = version;
+		prop->name = "version";
+		prop->desc = "solver release information";
+		mpt_solver_module_value_string(&prop->val, version);
 		return 0;
 	}
 	

@@ -203,8 +203,6 @@ extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name
  */
 extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT(property) *prop)
 {
-	static const uint8_t longfmt[] = { 'l', 0 };
-	static const uint8_t realfmt[] = { MPT_SOLVER_SUNDIALS(Realtype), 0 };
 	const char *name;
 	intptr_t pos = 0, id;
 	
@@ -223,10 +221,10 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
+		const char *ptr = version;
 		prop->name = "version";
 		prop->desc = "solver release information";
-		prop->val.fmt = 0;
-		prop->val.ptr = version;
+		mpt_solver_module_value_string(&prop->val, ptr);
 		return 0;
 	}
 	
@@ -250,24 +248,27 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
-		static const uint8_t fmt[] = "y";
 		prop->name = "jacobian";
 		prop->desc = "jacobian type";
-		prop->val.fmt = fmt;
+		prop->val.type = 'y';
 		prop->val.ptr = &cv->sd.jacobian;
+		if (!cv) return id;
+		MPT_value_set_data(&prop->val, 'y', &cv->sd.jacobian);
 		return cv ? (cv->sd.jacobian ? 1 : 0) : id;
 	}
 	if (name ? !strcasecmp(name, "method") : (pos == ++id)) {
+		const char *val = 0;
 		prop->name = "method";
 		prop->desc = "solver method";
-		prop->val.fmt = 0;
+		prop->val.type = 's';
 		prop->val.ptr = 0;
 		if (!cv) return id;
 		switch (cv->method) {
-		  case CV_BDF: prop->val.ptr = bdfText; break;
-		  case CV_ADAMS: prop->val.ptr = adamsText; break;
-		  default: prop->val.ptr = "";
+		  case CV_BDF: val = bdfText; break;
+		  case CV_ADAMS: val = adamsText; break;
+		  default: val = "";
 		}
+		mpt_solver_module_value_string(&prop->val, val);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "maxord") : (pos == ++id)) {
@@ -278,56 +279,69 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 		return (cv->maxord >= 0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "maxnumsteps")) : (pos == ++id)) {
-		const long *ptr = &cv->mxstep;
 		prop->name = "mxstep";
 		prop->desc = "allowed function evaluations per call";
-		prop->val.fmt = longfmt;
-		prop->val.ptr = ptr;
+		prop->val.type = 'l';
+		prop->val.ptr = &cv->mxstep;
 		if (!cv) return id;
+		mpt_solver_module_value_long(&prop->val, &cv->mxstep);
 		return (cv->mxstep >= 0) ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "hnilwarns") : (pos == ++id)) {
-		const int *ptr = &cv->mxhnil;
 		prop->name = "hnilwarns";
 		prop->desc = "threshold for 't + h == t' warnings";
-		mpt_solver_module_value_int(&prop->val, ptr);
+		prop->val.type = 'i';
+		prop->val.ptr = &cv->mxhnil;
 		if (!cv) return id;
+		mpt_solver_module_value_int(&prop->val, &cv->mxhnil);
 		return (cv->mxhnil >= 0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "tstop") || !strcasecmp(name, "tend")) : (pos == ++id)) {
 		const realtype *ptr = &cv->step.tstop;
 		prop->name = "tstop";
 		prop->desc = "final independent variable value";
-		prop->val.fmt = realfmt;
+		prop->val.type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->val.ptr = ptr;
 		if (!cv) return id;
+		if (prop->val._bufsize >= sizeof(*ptr)) {
+			prop->val.ptr = memcpy(prop->val._buf, ptr, sizeof(*ptr));
+		}
 		return (cv->step.tstop != INFINITY) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "hin") || !strcasecmp(name, "h0")) : (pos == ++id)) {
 		const realtype *ptr = &cv->step.hin;
 		prop->name = "hin";
 		prop->desc = "initial stepsize";
-		prop->val.fmt = realfmt;
+		prop->val.type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->val.ptr = ptr;
 		if (!cv) return id;
+		if (prop->val._bufsize >= sizeof(*ptr)) {
+			prop->val.ptr = memcpy(prop->val._buf, ptr, sizeof(*ptr));
+		}
 		return (cv->step.hin != 0.0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "stepmin")) : (pos == ++id)) {
 		const realtype *ptr = &cv->step.hmin;
 		prop->name = "hmin";
 		prop->desc = "minimal stepsize";
-		prop->val.fmt = realfmt;
+		prop->val.type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->val.ptr = ptr;
 		if (!cv) return id;
+		if (prop->val._bufsize >= sizeof(*ptr)) {
+			prop->val.ptr = memcpy(prop->val._buf, ptr, sizeof(*ptr));
+		}
 		return (cv->step.hmin != 0.0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) : (pos == ++id)) {
 		const realtype *ptr = &cv->step.hmax;
 		prop->name = "hmax";
 		prop->desc = "maximal stepsize";
-		prop->val.fmt = realfmt;
+		prop->val.type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->val.ptr = ptr;
 		if (!cv) return id;
+		if (prop->val._bufsize >= sizeof(*ptr)) {
+			prop->val.ptr = memcpy(prop->val._buf, ptr, sizeof(*ptr));
+		}
 		return (cv->step.hmax != 0.0) ? 1 : 0;
 	}
 	return MPT_ERROR(BadArgument);

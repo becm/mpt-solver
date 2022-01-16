@@ -17,7 +17,6 @@
 extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *ivp, MPT_SOLVER_MODULE_DATA_TYPE *t, MPT_SOLVER_MODULE_DATA_CONTAINER *y, MPT_INTERFACE(convertable) *src)
 {
 	MPT_INTERFACE(iterator) *it;
-	MPT_STRUCT(value) val = MPT_VALUE_INIT;
 	MPT_SOLVER_MODULE_DATA_TYPE *dest, tmp;
 	struct iovec vec;
 	size_t size, neqs;
@@ -29,52 +28,45 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 	vec.iov_base = 0;
 	vec.iov_len = 0;
 	it = 0;
-	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeValue), &val)) >= 0) {
-		const double *ptr;
-		if (!val.fmt || !(ptr = val.ptr)) {
-			return MPT_ERROR(BadValue);
-		}
-		/* require base time value */
-		if (val.fmt[0] != MPT_SOLVER_MODULE_DATA_ID) {
-			return MPT_ERROR(BadType);
-		}
-		tmp = *ptr++;
-		/* allow data or iterator for state */
-		if (val.fmt[1] == MPT_ENUM(TypeIteratorPtr)) {
-			if (!(it = *((void **) ptr))) {
-				return MPT_ERROR(BadValue);
-			}
-		}
-		else if (val.fmt[1] == MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID)) {
-			vec = *((const struct iovec *) ptr);
-		}
-		else {
-			return MPT_ERROR(BadType);
-		}
-		ret = 2;
+	/* pure state data */
+	if ((ret = src->_vptr->convert(src, MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) >= 0) {
+		ret = 0;
 	}
 	/* require state content */
-	else if ((ret = src->_vptr->convert(src, MPT_type_toVector(MPT_SOLVER_MODULE_DATA_ID), &vec)) < 0) {
-		if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) < 0
-		    || !it) {
-			return MPT_ERROR(BadType);
-		}
+	else if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) < 0 || !it) {
+		return MPT_ERROR(BadType);
+	}
+	/* require time value */
+	else if (t) {
+		tmp = *t;
 		ret = 0;
-		/* require time value */
-		if (t) {
-			tmp = *t;
-			if ((ret = src->_vptr->convert(src, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
-				/* get time value from iterator */
-				if ((ret = it->_vptr->get(it, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
-					return MPT_ERROR(BadType);
-				}
-				if ((ret = it->_vptr->advance(it)) <= 0) {
-					return MPT_ERROR(MissingData);
-				}
-				ret = 1;
-			} else {
-				ret = 0;
+		
+		if ((ret = src->_vptr->convert(src, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
+			const MPT_STRUCT(value) *val;
+			if (!(val = it->_vptr->value(it))
+			 || !val->ptr) {
+				return MPT_ERROR(BadValue);
 			}
+			if (val->type == MPT_SOLVER_MODULE_DATA_ID) {
+				tmp = *((MPT_SOLVER_MODULE_DATA_TYPE *) val->ptr);
+			}
+			else if (MPT_type_isConvertable(val->type)) {
+				MPT_INTERFACE(convertable) *conv = *((void * const *) val->ptr);
+				if (!conv) {
+					return MPT_ERROR(BadValue);
+				}
+				if ((ret = conv->_vptr->convert(conv, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
+					return ret;
+				}
+			}
+			else {
+				return MPT_ERROR(BadType);
+			}
+			/* consume time value */
+			if ((ret = it->_vptr->advance(it)) <= 0) {
+				return MPT_ERROR(MissingData);
+			}
+			ret = 1;
 		}
 	}
 	neqs = ivp->neqs;

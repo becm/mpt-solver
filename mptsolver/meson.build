@@ -12,7 +12,7 @@ solv_src = files(
   'solver_param.c', 'solver_print.c',
   'solver_read.c', 'solver_require.c',
   'solver_statistics.c',
-  'solver_typeid.c',
+  'solver_type_traits.c',
   'timeradd.c'
 )
 foreach d : [ 'ivp', 'nls' ]

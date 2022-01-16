@@ -39,13 +39,30 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFAC
 		tol = 0;
 		len = 0;
 		while (1) {
-			if ((ret = it->_vptr->get(it, 'd', &d)) < 0) {
-				if (tol) {
-					free(tol);
-				}
-				return ret;
+			const MPT_STRUCT(value) *val;
+			
+			if (!(val = it->_vptr->value(it))
+			 || !val->type
+			 || !val->ptr) {
+				break;
 			}
-			if (!ret || (ret = it->_vptr->advance(it)) < 0) {
+			if (val->type == 'd') {
+				d = *((const double *) val->ptr);
+			}
+			else if (!MPT_type_isConvertable(val->type)) {
+				break;
+			}
+			else {
+				MPT_INTERFACE(convertable) *conv = *((void * const *) val->ptr);
+				
+				if (!conv) {
+					break;
+				}
+				if ((ret = conv->_vptr->convert(conv, 'd', &d)) < 0) {
+					return ret;
+				}
+			}
+			if ((ret = it->_vptr->advance(it)) < 0) {
 				break;
 			}
 			if (len >= reserved) {
@@ -82,34 +99,13 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFAC
 		return len;
 	}
 	if ((ret = src->_vptr->convert(src, MPT_type_toVector('d'), &tmp)) < 0) {
-		MPT_STRUCT(value) val = MPT_VALUE_INIT;
+		double d;
 		len = 0;
-		/* values from value content */
-		if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeValue), &val)) < 0) {
-			double d;
-			if ((ret = src->_vptr->convert(src, 'd', &d)) < 0) {
-				return ret;
-			}
-			return mpt_solver_module_tol_set(vec, 0, ret ? def : d);
-		}
-		else if (ret) {
-			if (!val.fmt) {
-				return MPT_ERROR(BadValue);
-			}
-			/* consume matching elements */
-			while (*val.fmt++ == 'd') {
-				++len;
-			}
-		}
-		tmp.iov_base = (double *) val.ptr;
-		
-		if ((ret = len) < 2) {
-			if (len && val.ptr) {
-				def = *((double *) val.ptr);
-			}
-			mpt_solver_module_tol_set(vec, 0, def);
+		/* scalar tolerance value */
+		if ((ret = src->_vptr->convert(src, 'd', &d)) < 0) {
 			return ret;
 		}
+		return mpt_solver_module_tol_set(vec, 0, ret ? def : d);
 	}
 	/* values from double vector */
 	else {

@@ -8,6 +8,7 @@
 #include "mebdfi.h"
 
 #include "version.h"
+#include "types.h"
 #include "meta.h"
 
 #include "module_functions.h"
@@ -24,7 +25,7 @@ static int setInt(MPT_SOLVER_STRUCT(mebdfi) *me, size_t pos, int val)
 
 static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_INTERFACE(convertable) *src)
 {
-	MPT_STRUCT(consumable) val;
+	MPT_INTERFACE(iterator) *it;
 	const char *key;
 	int32_t ld, ud;
 	int ret, jnum;
@@ -36,16 +37,12 @@ static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_INTERFACE(convertable)
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
-			return ret;
-		}
-		ret = 0;
+	it = 0;
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
+		ret = mpt_solver_module_consume_value(it, 'k', &key, 0);
 	}
-	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
+	if (ret < 0 && (ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 		return ret;
-	} else {
-		ret = 1;
 	}
 	if (!key || (mode = *key)) {
 		me->jnum = me->jbnd = 0;
@@ -58,19 +55,19 @@ static int setJacobian(MPT_SOLVER_STRUCT(mebdfi) *me, MPT_INTERFACE(convertable)
 		case 'b': jnum = 1; break;
 		default: return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_consume_int(&val, &ld)) < 0) {
-		return ret;
-	}
-	else if (!ret) {
-		ld = ud = me->ivp.neqs;
-		ret = 1;
-	}
-	else if ((ret = mpt_consume_int(&val, &ud)) < 0) {
-		return ret;
+	if (!it || (ret = mpt_solver_module_consume_value(it, 'i', &ld, sizeof(ld))) < 0) {
+		ld = me->ivp.neqs;
+		if (!me->ivp.pint) {
+			--ld;
+		}
+		ud = ld;
 	}
 	else if (!ret) {
 		ud = ld;
 		ret = 2;
+	}
+	else if ((ret = mpt_solver_module_consume_value(it, 'i', &ud, sizeof(ud))) < 0) {
+		return ret;
 	}
 	else {
 		ret = 3;
@@ -215,8 +212,9 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
-		prop->name = "version"; prop->desc = "solver release information";
-		prop->val.fmt= 0; prop->val.ptr = version;
+		prop->name = "version";
+		prop->desc = "solver release information";
+		mpt_solver_module_value_string(&prop->val, version);
 		return 0;
 	}
 	
@@ -240,12 +238,18 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == ++id) {
-		static const uint8_t fmt[] = "ii";
+		const char *type;
 		prop->name = "jacobian";
 		prop->desc = "(user) jacobian parameters";
-		prop->val.fmt = fmt;
+		prop->val.type = 's';
 		prop->val.ptr = me->mbnd;
 		if (!me) return id;
+		if (me->jbnd) {
+			type = me->jac ? "Banded" : "banded";
+		} else {
+			type = me->jac ? "Full" : "full";
+		}
+		mpt_solver_module_value_string(&prop->val, type);
 		return me->jbnd ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "h0") || !strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) : pos == ++id) {

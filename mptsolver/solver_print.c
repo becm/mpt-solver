@@ -10,6 +10,7 @@
 
 #include "message.h"
 #include "convert.h"
+#include "types.h"
 
 #include "solver.h"
 
@@ -19,6 +20,32 @@ struct wrap_fmt {
 	int (*log)(void *, const char *, ... );
 	void *par;
 };
+
+int wrapText(const MPT_STRUCT(value) *val, ssize_t (*add)(void *, const char *, size_t ), void *ptr)
+{
+	if (val->type == MPT_ENUM(TypeObjectPtr)) {
+		const MPT_INTERFACE(object) *obj = *((void * const *) val->ptr);
+		uintptr_t i = 0;
+		while (1) {
+			MPT_STRUCT(property) tmp = MPT_PROPERTY_INIT;
+			tmp.desc = (void *) i;
+			if (obj->_vptr->property(obj, &tmp) < 0) {
+				break;
+			}
+			if (i++ && add(ptr, " ", 1) < 0) {
+				break;
+			}
+			if (mpt_tostring(&tmp.val, add, ptr) < 0) {
+				break;
+			}
+		}
+		return 2;
+	}
+	if (mpt_tostring(val, add, ptr) < 0) {
+		return MPT_ERROR(BadValue);
+	}
+	return 1;
+}
 
 static ssize_t appendString(void *to, const char *data, size_t len)
 {
@@ -73,18 +100,23 @@ static int wrapInfo(void *ptr, const MPT_STRUCT(property) *pr)
 	struct iovec vec;
 	char buf[256];
 	size_t len;
+	int ret;
 	
 	if (!pr->name) return 0;
 	
 	vec.iov_base = buf;
 	vec.iov_len  = sizeof(buf) - 1;
 	
-	if (mpt_tostring(&pr->val, appendString, &vec) < 0) return -2;
-	if (!(len = sizeof(buf) - vec.iov_len)) return 0;
+	if ((ret = wrapText(&pr->val, appendString, &vec)) < 0) {
+		return MPT_ERROR(BadValue);
+	}
+	if (!(len = sizeof(buf) - vec.iov_len)) {
+		return MPT_ERROR(MissingBuffer);
+	}
 	++vec.iov_len;
 	appendString(&vec, "", 1);
 	wp->log(wp->par, "%s: %s", pr->name, buf);
-	return 1;
+	return ret;
 }
 
 /*!
@@ -118,6 +150,7 @@ struct _wrapStatusCtx
 static int wrapStatus(void *ptr, const MPT_STRUCT(property) *pr)
 {
 	struct _wrapStatusCtx *out = ptr;
+	int ret;
 	
 	if (!pr->name) {
 		if (!out->vals) {
@@ -130,12 +163,13 @@ static int wrapStatus(void *ptr, const MPT_STRUCT(property) *pr)
 	appendString(&out->vec, " = ", 3);
 	
 	/* print property data */
-	mpt_tostring(&pr->val, appendString, &out->vec);
+	
+	ret = wrapText(&pr->val, appendString, &out->vec);
 	
 	/* add delimiter */
 	appendString(&out->vec, ", ", 2);
 	
-	return 1;
+	return ret;
 }
 /*!
  * \ingroup mptSolver
@@ -187,7 +221,7 @@ static int wrapReport(void *ptr, const MPT_STRUCT(property) *pr)
 	vec.iov_base = buf;
 	vec.iov_len  = sizeof(buf) - 1;
 	
-	if ((len = mpt_tostring(&pr->val, appendString, &vec)) < 0) {
+	if ((len = wrapText(&pr->val, appendString, &vec)) < 0) {
 		return len;
 	}
 	++vec.iov_len;

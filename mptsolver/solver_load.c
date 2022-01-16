@@ -131,7 +131,7 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 	else {
 		MPT_INTERFACE(convertable) *cfg;
 		MPT_INTERFACE(metatype) *next;
-		MPT_STRUCT(property) pr;
+		MPT_STRUCT(property) pr = MPT_PROPERTY_INIT;
 		const char *lpath = 0;
 		int type;
 		

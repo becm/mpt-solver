@@ -149,7 +149,7 @@ extern int mpt_bacol_set(MPT_SOLVER_STRUCT(bacol) *, const char *, MPT_INTERFACE
 extern int mpt_bacol_prepare(MPT_SOLVER_STRUCT(bacol) *);
 
 /* bacol status information */
-extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *, int , MPT_TYPE(property_handler) , void *);
+extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *, const MPT_SOLVER_STRUCT(bacol_out) *, int , MPT_TYPE(property_handler) , void *);
 
 /* default helper functions */
 extern int mpt_bacol_grid_init(int , const double *, int , double *);
@@ -164,7 +164,8 @@ extern void mpt_bacol_output_init(MPT_SOLVER_STRUCT(bacol_out) *);
 /* finish bacol output data */
 extern void mpt_bacol_output_fini(MPT_SOLVER_STRUCT(bacol_out) *);
 /* report output state */
-extern int mpt_bacol_output_report(const MPT_SOLVER_STRUCT(bacol_out) *, double , int (*)(void *, MPT_STRUCT(value)), void *);
+extern int mpt_bacol_output_grid(const MPT_SOLVER_STRUCT(bacol_out) *, MPT_STRUCT(value) *);
+extern int mpt_bacol_output_values(const MPT_SOLVER_STRUCT(bacol_out) *, MPT_STRUCT(value) *);
 
 /* generate output values from current bacol state */
 extern const double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacol_out) *, const MPT_SOLVER_STRUCT(bacol) *);

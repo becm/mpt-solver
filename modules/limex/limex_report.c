@@ -8,7 +8,7 @@
 
 extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TYPE(property_handler) out, void *usr)
 {
-	MPT_STRUCT(property) pr;
+	MPT_STRUCT(property) pr = MPT_PROPERTY_INIT;
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -22,27 +22,33 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TY
 	neqs = lx->ivp.neqs * (lx->ivp.pint + 1);
 	
 	if (lx->iopt[7] >= 0 && lx->iopt[7] < neqs) {
-		static const uint8_t fmt[] = "siis";
-		struct { const char *fmt; int32_t ml, mu; const char *jac; } val;
+		MPT_STRUCT(property) val[4] = { MPT_PROPERTY_INIT, MPT_PROPERTY_INIT, MPT_PROPERTY_INIT, MPT_PROPERTY_INIT };
 		
-		val.fmt = lx->jac ? "Banded" : "banded";
-		val.ml  = lx->iopt[7];
-		val.mu  = lx->iopt[8];
-		val.jac = jac;
+		val[0].name = "jac_type";
+		val[0].desc = MPT_tr("jacobian type");
+		mpt_solver_module_value_string(&val[0].val, lx->jac ? "Banded" : "banded");
+		val[1].name = "ml";
+		val[1].desc = MPT_tr("jacobian lower band size");
+		mpt_solver_module_value_int(&val[1].val, &lx->iopt[7]);
+		val[2].name = "mu";
+		val[2].desc = MPT_tr("jacobian upper band size");
+		mpt_solver_module_value_int(&val[2].val, &lx->iopt[8]);
+		val[3].name = "jac_method";
+		val[3].desc = MPT_tr("jacobian method");
+		mpt_solver_module_value_string(&val[3].val, jac);
 		
-		pr.val.fmt = fmt;
-		pr.val.ptr = &val;
-		out(usr, &pr);
+		mpt_solver_module_report_properties(val, 4, pr.name, pr.desc, out, usr);
 	} else {
-		static const uint8_t fmt[] = "ss";
-		const char *val[2];
+		MPT_STRUCT(property) val[2] = { MPT_PROPERTY_INIT, MPT_PROPERTY_INIT };
 		
-		val[0] = lx->jac ? "Full" : "full";
-		val[1] = jac;
+		val[0].name = "jac_type";
+		val[0].desc = MPT_tr("jacobian type");
+		mpt_solver_module_value_string(&val[0].val, lx->jac ? "Full" : "full");
+		val[1].name = "jac_method";
+		val[1].desc = MPT_tr("jacobian method");
+		mpt_solver_module_value_string(&val[1].val, jac);
 		
-		pr.val.fmt = fmt;
-		pr.val.ptr = val;
-		out(usr, &pr);
+		mpt_solver_module_report_properties(val, 2, pr.name, pr.desc, out, usr);
 	}
 	++line;
 	}

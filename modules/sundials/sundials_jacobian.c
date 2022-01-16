@@ -4,6 +4,7 @@
 
 #include <sundials/sundials_direct.h>
 
+#include "types.h"
 #include "meta.h"
 
 #include "sundials.h"
@@ -18,9 +19,10 @@
  */
 extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, MPT_INTERFACE(convertable) *src)
 {
-	MPT_STRUCT(consumable) val = MPT_CONSUMABLE_INIT;
+	MPT_INTERFACE(iterator) *it;
 	const char *key;
-	int ret, ml, mu;
+	int32_t ml, mu;
+	int ret;
 	char mode;
 	
 	if (!src) {
@@ -28,48 +30,50 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, MPT_INTERFACE(
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
-			return ret;
-		}
-		ret = 0;
+	it = 0;
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
+		ret = mpt_solver_module_consume_value(it, 'k', &key, 0);
 	}
-	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
+	if (ret < 0 && (ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 		return ret;
-	} else {
-		ret = 1;
 	}
 	if (!key || !(mode = *key)) {
 		sd->linsol = 0;
-		return ret;
+		return it ? 1 : 0;
 	}
 	switch (mode) {
 		case 'd': case 'D':
 			sd->linsol = MPT_SOLVER_SUNDIALS(Direct);
 			sd->jacobian = 0;
-			return ret;
+			return it ? 1 : 0;
 		case 'f': case 'F':
 			sd->linsol = MPT_SOLVER_SUNDIALS(Direct);
 			sd->jacobian = SUNDIALS_DENSE;
 			if (mode != 'F') {
 				sd->linsol |= MPT_SOLVER_SUNDIALS(Numeric);
 			}
-			return ret;
+			return it ? 1 : 0;
 		case 'b': case 'B':
 			mu = -1;
 			ml = -1;
-			if ((ret = mpt_consume_int(&val, &ml)) <= 0) {
-				ret = 0;
-			}
-			else if ((ret = mpt_consume_int(&val, &mu)) < 0) {
-				return MPT_ERROR(BadType);
-			}
-			else if (!ret) {
-				mu = ml;
+			ret = 0;
+			
+			if (it) {
+				int err;
+				if ((err = mpt_solver_module_consume_value(it, 'i', &ml, sizeof(ml))) < 0) {
+					return err;
+				}
 				ret = 1;
-			}
-			else {
-				ret = 2;
+				if (!err) {
+					mu = ml;
+					ret = 2;
+				}
+				else if ((err = mpt_solver_module_consume_value(it, 'i', &mu, sizeof(mu))) < 0) {
+					return MPT_ERROR(MissingData);
+				}
+				else {
+					ret = 3;
+				}
 			}
 			sd->ml = ml;
 			sd->mu = mu;
@@ -78,7 +82,7 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, MPT_INTERFACE(
 			if (mode != 'B') {
 				sd->linsol |= MPT_SOLVER_SUNDIALS(Numeric);
 			}
-			return ret + 1;
+			return ret;
 		default:
 			return MPT_ERROR(BadValue);
 	}

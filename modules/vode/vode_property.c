@@ -8,6 +8,7 @@
 #include "vode.h"
 
 #include "version.h"
+#include "types.h"
 #include "meta.h"
 
 #include "module_functions.h"
@@ -44,7 +45,7 @@ static int setReal(MPT_SOLVER_STRUCT(vode) *vd, size_t pos, double val)
 }
 static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(convertable) *src)
 {
-	MPT_STRUCT(consumable) val;
+	MPT_INTERFACE(iterator) *it;
 	const char *key;
 	int32_t ml, mu;
 	long max;
@@ -56,16 +57,16 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(convertable) *
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
-			return ret;
-		}
-		ret = 0;
+	it = 0;
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
+		ret = mpt_solver_module_consume_value(it, 'k', &key, 0);
 	}
-	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
+	if (ret < 0 && (ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 		return ret;
-	} else {
-		ret = 1;
+	}
+	if (!key || !(mode = *key)) {
+		vd->miter = 0;
+		return it ? 1 : 0;
 	}
 	if (!key || !(mode = *key)) {
 		vd->miter = 0;
@@ -80,19 +81,16 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(convertable) *
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_consume_int(&val, &ml)) < 0) {
-		return ret;
-	}
-	else if (!ret) {
+	if ((ret = mpt_solver_module_consume_value(it, 'i', &ml, sizeof(ml))) < 0) {
 		ml = mu = vd->ivp.neqs;
 		ret = 1;
-	}
-	else if ((ret = mpt_consume_int(&val, &mu)) < 0) {
-		return ret;
 	}
 	else if (!ret) {
 		mu = ml;
 		ret = 2;
+	}
+	else if ((ret = mpt_solver_module_consume_value(it, 'i', &mu, sizeof(mu))) < 0) {
+		return ret;
 	}
 	else {
 		ret = 3;
@@ -114,7 +112,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(convertable) *
 }
 static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(convertable) *src)
 {
-	MPT_STRUCT(consumable) val;
+	MPT_INTERFACE(iterator) *it;
 	const char *key;
 	double tcrit;
 	int ret;
@@ -125,20 +123,16 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(convertable) *
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
-			return ret;
-		}
-		ret = 0;
+	it = 0;
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
+		ret = mpt_solver_module_consume_value(it, 'k', &key, 0);
 	}
-	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
+	if (ret < 0 && (ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 		return ret;
-	} else {
-		ret = 1;
 	}
 	if (!key || !(mode = *key)) {
 		vd->itask = 1;
-		return 0;
+		return it ? 1 : 0;
 	}
 	switch (mode) {
 		/* single step */
@@ -153,7 +147,7 @@ static int setStepType(MPT_SOLVER_STRUCT(vode) *vd, MPT_INTERFACE(convertable) *
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if (!ret || !(ret = mpt_consume_double(&val, &tcrit))) {
+	if (!it || !(ret = mpt_solver_module_consume_value(it, 'd', &tcrit, sizeof(tcrit)))) {
 		return MPT_ERROR(MissingData);
 	}
 	if (ret < 0) {
@@ -283,8 +277,6 @@ static int getrwork(MPT_STRUCT(value) *val, int pos, const MPT_SOLVER_STRUCT(vod
 
 extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) *prop)
 {
-	static const uint8_t fmt_short[] = "n";
-	static const uint8_t fmt_byte[]  = "b";
 	const char *name;
 	intptr_t pos = -1, id;
 	
@@ -304,8 +296,10 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
-		prop->name = "version"; prop->desc = "solver release information";
-		prop->val.fmt = 0; prop->val.ptr = version;
+		const char *ptr = version;
+		prop->name = "version";
+		prop->desc = "solver release information";
+		mpt_solver_module_value_string(&prop->val, ptr);
 		return 0;
 	}
 	
@@ -329,27 +323,41 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
+		const int8_t *val = &vd->meth;
 		prop->name = "jacobian";
 		prop->desc = "(user) jacobian parameters";
-		prop->val.fmt = fmt_byte;
-		prop->val.ptr = &vd->miter;
+		prop->val.type = 'b';
+		prop->val.ptr = val;
 		if (!vd) return id;
+		if (prop->val._bufsize) {
+			prop->val.ptr = prop->val._buf;
+			prop->val._buf[0] = *val;
+		}
 		return vd->miter ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "itask", 2) : (pos == ++id)) {
+		const int16_t *val = &vd->itask;
 		prop->name = "itask";
 		prop->desc = "step control";
-		prop->val.fmt = fmt_short;
-		prop->val.ptr = &vd->itask;
+		prop->val.type = 'n';
+		prop->val.ptr = val;
 		if (!vd) return id;
+		if (prop->val._bufsize >= sizeof(*val)) {
+			prop->val.ptr = memcpy(prop->val._buf, val, sizeof(*val));
+		}
 		return (vd->itask != 1) ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "method", 4) : (pos == ++id)) {
+		const int8_t *val = &vd->meth;
 		prop->name = "method";
 		prop->desc = "iteration method";
-		prop->val.fmt = fmt_byte;
-		prop->val.ptr = &vd->meth;
+		prop->val.type = 'b';
+		prop->val.ptr = &val;
 		if (!vd) return id;
+		if (prop->val._bufsize) {
+			prop->val.ptr = prop->val._buf;
+			prop->val._buf[0] = *val;
+		}
 		return (vd->meth != 1) ? 1 : 0;
 	}
 	/* integer array parameter */

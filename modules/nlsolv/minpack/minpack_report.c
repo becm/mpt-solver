@@ -8,7 +8,7 @@
 
 extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show, MPT_TYPE(property_handler) out, void *usr)
 {
-	MPT_STRUCT(property) pr;
+	MPT_STRUCT(property) pr = MPT_PROPERTY_INIT;
 	int line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -35,35 +35,47 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	}
 	pr.name = "method";
 	pr.desc = MPT_tr("minpack solver type");
-	pr.val.fmt = 0;
-	pr.val.ptr = solv;
+	mpt_solver_module_value_string(&pr.val, solv);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("jacobian matrix type");
-	pr.val.fmt = 0;
-	pr.val.ptr = jac;
+	mpt_solver_module_value_string(&pr.val, jac);
 	out(usr, &pr);
 	++line;
 	}
 	if ((show & MPT_SOLVER_ENUM(Values)) && mpack->info >= 0) {
-		static const uint8_t fmt[] = { MPT_type_toVector('d'), MPT_type_toVector('d'), 0 };
-		struct {
-			struct iovec x, f;
-		} d;
+		MPT_STRUCT(property) arg[2] = { MPT_PROPERTY_INIT, MPT_PROPERTY_INIT };
+		const char *desc = MPT_tr("current parameters and residuals");
+		struct iovec *vec;
 		
-		d.x.iov_base = mpack->val.iov_base;
-		d.x.iov_len  = mpack->nls.nval * sizeof(double);
-		d.f.iov_base = ((double *) d.x.iov_base) + mpack->nls.nval;
-		d.f.iov_len  = mpack->nls.nres * sizeof(double);
+		arg[0].name = 0;
+		arg[0].desc = MPT_tr("current parameter values");
+		arg[0].val.type = MPT_type_toVector('d');
+		arg[0].val.ptr = arg[0].val._buf;
+		vec = (void *) arg[0].val._buf;
+			
+		vec->iov_base = mpack->val.iov_base;
+		vec->iov_len  = mpack->nls.nval * sizeof(double);
 		
-		pr.name = 0;
-		pr.desc = MPT_tr("parameters and residual data");
-		pr.val.fmt = mpack->info ? fmt : fmt + 1;
-		pr.val.ptr = &d;
-		
-		out(usr, &pr);
+		if (mpack->info) {
+			arg[0].name = "parameters";
+			
+			arg[1].name = "residuals";
+			arg[1].desc = MPT_tr("residuals for current parameters");
+			arg[1].val.type = MPT_type_toVector('d');
+			arg[1].val.ptr = arg[1].val._buf;
+			vec = (void *) arg[1].val._buf;
+			
+			vec->iov_base = ((double *) mpack->val.iov_base) + mpack->nls.nval;
+			vec->iov_len  = mpack->nls.nres * sizeof(double);
+			
+			mpt_solver_module_report_properties(arg, 2, 0, desc, out, usr); 
+		}
+		else {
+			out(usr, &arg[0]);
+		}
 	}
 	if (!(show & MPT_SOLVER_ENUM(Report))) {
 		return line;

@@ -8,7 +8,7 @@
 
 extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TYPE(property_handler) out, void *usr)
 {
-	MPT_STRUCT(property) pr;
+	MPT_STRUCT(property) pr = MPT_PROPERTY_INIT;
 	int val;
 	int line = 0;
 	
@@ -22,27 +22,33 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TY
 	jac = rd->jac ? "user" : "numerical";
 	
 	if (rd->mljac >= 0 && rd->mljac < val) {
-		struct { const char *fmt; int32_t ml, mu; const char *jac; } val;
-		static const uint8_t fmt[] = "siis";
+		MPT_STRUCT(property) val[4] = { MPT_PROPERTY_INIT, MPT_PROPERTY_INIT, MPT_PROPERTY_INIT, MPT_PROPERTY_INIT };
 		
-		val.fmt = rd->jac ? "Banded" : "banded";
-		val.ml  = rd->mljac;
-		val.mu  = rd->mujac;
-		val.jac = jac;
+		val[0].name = "jac_type";
+		val[0].desc = MPT_tr("jacobian type");
+		mpt_solver_module_value_string(&val[0].val, rd->jac ? "Banded" : "banded");
+		val[1].name = "ml";
+		val[1].desc = MPT_tr("jacobian lower band size");
+		mpt_solver_module_value_int(&val[1].val, &rd->mljac);
+		val[2].name = "mu";
+		val[2].desc = MPT_tr("jacobian upper band size");
+		mpt_solver_module_value_int(&val[2].val, &rd->mujac);
+		val[3].name = "jac_method";
+		val[3].desc = MPT_tr("jacobian method");
+		mpt_solver_module_value_string(&val[3].val, jac);
 		
-		pr.val.fmt = fmt;
-		pr.val.ptr = &val;
-		out(usr, &pr);
+		mpt_solver_module_report_properties(val, 4, pr.name, pr.desc, out, usr);
 	} else {
-		static const uint8_t fmt[] = "ss";
-		const char *val[2];
+		MPT_STRUCT(property) val[2] = { MPT_PROPERTY_INIT, MPT_PROPERTY_INIT };
 		
-		val[0] = rd->jac ? "Full" : "full";
-		val[1] = jac;
+		val[0].name = "jac_type";
+		val[0].desc = MPT_tr("jacobian type");
+		mpt_solver_module_value_string(&val[0].val, rd->jac ? "Full" : "full");
+		val[1].name = "jac_method";
+		val[1].desc = MPT_tr("jacobian method");
+		mpt_solver_module_value_string(&val[1].val, jac);
 		
-		pr.val.fmt = fmt;
-		pr.val.ptr = val;
-		out(usr, &pr);
+		mpt_solver_module_report_properties(val, 2, pr.name, pr.desc, out, usr);
 	}
 	++line;
 	}

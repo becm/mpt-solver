@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <stdio.h>
 
 #include "meta.h"
 #include "node.h"
@@ -35,20 +36,22 @@ extern int mpt_solver_param(MPT_INTERFACE(object) *obj, MPT_STRUCT(node) *base, 
 	if ((conf = mpt_node_next(base, "solconf"))
 	    && !(sub = conf->children)
 	    && (fname = mpt_node_data(conf, 0))) {
-		MPT_STRUCT(value) val;
-		static const uint8_t fmt[] = "ss";
-		const char *arg[2];
+		static const char format[] = "[ ] = !#\0";
+		FILE *file;
 		
-		val.fmt = fmt;
-		val.ptr = arg;
-		
-		arg[0] = fname;
-		arg[1] = "[ ] = !#";
-		
-		if ((ret = mpt_node_parse(conf, &val, out)) < 0) {
+		if (!(file = fopen(fname, "r"))) {
+			mpt_log(out, __func__, MPT_LOG(Error), "%s: %s",
+			        MPT_tr("failed to open solver config"), fname);
+			return MPT_ERROR(BadValue);
+		}
+		if ((ret = mpt_node_parse(conf, file, format, 0, out)) < 0) {
 			mpt_log(out, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("failed to read solver config"));
 			return ret;
+		}
+		else {
+			MPT_STRUCT(value) val = MPT_VALUE_INIT('s', &fname);
+			mpt_meta_set(&conf->_meta, &val);
 		}
 		sub = conf->children;
 	}

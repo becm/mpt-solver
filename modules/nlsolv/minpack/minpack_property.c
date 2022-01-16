@@ -19,7 +19,7 @@
 
 static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, MPT_INTERFACE(convertable) *src)
 {
-	MPT_STRUCT(consumable) val;
+	MPT_INTERFACE(iterator) *it;
 	const char *key;
 	int32_t ml, mu;
 	int ret;
@@ -29,16 +29,12 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, MPT_INTERFACE(convertable
 		return 0;
 	}
 	key = 0;
-	if ((ret = mpt_consumable_setup(&val, src)) < 0) {
-		if ((ret = src->_vptr->convert(src, 'k', &key)) < 0) {
-			return ret;
-		}
-		ret = 0;
+	it = 0;
+	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
+		ret = mpt_solver_module_consume_value(it, 'k', &key, 0);
 	}
-	else if ((ret = mpt_consume_key(&val, &key)) < 0) {
+	if (ret < 0 && (ret = src->_vptr->convert(src, 'k', &key)) < 0) {
 		return ret;
-	} else {
-		ret = 1;
 	}
 	if (!key || !*key) {
 		mp->mu = mp->ml = 0;
@@ -51,7 +47,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, MPT_INTERFACE(convertable
 		default:
 			return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_consume_int(&val, &ml)) < 0) {
+	if ((ret = mpt_solver_module_consume_value(it, 'd', &ml, sizeof(ml))) < 0) {
 		return ret;
 	}
 	if (!ret) {
@@ -61,7 +57,7 @@ static int setJacobian(MPT_SOLVER_STRUCT(minpack) *mp, MPT_INTERFACE(convertable
 	if (ml < 0 || ml >= mp->nls.nres) {
 		return MPT_ERROR(BadValue);
 	}
-	if ((ret = mpt_consume_int(&val, &mu)) < 0) {
+	if ((ret = mpt_solver_module_consume_value(it, 'd', &mu, sizeof(mu))) < 0) {
 		return ret;
 	}
 	if (!ret) {
@@ -123,6 +119,7 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, MPT
 	
 	if (!name) {
 		MPT_INTERFACE(iterator) *it = 0;
+		struct iovec vec;
 		double *par = mp->val.iov_base;
 		long all = mp->nls.nval;
 		
@@ -130,7 +127,12 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, MPT
 			return MPT_ERROR(BadArgument);
 		}
 		if (src && (ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) < 0) {
-			return ret;
+			if ((ret = src->_vptr->convert(src, MPT_type_toVector('d'), &vec)) < 0) {
+				return ret;
+			}
+			if (!vec.iov_base || (vec.iov_len / sizeof(double)) < (size_t) all) {
+				return MPT_ERROR(MissingData);
+			}
 		}
 		if (mp->nls.nres) {
 			all += mp->nls.nres;
@@ -140,7 +142,11 @@ extern int mpt_minpack_set(MPT_SOLVER_STRUCT(minpack) *mp, const char *name, MPT
 		if (!(par = mpt_solver_module_valloc(&mp->val, all, sizeof(*par)))) {
 			return MPT_ERROR(BadOperation);
 		}
-		return MPT_SOLVER_MODULE_FCN(data_set)(par, mp->nls.nval, 0, ret ? it : 0);
+		if (it) {
+			return MPT_SOLVER_MODULE_FCN(data_set)(par, mp->nls.nval, 0, it);
+		}
+		memcpy(par, vec.iov_base, mp->nls.nval * sizeof(*par));
+		return 0;
 	}
 	if (!*name) {
 		MPT_NLS_STRUCT(parameters) nls = MPT_NLSPAR_INIT;
@@ -237,10 +243,10 @@ extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *mp, MPT_STRUCT(prop
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
+		const char *ptr = version;
 		prop->name = "version";
 		prop->desc = "solver release information";
-		prop->val.fmt = 0;
-		prop->val.ptr = version;
+		mpt_solver_module_value_string(&prop->val, ptr);
 		return 0;
 	}
 	
@@ -295,22 +301,23 @@ extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *mp, MPT_STRUCT(prop
 		return mp->epsfcn ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "nprint", 3) : (pos == ++id)) {
-		static const uint8_t fmt[] = "c";
 		prop->name = "nprint";
 		prop->desc = "iteration output";
-		prop->val.fmt = fmt;
+		prop->val.type = 'b';
 		prop->val.ptr = &mp->nprint;
 		if (!mp) return id;
+		prop->val.ptr = &prop->val._buf;
+		prop->val._buf[0] = mp->nprint;
 		return mp->nprint ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "diag") : (pos == ++id)) {
-		static const uint8_t fmt[] = { MPT_type_toVector('d'), 0 };
 		prop->name = "diag";
 		prop->desc = "scale factor for variables";
-		prop->val.fmt = fmt;
+		prop->val.type = MPT_type_toVector('d');
 		prop->val.ptr = &mp->diag;
 		if (!mp) return id;
-		return mp->diag.iov_len / sizeof(double);
+		mpt_solver_module_value_rvec(&prop->val, 0, &mp->diag);
+		return mp->diag.iov_len ? 1 : 0;
 	}
 	return MPT_ERROR(BadArgument);
 }

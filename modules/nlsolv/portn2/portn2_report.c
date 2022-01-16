@@ -8,7 +8,7 @@
 
 extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_TYPE(property_handler) out, void *usr)
 {
-	MPT_STRUCT(property) pr;
+	MPT_STRUCT(property) pr[] = { MPT_PROPERTY_INIT, MPT_PROPERTY_INIT };
 	int state, line = 0;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -17,33 +17,45 @@ extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_
 	if (n2->nd < 0)   jac = "numeric";
 	else if (!n2->nd) jac = "user (full)";
 	
-	pr.name = "jacobian";
-	pr.desc = "type of jacobian matrix";
-	pr.val.fmt = 0;
-	pr.val.ptr = jac;
-	out(usr, &pr);
+	pr[0].name = "jacobian";
+	pr[0].desc = "type of jacobian matrix";
+	mpt_solver_module_value_string(&pr[0].val, jac);
+	out(usr, &pr[0]);
 	++line;
 	}
 	state = ((int *) n2->iv.iov_base)[0];
 	if ((show & MPT_SOLVER_ENUM(Values)) && state >= 0) {
-		static const uint8_t fmt[] = { MPT_type_toVector('d'), MPT_type_toVector('d'), 0 };
-		struct {
-			struct iovec x, f;
-		} d;
+		struct iovec *vec;
+		const double *res;
 		
-		d.x.iov_base = n2->pv.iov_base;
-		d.x.iov_len  = n2->nls.nval * sizeof(double);
+		pr[0].name = 0;
+		pr[0].desc = MPT_tr("current parameter values");
+		pr[0].val.type = MPT_type_toVector('d');
+		pr[0].val.ptr = pr[0].val._buf;
+		vec = (void *) pr[0].val._buf;
 		
-		pr.name = 0;
-		pr.desc = MPT_tr("parameters and residual data");
-		pr.val.fmt = fmt+1;
-		pr.val.ptr = &d;
+		vec->iov_base = n2->pv.iov_base;
+		vec->iov_len  = n2->nls.nval * sizeof(double);
 		
-		if (state && (d.f.iov_base = (void *) mpt_portn2_residuals(n2))) {
-			d.f.iov_len = n2->nls.nres * sizeof(double);
-			pr.val.fmt  = fmt;
+		if (state && (res = mpt_portn2_residuals(n2))) {
+			const char *desc = MPT_tr("current parameters and residuals");
+			
+			pr[0].name = "parameters";
+			
+			pr[1].name = "residuals";
+			pr[1].desc = MPT_tr("residuals for current parameters");
+			pr[1].val.type = MPT_type_toVector('d');
+			pr[1].val.ptr = pr[1].val._buf;
+			vec = (void *) pr[1].val._buf;
+			
+			vec->iov_base = (void *) res;
+			vec->iov_len  = n2->nls.nres * sizeof(double);
+			
+			mpt_solver_module_report_properties(pr, 2, 0, desc, out, usr); 
 		}
-		out(usr, &pr);
+		else {
+			out(usr, &pr[0]);
+		}
 	}
 	
 	return 0;

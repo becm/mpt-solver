@@ -11,7 +11,7 @@
 
 extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_TYPE(property_handler) out, void *usr)
 {
-	MPT_STRUCT(property) pr;
+	MPT_STRUCT(property) pr = MPT_PROPERTY_INIT;
 	int line = 0, *iwk = me->iwork.iov_base;
 	
 	if (show & MPT_SOLVER_ENUM(Header)) {
@@ -22,27 +22,33 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 	jac = (me->jac && !me->jnum) ? "user" : "numerical";
 	
 	if (me->jbnd) {
-		static const uint8_t fmt[] = "siis";
-		struct { const char *fmt; int32_t mu, ml; const char *jac; } val;
+		MPT_STRUCT(property) val[4] = { MPT_PROPERTY_INIT, MPT_PROPERTY_INIT, MPT_PROPERTY_INIT, MPT_PROPERTY_INIT };
 		
-		val.fmt = (me->jac && !me->jnum) ? "Banded" : "banded";
-		val.ml  = me->mbnd[0];
-		val.mu  = me->mbnd[1];
-		val.jac = jac;
+		val[0].name = "jac_type";
+		val[0].desc = MPT_tr("jacobian type");
+		mpt_solver_module_value_string(&val[0].val, (me->jac && !me->jnum) ? "Banded" : "banded");
+		val[1].name = "ml";
+		val[1].desc = MPT_tr("jacobian lower band size");
+		mpt_solver_module_value_int(&val[1].val, &me->mbnd[0]);
+		val[2].name = "mu";
+		val[2].desc = MPT_tr("jacobian upper band size");
+		mpt_solver_module_value_int(&val[2].val, &me->mbnd[1]);
+		val[3].name = "jac_method";
+		val[3].desc = MPT_tr("jacobian method");
+		mpt_solver_module_value_string(&val[3].val, jac);
 		
-		pr.val.fmt = fmt;
-		pr.val.ptr = &val;
-		out(usr, &pr);
+		mpt_solver_module_report_properties(val, 4, pr.name, pr.desc, out, usr);
 	} else {
-		static const uint8_t fmt[] = "ss";
-		const char *val[2];
+		MPT_STRUCT(property) val[2] = { MPT_PROPERTY_INIT, MPT_PROPERTY_INIT };
 		
-		val[0] = (me->jac && !me->jnum) ? "Full" : "full";
-		val[1] = jac;
+		val[0].name = "jac_type";
+		val[0].desc = MPT_tr("jacobian type");
+		mpt_solver_module_value_string(&val[0].val, (me->jac && !me->jnum) ? "Full" : "full");
+		val[1].name = "jac_method";
+		val[1].desc = MPT_tr("jacobian method");
+		mpt_solver_module_value_string(&val[1].val, jac);
 		
-		pr.val.fmt = fmt;
-		pr.val.ptr = val;
-		out(usr, &pr);
+		mpt_solver_module_report_properties(val, 2, pr.name, pr.desc, out, usr);
 	}
 	++line;
 	}
