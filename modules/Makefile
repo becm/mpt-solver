@@ -5,7 +5,6 @@ LIB = mpt_solvers
 #
 # include global configuration
 DIR_TOP = ${MPT_PREFIX}
-DIR_INC = ${MPT_PREFIX}/include/mpt
 DIR_BASE ?= ../base/
 include ${DIR_BASE}mpt.config.mk
 #

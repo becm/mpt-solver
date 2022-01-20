@@ -38,6 +38,14 @@ static int valPropertyGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property)
 		
 		return 2;
 	}
+	else if (!*pr->name) {
+		pr->name = "object";
+		pr->desc = MPT_tr("solver module output wrapper");
+		pr->val.domain = 0;
+		pr->val.type = 0;
+		pr->val.ptr = 0;
+		return val->len;
+	}
 	for (i = 0; i < val->len; i++) {
 		const MPT_STRUCT(property) *curr = val->pr + i;
 		if (!strcmp(pr->name, curr->name)) {

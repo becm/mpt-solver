@@ -16,6 +16,10 @@ install(FILES solver.h COMPONENT headers DESTINATION ${MPT_INSTALL_INCLUDE}/mpt)
 # rules for solver library
 add_subdirectory(mptsolver)
 
+# enable tests
+enable_testing()
+add_subdirectory(examples)
+
 # package creation
 set(CPACK_PACKAGE_NAME "mptsolver")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
