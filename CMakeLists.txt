@@ -5,7 +5,7 @@ project(mptsolver)
 
 # MPT config options
 list(APPEND CMAKE_PREFIX_PATH "base")
-find_package(Mpt REQUIRED COMPONENTS Plot Loader Core)
+find_package(Mpt COMPONENTS Cxx Plot Loader IO Core)
 
 # primary header locations
 include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
