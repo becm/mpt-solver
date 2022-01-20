@@ -54,7 +54,11 @@ static void *getSolverData(MPT_SOLVER_STRUCT(cvode) *cv) {
 	if ((cv_mem = cv->mem)) {
 		return cv_mem;
 	}
+#if SUNDIALS_VERSION_MAJOR >= 6
+	if (!(cv_mem = CVodeCreate(cv->method, mpt_sundials_context(&cv->sd)))) {
+#else
 	if (!(cv_mem = CVodeCreate(cv->method))) {
+#endif
 		return NULL;
 	}
 	if (CVodeSetUserData(cv_mem, cv) != CV_SUCCESS) {
@@ -87,7 +91,13 @@ extern int mpt_sundials_cvode_set(MPT_SOLVER_STRUCT(cvode) *cv, const char *name
 		return MPT_ERROR(BadArgument);
 	}
 	if (!name) {
-		return MPT_SOLVER_MODULE_FCN(ivp_state)(&cv->ivp, &cv->t, &cv->sd.y, src);
+		MPT_SOLVER_STRUCT(sundials_vector_context) ctx = {
+			&cv->sd.y
+#if SUNDIALS_VERSION_MAJOR >= 6
+			, mpt_sundials_context(&cv->sd)
+#endif
+		};
+		return MPT_SOLVER_MODULE_FCN(ivp_state)(&cv->ivp, &cv->t, &ctx, src);
 	}
 	if (!*name) {
 		if (src && (ret = mpt_solver_module_ivpset(&cv->ivp, src)) < 0) {

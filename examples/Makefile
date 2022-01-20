@@ -35,7 +35,6 @@ solvers_static : LDLIBS=-lmpt++ -lmpt -lmpt_solvers
 solvers.o : CPPFLAGS+=-std=c++11 $(solvers:%=-Dwith_%)
 solvers.o : INC+=$(ivp_solvers:%='${DIR_SOLVER}modules/%')
 solvers.o : INC+=$(nl_solvers:%='${DIR_SOLVER}modules/nlsolv/%')
-solvers.o : INC+='${MPT_PREFIX}/include'
 
 loadsol :  LDLIBS=-lmptsolver -lmptloader -lmptcore
 loadsol.o :

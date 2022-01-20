@@ -37,7 +37,11 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 		return MPT_ERROR(BadArgument);
 	}
 	if (!(cv_mem = cv->mem)) {
+#if SUNDIALS_VERSION_MAJOR >= 6
+		if (!(cv_mem = CVodeCreate(cv->method, mpt_sundials_context(&cv->sd)))) {
+#else
 		if (!(cv_mem = CVodeCreate(cv->method))) {
+#endif
 			return MPT_ERROR(BadOperation);
 		}
 		if (CVodeSetUserData(cv_mem, cv) != CV_SUCCESS) {
@@ -54,7 +58,11 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	/* prepare initial vector */
 	if (!cv->sd.y) {
 		realtype *y;
+#if SUNDIALS_VERSION_MAJOR >= 6
+		if (!(cv->sd.y = mpt_sundials_nvector(neqs, mpt_sundials_context(&cv->sd)))) {
+#else
 		if (!(cv->sd.y = mpt_sundials_nvector(neqs))) {
+#endif
 			return MPT_ERROR(BadOperation);
 		}
 		y = N_VGetArrayPointer(cv->sd.y);

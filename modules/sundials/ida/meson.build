@@ -1,5 +1,6 @@
 # meson.build.gen: ida_*.c
 src = files(
+  'ida_data.c',
   'ida_fcn.c',
   'ida_finit.c',
   'ida_jacobian.c',

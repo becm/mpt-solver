@@ -30,4 +30,3 @@ extern int mpt_sundials_cvode_step(MPT_SOLVER_STRUCT(cvode) *cv, double tend)
 	err = CVode(cv->mem, tend, cv->sd.y, &cv->t, err);
 	return err < 0 ? err : 0;
 }
-

@@ -11,7 +11,8 @@
 
 #include "sundials.h"
 
-static void resetValues(MPT_SOLVER_STRUCT(ida) *data) {
+static void resetValues(MPT_SOLVER_STRUCT(ida) *data)
+{
 	static const MPT_SOLVER_STRUCT(sundials_step) step = MPT_SOLVER_SUNDIALS_STEP_INIT;
 	
 	data->t = 0.0;
@@ -20,18 +21,8 @@ static void resetValues(MPT_SOLVER_STRUCT(ida) *data) {
 	data->mxstep = -1;
 }
 
-/*!
- * \ingroup mptSundialsIda
- * \brief reset IDA data
- * 
- * Prepare IDA data for new problem
- * 
- * \param data  IDA data
- */
-extern void mpt_sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
+static void resetContext(MPT_SOLVER_STRUCT(ida) *data)
 {
-	mpt_sundials_fini(&data->sd);
-	
 	if (data->yp) {
 		N_VDestroy(data->yp);
 		data->yp = 0;
@@ -44,7 +35,24 @@ extern void mpt_sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
 		data->tmp.base = 0;
 		data->tmp.size = 0;
 	}
+	mpt_sundials_fini(&data->sd);
+}
+
+/*!
+ * \ingroup mptSundialsIda
+ * \brief reset IDA data
+ * 
+ * Prepare IDA data for new problem
+ * 
+ * \param data  IDA data
+ */
+extern void mpt_sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
+{
+	void *ctx = data->sd._sun_ctx_ref;
 	resetValues(data);
+	resetContext(data);
+	mpt_sundials_init(&data->sd);
+	data->sd._sun_ctx_ref = ctx;
 }
 
 /*!
@@ -58,13 +66,7 @@ extern void mpt_sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
 extern void mpt_sundials_ida_fini(MPT_SOLVER_STRUCT(ida) *data)
 {
 	mpt_solver_module_ivpset(&data->ivp, 0);
-	
-	mpt_sundials_ida_reset(data);
-	
-	if (data->mem) {
-		IDAFree(&data->mem);
-		data->mem = NULL;
-	}
+	resetContext(data);
 }
 
 /*!

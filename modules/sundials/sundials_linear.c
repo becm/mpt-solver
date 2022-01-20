@@ -20,6 +20,12 @@
 #define _SUNDIALS_GENERIC_TYPE(x) void
 #include "sundials.h"
 
+#if SUNDIALS_VERSION_MAJOR >= 6
+# define CTX , mpt_sundials_context(sd)
+#else
+# define CTX
+#endif
+
 static int setLS(MPT_SOLVER_STRUCT(sundials) *sd, SUNLinearSolver LS, SUNMatrix A)
 {
 	if (sd->A) {
@@ -42,10 +48,10 @@ static int setLapack(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 	SUNLinearSolver LS;
 	
 	if (sd->jacobian == SUNDIALS_DENSE) {
-		if (!(A = SUNDenseMatrix(neqs, neqs))) {
+		if (!(A = SUNDenseMatrix(neqs, neqs CTX))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (!(LS = SUNLinSol_LapackDense(sd->y, A))) {
+		if (!(LS = SUNLinSol_LapackDense(sd->y, A CTX))) {
 			SUNMatDestroy(A);
 			return MPT_ERROR(BadOperation);
 		}
@@ -53,10 +59,10 @@ static int setLapack(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 	}
 	if (sd->jacobian == SUNDIALS_BAND) {
 		/* direct solver; matrix WILL be LU factored! */
-		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml))) {
+		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml CTX))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (!(LS = SUNLinSol_LapackBand(sd->y, A))) {
+		if (!(LS = SUNLinSol_LapackBand(sd->y, A CTX))) {
 			SUNMatDestroy(A);
 			return MPT_ERROR(BadOperation);
 		}
@@ -73,10 +79,10 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 	SUNLinearSolver LS;
 	
 	if (sd->jacobian == SUNDIALS_DENSE) {
-		if (!(A = SUNDenseMatrix(neqs, neqs))) {
+		if (!(A = SUNDenseMatrix(neqs, neqs CTX))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (!(LS = SUNLinSol_Dense(sd->y, A))) {
+		if (!(LS = SUNLinSol_Dense(sd->y, A CTX))) {
 			SUNMatDestroy(A);
 			return MPT_ERROR(BadOperation);
 		}
@@ -84,10 +90,10 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 	}
 	if (sd->jacobian == SUNDIALS_BAND) {
 		/* direct solver; matrix WILL be LU factored! */
-		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml))) {
+		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml CTX))) {
 			return MPT_ERROR(BadValue);
 		}
-		if (!(LS = SUNLinSol_Band(sd->y, A))) {
+		if (!(LS = SUNLinSol_Band(sd->y, A CTX))) {
 			SUNMatDestroy(A);
 			return MPT_ERROR(BadOperation);
 		}
@@ -115,17 +121,17 @@ extern int mpt_sundials_linear(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neq
 		case MPT_SOLVER_SUNDIALS(Direct):
 			return setDls(sd, neqs);
 		case MPT_SOLVER_SUNDIALS(IterGMR):
-			if (!(s = SUNLinSol_SPGMR(sd->y, sd->prec, sd->kmax))) {
+			if (!(s = SUNLinSol_SPGMR(sd->y, sd->prec, sd->kmax CTX))) {
 				return MPT_ERROR(BadOperation);
 			}
 			return setLS(sd, s, 0);
 		case MPT_SOLVER_SUNDIALS(IterBCG):
-			if (!(s = SUNLinSol_SPBCGS(sd->y, sd->prec, sd->kmax))) {
+			if (!(s = SUNLinSol_SPBCGS(sd->y, sd->prec, sd->kmax CTX))) {
 				return MPT_ERROR(BadOperation);
 			}
 			return setLS(sd, s, 0);
 		case MPT_SOLVER_SUNDIALS(IterTFQMR):
-			if (!(s = SUNLinSol_SPTFQMR(sd->y, sd->prec, sd->kmax))) {
+			if (!(s = SUNLinSol_SPTFQMR(sd->y, sd->prec, sd->kmax CTX))) {
 				return MPT_ERROR(BadOperation);
 			}
 			return setLS(sd, s, 0);

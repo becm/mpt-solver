@@ -8,30 +8,40 @@
 #include "../solver.h"
 
 #ifdef __cplusplus
-# include <sundials/sundials_nvector.h>
-# include <sundials/sundials_matrix.h>
-# include <sundials/sundials_linearsolver.h>
 #  define MPT_SOLVER_SUNDIALS(x) x
 # else
 #  define MPT_SOLVER_SUNDIALS(x) MPT_SOLVER_ENUM(Sundials##x)
 #endif
 
+/* type definition flag pre SUNDIALS 6 */
+#ifdef _SUNDIALSTYPES_H
+# ifndef _SUNDIALS_TYPES_H
+#  define _SUNDIALS_TYPES_H _SUNDIALSTYPES_H
+# endif
+#endif
+
 __MPT_SOLVER_BEGIN
 
-#ifndef _NVECTOR_H
+#ifdef _SUNDIALS_TYPES_H
+# ifndef _NVECTOR_H
 typedef void * N_Vector;
-#endif
+# endif
 
-#ifndef _SUNMATRIX_H
+# ifndef _SUNMATRIX_H
 typedef void * SUNMatrix;
-#endif
+# endif
 
-#ifndef _SUNLINEARSOLVER_H
+# ifndef _SUNLINEARSOLVER_H
 typedef void * SUNLinearSolver;
-#endif
+# endif
+
+# ifndef _SUNDIALS_CONTEXT_H
+typedef void * SUNContext;
+# endif
+#endif /* _SUNDIALS_TYPES_H */
 
 enum MPT_SOLVER_SUNDIALS(Type) {
-#ifdef _SUNDIALSTYPES_H
+#ifdef _SUNDIALS_TYPES_H
 # if defined(SUNDIALS_SINGLE_PRECISION)
 	MPT_SOLVER_SUNDIALS(Realtype)  = 'f',
 # elif defined(SUNDIALS_DOUBLE_PRECISION)
@@ -44,7 +54,7 @@ enum MPT_SOLVER_SUNDIALS(Type) {
 # elif defined(SUNDIALS_INT32_T)
 	MPT_SOLVER_SUNDIALS(Indextype) = 'i',
 # endif
-#endif
+#endif /* _SUNDIALS_TYPES_H */
 	/* iterative solvers */
 	MPT_SOLVER_SUNDIALS(IterGMR)   = 0x1,
 	MPT_SOLVER_SUNDIALS(IterBCG)   = 0x2,
@@ -57,7 +67,7 @@ enum MPT_SOLVER_SUNDIALS(Type) {
 };
 
 MPT_SOLVER_STRUCT(sundials)
-#ifdef _SUNDIALSTYPES_H
+#ifdef _SUNDIALS_TYPES_H
 {
 # ifdef __cplusplus
 	sundials();
@@ -67,6 +77,11 @@ MPT_SOLVER_STRUCT(sundials)
 	
 	SUNLinearSolver LS;  /* linear solver backend */
 	
+# if SUNDIALS_VERSION_MAJOR >= 6
+	SUNContext _sun_ctx; /* simulation context */
+	void *_sun_ctx_ref;  /* context cookie */
+# endif
+	
 	SUNMatrix A;          /* solver matrix */
 	sunindextype ml, mu;  /* band matrix dimensions */
 	
@@ -75,11 +90,11 @@ MPT_SOLVER_STRUCT(sundials)
 	       prec,      /* preconditioner mode */
 	       kmax;      /* max. Krylov subspace size */
 }
-#endif /* _SUNDIALSTYPES_H */
+#endif /* _SUNDIALS_TYPES_H */
 ;
 
 MPT_SOLVER_STRUCT(sundials_step)
-#ifdef _SUNDIALSTYPES_H
+#ifdef _SUNDIALS_TYPES_H
 {
 # ifdef _MATH_H
 #  ifdef __cplusplus
@@ -96,11 +111,11 @@ MPT_SOLVER_STRUCT(sundials_step)
 	realtype hmin;  /* minimal stapsize */
 	realtype hmax;  /* maximal stapsize */
 }
-#endif  /* _SUNDIALSTYPES_H */
+#endif  /* _SUNDIALS_TYPES_H */
 ;
 
 MPT_SOLVER_STRUCT(cvode)
-#ifdef _SUNDIALSTYPES_H
+#ifdef _SUNDIALS_TYPES_H
 {
 # ifdef __cplusplus
 public:
@@ -126,11 +141,11 @@ public:
 	
 	const MPT_IVP_STRUCT(odefcn) *ufcn;
 }
-#endif /* _SUNDIALSTYPES_H */
+#endif /* _SUNDIALS_TYPES_H */
 ;
 
 MPT_SOLVER_STRUCT(ida)
-#ifdef _SUNDIALSTYPES_H
+#ifdef _SUNDIALS_TYPES_H
 {
 # ifdef __cplusplus
 public:
@@ -162,22 +177,28 @@ protected:
 		size_t  size;
 	} tmp;          /* temporary data buffer */
 }
-#endif
+#endif /* _SUNDIALS_TYPES_H */
 ;
 
 #define SUNDIALS_flags_jac(f,s)  (f = ((f) & ~0xfL) | ((s) & 0xfL))
 
 __MPT_EXTDECL_BEGIN
 
-/* calculate errors tolerances */
-extern int mpt_sundials_ewtfcn(N_Vector , N_Vector , void *);
-
 /* clear SUNDIALS data */
 extern void mpt_sundials_init(MPT_SOLVER_STRUCT(sundials) *);
 extern void mpt_sundials_fini(MPT_SOLVER_STRUCT(sundials) *);
+#ifdef _SUNDIALS_TYPES_H
+# if SUNDIALS_VERSION_MAJOR >= 6
+extern SUNContext mpt_sundials_context(MPT_SOLVER_STRUCT(sundials) *);
+# endif
+#endif
 
+#ifdef _SUNDIALS_TYPES_H
 /* initialize values */
 extern int mpt_sundials_vector_set(N_Vector *, long , long , MPT_INTERFACE(iterator) *);
+/* calculate errors tolerances */
+extern int mpt_sundials_ewtfcn(N_Vector , N_Vector , void *);
+#endif
 
 /* set CVode parameter */
 extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *, MPT_STRUCT(property) *);
@@ -208,33 +229,46 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *);
 /* temporary data for IDA */
 extern void *mpt_sundials_ida_tmp(MPT_SOLVER_STRUCT(ida) *, size_t , size_t);
 
-#ifdef _SUNDIALSTYPES_H
 /* execute CVode step (cvdata, data, tend) */
-extern int mpt_sundials_cvode_step(MPT_SOLVER_STRUCT(cvode) *, realtype);
+extern int mpt_sundials_cvode_step(MPT_SOLVER_STRUCT(cvode) *, double);
 /* execute IDA step(solver, x, tend) */
-extern int mpt_sundials_ida_step(MPT_SOLVER_STRUCT(ida) *, realtype);
+extern int mpt_sundials_ida_step(MPT_SOLVER_STRUCT(ida) *, double);
 
+#ifdef _SUNDIALS_TYPES_H
 /* create Sundials NVector with data */
+# if SUNDIALS_VERSION_MAJOR >= 6
+extern N_Vector mpt_sundials_nvector(sunindextype, SUNContext);
+# else
 extern N_Vector mpt_sundials_nvector(sunindextype);
+# endif
 /* setup linear solver */
 extern int mpt_sundials_linear(MPT_SOLVER_STRUCT(sundials) *, sunindextype);
-#endif
+#endif /* _SUNDIALS_TYPES_H */
 
 #ifndef __cplusplus
 extern MPT_INTERFACE(metatype) *mpt_sundials_cvode(void);
 extern MPT_INTERFACE(metatype) *mpt_sundials_ida(void);
 #endif
 
+/* wrappers to create/destroy opaque CVode solver data */
+MPT_SOLVER_STRUCT(cvode) *_mpt_sundials_cvode_create(const MPT_IVP_STRUCT(odefcn) *);
+const MPT_IVP_STRUCT(parameters) *_mpt_sundials_cvode_parameters(const MPT_SOLVER_STRUCT(cvode) *);
+void _mpt_sundials_cvode_destroy(MPT_SOLVER_STRUCT(cvode) *);
+
+/* wrappers to create/destroy opaque IDA solver data */
+MPT_SOLVER_STRUCT(ida) *_mpt_sundials_ida_create(const MPT_IVP_STRUCT(daefcn) *);
+const MPT_IVP_STRUCT(parameters) *_mpt_sundials_ida_parameters(const MPT_SOLVER_STRUCT(ida) *);
+void _mpt_sundials_ida_destroy(MPT_SOLVER_STRUCT(ida) *);
+
 /* setup Sundials jacobian parameters */
 extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *, MPT_INTERFACE(convertable) *);
 /* output Sundials jacobian parameters */
 extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *, MPT_TYPE(property_handler) , void *);
 
-#ifndef _SUNDIALS_GENERIC_TYPE
-# define _SUNDIALS_GENERIC_TYPE(x) x
-#endif
-
-#ifdef _SUNDIALSTYPES_H
+#ifdef _SUNDIALS_TYPES_H
+# ifndef _SUNDIALS_GENERIC_TYPE
+#  define _SUNDIALS_GENERIC_TYPE(x) x
+# endif
 /* wrapper for CVode user functions */
 extern int mpt_sundials_cvode_fcn(realtype , N_Vector , N_Vector , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *);
 /* wrapper for IDA user functions */
@@ -253,100 +287,106 @@ extern int mpt_sundials_ida_jac(realtype , realtype , N_Vector , N_Vector , N_Ve
                                 N_Vector , N_Vector , N_Vector);
 #  endif
 # endif
-#endif
+#endif /* _SUNDIALS_TYPES_H */
 
 __MPT_EXTDECL_END
 
 
 #ifdef __cplusplus
-inline sundials::sundials()
-{ mpt_sundials_init(this); }
-inline sundials::~sundials()
-{ mpt_sundials_fini(this); }
+# ifdef _SUNDIALS_TYPES_H
+inline sundials::sundials()  { mpt_sundials_init(this); }
+inline sundials::~sundials() { mpt_sundials_fini(this); }
 
-class CVode : public IVP, cvode
+inline cvode::cvode()  { mpt_sundials_cvode_init(this); }
+inline cvode::~cvode() { mpt_sundials_cvode_fini(this); }
+
+inline ida::ida()  { mpt_sundials_ida_init(this); }
+inline ida::~ida() { mpt_sundials_ida_fini(this); }
+# endif /* _SUNDIALS_TYPES_H */
+
+class CVode : public IVP
 {
 public:
 	CVode() : _fcn(0)
 	{
-		ufcn = &_fcn;
+		_cvode = _mpt_sundials_cvode_create(&_fcn);
 	}
 	~CVode() __MPT_OVERRIDE
-	{ }
+	{
+		_mpt_sundials_cvode_destroy(_cvode);
+	}
 	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
-		return mpt_sundials_cvode_get(this, pr);
+		return mpt_sundials_cvode_get(_cvode, pr);
 	}
 	int set_property(const char *pr, convertable *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
-			return mpt_sundials_cvode_prepare(this);
+			return mpt_sundials_cvode_prepare(_cvode);
 		}
-		return mpt_sundials_cvode_set(this, pr, src);
+		return mpt_sundials_cvode_set(_cvode, pr, src);
 	}
 	/* solver operations */
 	int solve() __MPT_OVERRIDE
 	{
-		return mpt_sundials_cvode_step(this, _t);
+		return mpt_sundials_cvode_step(_cvode, _t);
 	}
 	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
-		return mpt_sundials_cvode_report(this, what, out, opar);
+		return mpt_sundials_cvode_report(_cvode, what, out, opar);
 	}
 	int set_functions(int type, const void *ptr) __MPT_OVERRIDE
 	{
-		return mpt_solver_module_ufcn_ode(ivp.pint, &_fcn, type, ptr);
+		const parameters *ivp = _mpt_sundials_cvode_parameters(_cvode);
+		return mpt_solver_module_ufcn_ode(ivp->pint, &_fcn, type, ptr);
 	}
 protected:
 	struct odefcn _fcn;
+	cvode *_cvode;
 };
-inline cvode::cvode()
-{ mpt_sundials_cvode_init(this); }
-inline cvode::~cvode()
-{ mpt_sundials_cvode_fini(this); }
 
-class IDA : public IVP, ida
+class IDA : public IVP
 {
 public:
 	IDA() : _fcn(0)
 	{
-		ufcn = &_fcn;
+		_ida = _mpt_sundials_ida_create(&_fcn);
 	}
 	~IDA() __MPT_OVERRIDE
-	{ }
+	{
+		_mpt_sundials_ida_destroy(_ida);
+	}
 	/* object operations */
 	int property(struct property *pr) const __MPT_OVERRIDE
 	{
-		return mpt_sundials_ida_get(this, pr);
+		return mpt_sundials_ida_get(_ida, pr);
 	}
 	int set_property(const char *pr, convertable *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
-			return mpt_sundials_ida_prepare(this);
+			return mpt_sundials_ida_prepare(_ida);
 		}
-		return mpt_sundials_ida_set(this, pr, src);
+		return mpt_sundials_ida_set(_ida, pr, src);
 	}
 	/* solver operations */
 	int solve() __MPT_OVERRIDE
 	{
-		return mpt_sundials_ida_step(this, _t);
+		return mpt_sundials_ida_step(_ida, _t);
 	}
 	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
-		return mpt_sundials_ida_report(this, what, out, opar);
+		return mpt_sundials_ida_report(_ida, what, out, opar);
 	}
 	int set_functions(int type, const void *ptr) __MPT_OVERRIDE
 	{
-		return mpt_solver_module_ufcn_dae(ivp.pint, &_fcn, type, ptr);
+		const parameters *ivp = _mpt_sundials_ida_parameters(_ida);
+		return mpt_solver_module_ufcn_dae(ivp->pint, &_fcn, type, ptr);
 	}
 protected:
 	struct daefcn _fcn;
+	ida *_ida;
 };
-inline ida::ida()
-{ mpt_sundials_ida_init(this); }
-inline ida::~ida()
-{ mpt_sundials_ida_fini(this); }
 
 #endif
 

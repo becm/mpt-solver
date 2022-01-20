@@ -23,6 +23,22 @@ extern void mpt_sundials_init(MPT_SOLVER_STRUCT(sundials) *sd)
 	sd->ml = sd->mu = -1;
 }
 
+#if SUNDIALS_VERSION_MAJOR >= 6
+/*!
+ * \ingroup mptSundials
+ * \brief init SUNDIALS data
+ * 
+ * Initialize SUNDIALS data on raw memory.
+ */
+extern SUNContext mpt_sundials_context(MPT_SOLVER_STRUCT(sundials) *sd)
+{
+	if (!sd->_sun_ctx) {
+		SUNContext_Create(sd->_sun_ctx_ref, &sd->_sun_ctx);
+	}
+	return sd->_sun_ctx;
+}
+#endif
+
 /*!
  * \ingroup mptSundials
  * \brief finalize SUNDIALS data
@@ -40,5 +56,8 @@ extern void mpt_sundials_fini(MPT_SOLVER_STRUCT(sundials) *sd)
 	if (sd->A) {
 		SUNMatDestroy(sd->A);
 	}
-	mpt_sundials_init(sd);
+#if SUNDIALS_VERSION_MAJOR >= 6
+	SUNContext_Free(&sd->_sun_ctx);
+#endif
+	memset(sd, 0, sizeof(*sd));
 }

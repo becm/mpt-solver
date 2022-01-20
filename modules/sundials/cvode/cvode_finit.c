@@ -11,7 +11,8 @@
 
 #include "sundials.h"
 
-static void resetValues(MPT_SOLVER_STRUCT(cvode) *data) {
+static void resetValues(MPT_SOLVER_STRUCT(cvode) *data)
+{
 	static const MPT_SOLVER_STRUCT(sundials_step) step = MPT_SOLVER_SUNDIALS_STEP_INIT;
 	
 	data->t = 0.0;
@@ -24,6 +25,18 @@ static void resetValues(MPT_SOLVER_STRUCT(cvode) *data) {
 	data->maxord = 0;
 }
 
+static void resetContext(MPT_SOLVER_STRUCT(cvode) *data)
+{
+	mpt_solver_module_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
+	mpt_solver_module_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
+	
+	if (data->mem) {
+		CVodeFree(&data->mem);
+		data->mem = NULL;
+	}
+	mpt_sundials_fini(&data->sd);
+}
+
 /*!
  * \ingroup mptSundialsCVode
  * \brief reset CVode data
@@ -34,16 +47,9 @@ static void resetValues(MPT_SOLVER_STRUCT(cvode) *data) {
  */
 extern void mpt_sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
 {
-	mpt_sundials_fini(&data->sd);
-	
-	mpt_solver_module_tol_check(&data->rtol, 0, 0, __MPT_IVP_RTOL);
-	mpt_solver_module_tol_check(&data->atol, 0, 0, __MPT_IVP_ATOL);
-	
-	if (data->mem) {
-		CVodeFree(&data->mem);
-		data->mem = NULL;
-	}
 	resetValues(data);
+	resetContext(data);
+	mpt_sundials_init(&data->sd);
 }
 
 /*!
@@ -57,8 +63,7 @@ extern void mpt_sundials_cvode_reset(MPT_SOLVER_STRUCT(cvode) *data)
 extern void mpt_sundials_cvode_fini(MPT_SOLVER_STRUCT(cvode) *data)
 {
 	mpt_solver_module_ivpset(&data->ivp, 0);
-	
-	mpt_sundials_cvode_reset(data);
+	resetContext(data);
 }
 
 /*!
@@ -81,7 +86,7 @@ extern int mpt_sundials_cvode_init(MPT_SOLVER_STRUCT(cvode) *data)
 	MPT_VECPAR_INIT(&data->rtol, __MPT_IVP_RTOL);
 	MPT_VECPAR_INIT(&data->atol, __MPT_IVP_ATOL);
 	
-	memset(&data->sd, 0, sizeof(data->sd));
+	mpt_sundials_init(&data->sd);
 	
 	resetValues(data);
 	

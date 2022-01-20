@@ -9,10 +9,6 @@
 #include "object.h"
 #include "array.h"
 
-#ifdef __cplusplus
-# include "types.h"
-#endif
-
 #include <sys/uio.h>
 
 #ifdef __cplusplus

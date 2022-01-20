@@ -9,6 +9,8 @@
 #define _SUNDIALS_GENERIC_TYPE(x) void
 #include "sundials.h"
 
+#include "module_functions.h"
+
 /*!
  * \ingroup mptSundialsIda
  * \brief prepare IDA solver
@@ -30,7 +32,11 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 		return MPT_ERROR(BadArgument);
 	}
 	if (!(ida_mem = ida->mem)) {
+#if SUNDIALS_VERSION_MAJOR >= 6
+		if (!(ida_mem = IDACreate(mpt_sundials_context(&ida->sd)))) {
+#else
 		if (!(ida_mem = IDACreate())) {
+#endif
 			return MPT_ERROR(BadOperation);
 		}
 		if (IDASetUserData(ida_mem, ida) != IDA_SUCCESS) {
@@ -46,7 +52,11 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	
 	/* prepare initial vector */
 	if (!ida->sd.y) {
+#if SUNDIALS_VERSION_MAJOR >= 6
+		if (!(ida->sd.y = mpt_sundials_nvector(neqs, mpt_sundials_context(&ida->sd)))) {
+#else
 		if (!(ida->sd.y = mpt_sundials_nvector(neqs))) {
+#endif
 			return MPT_ERROR(BadOperation);
 		}
 		N_VConst(0, ida->sd.y);

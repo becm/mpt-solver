@@ -32,8 +32,14 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(convertable) *src)
 	if ((len = ida->ivp.neqs * (ida->ivp.pint + 1)) < 0) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (!ida->sd.y && !(ida->sd.y = mpt_sundials_nvector(len))) {
-		return MPT_ERROR(BadOperation);
+	if (!ida->sd.y) {
+#if SUNDIALS_VERSION_MAJOR >= 6
+		if (!(ida->sd.y = mpt_sundials_nvector(len, mpt_sundials_context(&ida->sd)))) {
+#else
+		if (!(ida->sd.y = mpt_sundials_nvector(len))) {
+#endif
+			return MPT_ERROR(BadOperation);
+		}
 	}
 	if (!(yprime = N_VClone(ida->sd.y))) {
 		return MPT_ERROR(BadOperation);
@@ -52,7 +58,11 @@ static void *getSolverData(MPT_SOLVER_STRUCT(ida) *ida) {
 	if ((ida_mem = ida->mem)) {
 		return ida_mem;
 	}
+#if SUNDIALS_VERSION_MAJOR >= 6
+	if (!(ida_mem = IDACreate(mpt_sundials_context(&ida->sd)))) {
+#else
 	if (!(ida_mem = IDACreate())) {
+#endif
 		return NULL;
 	}
 	if (IDASetUserData(ida_mem, ida) != IDA_SUCCESS) {
@@ -85,7 +95,13 @@ extern int mpt_sundials_ida_set(MPT_SOLVER_STRUCT(ida) *ida, const char *name, M
 		return MPT_ERROR(BadArgument);
 	}
 	if (!name) {
-		return MPT_SOLVER_MODULE_FCN(ivp_state)(&ida->ivp, &ida->t, &ida->sd.y, src);
+		MPT_SOLVER_STRUCT(sundials_vector_context) ctx = {
+			&ida->sd.y
+#if SUNDIALS_VERSION_MAJOR >= 6
+			, mpt_sundials_context(&ida->sd)
+#endif
+		};
+		return MPT_SOLVER_MODULE_FCN(ivp_state)(&ida->ivp, &ida->t, &ctx, src);
 	}
 	if (!*name) {
 		if (src && (ret = mpt_solver_module_ivpset(&ida->ivp, src)) < 0) {

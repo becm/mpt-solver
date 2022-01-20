@@ -45,7 +45,7 @@ extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TY
 		ptr = sd->linsol & MPT_SOLVER_SUNDIALS(Numeric) ? "numerical": "user";
 		mpt_solver_module_value_string(&prop[1].val, ptr);
 		
-		mpt_solver_module_report_properties(prop, 2, pr.name, pr.desc, out, usr);
+		return mpt_solver_module_report_properties(prop, 2, pr.name, pr.desc, out, usr);
 	}
 	if (type == SUNMATRIX_BAND) {
 		MPT_STRUCT(property) prop[4] = {
@@ -77,7 +77,7 @@ extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *sd, MPT_TY
 		ptr = sd->linsol & MPT_SOLVER_SUNDIALS(Numeric) ? "numerical": "user";
 		mpt_solver_module_value_string(&prop[3].val, ptr);
 		
-		mpt_solver_module_report_properties(prop, 4, pr.name, pr.desc, out, usr);
+		return mpt_solver_module_report_properties(prop, 4, pr.name, pr.desc, out, usr);
 	}
 	return 0;
 }
