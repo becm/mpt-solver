@@ -664,14 +664,19 @@ extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *, MPT_INTERFACE(
 /* solver module generic type conversion */
 extern int mpt_solver_module_nextval(double *, double , MPT_INTERFACE(convertable) *);
 
-/* set value to scalar type */
+/* set value to equotation count */
 extern int mpt_solver_module_value_ivp(MPT_STRUCT(value) *val, const MPT_IVP_STRUCT(parameters) *);
 extern int mpt_solver_module_value_nls(MPT_STRUCT(value) *val, const MPT_NLS_STRUCT(parameters) *);
+/* set value to vector data or element */
 extern int mpt_solver_module_value_ivec(MPT_STRUCT(value) *val, long , const struct iovec *);
 extern int mpt_solver_module_value_rvec(MPT_STRUCT(value) *val, long , const struct iovec *);
+/* set value to scalar type */
 extern void mpt_solver_module_value_double(MPT_STRUCT(value) *val, const double *);
+extern void mpt_solver_module_value_signed(MPT_STRUCT(value) *val, const void *, size_t);
+/* wrappers for signed integer assignments */
 extern void mpt_solver_module_value_int(MPT_STRUCT(value) *val, const int *);
 extern void mpt_solver_module_value_long(MPT_STRUCT(value) *val, const long *);
+/* set value to string */
 extern void mpt_solver_module_value_string(MPT_STRUCT(value) *val, const char *);
 
 /* assign user functions */

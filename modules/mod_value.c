@@ -45,16 +45,6 @@ extern int mpt_solver_module_value_rvec(MPT_STRUCT(value) *val, long pos, const 
 	mpt_solver_module_value_double(val, ptr);
 	return *ptr ? 1 : 0;
 }
-extern void mpt_solver_module_value_double(MPT_STRUCT(value) *val, const double *ptr)
-{
-	val->domain = 0;
-	val->type = 'd';
-	if (ptr && val->_bufsize >= sizeof(*ptr)) {
-		val->ptr = memcpy(val->_buf, ptr, sizeof(*ptr));
-	} else {
-		val->ptr = ptr;
-	}
-}
 extern int mpt_solver_module_value_ivec(MPT_STRUCT(value) *val, long pos, const struct iovec *vec)
 {
 	int *ptr;
@@ -91,48 +81,59 @@ extern int mpt_solver_module_value_ivec(MPT_STRUCT(value) *val, long pos, const 
 	mpt_solver_module_value_int(val, ptr);
 	return *ptr ? 1 : 0;
 }
-extern void mpt_solver_module_value_int(MPT_STRUCT(value) *val, const int *ptr)
+
+extern void mpt_solver_module_value_double(MPT_STRUCT(value) *val, const double *ptr)
 {
 	val->domain = 0;
-	val->type = 'i';
+	val->type = 'd';
 	if (ptr && val->_bufsize >= sizeof(*ptr)) {
 		val->ptr = memcpy(val->_buf, ptr, sizeof(*ptr));
 	} else {
 		val->ptr = ptr;
 	}
 }
-extern void mpt_solver_module_value_long(MPT_STRUCT(value) *val, const long *ptr)
+
+extern void mpt_solver_module_value_signed(MPT_STRUCT(value) *val, const void *ptr, size_t len)
 {
-	size_t len = sizeof(long);
 	int type;
 	switch (len) {
-		case 1: type = 'b'; break;
-		case 2: type = 'n'; break;
-		case 4: type = 'i'; break;
-		case 8: type = 'x'; break;
+		case sizeof(int8_t) : type = 'b'; break;
+		case sizeof(int16_t): type = 'n'; break;
+		case sizeof(int32_t): type = 'i'; break;
+		case sizeof(int64_t): type = 'x'; break;
 		default:
-			len = 0;
+			ptr = 0;
 			type = 0;
 	}
 	val->domain = 0;
 	val->type = type;
-	if (ptr && val->_bufsize <= len) {
+	if (ptr && len <= val->_bufsize) {
 		val->ptr = memcpy(val->_buf, ptr, len);
 	} else {
 		val->ptr = ptr;
 	}
+}
+extern void mpt_solver_module_value_int(MPT_STRUCT(value) *val, const int *ptr)
+{
+	mpt_solver_module_value_signed(val, ptr, sizeof(*ptr));
+}
+extern void mpt_solver_module_value_long(MPT_STRUCT(value) *val, const long *ptr)
+{
+	mpt_solver_module_value_signed(val, ptr, sizeof(*ptr));
 }
 
 extern void mpt_solver_module_value_string(MPT_STRUCT(value) *val, const char *ptr)
 {
 	val->domain = 0;
 	val->type = 's';
-	if (ptr && val->_bufsize >= sizeof(ptr)) {
-		size_t len = strlen(ptr);
-		if (len < (val->_bufsize - sizeof(ptr))) {
+	if (val->_bufsize >= sizeof(ptr)) {
+		size_t len;
+		/* save full data in value */
+		if (ptr && (((len = strlen(ptr)) + sizeof(ptr)) < val->_bufsize)) {
 			ptr = memcpy(val->_buf + sizeof(ptr), ptr, len + 1);
 		}
-		val->ptr = memcpy(val->_buf, &ptr, sizeof(ptr));
+		*((const char **) val->_buf) = ptr;
+		val->ptr = val->_buf;
 	} else {
 		val->ptr = 0;
 	}
