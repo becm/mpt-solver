@@ -51,16 +51,17 @@ static MPT_INTERFACE(metatype) *bacClone(const MPT_INTERFACE(metatype) *mt)
 static int bacReport(MPT_SOLVER(interface) *sol, int what, MPT_TYPE(property_handler) out, void *data)
 {
 	MPT_STRUCT(BacolData) *bac = MPT_baseaddr(BacolData, sol, _sol);
+	const MPT_SOLVER_STRUCT(bacol_out) *bac_out = 0;
 	
 	if (!what && !out && !data) {
 		return MPT_SOLVER_ENUM(PDE);
 	}
 	if (what & MPT_SOLVER_ENUM(Values)) {
-		if (!bac->out.nint && !mpt_bacol_values(&bac->out, &bac->d)) {
-			return MPT_ERROR(BadOperation);
+		if (bac->out.nint || mpt_bacol_values(&bac->out, &bac->d)) {
+			bac_out = &bac->out;
 		}
 	}
-	return mpt_bacol_report(&bac->d, &bac->out, what, out, data);
+	return mpt_bacol_report(&bac->d, bac_out, what, out, data);
 }
 static int bacFcn(MPT_SOLVER(interface) *sol, int type, const void *ptr)
 {

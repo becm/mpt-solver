@@ -214,35 +214,22 @@ public:
 	{
 		_values.invalidate();
 		if (!pr && !src) {
-			return mpt_bacol_prepare(this);
+			int ret = mpt_bacol_prepare(this);
+			if (ret >= 0) _t = t;
+			return ret;
+		}
+		if (_is_time_property(pr)) {
+			return mpt_solver_module_nextval(&_t, t, src);
 		}
 		return mpt_bacol_set(this, pr, src);
 	}
 	int report(int what, property_handler_t out, void *opar) __MPT_OVERRIDE
 	{
-		int ret;
-		if ((ret = mpt_bacol_report(this, what & ~Values, out, opar)) < 0
-		    || !(what & Values)
-		    || !out) {
-			return ret;
+		if (!what && !out && !opar) {
+			return PDE;
 		}
-		struct context {
-			property_handler_t out;
-			void *par;
-			static int setProp(void *ptr, value val)
-			{
-				const context *ctx = static_cast<context *>(ptr);
-				struct property pr;
-				pr.desc = "BACOL solver state";
-				pr.val = val;
-				return ctx->out(ctx->par, &pr);
-			}
-		};
-		struct context ctx;
-		ctx.out = out;
-		ctx.par = opar;
-		mpt_bacol_output_report(&values(), t, context::setProp, &ctx);
-		return ret + 1;
+		const struct bacol_out *bac = (what & Values) ? &values() : 0;
+		return mpt_bacol_report(this, bac, what, out, opar);
 	}
 	int set_functions(int , const void *) __MPT_OVERRIDE
 	{
@@ -258,6 +245,7 @@ public:
 	}
 protected:
 	struct bacol_out _values;
+	double _t;
 };
 #endif
 __MPT_SOLVER_END
