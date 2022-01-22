@@ -200,22 +200,17 @@ public:
 	struct daefcn;
 	struct pdefcn;
 	
-	inline IVP() : _t(0.0)
+	inline IVP()
 	{ }
 	
-	virtual int step(double t)
+	int step(double t)
 	{
-		double save = _t;
-		_t = t;
-		int err = solve();
-		if (err < 0) _t = save;
-		return err;
+		int ret = mpt_object_set(this, "t", "d", t);
+		return ret < 0 ? ret : solve();
 	}
 	inline bool set(double t, span<const double> x)
 	{
-		int ret = mpt_object_set(this, 0, "dD", t, x);
-		if (ret >= 0) _t = t;
-		return ret;
+		return mpt_object_set(this, 0, "dD", t, x);
 	}
 	template <typename T>
 	inline bool set(const T &fcn)
@@ -226,8 +221,8 @@ public:
 MPT_IVP_STRUCT(parameters);
 #endif
 /* right side function */
-typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Fcn))(void *, double t, const double *, double *);
-typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Pde))(void *, double t, const double *, double *, const MPT_IVP_STRUCT(parameters) *);
+typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Fcn))(void *, double , const double *, double *);
+typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Pde))(void *, double , const double *, double *, const MPT_IVP_STRUCT(parameters) *);
 /* extension for ODE/DAE solvers */
 typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Jac))(void *, double , const double *, double *, int);
 typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Mas))(void *, double , const double *, double *, int *, int *);
@@ -235,7 +230,10 @@ typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Mas))(void *, double , const double *, dou
 typedef int (*_MPT_SOLVER_IVP_TYPEDEF(Rside))(void *, double , const double *, double *, double , double *, double *);
 #ifdef __cplusplus
 protected:
-	double _t;
+	inline bool _is_time_property(const char *id)
+	{
+		return id && id[0] == 't' && id[1] == 0;
+	}
 };
 #endif
 

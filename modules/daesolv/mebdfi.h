@@ -95,7 +95,7 @@ inline mebdfi::~mebdfi()
 class Mebdfi : public IVP, mebdfi
 {
 public:
-	inline Mebdfi() : _fcn(0)
+	inline Mebdfi() : _fcn(0), _t(0)
 	{ }
 	~Mebdfi() __MPT_OVERRIDE
 	{ }
@@ -107,7 +107,12 @@ public:
 	int set_property(const char *pr, convertable *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
-			return mpt_mebdfi_prepare(this);
+			int ret = mpt_mebdfi_prepare(this);
+			if (ret >= 0) _t = t;
+			return ret;
+		}
+		if (_is_time_property(pr)) {
+			return mpt_solver_module_nextval(&_t, t, src);
 		}
 		return mpt_mebdfi_set(this, pr, src);
 	}
@@ -126,6 +131,7 @@ public:
 	}
 protected:
 	struct daefcn _fcn;
+	double _t;
 };
 #endif
 

@@ -187,18 +187,6 @@ __MPT_EXTDECL_BEGIN
 /* clear SUNDIALS data */
 extern void mpt_sundials_init(MPT_SOLVER_STRUCT(sundials) *);
 extern void mpt_sundials_fini(MPT_SOLVER_STRUCT(sundials) *);
-#ifdef _SUNDIALS_TYPES_H
-# if SUNDIALS_VERSION_MAJOR >= 6
-extern SUNContext mpt_sundials_context(MPT_SOLVER_STRUCT(sundials) *);
-# endif
-#endif
-
-#ifdef _SUNDIALS_TYPES_H
-/* initialize values */
-extern int mpt_sundials_vector_set(N_Vector *, long , long , MPT_INTERFACE(iterator) *);
-/* calculate errors tolerances */
-extern int mpt_sundials_ewtfcn(N_Vector , N_Vector , void *);
-#endif
 
 /* set CVode parameter */
 extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *, MPT_STRUCT(property) *);
@@ -234,30 +222,16 @@ extern int mpt_sundials_cvode_step(MPT_SOLVER_STRUCT(cvode) *, double);
 /* execute IDA step(solver, x, tend) */
 extern int mpt_sundials_ida_step(MPT_SOLVER_STRUCT(ida) *, double);
 
-#ifdef _SUNDIALS_TYPES_H
-/* create Sundials NVector with data */
-# if SUNDIALS_VERSION_MAJOR >= 6
-extern N_Vector mpt_sundials_nvector(sunindextype, SUNContext);
-# else
-extern N_Vector mpt_sundials_nvector(sunindextype);
-# endif
-/* setup linear solver */
-extern int mpt_sundials_linear(MPT_SOLVER_STRUCT(sundials) *, sunindextype);
-#endif /* _SUNDIALS_TYPES_H */
-
-#ifndef __cplusplus
-extern MPT_INTERFACE(metatype) *mpt_sundials_cvode(void);
-extern MPT_INTERFACE(metatype) *mpt_sundials_ida(void);
-#endif
-
 /* wrappers to create/destroy opaque CVode solver data */
 MPT_SOLVER_STRUCT(cvode) *_mpt_sundials_cvode_create(const MPT_IVP_STRUCT(odefcn) *);
 const MPT_IVP_STRUCT(parameters) *_mpt_sundials_cvode_parameters(const MPT_SOLVER_STRUCT(cvode) *);
+double _mpt_sundials_cvode_time(const MPT_SOLVER_STRUCT(cvode) *);
 void _mpt_sundials_cvode_destroy(MPT_SOLVER_STRUCT(cvode) *);
 
 /* wrappers to create/destroy opaque IDA solver data */
 MPT_SOLVER_STRUCT(ida) *_mpt_sundials_ida_create(const MPT_IVP_STRUCT(daefcn) *);
 const MPT_IVP_STRUCT(parameters) *_mpt_sundials_ida_parameters(const MPT_SOLVER_STRUCT(ida) *);
+double _mpt_sundials_ida_time(const MPT_SOLVER_STRUCT(ida) *);
 void _mpt_sundials_ida_destroy(MPT_SOLVER_STRUCT(ida) *);
 
 /* setup Sundials jacobian parameters */
@@ -266,6 +240,20 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *, MPT_INTERFACE(co
 extern int mpt_sundials_report_jac(const MPT_SOLVER_STRUCT(sundials) *, MPT_TYPE(property_handler) , void *);
 
 #ifdef _SUNDIALS_TYPES_H
+/* setup linear solver */
+extern int mpt_sundials_linear(MPT_SOLVER_STRUCT(sundials) *, sunindextype);
+# if SUNDIALS_VERSION_MAJOR >= 6
+extern SUNContext mpt_sundials_context(MPT_SOLVER_STRUCT(sundials) *);
+/* create Sundials NVector with data */
+extern N_Vector mpt_sundials_nvector(sunindextype, SUNContext);
+# else
+extern N_Vector mpt_sundials_nvector(sunindextype);
+# endif
+/* initialize values */
+extern int mpt_sundials_vector_set(N_Vector *, long , long , MPT_INTERFACE(iterator) *);
+/* calculate errors tolerances */
+extern int mpt_sundials_ewtfcn(N_Vector , N_Vector , void *);
+
 # ifndef _SUNDIALS_GENERIC_TYPE
 #  define _SUNDIALS_GENERIC_TYPE(x) x
 # endif
@@ -289,8 +277,12 @@ extern int mpt_sundials_ida_jac(realtype , realtype , N_Vector , N_Vector , N_Ve
 # endif
 #endif /* _SUNDIALS_TYPES_H */
 
-__MPT_EXTDECL_END
+#ifndef __cplusplus
+extern MPT_INTERFACE(metatype) *mpt_sundials_cvode(void);
+extern MPT_INTERFACE(metatype) *mpt_sundials_ida(void);
+#endif
 
+__MPT_EXTDECL_END
 
 #ifdef __cplusplus
 # ifdef _SUNDIALS_TYPES_H
@@ -307,7 +299,7 @@ inline ida::~ida() { mpt_sundials_ida_fini(this); }
 class CVode : public IVP
 {
 public:
-	CVode() : _fcn(0)
+	CVode() : _fcn(0), _t(0)
 	{
 		_cvode = _mpt_sundials_cvode_create(&_fcn);
 	}
@@ -323,7 +315,13 @@ public:
 	int set_property(const char *pr, convertable *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
-			return mpt_sundials_cvode_prepare(_cvode);
+			int ret = mpt_sundials_cvode_prepare(_cvode);
+			if (ret >= 0) _t = _mpt_sundials_cvode_time(_cvode);
+			return ret;
+		}
+		if (_is_time_property(pr)) {
+			double curr = _mpt_sundials_cvode_time(_cvode);
+			return mpt_solver_module_nextval(&_t, curr, src);
 		}
 		return mpt_sundials_cvode_set(_cvode, pr, src);
 	}
@@ -344,12 +342,13 @@ public:
 protected:
 	struct odefcn _fcn;
 	cvode *_cvode;
+	double _t;
 };
 
 class IDA : public IVP
 {
 public:
-	IDA() : _fcn(0)
+	IDA() : _fcn(0), _t(0)
 	{
 		_ida = _mpt_sundials_ida_create(&_fcn);
 	}
@@ -365,7 +364,13 @@ public:
 	int set_property(const char *pr, convertable *src) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
-			return mpt_sundials_ida_prepare(_ida);
+			int ret = mpt_sundials_ida_prepare(_ida);
+			if (ret >= 0) _t = _mpt_sundials_ida_time(_ida);
+			return ret;
+		}
+		if (_is_time_property(pr)) {
+			double curr = _mpt_sundials_ida_time(_ida);
+			return mpt_solver_module_nextval(&_t, curr, src);
 		}
 		return mpt_sundials_ida_set(_ida, pr, src);
 	}
@@ -386,6 +391,7 @@ public:
 protected:
 	struct daefcn _fcn;
 	ida *_ida;
+	double _t;
 };
 
 #endif

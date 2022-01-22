@@ -111,7 +111,7 @@ inline radau::~radau()
 class Radau : public IVP, radau
 {
 public:
-	inline Radau() : _fcn(0)
+	inline Radau() : _fcn(0), _t(0)
 	{ }
 	~Radau() __MPT_OVERRIDE
 	{ }
@@ -123,7 +123,12 @@ public:
 	int set_property(const char *pr, convertable *src = 0) __MPT_OVERRIDE
 	{
 		if (!pr && !src) {
-			return mpt_radau_prepare(this);
+			int ret = mpt_radau_prepare(this);
+			if (ret >= 0) _t = t;
+			return ret;
+		}
+		if (_is_time_property(pr)) {
+			return mpt_solver_module_nextval(&_t, t, src);
 		}
 		return mpt_radau_set(this, pr, src);
 	}
@@ -142,6 +147,7 @@ public:
 	}
 protected:
 	struct daefcn _fcn;
+	double _t;
 };
 #endif
 

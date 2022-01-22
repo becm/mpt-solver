@@ -37,10 +37,27 @@ extern MPT_SOLVER_STRUCT(ida) *_mpt_sundials_ida_create(const MPT_IVP_STRUCT(dae
  * Destroy allocated IDA solver data.
  * 
  * \param ida  IDA solver data pointer
+ * 
+ * \return IVP parameters in IDA data
  */
 extern const MPT_IVP_STRUCT(parameters) *_mpt_sundials_ida_parameters(const MPT_SOLVER_STRUCT(ida) *ida)
 {
 	return &ida->ivp;
+}
+
+/*!
+ * \ingroup mptSundialsIda
+ * \brief IDA data destruction
+ * 
+ * Destroy allocated IDA solver data.
+ * 
+ * \param ida  IDA solver data pointer
+ * 
+ * \return current time value of IDA data
+ */
+extern double _mpt_sundials_ida_time(const MPT_SOLVER_STRUCT(ida) *ida)
+{
+	return ida->t;
 }
 
 /*!

@@ -37,10 +37,27 @@ extern MPT_SOLVER_STRUCT(cvode) *_mpt_sundials_cvode_create(const MPT_IVP_STRUCT
  * Destroy allocated CVode solver data.
  * 
  * \param cv  CVode solver data pointer
+ * 
+ * \return IVP parameters in CVode data
  */
 extern const MPT_IVP_STRUCT(parameters) *_mpt_sundials_cvode_parameters(const MPT_SOLVER_STRUCT(cvode) *cv)
 {
 	return &cv->ivp;
+}
+
+/*!
+ * \ingroup mptSundialsCVode
+ * \brief CVode data destruction
+ * 
+ * Destroy allocated CVode solver data.
+ * 
+ * \param cv  CVode solver data pointer
+ * 
+ * \return current time value of CVode data
+ */
+extern double _mpt_sundials_cvode_time(const MPT_SOLVER_STRUCT(cvode) *cv)
+{
+	return cv->t;
 }
 
 /*!

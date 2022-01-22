@@ -98,7 +98,7 @@ inline limex::~limex()
 class Limex : public IVP
 {
 public:
-	Limex() : _fcn(0)
+	Limex() : _fcn(0), _t(0)
 	{
 		if ((_lx = mpt_limex_global())) {
 			_lx->ufcn = &_fcn;
@@ -119,7 +119,12 @@ public:
 			return BadOperation;
 		}
 		if (!pr && !src) {
-			return mpt_limex_prepare(_lx);
+			int ret = mpt_limex_prepare(_lx);
+			if (ret >= 0) _t = _lx->t;
+			return ret;
+		}
+		if (_is_time_property(pr)) {
+			return mpt_solver_module_nextval(&_t, _lx->t, src);
 		}
 		return mpt_limex_set(_lx, pr, src);
 	}
@@ -139,6 +144,7 @@ public:
 protected:
 	struct daefcn _fcn;
 	limex *_lx;
+	double _t;
 };
 #endif
 
