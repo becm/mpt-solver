@@ -3,8 +3,9 @@
  *   prepare vecpar data
  */
 
+#include <string.h>
+
 #include "meta.h"
-#include "types.h"
 
 #include "../solver.h"
 

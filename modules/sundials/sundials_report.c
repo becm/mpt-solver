@@ -2,6 +2,8 @@
  * report for SUNDIALS jacobian operations
  */
 
+#include <string.h>
+
 #include <sundials/sundials_matrix.h>
 
 #include <sunmatrix/sunmatrix_band.h>

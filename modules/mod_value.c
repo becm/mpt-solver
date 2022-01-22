@@ -3,6 +3,8 @@
  *   value representation for common data types
  */
 
+#include <string.h>
+
 #include "types.h"
 
 #include "../solver.h"

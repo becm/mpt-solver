@@ -4,6 +4,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <sys/uio.h>
 
@@ -22,6 +23,7 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFA
 {
 	MPT_INTERFACE(iterator) *it;
 	struct iovec grid;
+	size_t part;
 	int32_t neqs;
 	uint32_t pint;
 	int ret, len;
@@ -40,52 +42,28 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFA
 	}
 	/* direct distinct conversions */
 	len = 0;
+	part = 0;
+	it = 0;
 	if ((ret = src->_vptr->convert(src, 'i', &neqs)) > 0) {
 		if (neqs < 1) {
 			return MPT_ERROR(BadValue);
 		}
-		if ((len = src->_vptr->convert(src, MPT_type_toVector('d'), &grid)) > 0) {
-			size_t part = grid.iov_len / sizeof(double);
+		if ((ret = src->_vptr->convert(src, MPT_type_toVector('d'), &grid)) > 0) {
+			part = grid.iov_len / sizeof(double);
 			if (part < 2 || part >= UINT32_MAX) {
 				return MPT_ERROR(BadValue);
 			}
-			pint = part - 1;
 		}
-		if (!len || pint < 1) {
-			ivp->neqs = neqs;
-			ivp->pint = 0;
-			if (ivp->grid) {
-				free(ivp->grid);
-			}
-			return 0;
-		}
-		else if (len > 0) {
-			double *tmp;
-			size_t size = (pint + 1) * sizeof(*tmp);
-			if (!(tmp = malloc(size))) {
-				return MPT_ERROR(BadOperation);
-			}
-			if (ivp->grid) {
-				free(ivp->grid);
-			}
-			if (grid.iov_base) {
-				ivp->grid = memcpy(tmp, grid.iov_base, size);
-			} else {
-				ivp->grid = memset(tmp, 0, size);
-			}
-			return 0;
-		}
-		len = 0;
 	}
-	/* get values from iterator */
-	if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) >= 0) {
-		const MPT_STRUCT(value) *val;
-		if (!ret || !it) {
-			ivp->neqs = neqs;
-			ivp->pint = pint;
-			return 0;
-		}
-		if (!(val = it->_vptr->value(it))
+	/* require iteratable source */
+	else if ((ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &it)) < 0) {
+		return MPT_ERROR(BadType);
+	}
+	/* get values from active iterator */
+	else if (ret && it) {
+		const MPT_STRUCT(value) *val = it->_vptr->value(it);
+		
+		if (!val
 		 || !val->type
 		 || !val->ptr) {
 			return MPT_ERROR(MissingData);
@@ -101,12 +79,10 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFA
 			}
 		}
 		else if (val->type == 'i') {
-			neqs = *((const int *) val->ptr);
+			neqs = *((const int32_t *) val->ptr);
 		}
 		else {
-			ivp->neqs = neqs;
-			ivp->pint = pint;
-			return 0;
+			return MPT_ERROR(BadType);
 		}
 		if (neqs < 1) {
 			return MPT_ERROR(BadValue);
@@ -115,82 +91,83 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFA
 			return ret;
 		}
 		len = 1;
-		if (!(val = it->_vptr->value(it))
-		 || !val->type
-		 || !val->ptr) {
-			return len;
+		if (!ret || !(val = it->_vptr->value(it))) {
+			/* iterator has no further data */
 		}
-		/* PDE without grid data */
-		if (val->type == MPT_type_toVector('d')) {
+		else if (!val->type) {
+			return MPT_ERROR(BadType);
+		}
+		else if (!val->ptr) {
+			return MPT_ERROR(MissingData);
+		}
+		/* actual grid data */
+		else if (val->type == MPT_type_toVector('d')) {
 			const struct iovec *vec = val->ptr;
 			grid = *vec;
-			ret = 1;
+			part = grid.iov_len / sizeof(double);
 		}
-		else if (MPT_type_isConvertable(val->type)) {
+		/* scalar interval values */
+		else if (val->type == 'i') {
+			pint = *((const int32_t *) val->ptr);
+		}
+		else if (val->type == 'u') {
+			pint = *((const uint32_t *) val->ptr);
+		}
+		/* convertable value */
+		else if (!MPT_type_isConvertable(val->type)) {
 			MPT_INTERFACE(convertable) *conv = *((void * const *) val->ptr);
 			
 			if (!conv) {
 				return MPT_ERROR(BadValue);
 			}
-			if ((ret = conv->_vptr->convert(conv, MPT_type_toVector('d'), &grid)) < 0) {
-				if ((ret = conv->_vptr->convert(conv, 'u', &pint)) < 0) {
-					int32_t tmp;
-					if ((ret = conv->_vptr->convert(conv, 'i', &tmp)) < 0) {
-						return ret;
+			if ((ret = conv->_vptr->convert(conv, MPT_type_toVector('d'), &grid)) >= 0) {
+				part = grid.iov_len / sizeof(double);
+			}
+			else if ((ret = conv->_vptr->convert(conv, 'u', &pint)) < 0) {
+				int32_t tmp;
+				if ((ret = conv->_vptr->convert(conv, 'i', &tmp)) < 0) {
+					return ret;
+				}
+				if (ret > 0) {
+					if (tmp < 0) {
+						return MPT_ERROR(BadValue);
 					}
-					if (ret > 0) {
-						if (tmp < 0) {
-							return MPT_ERROR(BadValue);
-						}
-						pint = tmp;
-					}
+					pint = tmp;
 				}
 			}
-			if (!ret) {
-				pint = 0;
-			}
-			else if ((ret = it->_vptr->advance(it)) < 0) {
-				return ret;
-			}
-			else {
-				len = 2;
-			}
-			if (ivp->grid) {
-				free(ivp->grid);
-				ivp->grid = 0;
-			}
 		}
-		/* copy grid data for PDE */
-		if (ret) {
-			double *ptr;
-			size_t part = grid.iov_len / sizeof(double);
-			if (part < 2 || part > UINT32_MAX) {
-				return MPT_ERROR(BadValue);
-			}
-			if ((ret = it->_vptr->advance(it)) < 0) {
-				return ret;
-			}
-			pint = part - 1;
-			part *= sizeof(double);
-			if (!(ptr = malloc(part))) {
-				return MPT_ERROR(BadOperation);
-			}
-			if (grid.iov_base) {
-				memcpy(ptr, grid.iov_base, part);
-			} else {
-				memset(ptr, 0, part);
-			}
-			if (ivp->grid) {
-				free(ivp->grid);
-			}
-			ivp->grid = ptr;
-			len = 2;
+		else {
+			return MPT_ERROR(BadType);
 		}
-		/* no grid data equals ODE/DAE mode */
-		else if (ivp->grid) {
+	}
+	/* copy grid data for PDE */
+	if (part) {
+		double *ptr;
+		if (part < 2 || part > UINT32_MAX) {
+			return MPT_ERROR(BadValue);
+		}
+		pint = part - 1;
+		part *= sizeof(double);
+		if (!(ptr = malloc(part))) {
+			return MPT_ERROR(BadOperation);
+		}
+		if (grid.iov_base) {
+			memcpy(ptr, grid.iov_base, part);
+		} else {
+			memset(ptr, 0, part);
+		}
+		if (ivp->grid) {
 			free(ivp->grid);
-			ivp->grid = 0;
 		}
+		ivp->grid = ptr;
+	}
+	/* no grid data equals ODE/DAE mode */
+	else if (ivp->grid) {
+		free(ivp->grid);
+		ivp->grid = 0;
+	}
+	if (it && (ret = it->_vptr->advance(it)) >= 0) {
+		++len;
 	}
 	ivp->neqs = neqs;
 	ivp->pint = pint;

@@ -3,6 +3,8 @@
  * get status information.
  */
 
+#include <string.h>
+
 #include "vode.h"
 
 #include "module_functions.h"
