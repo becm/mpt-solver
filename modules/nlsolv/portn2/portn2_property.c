@@ -93,7 +93,7 @@ extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *n2, MPT_STRUCT(proper
 	else if (!*name) {
 		prop->name = "portn2";
 		prop->desc = "solver for overdetermined nonlinear equotations";
-		return mpt_solver_module_value_nls(&prop->val, n2 ? &n2->nls : 0);
+		return mpt_solver_module_value_nls(prop, n2 ? &n2->nls : 0);
 	}
 	
 	if (name && !strcasecmp(name, "version")) {
@@ -101,7 +101,7 @@ extern int mpt_portn2_get(const MPT_SOLVER_STRUCT(portn2) *n2, MPT_STRUCT(proper
 		const char *ptr = version;
 		prop->name = "version";
 		prop->desc = "solver release information";
-		mpt_solver_module_value_string(&prop->val, ptr);
+		mpt_solver_module_value_string(prop, ptr);
 		return 0;
 	}
 	return MPT_ERROR(BadArgument);

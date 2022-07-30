@@ -164,8 +164,8 @@ extern void mpt_bacol_output_init(MPT_SOLVER_STRUCT(bacol_out) *);
 /* finish bacol output data */
 extern void mpt_bacol_output_fini(MPT_SOLVER_STRUCT(bacol_out) *);
 /* report output state */
-extern int mpt_bacol_output_grid(const MPT_SOLVER_STRUCT(bacol_out) *, MPT_STRUCT(value) *);
-extern int mpt_bacol_output_values(const MPT_SOLVER_STRUCT(bacol_out) *, MPT_STRUCT(value) *);
+extern int mpt_bacol_output_grid(const MPT_SOLVER_STRUCT(bacol_out) *, struct iovec *);
+extern int mpt_bacol_output_values(const MPT_SOLVER_STRUCT(bacol_out) *, struct iovec *);
 
 /* generate output values from current bacol state */
 extern const double *mpt_bacol_values(MPT_SOLVER_STRUCT(bacol_out) *, const MPT_SOLVER_STRUCT(bacol) *);

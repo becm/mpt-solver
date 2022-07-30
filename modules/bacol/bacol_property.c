@@ -197,13 +197,13 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	else if (!*name) {
 		prop->name = "bacol";
 		prop->desc = "SPline PDE solver";
-		return mpt_solver_module_value_ivp(&prop->val, bac ? &bac->ivp : 0);
+		return mpt_solver_module_value_ivp(prop, bac ? &bac->ivp : 0);
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version";
 		prop->desc = "solver release information";
-		mpt_solver_module_value_string(&prop->val, version);
+		mpt_solver_module_value_string(prop, version);
 		return 0;
 	}
 	
@@ -211,71 +211,80 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
 		prop->name = "atol";
 		prop->desc = "absolute tolerances";
-		if (bac) {
-			return mpt_solver_module_tol_get(&prop->val, &bac->atol);
+		if (!bac) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
 		}
-		mpt_solver_module_value_double(&prop->val, &bac->atol._d.val);
-		return id;
+		return mpt_solver_module_tol_get(prop, &bac->atol);
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		prop->name = "rtol";
 		prop->desc = "relative tolerances";
-		if (bac) {
-			return mpt_solver_module_tol_get(&prop->val, &bac->rtol);
+		if (!bac) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
 		}
-		mpt_solver_module_value_double(&prop->val, &bac->rtol._d.val);
-		return id;
+		return mpt_solver_module_tol_get(prop, &bac->rtol);
 	}
 	/* bacol parameters */
 	if (name ? !strcasecmp(name, "kcol") : pos == ++id) {
 		prop->name = "kcol";
 		prop->desc = "collocations per interval";
-		prop->val.type = 'n';
-		prop->val.ptr = &bac->kcol;
-		if (!bac) return id;
-		if (prop->val._bufsize >= sizeof(bac->kcol)) {
-			prop->val.ptr = memcpy(prop->val._buf, &bac->kcol, sizeof(bac->kcol));
+		if (!bac) {
+			MPT_value_set(&prop->val, 'n', 0);
+			return id;
 		}
+		mpt_solver_module_value_set(prop, 'n', &bac->kcol, sizeof(bac->kcol));
 		return bac->kcol == 2 ? 0 : 1;
 	}
 	if (name ? !strcasecmp(name, "nint") : pos == ++id) {
 		prop->name = "nint";
 		prop->desc = "number of internal intervals";
-		mpt_solver_module_value_int(&prop->val, &bac->nint);
-		if (!bac) return id;
+		if (!bac) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		mpt_solver_module_value_int(prop, &bac->nint);
 		return bac->nint == 10 ? 0 : 1;
 	}
 	if (name ? (!strcasecmp(name, "nout") || !strcasecmp(name, "iout")) : pos == ++id) {
 		prop->name = "iout";
 		prop->desc = "number of output intervals";
-		prop->val.type = 'u';
-		prop->val.ptr = &bac->ivp.pint;
-		if (!bac) return id;
-		if (prop->val._bufsize >= sizeof(bac->ivp.pint)) {
-			prop->val.ptr = memcpy(prop->val._buf, &bac->ivp.pint, sizeof(bac->ivp.pint));
+		if (!bac) {
+			MPT_value_set(&prop->val, 'u', 0);
+			return id;
 		}
+		mpt_solver_module_value_set(prop, 'u', &bac->ivp.pint, sizeof(bac->ivp.pint));
 		return bac->ivp.pint != 10 ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "nintmx") : pos == ++id) {
 		prop->name = "nintmx";
 		prop->desc = "maximum internal intervals";
-		mpt_solver_module_value_int(&prop->val, &bac->nintmx);
-		if (!bac) return id;
+		if (!bac) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		mpt_solver_module_value_int(prop, &bac->nintmx);
 		return bac->nintmx == MPT_BACOL_NIMAXDEF ? 0 : 1;
 	}
 	if (name ? !strcasecmp(name, "dirichlet") : pos == ++id) {
 		prop->name = "dirichlet";
 		prop->desc = "boundaries of dirichlet type";
-		mpt_solver_module_value_int(&prop->val, &bac->mflag.bdir);
-		if (!bac) return id;
-		return bac->mflag.bdir;
+		if (!bac) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		return mpt_solver_module_value_int(prop, &bac->mflag.bdir);
 	}
 	/* ode parameter */
 	if (name ? !strcasecmp(name, "stepinit") : pos == ++id) {
 		prop->name = "stepinit";
 		prop->desc = "expl. initial stepsize";
-		mpt_solver_module_value_double(&prop->val, &bac->initstep);
-		if (!bac) return id;
+		if (!bac) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		mpt_solver_module_value_double(prop, &bac->initstep);
 		return bac->mflag.step ? 1 : 0;
 	}
 	/* solving backend */
@@ -283,9 +292,10 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 		const char *val;
 		prop->name = "backend";
 		prop->desc = "solver step backend";
-		prop->val.type = 's';
-		prop->val.ptr = 0;
-		if (!bac) return id;
+		if (!bac) {
+			MPT_value_set(&prop->val, 's', 0);
+			return id;
+		}
 		switch (bac->_backend) {
 #ifdef MPT_BACOL_DASSL
 		  case 'd': case 'D': val = "dassl"; break;
@@ -295,7 +305,7 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 #endif
 		  default: val = "<unknown>";
 		}
-		mpt_solver_module_value_string(&prop->val, val);
+		mpt_solver_module_value_string(prop, val);
 		return id;
 	}
 #ifdef MPT_BACOL_DASSL
@@ -304,24 +314,33 @@ extern int mpt_bacol_get(const MPT_SOLVER_STRUCT(bacol) *bac, MPT_STRUCT(propert
 	if (name ? (!strcasecmp(name, "tstop") || !strcasecmp(name, "mflag(3)")) : pos == ++id) {
 		prop->name = "tstop";
 		prop->desc = "max. time allowed";
-		mpt_solver_module_value_rvec(&prop->val, 1, bac ? &bac->rpar : 0);
-		if (!bac) return id;
-		return bac->mflag.bdir ? 1 : 0;
+		if (!bac) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
+		}
+		mpt_solver_module_value_rvec(prop, 1, &bac->rpar);
+		return bac->mflag.tstop ? 1 : 0;
 	}
 	/* dassl parameter */
 	if (name ? (!strcasecmp(name, "maxstep") || !strcasecmp(name, "mflag(4)")) : pos == ++id) {
 		prop->name = "maxstep";
 		prop->desc = "max. steps per call";
-		mpt_solver_module_value_ivec(&prop->val, 8, bac ? &bac->ipar : 0);
-		if (!bac) return id;
-		return bac->mflag.tstop ? 1 : 0;
+		if (!bac) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		mpt_solver_module_value_ivec(prop, 8, &bac->ipar);
+		return bac->mflag.mstep ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "dasslbdf") || !strcasecmp(name, "bdf") || !strcasecmp(name, "mflag(7)")) : pos == ++id) {
 		prop->name = "dasslbdf";
 		prop->desc = "max. number of BDF order";
-		mpt_solver_module_value_ivec(&prop->val, 15, bac ? &bac->ipar : 0);
-		if (!bac) return id;
-		return bac->mflag.bdir ? 1 : 0;
+		if (!bac) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		mpt_solver_module_value_ivec(prop, 15, &bac->ipar);
+		return bac->mflag.dbmax ? 1 : 0;
 	}
 	}
 #endif

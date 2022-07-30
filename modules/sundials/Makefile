@@ -2,7 +2,7 @@
 LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
-sundials_version = 6.1.0
+sundials_version = 6.2.0
 DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-${sundials_version}
 #
 # precompiled object location

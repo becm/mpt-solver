@@ -50,7 +50,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	    && (IDAGetCurrentTime(ida->mem, &dval) == IDA_SUCCESS)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	mpt_solver_module_value_double(&pr.val, &dval);
+	mpt_solver_module_value_double(&pr, &dval);
 	out(usr, &pr);
 	++line;
 	}
@@ -58,7 +58,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	    && (IDAGetNumSteps(ida->mem, &lval) == IDA_SUCCESS)) {
 	pr.name = "n";
 	pr.desc = MPT_tr("integration steps");
-	mpt_solver_module_value_long(&pr.val, &lval);
+	mpt_solver_module_value_long(&pr, &lval);
 	out(usr, &pr);
 	++line;
 	}
@@ -68,7 +68,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	if (!lval || (IDAGetLastStep(ida->mem, &dval) == IDA_SUCCESS)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	mpt_solver_module_value_double(&pr.val, &dval);
+	mpt_solver_module_value_double(&pr, &dval);
 	out(usr, &pr);
 	++line;
 	}
@@ -79,7 +79,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	if (IDAGetNumResEvals(ida->mem, &lval) == IDA_SUCCESS) {
 	pr.name = "reval";
 	pr.desc = MPT_tr("residual evaluations");
-	mpt_solver_module_value_long(&pr.val, &lval);
+	mpt_solver_module_value_long(&pr, &lval);
 	out(usr, &pr);
 	++line;
 	}
@@ -88,7 +88,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 		if (IDAGetNumJacEvals(ida->mem, &lval) == IDA_SUCCESS) {
 		pr.name = "jeval";
 		pr.desc = MPT_tr("jacobian evaluations");
-		mpt_solver_module_value_long(&pr.val, &lval);
+		mpt_solver_module_value_long(&pr, &lval);
 		out(usr, &pr);
 		++line;
 		}
@@ -98,7 +98,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 		if (IDAGetNumLinIters(ida->mem, &lval) == IDA_SUCCESS) {
 		pr.name = "liter";
 		pr.desc = MPT_tr("linear iterations");
-		mpt_solver_module_value_long(&pr.val, &lval);
+		mpt_solver_module_value_long(&pr, &lval);
 		out(usr, &pr);
 		++line;
 		}
@@ -106,7 +106,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	if (IDAGetNumNonlinSolvIters(ida->mem, &lval) == IDA_SUCCESS) {
 	pr.name = "niter";
 	pr.desc = MPT_tr("nonlinear iterations");
-	mpt_solver_module_value_long(&pr.val, &lval);
+	mpt_solver_module_value_long(&pr, &lval);
 	out(usr, &pr);
 	++line;
 	}
@@ -114,7 +114,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	    && lval) {
 	pr.name = "etfail";
 	pr.desc = MPT_tr("error test failures");
-	mpt_solver_module_value_long(&pr.val, &lval);
+	mpt_solver_module_value_long(&pr, &lval);
 	out(usr, &pr);
 	++line;
 	}

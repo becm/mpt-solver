@@ -208,13 +208,13 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 	else if (!*name) {
 		prop->name = "mebdfi";
 		prop->desc = "implicit DAE solver with BDF";
-		return mpt_solver_module_value_ivp(&prop->val, &me->ivp);
+		return mpt_solver_module_value_ivp(prop, me ? &me->ivp : 0);
 	}
 	else if (!strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
 		prop->name = "version";
 		prop->desc = "solver release information";
-		mpt_solver_module_value_string(&prop->val, version);
+		mpt_solver_module_value_string(prop, version);
 		return 0;
 	}
 	
@@ -222,65 +222,84 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 	if (name ? !strcasecmp(name, "atol") : pos == ++id) {
 		prop->name = "atol";
 		prop->desc = "absolute tolerances";
-		if (me) {
-			return mpt_solver_module_tol_get(&prop->val, &me->atol);
+		if (!me) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
 		}
-		mpt_solver_module_value_double(&prop->val, &me->atol._d.val);
-		return id;
+		return mpt_solver_module_tol_get(prop, &me->atol);
 	}
 	if (name ? !strcasecmp(name, "rtol") : pos == ++id) {
 		prop->name = "rtol";
 		prop->desc = "relative tolerances";
-		if (me) {
-			return mpt_solver_module_tol_get(&prop->val, &me->rtol);
+		if (!me) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
 		}
-		mpt_solver_module_value_double(&prop->val, &me->rtol._d.val);
-		return id;
+		return mpt_solver_module_tol_get(prop, &me->rtol);
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : pos == ++id) {
 		const char *type;
 		prop->name = "jacobian";
 		prop->desc = "(user) jacobian parameters";
-		prop->val.type = 's';
-		prop->val.ptr = me->mbnd;
-		if (!me) return id;
+		if (!me) {
+			MPT_value_set(&prop->val, 's', 0);
+			return id;
+		}
 		if (me->jbnd) {
 			type = me->jac ? "Banded" : "banded";
 		} else {
 			type = me->jac ? "Full" : "full";
 		}
-		mpt_solver_module_value_string(&prop->val, type);
+		mpt_solver_module_value_string(prop, type);
 		return me->jbnd ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "h0") || !strcasecmp(name, "stepinit") || !strcasecmp(name, "initstep")) : pos == ++id) {
 		prop->name = "stepinit";
 		prop->desc = "explicit initial step size";
-		mpt_solver_module_value_double(&prop->val, &me->h);
-		if (!me) return id;
-		return me->h ? 1 : 0;
+		if (!me) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
+		}
+		return mpt_solver_module_value_double(prop, &me->h);
 	}
 	if (name ? (!strcasecmp(name, "maxstp") || !strcasecmp(name, "maxstep") || !strcasecmp(name, "iwork14")) : pos == ++id) {
 		prop->name = "maxstep";
 		prop->desc = "max. internal steps per call";
-		pos = mpt_solver_module_value_ivec(&prop->val, 14, me ? &me->iwork : 0);
+		if (!me) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		pos = mpt_solver_module_value_ivec(prop, 14, &me->iwork);
 		return me ? pos : id;
 	}
 	if (name ? !strcasecmp(name, "nind1") : pos == ++id) {
 		prop->name = "nind1";
 		prop->desc = "index1 variables";
-		pos = mpt_solver_module_value_ivec(&prop->val, 1, me ? &me->iwork : 0);
+		if (!me) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		pos = mpt_solver_module_value_ivec(prop, 1, &me->iwork);
 		return me ? pos : id;
 	}
 	if (name ? !strcasecmp(name, "nind2") : pos == ++id) {
 		prop->name = "nind2";
 		prop->desc = "index2 variables";
-		pos = mpt_solver_module_value_ivec(&prop->val, 2, me ? &me->iwork : 0);
+		if (!me) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		pos = mpt_solver_module_value_ivec(prop, 2, &me->iwork);
 		return me ? pos : id;
 	}
 	if (name ? !strcasecmp(name, "nind3") : pos == ++id) {
 		prop->name = "nind3";
 		prop->desc = "index3 variables";
-		pos = mpt_solver_module_value_ivec(&prop->val, 3, me ? &me->iwork : 0);
+		if (!me) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		pos = mpt_solver_module_value_ivec(prop, 3, &me->iwork);
 		return me ? pos : id;
 	}
 	/* state properties */
@@ -288,11 +307,22 @@ extern int mpt_mebdfi_get(const MPT_SOLVER_STRUCT(mebdfi) *me, MPT_STRUCT(proper
 		return MPT_ERROR(BadArgument);
 	}
 	if (!strncasecmp(name, "yp", 2)) {
+		const int type = MPT_type_toVector('d');
 		prop->name = "yp";
 		prop->desc = "current deviation vector";
-		mpt_solver_module_value_double(&prop->val, me->y);
-		pos = me->ivp.pint + 1;
-		return me->ivp.neqs * pos;
+		if (!me) {
+			MPT_value_set(&prop->val, type, 0);
+			return id;
+		}
+		else {
+			struct iovec vec;
+			vec.iov_base = me->yp;
+			vec.iov_len  = me->ivp.neqs * (me->ivp.pint + 1) * sizeof(*me->yp);
+			if ((id = mpt_solver_module_value_set(prop, type, &vec, sizeof(vec))) < 0) {
+				return id;
+			}
+			return me->yp ? 1 : 0;
+		}
 	}
 	return MPT_ERROR(BadArgument);
 }

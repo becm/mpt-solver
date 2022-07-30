@@ -19,7 +19,7 @@ extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_
 	
 	pr[0].name = "jacobian";
 	pr[0].desc = "type of jacobian matrix";
-	mpt_solver_module_value_string(&pr[0].val, jac);
+	mpt_solver_module_value_string(&pr[0], jac);
 	out(usr, &pr[0]);
 	++line;
 	}
@@ -30,12 +30,11 @@ extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_
 		
 		pr[0].name = 0;
 		pr[0].desc = MPT_tr("current parameter values");
-		pr[0].val.type = MPT_type_toVector('d');
-		pr[0].val.ptr = pr[0].val._buf;
-		vec = (void *) pr[0].val._buf;
 		
+		vec = (void *) pr[0]._buf;
 		vec->iov_base = n2->pv.iov_base;
 		vec->iov_len  = n2->nls.nval * sizeof(double);
+		MPT_value_set(&pr[0].val, MPT_type_toVector('d'), vec);
 		
 		if (state && (res = mpt_portn2_residuals(n2))) {
 			const char *desc = MPT_tr("current parameters and residuals");
@@ -44,12 +43,11 @@ extern int mpt_portn2_report(const MPT_SOLVER_STRUCT(portn2) *n2, int show, MPT_
 			
 			pr[1].name = "residuals";
 			pr[1].desc = MPT_tr("residuals for current parameters");
-			pr[1].val.type = MPT_type_toVector('d');
-			pr[1].val.ptr = pr[1].val._buf;
-			vec = (void *) pr[1].val._buf;
 			
+			vec = (void *) pr[1]._buf;
 			vec->iov_base = (void *) res;
 			vec->iov_len  = n2->nls.nres * sizeof(double);
+			MPT_value_set(&pr[1].val, MPT_type_toVector('d'), vec);
 			
 			mpt_solver_module_report_properties(pr, 2, 0, desc, out, usr); 
 		}

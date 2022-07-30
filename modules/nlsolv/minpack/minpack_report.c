@@ -35,13 +35,13 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	}
 	pr.name = "method";
 	pr.desc = MPT_tr("minpack solver type");
-	mpt_solver_module_value_string(&pr.val, solv);
+	mpt_solver_module_value_string(&pr, solv);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jacobian";
 	pr.desc = MPT_tr("jacobian matrix type");
-	mpt_solver_module_value_string(&pr.val, jac);
+	mpt_solver_module_value_string(&pr, jac);
 	out(usr, &pr);
 	++line;
 	}
@@ -52,24 +52,22 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 		
 		arg[0].name = 0;
 		arg[0].desc = MPT_tr("current parameter values");
-		arg[0].val.type = MPT_type_toVector('d');
-		arg[0].val.ptr = arg[0].val._buf;
-		vec = (void *) arg[0].val._buf;
-			
+		
+		vec = (void *) arg[0]._buf;
 		vec->iov_base = mpack->val.iov_base;
 		vec->iov_len  = mpack->nls.nval * sizeof(double);
+		MPT_value_set(&arg[0].val, MPT_type_toVector('d'), vec);
 		
 		if (mpack->info) {
 			arg[0].name = "parameters";
 			
 			arg[1].name = "residuals";
 			arg[1].desc = MPT_tr("residuals for current parameters");
-			arg[1].val.type = MPT_type_toVector('d');
-			arg[1].val.ptr = arg[1].val._buf;
-			vec = (void *) arg[1].val._buf;
 			
+			vec = (void *) arg[1]._buf;
 			vec->iov_base = ((double *) mpack->val.iov_base) + mpack->nls.nval;
 			vec->iov_len  = mpack->nls.nres * sizeof(double);
+			MPT_value_set(&arg[0].val, MPT_type_toVector('d'), vec);
 			
 			mpt_solver_module_report_properties(arg, 2, 0, desc, out, usr); 
 		}
@@ -83,14 +81,14 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 	
 	pr.name = "feval";
 	pr.desc = MPT_tr("function evaluations");
-	mpt_solver_module_value_int(&pr.val, &mpack->nfev);
+	mpt_solver_module_value_int(&pr, &mpack->nfev);
 	out(usr, &pr);
 	++line;
 	
 	if (mpack->njev) {
 		pr.name = "jeval";
 		pr.desc = MPT_tr("jacobian evaluations");
-		mpt_solver_module_value_int(&pr.val, &mpack->njev);
+		mpt_solver_module_value_int(&pr, &mpack->njev);
 		out(usr, &pr);
 		++line;
 	}

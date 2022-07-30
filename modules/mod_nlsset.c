@@ -7,9 +7,9 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_module_value_nls(MPT_STRUCT(value) *val, const MPT_NLS_STRUCT(parameters) *par)
+extern int mpt_solver_module_value_nls(MPT_STRUCT(property) *pr, const MPT_NLS_STRUCT(parameters) *par)
 {
-	mpt_solver_module_value_int(val, par ? &par->nval : 0);
+	mpt_solver_module_value_int(pr, par ? &par->nval : 0);
 	return par && (par->nval != 1) ? 1 : 0;
 }
 

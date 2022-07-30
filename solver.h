@@ -650,7 +650,7 @@ extern int mpt_output_solver_history(MPT_INTERFACE(output) *, const double *, in
 
 
 /* solver module tolerance handling */
-extern int mpt_solver_module_tol_get(MPT_STRUCT(value) *, const MPT_SOLVER_TYPE(dvecpar) *);
+extern int mpt_solver_module_tol_get(MPT_STRUCT(property) *, const MPT_SOLVER_TYPE(dvecpar) *);
 extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *, MPT_INTERFACE(convertable) *, double);
 extern int mpt_solver_module_tol_check(MPT_SOLVER_TYPE(dvecpar) *, long , long , double);
 
@@ -664,20 +664,20 @@ extern int mpt_solver_module_nlsset(MPT_NLS_STRUCT(parameters) *, MPT_INTERFACE(
 /* solver module generic type conversion */
 extern int mpt_solver_module_nextval(double *, double , MPT_INTERFACE(convertable) *);
 
+/* set value to buffered value */
+extern int mpt_solver_module_value_set(MPT_STRUCT(property) *, int , const void *, size_t);
 /* set value to equotation count */
-extern int mpt_solver_module_value_ivp(MPT_STRUCT(value) *val, const MPT_IVP_STRUCT(parameters) *);
-extern int mpt_solver_module_value_nls(MPT_STRUCT(value) *val, const MPT_NLS_STRUCT(parameters) *);
+extern int mpt_solver_module_value_ivp(MPT_STRUCT(property) *, const MPT_IVP_STRUCT(parameters) *);
+extern int mpt_solver_module_value_nls(MPT_STRUCT(property) *, const MPT_NLS_STRUCT(parameters) *);
 /* set value to vector data or element */
-extern int mpt_solver_module_value_ivec(MPT_STRUCT(value) *val, long , const struct iovec *);
-extern int mpt_solver_module_value_rvec(MPT_STRUCT(value) *val, long , const struct iovec *);
+extern int mpt_solver_module_value_ivec(MPT_STRUCT(property) *, long , const struct iovec *);
+extern int mpt_solver_module_value_rvec(MPT_STRUCT(property) *, long , const struct iovec *);
 /* set value to scalar type */
-extern void mpt_solver_module_value_double(MPT_STRUCT(value) *val, const double *);
-extern void mpt_solver_module_value_signed(MPT_STRUCT(value) *val, const void *, size_t);
-/* wrappers for signed integer assignments */
-extern void mpt_solver_module_value_int(MPT_STRUCT(value) *val, const int *);
-extern void mpt_solver_module_value_long(MPT_STRUCT(value) *val, const long *);
+extern int mpt_solver_module_value_int(MPT_STRUCT(property) *, const int *);
+extern int mpt_solver_module_value_long(MPT_STRUCT(property) *, const long *);
+extern int mpt_solver_module_value_double(MPT_STRUCT(property) *, const double *);
 /* set value to string */
-extern void mpt_solver_module_value_string(MPT_STRUCT(value) *val, const char *);
+extern int mpt_solver_module_value_string(MPT_STRUCT(property) *, const char *);
 
 /* assign user functions */
 extern int mpt_solver_module_ufcn_ode(long , MPT_IVP_STRUCT(odefcn) *, int , const void *);

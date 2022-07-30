@@ -23,13 +23,13 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, const MPT_SOLVE
 	
 	pr.name = "backend";
 	pr.desc = "used single step backend";
-	mpt_solver_module_value_string(&pr.val, backend);
+	mpt_solver_module_value_string(&pr, backend);
 	out(usr, &pr);
 	++lines;
 	
 	pr.name = "kcol";
 	pr.desc = "collocations";
-	mpt_solver_module_value_int(&pr.val, &kcol);
+	mpt_solver_module_value_int(&pr, &kcol);
 	out(usr, &pr);
 	++lines;
 	}
@@ -38,13 +38,13 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, const MPT_SOLVE
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	mpt_solver_module_value_double(&pr.val, &bac->t);
+	mpt_solver_module_value_double(&pr, &bac->t);
 	out(usr, &pr);
 	++lines;
 	
 	pr.name = "nint";
 	pr.desc = "intervals";
-	mpt_solver_module_value_int(&pr.val, &bac->nint);
+	mpt_solver_module_value_int(&pr, &bac->nint);
 	out(usr, &pr);
 	++lines;
 	}
@@ -53,7 +53,7 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, const MPT_SOLVE
 	pr.name = 0;
 	pr.desc = MPT_tr("BACOL solver state");
 	if (!od) {
-		mpt_solver_module_value_double(&pr.val, &bac->t);
+		mpt_solver_module_value_double(&pr, &bac->t);
 		out(usr, &pr);
 	}
 	else {
@@ -62,7 +62,7 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, const MPT_SOLVE
 		
 		val[0].name = "t";
 		val[0].desc = MPT_tr("current time");
-		mpt_solver_module_value_double(&val[0].val, &bac->t);
+		mpt_solver_module_value_double(&val[0], &bac->t);
 		
 		val[1].name = "grid";
 		val[1].desc = MPT_tr("user-defined output grid data");
@@ -70,11 +70,13 @@ extern int mpt_bacol_report(const MPT_SOLVER_STRUCT(bacol) *bac, const MPT_SOLVE
 		val[2].name = "y";
 		val[2].desc = MPT_tr("data interpolation for output grid");
 		
-		if ((ret = mpt_bacol_output_grid(od, &val[1].val) < 0)
-		 || (ret = mpt_bacol_output_values(od, &val[2].val) < 0)) {
+		if ((ret = mpt_bacol_output_grid(od, (void *) val[1]._buf) < 0)
+		 || (ret = mpt_bacol_output_values(od, (void *) val[2]._buf) < 0)) {
 			out(usr, &val[0]);
 		}
 		else {
+			MPT_value_set(&val[1].val, MPT_type_toVector('d'), val[1]._buf);
+			MPT_value_set(&val[2].val, MPT_type_toVector('d'), val[2]._buf);
 			mpt_solver_module_report_properties(val, 3, pr.name, pr.desc, out, usr);
 		}
 	}

@@ -34,16 +34,14 @@ static int valPropertyGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property)
 		curr = val->pr + pos;
 		pr->name = curr->name;
 		pr->desc = curr->desc;
-		mpt_value_copy(&pr->val, &curr->val);
+		pr->val  = curr->val;
 		
 		return 2;
 	}
 	else if (!*pr->name) {
 		pr->name = "object";
 		pr->desc = MPT_tr("solver module output wrapper");
-		pr->val.domain = 0;
-		pr->val.type = 0;
-		pr->val.ptr = 0;
+		MPT_value_set(&pr->val, 0, 0);
 		return val->len;
 	}
 	for (i = 0; i < val->len; i++) {
@@ -51,7 +49,8 @@ static int valPropertyGet(const MPT_INTERFACE(object) *obj, MPT_STRUCT(property)
 		if (!strcmp(pr->name, curr->name)) {
 			pr->name = curr->name;
 			pr->desc = curr->desc;
-			mpt_value_copy(&pr->val, &curr->val);
+			pr->val  = curr->val;
+			
 			return 1;
 		}
 	}
@@ -101,9 +100,7 @@ extern int mpt_solver_module_report_properties(const MPT_STRUCT(property) *prop,
 	ptr = &val;
 	wrap.name = name;
 	wrap.desc = desc;
-	wrap.val.domain = 0;
-	wrap.val.type = MPT_ENUM(TypeObjectPtr);
-	wrap.val.ptr  = memcpy(wrap.val._buf, &ptr, sizeof(ptr));
+	MPT_property_set_data(&wrap, MPT_ENUM(TypeObjectPtr), &ptr);
 	
 	return out(usr, &wrap);
 }

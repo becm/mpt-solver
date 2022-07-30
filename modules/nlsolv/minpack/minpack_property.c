@@ -239,14 +239,14 @@ extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *mp, MPT_STRUCT(prop
 	else if (!*name) {
 		prop->name = "minpack";
 		prop->desc = "solver for (overdetermined) nonlinear equotations";
-		return mpt_solver_module_value_nls(&prop->val, mp ? &mp->nls : 0);
+		return mpt_solver_module_value_nls(prop, mp ? &mp->nls : 0);
 	}
 	if (name && !strcasecmp(name, "version")) {
 		static const char version[] = BUILD_VERSION"\0";
 		const char *ptr = version;
 		prop->name = "version";
 		prop->desc = "solver release information";
-		mpt_solver_module_value_string(&prop->val, ptr);
+		mpt_solver_module_value_string(prop, ptr);
 		return 0;
 	}
 	
@@ -254,69 +254,87 @@ extern int mpt_minpack_get(const MPT_SOLVER_STRUCT(minpack) *mp, MPT_STRUCT(prop
 	if (name ? !strcasecmp(name, "xtol") : (pos == ++id)) {
 		prop->name = "xtol";
 		prop->desc = "desired relative error";
-		mpt_solver_module_value_double(&prop->val, &mp->xtol);
-		if (!mp) return id;
-		return mp->xtol ? 1 : 0;
+		if (!mp) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
+		}
+		return mpt_solver_module_value_double(prop, &mp->xtol);
 	}
 	if (name ? !strcasecmp(name, "ftol") : (pos == ++id)) {
 		prop->name = "ftol";
 		prop->desc = "desired residual";
-		mpt_solver_module_value_double(&prop->val, &mp->ftol);
-		if (!mp) return id;
+		if (!mp) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
+		}
+		mpt_solver_module_value_double(prop, &mp->ftol);
 		return (mp->ftol != 1e-7) ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "gtol") : (pos == ++id)) {
 		prop->name = "gtol";
 		prop->desc = "desired orthogonality";
-		mpt_solver_module_value_double(&prop->val, &mp->gtol);
-		if (!mp) return id;
-		return mp->gtol ? 1 : 0;
+		if (!mp) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
+		}
+		return mpt_solver_module_value_double(prop, &mp->gtol);
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
 		prop->name = "jacobian";
 		prop->desc = "(user) jacobian settings";
-		mpt_solver_module_value_int(&prop->val, &mp->mu);
-		if (!mp) return id;
+		if (!mp) {
+			MPT_value_set(&prop->val, 'i', 0);
+			return id;
+		}
+		mpt_solver_module_value_int(prop, &mp->mu);
 		return (mp->mu || mp->ml) ? 2 : 0;
 	}
 	if (name ? !strcasecmp(name, "maxfev") : (pos == ++id)) {
 		prop->name = "maxfev";
 		prop->desc = "max. function evaluations per call";
-		mpt_solver_module_value_int(&prop->val, &mp->maxfev);
-		if(!mp) return id;
-		return mp->maxfev ? 1 : 0;
+		if(!mp) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
+		}
+		return mpt_solver_module_value_int(prop, &mp->maxfev);
 	}
 	if (name ? !strncasecmp(name, "fac", 3) : (pos == ++id)) {
 		prop->name = "factor";
 		prop->desc = "initial step bound";
-		mpt_solver_module_value_double(&prop->val, &mp->factor);
-		if (!mp) return id;
+		if(!mp) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
+		}
+		mpt_solver_module_value_double(prop, &mp->factor);
 		return (mp->factor == 200 * (mp->nls.nval + 1)) ? 0 : 1;
 	}
 	if (name ? !strncasecmp(name, "eps", 3) : (pos == ++id)) {
 		prop->name = "epsfcn";
 		prop->desc = "initial forward-difference step length";
-		mpt_solver_module_value_double(&prop->val, &mp->epsfcn);
-		if (!mp) return id;
-		return mp->epsfcn ? 1 : 0;
+		if(!mp) {
+			MPT_value_set(&prop->val, 'd', 0);
+			return id;
+		}
+		return mpt_solver_module_value_double(prop, &mp->epsfcn);
 	}
 	if (name ? !strncasecmp(name, "nprint", 3) : (pos == ++id)) {
 		prop->name = "nprint";
 		prop->desc = "iteration output";
-		prop->val.type = 'b';
-		prop->val.ptr = &mp->nprint;
-		if (!mp) return id;
-		prop->val.ptr = &prop->val._buf;
-		prop->val._buf[0] = mp->nprint;
+		if(!mp) {
+			MPT_value_set(&prop->val, 'b', 0);
+			return id;
+		}
+		mpt_solver_module_value_set(prop, 'b', &mp->nprint, sizeof(mp->nprint));
 		return mp->nprint ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "diag") : (pos == ++id)) {
 		prop->name = "diag";
 		prop->desc = "scale factor for variables";
-		prop->val.type = MPT_type_toVector('d');
-		prop->val.ptr = &mp->diag;
-		if (!mp) return id;
-		mpt_solver_module_value_rvec(&prop->val, 0, &mp->diag);
+		if(!mp) {
+			MPT_value_set(&prop->val, MPT_type_toVector('d'), 0);
+			return id;
+		}
+		mpt_solver_module_value_rvec(prop, 0, &mp->diag);
 		return mp->diag.iov_len ? 1 : 0;
 	}
 	return MPT_ERROR(BadArgument);

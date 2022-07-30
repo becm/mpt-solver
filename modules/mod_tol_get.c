@@ -11,26 +11,24 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_module_tol_get(MPT_STRUCT(value) *val, const MPT_SOLVER_TYPE(dvecpar) *tol)
+extern int mpt_solver_module_tol_get(MPT_STRUCT(property) *pr, const MPT_SOLVER_TYPE(dvecpar) *tol)
 {
 	if (tol->_base) {
-		if (val) {
-			val->type = MPT_type_toVector('d');
-			if (val->_bufsize <= sizeof(*tol)) {
-				val->ptr = memcpy(val->_buf, tol, sizeof(*tol));
+		if (pr) {
+			MPT_value_set(&pr->val, MPT_type_toVector('d'), tol);
+			if (tol && (sizeof(pr->_buf) <= sizeof(*tol))) {
+				pr->val.ptr = memcpy(pr->_buf, tol, sizeof(*tol));
 				return 2;
 			}
-			val->ptr = tol;
 		}
 		return 0;
 	}
-	if (val) {
-		val->type = 'd';
-		if (val->_bufsize <= sizeof(tol->_d.val)) {
-			val->ptr = memcpy(val->_buf, &tol->_d.val, sizeof(tol->_d.val));
+	if (pr) {
+		MPT_value_set(&pr->val, 'd', &tol->_d.val);
+		if (tol && (sizeof(pr->_buf) <= sizeof(tol->_d.val))) {
+			pr->val.ptr = memcpy(pr->_buf, &tol->_d.val, sizeof(tol->_d.val));
 			return 1;
 		}
-		val->ptr = &tol->_d.val;
 	}
 	return 0;
 }

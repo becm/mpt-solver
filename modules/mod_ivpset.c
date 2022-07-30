@@ -13,9 +13,9 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_module_value_ivp(MPT_STRUCT(value) *val, const MPT_IVP_STRUCT(parameters) *par)
+extern int mpt_solver_module_value_ivp(MPT_STRUCT(property) *pr, const MPT_IVP_STRUCT(parameters) *par)
 {
-	mpt_solver_module_value_int(val, par ? &par->neqs : 0);
+	mpt_solver_module_value_int(pr, par ? &par->neqs : 0);
 	return par && (par->neqs != 1 || par->pint) ? 1 : 0;
 }
 

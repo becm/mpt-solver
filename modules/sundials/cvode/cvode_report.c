@@ -44,7 +44,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	  case CV_BDF:   sval = "BDF";   break;
 	  default:       sval = "";
 	}
-	mpt_solver_module_value_string(&pr.val, sval);
+	mpt_solver_module_value_string(&pr, sval);
 	if (out(usr, &pr) > 0) ++line;
 	
 	if (mpt_sundials_report_jac(&cv->sd, out, usr) >= 0) {
@@ -65,7 +65,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	    && (CVodeGetCurrentTime(cv_mem, &dval) == CV_SUCCESS)) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	mpt_solver_module_value_double(&pr.val, &dval);
+	mpt_solver_module_value_double(&pr, &dval);
 	out(usr, &pr);
 	++line;
 	}
@@ -74,7 +74,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	    && (CVodeGetNumSteps(cv_mem, &lval) == CV_SUCCESS)) {
 	pr.name = "n";
 	pr.desc = MPT_tr("integration steps");
-	mpt_solver_module_value_long(&pr.val, &lval);
+	mpt_solver_module_value_long(&pr, &lval);
 	out(usr, &pr);
 	++line;
 	}
@@ -84,7 +84,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	if (!lval || (CVodeGetLastStep(cv_mem, &dval) == CV_SUCCESS)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	mpt_solver_module_value_double(&pr.val, &dval);
+	mpt_solver_module_value_double(&pr, &dval);
 	out(usr, &pr);
 	++line;
 	}
@@ -95,7 +95,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	if (CVodeGetNumRhsEvals(cv_mem, &lval) == CV_SUCCESS) {
 	pr.name = "feval";
 	pr.desc = MPT_tr("function evaluations");
-	mpt_solver_module_value_long(&pr.val, &lval);
+	mpt_solver_module_value_long(&pr, &lval);
 	out(usr, &pr);
 	++line;
 	}
@@ -104,7 +104,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	    && (CVodeGetNumLinSolvSetups(cv_mem, &lval) == CV_SUCCESS)) {
 	pr.name = "lsetup";
 	pr.desc = MPT_tr("linear solver setups");
-	mpt_solver_module_value_long(&pr.val, &lval);
+	mpt_solver_module_value_long(&pr, &lval);
 	out(usr, &pr);
 	++line;
 	}
@@ -112,7 +112,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	if (CVodeGetNumNonlinSolvIters(cv_mem, &lval) == CV_SUCCESS) {
 	pr.name = "nliter";
 	pr.desc = MPT_tr("nonlinear solver iterations");
-	mpt_solver_module_value_long(&pr.val, &lval);
+	mpt_solver_module_value_long(&pr, &lval);
 	out(usr, &pr);
 	++line;
 	}
@@ -121,7 +121,7 @@ extern int mpt_sundials_cvode_report(const MPT_SOLVER_STRUCT(cvode) *cv, int sho
 	    && lval) {
 	pr.name = "nlfail";
 	pr.desc = MPT_tr("nonlinear solver conv. fail");
-	mpt_solver_module_value_long(&pr.val, &lval);
+	mpt_solver_module_value_long(&pr, &lval);
 	out(usr, &pr);
 	++line;
 	}

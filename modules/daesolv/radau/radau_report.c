@@ -26,16 +26,16 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TY
 		
 		val[0].name = "jac_type";
 		val[0].desc = MPT_tr("jacobian type");
-		mpt_solver_module_value_string(&val[0].val, rd->jac ? "Banded" : "banded");
+		mpt_solver_module_value_string(&val[0], rd->jac ? "Banded" : "banded");
 		val[1].name = "ml";
 		val[1].desc = MPT_tr("jacobian lower band size");
-		mpt_solver_module_value_int(&val[1].val, &rd->mljac);
+		mpt_solver_module_value_int(&val[1], &rd->mljac);
 		val[2].name = "mu";
 		val[2].desc = MPT_tr("jacobian upper band size");
-		mpt_solver_module_value_int(&val[2].val, &rd->mujac);
+		mpt_solver_module_value_int(&val[2], &rd->mujac);
 		val[3].name = "jac_method";
 		val[3].desc = MPT_tr("jacobian method");
-		mpt_solver_module_value_string(&val[3].val, jac);
+		mpt_solver_module_value_string(&val[3], jac);
 		
 		mpt_solver_module_report_properties(val, 4, pr.name, pr.desc, out, usr);
 	} else {
@@ -43,10 +43,10 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TY
 		
 		val[0].name = "jac_type";
 		val[0].desc = MPT_tr("jacobian type");
-		mpt_solver_module_value_string(&val[0].val, rd->jac ? "Full" : "full");
+		mpt_solver_module_value_string(&val[0], rd->jac ? "Full" : "full");
 		val[1].name = "jac_method";
 		val[1].desc = MPT_tr("jacobian method");
-		mpt_solver_module_value_string(&val[1].val, jac);
+		mpt_solver_module_value_string(&val[1], jac);
 		
 		mpt_solver_module_report_properties(val, 2, pr.name, pr.desc, out, usr);
 	}
@@ -60,7 +60,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TY
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	mpt_solver_module_value_double(&pr.val, &rd->t);
+	mpt_solver_module_value_double(&pr, &rd->t);
 	out(usr, &pr);
 	++line;
 	}
@@ -68,7 +68,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TY
 	pr.name = "n";
 	pr.desc = "integration steps";
 	val = rd->count.st.nsteps;
-	mpt_solver_module_value_int(&pr.val, &val);
+	mpt_solver_module_value_int(&pr, &val);
 	out(usr, &pr);
 	++line;
 	}
@@ -76,7 +76,7 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TY
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = "current step size";
-	mpt_solver_module_value_double(&pr.val, &rd->h);
+	mpt_solver_module_value_double(&pr, &rd->h);
 	out(usr, &pr);
 	++line;
 	}
@@ -89,28 +89,28 @@ extern int mpt_radau_report(const MPT_SOLVER_STRUCT(radau) *rd, int show, MPT_TY
 		pr.name = "nacc";
 		pr.desc = MPT_tr("accepted steps");
 		val = rd->count.st.naccpt;
-		mpt_solver_module_value_int(&pr.val, &val);
+		mpt_solver_module_value_int(&pr, &val);
 		out(usr, &pr);
 		++line;
 	}
 	pr.name = "feval";
 	pr.desc = MPT_tr("function evaluations");
 	val = rd->count.st.nfev;
-	mpt_solver_module_value_int(&pr.val, &val); 
+	mpt_solver_module_value_int(&pr, &val); 
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jeval";
 	pr.desc = MPT_tr("jacobian evaluations");
 	val = rd->count.st.njac;
-	mpt_solver_module_value_int(&pr.val, &val); 
+	mpt_solver_module_value_int(&pr, &val); 
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
 	val = rd->count.st.nlud;
-	mpt_solver_module_value_int(&pr.val, &val); 
+	mpt_solver_module_value_int(&pr, &val); 
 	out(usr, &pr);
 	++line;
 	

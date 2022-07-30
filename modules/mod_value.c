@@ -9,19 +9,17 @@
 
 #include "../solver.h"
 
-extern int mpt_solver_module_value_rvec(MPT_STRUCT(value) *val, long pos, const struct iovec *vec)
+extern int mpt_solver_module_value_rvec(MPT_STRUCT(property) *pr, long pos, const struct iovec *vec)
 {
 	double *ptr;
 	size_t len;
 	
 	if (!pos) {
-		val->domain = 0;
-		val->type = MPT_type_toVector('d');
-		if (vec && val->_bufsize >= sizeof(*vec)) {
-			val->ptr = memcpy(&val->_buf, vec, sizeof(*vec));
+		MPT_value_set(&pr->val, MPT_type_toVector('d'), vec);
+		if (vec && (sizeof(pr->_buf) >= sizeof(*vec))) {
+			pr->val.ptr = memcpy(&pr->_buf, vec, sizeof(*vec));
 			return vec->iov_len ? 3 : 2;
 		}
-		val->ptr = vec;
 		return (vec && vec->iov_len) ? 1 : 0;
 	}
 	if (!vec) {
@@ -36,28 +34,24 @@ extern int mpt_solver_module_value_rvec(MPT_STRUCT(value) *val, long pos, const 
 	
 	if (!(ptr = vec->iov_base)
 	  || vec->iov_len < len) {
-		val->domain = 0;
-		val->type = 'd';
-		val->ptr = 0;
+		MPT_value_set(&pr->val, 'd', 0);
 		return 0;
 	}
 	ptr += pos;
-	mpt_solver_module_value_double(val, ptr);
+	mpt_solver_module_value_double(pr, ptr);
 	return *ptr ? 1 : 0;
 }
-extern int mpt_solver_module_value_ivec(MPT_STRUCT(value) *val, long pos, const struct iovec *vec)
+extern int mpt_solver_module_value_ivec(MPT_STRUCT(property) *pr, long pos, const struct iovec *vec)
 {
 	int *ptr;
 	size_t len;
 	
 	if (!pos) {
-		val->domain = 0;
-		val->type = MPT_type_toVector('i');
-		if (vec && val->_bufsize >= sizeof(*vec)) {
-			val->ptr = memcpy(&val->_buf, vec, sizeof(*vec));
+		MPT_value_set(&pr->val, MPT_type_toVector('i'), vec);
+		if (vec && (sizeof(pr->_buf) >= sizeof(*vec))) {
+			pr->val.ptr = memcpy(&pr->_buf, vec, sizeof(*vec));
 			return vec->iov_len ? 3 : 2;
 		}
-		val->ptr = vec;
 		return (vec && vec->iov_len) ? 1 : 0;
 	}
 	if (!vec) {
@@ -72,29 +66,31 @@ extern int mpt_solver_module_value_ivec(MPT_STRUCT(value) *val, long pos, const 
 	
 	if (!(ptr = vec->iov_base)
 	  || vec->iov_len < len) {
-		val->domain = 0;
-		val->type = 'i';
-		val->ptr = 0;
+		MPT_value_set(&pr->val, 'i', 0);
 		return 0;
 	}
 	ptr += pos;
-	mpt_solver_module_value_int(val, ptr);
+	mpt_solver_module_value_int(pr, ptr);
 	return *ptr ? 1 : 0;
 }
 
-extern void mpt_solver_module_value_double(MPT_STRUCT(value) *val, const double *ptr)
+extern int mpt_solver_module_value_set(MPT_STRUCT(property) *pr, int type, const void *ptr, size_t len)
 {
-	val->domain = 0;
-	val->type = 'd';
-	if (ptr && val->_bufsize >= sizeof(*ptr)) {
-		val->ptr = memcpy(val->_buf, ptr, sizeof(*ptr));
-	} else {
-		val->ptr = ptr;
+	if (len > sizeof(pr->_buf)) {
+		return MPT_ERROR(MissingBuffer);
 	}
+	if (ptr) {
+		ptr = memcpy(pr->_buf, ptr, len);
+	}
+	else {
+		ptr = memset(pr->_buf, 0, len);
+	}
+	MPT_value_set(&pr->val, type, ptr);
+	return sizeof(pr->_buf) - len;
 }
-
-extern void mpt_solver_module_value_signed(MPT_STRUCT(value) *val, const void *ptr, size_t len)
+extern int mpt_solver_module_value_int(MPT_STRUCT(property) *pr, const int *ptr)
 {
+	int len = sizeof(*ptr);
 	int type;
 	switch (len) {
 		case sizeof(int8_t) : type = 'b'; break;
@@ -105,36 +101,48 @@ extern void mpt_solver_module_value_signed(MPT_STRUCT(value) *val, const void *p
 			ptr = 0;
 			type = 0;
 	}
-	val->domain = 0;
-	val->type = type;
-	if (ptr && len <= val->_bufsize) {
-		val->ptr = memcpy(val->_buf, ptr, len);
-	} else {
-		val->ptr = ptr;
+	if (mpt_solver_module_value_set(pr, type, ptr, len) < 0) {
+		MPT_value_set(&pr->val, type, ptr);
 	}
+	return ptr && *ptr != 0;
 }
-extern void mpt_solver_module_value_int(MPT_STRUCT(value) *val, const int *ptr)
+extern int mpt_solver_module_value_long(MPT_STRUCT(property) *pr, const long *ptr)
 {
-	mpt_solver_module_value_signed(val, ptr, sizeof(*ptr));
-}
-extern void mpt_solver_module_value_long(MPT_STRUCT(value) *val, const long *ptr)
-{
-	mpt_solver_module_value_signed(val, ptr, sizeof(*ptr));
+	int len = sizeof(*ptr);
+	int type;
+	switch (len) {
+		case sizeof(int8_t) : type = 'b'; break;
+		case sizeof(int16_t): type = 'n'; break;
+		case sizeof(int32_t): type = 'i'; break;
+		case sizeof(int64_t): type = 'x'; break;
+		default:
+			ptr = 0;
+			type = 0;
+	}
+	if (mpt_solver_module_value_set(pr, type, ptr, len) < 0) {
+		MPT_value_set(&pr->val, type, ptr);
+	}
+	return ptr && *ptr != 0;
 }
 
-extern void mpt_solver_module_value_string(MPT_STRUCT(value) *val, const char *ptr)
+extern int mpt_solver_module_value_double(MPT_STRUCT(property) *pr, const double *ptr)
 {
-	val->domain = 0;
-	val->type = 's';
-	if (val->_bufsize >= sizeof(ptr)) {
-		size_t len;
-		/* save full data in value */
-		if (ptr && (((len = strlen(ptr)) + sizeof(ptr)) < val->_bufsize)) {
-			ptr = memcpy(val->_buf + sizeof(ptr), ptr, len + 1);
-		}
-		*((const char **) val->_buf) = ptr;
-		val->ptr = val->_buf;
-	} else {
-		val->ptr = 0;
+	if (mpt_solver_module_value_set(pr, 'd', ptr, sizeof(*ptr)) < 0) {
+		MPT_value_set(&pr->val, 'd', ptr);
 	}
+	return ptr && *ptr != 0.0;
+}
+
+extern int mpt_solver_module_value_string(MPT_STRUCT(property) *pr, const char *ptr)
+{
+	int ret = ptr ? 1 : 0;
+	size_t len;
+	/* save full data in buffer area */
+	if (ptr && (((len = strlen(ptr)) + sizeof(ptr)) < sizeof(pr->_buf))) {
+		ptr = memcpy(pr->_buf + sizeof(ptr), ptr, len + 1);
+		ret = 2;
+	}
+	*((const char **) pr->_buf) = ptr;
+	MPT_value_set(&pr->val, 's', pr->_buf);
+	return ret;
 }

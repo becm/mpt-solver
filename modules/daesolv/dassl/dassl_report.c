@@ -27,16 +27,16 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TY
 		
 		val[0].name = "jac_type";
 		val[0].desc = MPT_tr("jacobian type");
-		mpt_solver_module_value_string(&val[0].val, da->info[4] ? "Banded" : "banded");
+		mpt_solver_module_value_string(&val[0], da->info[4] ? "Banded" : "banded");
 		val[1].name = "ml";
 		val[1].desc = MPT_tr("jacobian lower band size");
-		mpt_solver_module_value_int(&val[1].val, &iwork[0]);
+		mpt_solver_module_value_int(&val[1], &iwork[0]);
 		val[2].name = "mu";
 		val[2].desc = MPT_tr("jacobian upper band size");
-		mpt_solver_module_value_int(&val[2].val, &iwork[1]);
+		mpt_solver_module_value_int(&val[2], &iwork[1]);
 		val[3].name = "jac_method";
 		val[3].desc = MPT_tr("jacobian method");
-		mpt_solver_module_value_string(&val[3].val, jac);
+		mpt_solver_module_value_string(&val[3], jac);
 		
 		mpt_solver_module_report_properties(val, 4, pr.name, pr.desc, out, usr);
 	} else {
@@ -44,10 +44,10 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TY
 		
 		val[0].name = "jac_type";
 		val[0].desc = MPT_tr("jacobian type");
-		mpt_solver_module_value_string(&val[0].val, da->info[4] ? "Full" : "full");
+		mpt_solver_module_value_string(&val[0], da->info[4] ? "Full" : "full");
 		val[1].name = "jac_method";
 		val[1].desc = MPT_tr("jacobian method");
-		mpt_solver_module_value_string(&val[1].val, jac);
+		mpt_solver_module_value_string(&val[1], jac);
 		
 		mpt_solver_module_report_properties(val, 2, pr.name, pr.desc, out, usr);
 	}
@@ -63,9 +63,9 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TY
 	pr.name = "t";
 	pr.desc = "value of independent variable";
 	if (lr > 3) {
-		mpt_solver_module_value_double(&pr.val, &rwork[3]);
+		mpt_solver_module_value_double(&pr, &rwork[3]);
 	} else {
-		mpt_solver_module_value_double(&pr.val, &da->t);
+		mpt_solver_module_value_double(&pr, &da->t);
 	}
 	out(usr, &pr);
 	++line;
@@ -74,7 +74,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TY
 	if (show & (MPT_SOLVER_ENUM(Report) | MPT_SOLVER_ENUM(Status)) && li > 10) {
 	pr.name = "n";
 	pr.desc = "integration steps";
-	mpt_solver_module_value_int(&pr.val, &iwork[10]);
+	mpt_solver_module_value_int(&pr, &iwork[10]);
 	out(usr, &pr);
 	++line;
 	}
@@ -82,7 +82,7 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TY
 	if (show & MPT_SOLVER_ENUM(Status) && lr > 2) {
 	pr.name = "h";
 	pr.desc = "current step size";
-	mpt_solver_module_value_double(&pr.val, &rwork[2]);
+	mpt_solver_module_value_double(&pr, &rwork[2]);
 	out(usr, &pr);
 	++line;
 	}
@@ -91,25 +91,25 @@ extern int mpt_dassl_report(const MPT_SOLVER_STRUCT(dassl) *da, int show, MPT_TY
 	
 	pr.name = "reval";
 	pr.desc = "residual evaluations";
-	mpt_solver_module_value_int(&pr.val, &iwork[11]);
+	mpt_solver_module_value_int(&pr, &iwork[11]);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jeval";
 	pr.desc = "jacobian evaluations";
-	mpt_solver_module_value_int(&pr.val, &iwork[12]);
+	mpt_solver_module_value_int(&pr, &iwork[12]);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "etfail";
 	pr.desc = "error test failures";
-	mpt_solver_module_value_int(&pr.val, &iwork[13]);
+	mpt_solver_module_value_int(&pr, &iwork[13]);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "cvfail";
 	pr.desc = "convergence failures";
-	mpt_solver_module_value_int(&pr.val, &iwork[14]);
+	mpt_solver_module_value_int(&pr, &iwork[14]);
 	out(usr, &pr);
 	++line;
 	}

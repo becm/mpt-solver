@@ -9,43 +9,39 @@
 
 #include "bacol.h"
 
-extern int mpt_bacol_output_grid(const MPT_SOLVER_STRUCT(bacol_out) *bo, MPT_STRUCT(value) *val)
+extern int mpt_bacol_output_grid(const MPT_SOLVER_STRUCT(bacol_out) *bo, struct iovec *vec)
 {
-	struct iovec *vec;
 	if (!bo->nint) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (val->_bufsize < sizeof(*vec)) {
-		return MPT_ERROR(MissingBuffer);
+	if (!vec) {
+		return bo->nint;
 	}
-	val->domain = 0;
-	val->type = MPT_type_toVector('d');
-	val->ptr = vec = (void *) val->_buf;
-	
+	if (!bo->_val.iov_base) {
+		return MPT_ERROR(MissingData);
+	}
 	vec->iov_base = bo->_val.iov_base;
 	vec->iov_len  = (bo->nint + 1) * sizeof(double);
 	
 	return bo->neqs;
 }
 
-extern int mpt_bacol_output_values(const MPT_SOLVER_STRUCT(bacol_out) *bo, MPT_STRUCT(value) *val)
+extern int mpt_bacol_output_values(const MPT_SOLVER_STRUCT(bacol_out) *bo, struct iovec *vec)
 {
-	struct iovec *vec;
 	double *u;
 	long len;
-	if (!bo->nint || !bo->neqs || !(u = bo->_val.iov_base)) {
+	if (!bo->nint || !bo->neqs) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (val->_bufsize < sizeof(*vec)) {
-		return MPT_ERROR(MissingBuffer);
+	if (!vec) {
+		return bo->neqs;
 	}
-	val->domain = 0;
-	val->type = MPT_type_toVector('d');
-	val->ptr = vec = (void *) val->_buf;
-
+	if (!(u = bo->_val.iov_base)) {
+		return MPT_ERROR(MissingData);
+	}
 	len = (bo->nint + 1) * bo->neqs;
 	vec->iov_base = u + bo->nint + 1;
-	vec->iov_len = len * sizeof(*u);
+	vec->iov_len  = len * sizeof(*u);
 	
 	return bo->neqs;
 }

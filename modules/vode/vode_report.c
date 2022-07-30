@@ -33,18 +33,18 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	val = (vd->meth == 2) ? "BDF" : "Adams";
 	
 	if (!vd->miter || vd->jsv < 0) {
-		mpt_solver_module_value_string(&pr.val, val);
+		mpt_solver_module_value_string(&pr, val);
 		out(usr, &pr);
 	}
 	else {
 		more[0].name = "sol_method";
 		more[0].desc = MPT_tr("solver method");
-		mpt_solver_module_value_string(&more[0].val, val);
+		mpt_solver_module_value_string(&more[0], val);
 		
 		more[1].name = "sol_save";
 		more[1].desc = MPT_tr("reuse data");
 		val = "saved";
-		mpt_solver_module_value_string(&more[1].val, val);
+		mpt_solver_module_value_string(&more[1], val);
 		
 		mpt_solver_module_report_properties(more, 2, pr.name, pr.desc, out, usr);
 	}
@@ -59,18 +59,18 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 		
 		more[1].name = "ml";
 		more[1].desc = MPT_tr("jacobian lower band size");
-		MPT_value_set_data(&more[1].val, 'i', &ml);
+		MPT_property_set_data(&more[1], 'i', &ml);
 		
 		more[2].name = "mu";
 		more[2].desc = MPT_tr("jacobian upper band size");
-		MPT_value_set_data(&more[2].val, 'i', &mu);
+		MPT_property_set_data(&more[2], 'i', &mu);
 	}
 	
 	switch (vd->miter) {
 		case 1:
 			val = "Full";
 			if (vd->jac) {
-				mpt_solver_module_value_string(&pr.val, val);
+				mpt_solver_module_value_string(&pr, val);
 				out(usr, &pr);
 				break;
 			}
@@ -80,23 +80,23 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 			if (vd->jac) {
 				more[0].name = "jac_method";
 				more[0].desc = MPT_tr("jacobian method");
-				mpt_solver_module_value_string(&more[0].val, val);
+				mpt_solver_module_value_string(&more[0], val);
 				
 				more[1].name = "jac_type";
 				more[1].desc = MPT_tr("jacobian type");
 				val = "numerical";
-				mpt_solver_module_value_string(&more[1].val, val);
+				mpt_solver_module_value_string(&more[1], val);
 				
 				mpt_solver_module_report_properties(more, 2, pr.name, pr.desc, out, usr);
 			}
 			else {
-				mpt_solver_module_value_string(&pr.val, val);
+				mpt_solver_module_value_string(&pr, val);
 				out(usr, &pr);
 			}
 			break;
 		case 3:
 			val = "diagonal";
-			mpt_solver_module_value_string(&pr.val, val);
+			mpt_solver_module_value_string(&pr, val);
 			out(usr, &pr);
 			break;
 		case 4:
@@ -104,7 +104,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 			if (vd->jac) {
 				more[0].name = "jac_method";
 				more[0].desc = MPT_tr("jacobian method");
-				mpt_solver_module_value_string(&more[0].val, val);
+				mpt_solver_module_value_string(&more[0], val);
 				
 				mpt_solver_module_report_properties(more, li > 1 ? 3 : 1, pr.name, pr.desc, out, usr);
 				break;
@@ -114,7 +114,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 			val = "banded";
 			more[0].name = "jac_method";
 			more[0].desc = MPT_tr("jacobian method");
-			mpt_solver_module_value_string(&more[0].val, val);
+			mpt_solver_module_value_string(&more[0], val);
 			
 			val = "numerical";
 			if (li > 1) {
@@ -122,7 +122,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 					more[3].name = "jac_type";
 					more[3].desc = MPT_tr("jacobian type");
 					val = "numerical";
-					mpt_solver_module_value_string(&more[3].val, val);
+					mpt_solver_module_value_string(&more[3], val);
 					
 				}
 				mpt_solver_module_report_properties(more, vd->jac ? 4 : 3, pr.name, pr.desc, out, usr);
@@ -132,14 +132,14 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 					more[1].name = "jac_type";
 					more[1].desc = MPT_tr("jacobian type");
 					val = "numerical";
-					mpt_solver_module_value_string(&more[1].val, val);
+					mpt_solver_module_value_string(&more[1], val);
 				}
 				mpt_solver_module_report_properties(more, vd->jac ? 2 : 1, pr.name, pr.desc, out, usr);
 			}
 			break;
 		default:
 			val = "none";
-			mpt_solver_module_value_string(&pr.val, val);
+			mpt_solver_module_value_string(&pr, val);
 			out(usr, &pr);
 	}
 	++line;
@@ -153,9 +153,9 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
 	if (lr > 12) {
-		mpt_solver_module_value_double(&pr.val, &rwk[12]);
+		mpt_solver_module_value_double(&pr, &rwk[12]);
 	} else {
-		mpt_solver_module_value_double(&pr.val, &vd->t);
+		mpt_solver_module_value_double(&pr, &vd->t);
 	}
 	out(usr, &pr);
 	++line;
@@ -164,7 +164,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	if (show & (MPT_SOLVER_ENUM(Status) | MPT_SOLVER_ENUM(Report)) && li > 10) {
 	pr.name = "n";
 	pr.desc = MPT_tr("integration steps");
-	mpt_solver_module_value_int(&pr.val, &iwk[10]);
+	mpt_solver_module_value_int(&pr, &iwk[10]);
 	out(usr, &pr);
 	++line;
 	}
@@ -172,7 +172,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	if (show & MPT_SOLVER_ENUM(Status) && lr > 10) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	mpt_solver_module_value_double(&pr.val, &rwk[10]);
+	mpt_solver_module_value_double(&pr, &rwk[10]);
 	out(usr, &pr);
 	++line;
 	}
@@ -180,14 +180,14 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	if ((show & MPT_SOLVER_ENUM(Report)) && li > 11) {
 	pr.name = "feval";
 	pr.desc = MPT_tr("f evaluations");
-	mpt_solver_module_value_int(&pr.val, &iwk[11]);
+	mpt_solver_module_value_int(&pr, &iwk[11]);
 	out(usr, &pr);
 	++line;
 	
 	if (li > 12 && iwk[12]) {
 	pr.name = "jeval";
 	pr.desc = MPT_tr("jacobian evaluations");
-	mpt_solver_module_value_int(&pr.val, &iwk[12]);
+	mpt_solver_module_value_int(&pr, &iwk[12]);
 	out(usr, &pr);
 	++line;
 	}
@@ -195,7 +195,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	if (li > 18 && iwk[18]) {
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
-	mpt_solver_module_value_int(&pr.val, &iwk[18]);
+	mpt_solver_module_value_int(&pr, &iwk[18]);
 	out(usr, &pr);
 	++line;
 	}
@@ -203,7 +203,7 @@ extern int mpt_vode_report(const MPT_SOLVER_STRUCT(vode) *vd, int show, MPT_TYPE
 	if (li > 19 && iwk[19]) {
 	pr.name = "niter";
 	pr.desc = MPT_tr("nonlinear (Newton) iterations");
-	mpt_solver_module_value_int(&pr.val, &iwk[19]);
+	mpt_solver_module_value_int(&pr, &iwk[19]);
 	out(usr, &pr);
 	++line;
 	}

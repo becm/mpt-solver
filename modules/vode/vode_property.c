@@ -266,13 +266,23 @@ extern int mpt_vode_set(MPT_SOLVER_STRUCT(vode) *vd, const char *name, MPT_INTER
 	return MPT_ERROR(BadArgument);
 }
 
-static int getiwork(MPT_STRUCT(value) *val, int pos, const MPT_SOLVER_STRUCT(vode) *vd)
+static int getiwork(MPT_STRUCT(property) *pr, int pos, const MPT_SOLVER_STRUCT(vode) *vd)
 {
-	return mpt_solver_module_value_ivec(val, pos, vd ? &vd->iwork : 0);
+	if (!vd) {
+		int type = pos ? 'i' : MPT_type_toVector('i');
+		MPT_value_set(&pr->val, type, 0);
+		return 0;
+	}
+	return mpt_solver_module_value_ivec(pr, pos, &vd->iwork);
 }
-static int getrwork(MPT_STRUCT(value) *val, int pos, const MPT_SOLVER_STRUCT(vode) *vd)
+static int getrwork(MPT_STRUCT(property) *pr, int pos, const MPT_SOLVER_STRUCT(vode) *vd)
 {
-	return mpt_solver_module_value_rvec(val, pos, vd ? &vd->rwork : 0);
+	if (!vd) {
+		int type = pos ? 'd' : MPT_type_toVector('d');
+		MPT_value_set(&pr->val, type, 0);
+		return 0;
+	}
+	return mpt_solver_module_value_rvec(pr, pos, &vd->rwork);
 }
 
 extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) *prop)
@@ -291,7 +301,7 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 	else if (!*name) {
 		prop->name = "vode";
 		prop->desc = "implicit ODE solver with BDF";
-		mpt_solver_module_value_ivp(&prop->val, &vd->ivp);
+		mpt_solver_module_value_ivp(prop, &vd->ivp);
 		return vd->ivp.neqs == 1 && !vd->ivp.pint ? 0 : 1;
 	}
 	else if (!strcasecmp(name, "version")) {
@@ -299,7 +309,7 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 		const char *ptr = version;
 		prop->name = "version";
 		prop->desc = "solver release information";
-		mpt_solver_module_value_string(&prop->val, ptr);
+		mpt_solver_module_value_string(prop, ptr);
 		return 0;
 	}
 	
@@ -308,94 +318,92 @@ extern int mpt_vode_get(const MPT_SOLVER_STRUCT(vode) *vd, MPT_STRUCT(property) 
 		prop->name = "atol";
 		prop->desc = "absolute tolerances";
 		if (vd) {
-			return mpt_solver_module_tol_get(&prop->val, &vd->atol);
+			return mpt_solver_module_tol_get(prop, &vd->atol);
 		}
-		mpt_solver_module_value_double(&prop->val, &vd->atol._d.val);
+		MPT_value_set(&prop->val, 'd', 0);
 		return id;
 	}
 	if (name ? !strcasecmp(name, "rtol") : (pos == ++id)) {
 		prop->name = "rtol";
 		prop->desc = "relative tolerances";
 		if (vd) {
-			return mpt_solver_module_tol_get(&prop->val, &vd->rtol);
+			return mpt_solver_module_tol_get(prop, &vd->rtol);
 		}
-		mpt_solver_module_value_double(&prop->val, &vd->rtol._d.val);
+		MPT_value_set(&prop->val, 'd', 0);
 		return id;
 	}
 	if (name ? !strncasecmp(name, "jac", 3) : (pos == ++id)) {
 		const int8_t *val = &vd->meth;
+		const int type = 'b';
 		prop->name = "jacobian";
 		prop->desc = "(user) jacobian parameters";
-		prop->val.type = 'b';
-		prop->val.ptr = val;
-		if (!vd) return id;
-		if (prop->val._bufsize) {
-			prop->val.ptr = prop->val._buf;
-			prop->val._buf[0] = *val;
+		if (!vd) {
+			MPT_value_set(&prop->val, type, 0);
+			return id;
 		}
+		MPT_property_set_data(prop, type, val);
 		return vd->miter ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "itask", 2) : (pos == ++id)) {
 		const int16_t *val = &vd->itask;
+		const int type = 'n';
 		prop->name = "itask";
 		prop->desc = "step control";
-		prop->val.type = 'n';
-		prop->val.ptr = val;
-		if (!vd) return id;
-		if (prop->val._bufsize >= sizeof(*val)) {
-			prop->val.ptr = memcpy(prop->val._buf, val, sizeof(*val));
+		if (!vd) {
+			MPT_value_set(&prop->val, type, 0);
+			return id;
 		}
+		MPT_property_set_data(prop, type, val);
 		return (vd->itask != 1) ? 1 : 0;
 	}
 	if (name ? !strncasecmp(name, "method", 4) : (pos == ++id)) {
 		const int8_t *val = &vd->meth;
+		const int type = 'b';
 		prop->name = "method";
 		prop->desc = "iteration method";
-		prop->val.type = 'b';
-		prop->val.ptr = &val;
-		if (!vd) return id;
-		if (prop->val._bufsize) {
-			prop->val.ptr = prop->val._buf;
-			prop->val._buf[0] = *val;
+		if (!vd) {
+			MPT_value_set(&prop->val, type, 0);
+			return id;
 		}
+		MPT_property_set_data(prop, type, val);
 		return (vd->meth != 1) ? 1 : 0;
 	}
 	/* integer array parameter */
 	if (name ? (!strcasecmp(name, "maxord") || !strcasecmp(name, "iwork5")) : (pos == ++id)) {
 		prop->name = "maxord";
 		prop->desc = "maximum order to be allowed";
-		pos = getiwork(&prop->val, 5, vd);
+		pos = getiwork(prop, 5, vd);
 		return vd ? pos : id;
 	}
 	if (name ? (!strcasecmp(name, "mxstep") || !strcasecmp(name, "iwork6")) : (pos == ++id)) {
 		prop->name = "mxstep";
 		prop->desc = "max. internal steps per call";
-		pos = getiwork(&prop->val, 6, vd);
+		pos = getiwork(prop, 6, vd);
 		return vd ? pos : id;
 	}
 	if (name ? (!strcasecmp(name, "mxhnil") || !strcasecmp(name, "iwork7")) : (pos == ++id)) {
 		prop->name = "mxhnil";
 		prop->desc = "max. warnings for 't + h = t'";
-		pos = getiwork(&prop->val, 7, vd);
+		pos = getiwork(prop, 7, vd);
 		return vd ? pos : id;
 	}
 	/* real array parameter */
 	if (name ? (!strcasecmp(name, "h0") || !strcasecmp(name, "rwork5")) : (pos == ++id)) {
 		prop->name = "h0";
 		prop->desc = "explicit initial steps size";
-		pos = getrwork(&prop->val, 5, vd);
+		pos = getrwork(prop, 5, vd);
 		return vd ? pos : id;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "rwork6")) : (pos == ++id)) {
 		prop->name = "hmax";
 		prop->desc = "maximal internal steps size";
-		pos = getrwork(&prop->val, 6, vd);
+		pos = getrwork(prop, 6, vd);
 		return vd ? pos : id;
 	}
 	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "rwork7")) : (pos == ++id)) {
 		prop->name = "hmin";
 		prop->desc = "maximal internal steps size";
-		pos = getrwork(&prop->val, 7, vd);
+		pos = getrwork(prop, 7, vd);
 		return vd ? pos : id;
 	}
 	return MPT_ERROR(BadArgument);

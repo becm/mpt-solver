@@ -23,6 +23,7 @@ MPT_STRUCT(iterProfile) {
 	MPT_INTERFACE(iterator) _it;
 	
 	MPT_STRUCT(value) val;
+	struct iovec vec;
 	double t;
 	long pos;
 	long len;
@@ -35,19 +36,11 @@ static const MPT_STRUCT(value) *iterProfileValue(MPT_INTERFACE(iterator) *it)
 	double *val = (void *) (p + 1);
 	MPT_INTERFACE(metatype) **mptr = (void *) (val  + p->neqs);
 	MPT_INTERFACE(iterator) **iptr = (void *) (mptr + p->neqs);
-	struct iovec *vec;
 	int i;
 	
 	if (p->pos >= p->len) {
 		return 0;
 	}
-	
-	p->val.type = MPT_type_toVector('d');
-	p->val.ptr = p->val._buf;
-	vec = (struct iovec *) p->val._buf;
-	
-	vec->iov_base = val;
-	vec->iov_len = p->neqs * sizeof(double);
 	
 	for (i = 0; i < p->neqs; ++i) {
 		MPT_INTERFACE(iterator) *it;
@@ -62,8 +55,9 @@ static const MPT_STRUCT(value) *iterProfileValue(MPT_INTERFACE(iterator) *it)
 			return 0;
 		}
 	}
-	vec->iov_base = val;
-	vec->iov_len = i * sizeof(*val);
+	MPT_value_set(&p->val, MPT_type_toVector('d'), &p->vec);
+	p->vec.iov_base = val;
+	p->vec.iov_len = i * sizeof(*val);
 	
 	return &p->val;
 }

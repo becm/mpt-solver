@@ -26,16 +26,16 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 		
 		val[0].name = "jac_type";
 		val[0].desc = MPT_tr("jacobian type");
-		mpt_solver_module_value_string(&val[0].val, (me->jac && !me->jnum) ? "Banded" : "banded");
+		mpt_solver_module_value_string(&val[0], (me->jac && !me->jnum) ? "Banded" : "banded");
 		val[1].name = "ml";
 		val[1].desc = MPT_tr("jacobian lower band size");
-		mpt_solver_module_value_int(&val[1].val, &me->mbnd[0]);
+		mpt_solver_module_value_int(&val[1], &me->mbnd[0]);
 		val[2].name = "mu";
 		val[2].desc = MPT_tr("jacobian upper band size");
-		mpt_solver_module_value_int(&val[2].val, &me->mbnd[1]);
+		mpt_solver_module_value_int(&val[2], &me->mbnd[1]);
 		val[3].name = "jac_method";
 		val[3].desc = MPT_tr("jacobian method");
-		mpt_solver_module_value_string(&val[3].val, jac);
+		mpt_solver_module_value_string(&val[3], jac);
 		
 		mpt_solver_module_report_properties(val, 4, pr.name, pr.desc, out, usr);
 	} else {
@@ -43,10 +43,10 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 		
 		val[0].name = "jac_type";
 		val[0].desc = MPT_tr("jacobian type");
-		mpt_solver_module_value_string(&val[0].val, (me->jac && !me->jnum) ? "Full" : "full");
+		mpt_solver_module_value_string(&val[0], (me->jac && !me->jnum) ? "Full" : "full");
 		val[1].name = "jac_method";
 		val[1].desc = MPT_tr("jacobian method");
-		mpt_solver_module_value_string(&val[1].val, jac);
+		mpt_solver_module_value_string(&val[1], jac);
 		
 		mpt_solver_module_report_properties(val, 2, pr.name, pr.desc, out, usr);
 	}
@@ -61,7 +61,7 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 	    && me->rwork.iov_base) {
 	pr.name = "t";
 	pr.desc = MPT_tr("value of independent variable");
-	mpt_solver_module_value_double(&pr.val, &me->t);
+	mpt_solver_module_value_double(&pr, &me->t);
 	out(usr, &pr);
 	++line;
 	}
@@ -69,7 +69,7 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 	if (show & (MPT_SOLVER_ENUM(Status) | MPT_SOLVER_ENUM(Report)) && iwk) {
 	pr.name = "n";
 	pr.desc = MPT_tr("integration steps");
-	mpt_solver_module_value_ivec(&pr.val, 5, &me->iwork);
+	mpt_solver_module_value_ivec(&pr, 5, &me->iwork);
 	out(usr, &pr);
 	++line;
 	}
@@ -77,7 +77,7 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = MPT_tr("current step size");
-	mpt_solver_module_value_rvec(&pr.val, 2, &me->rwork);
+	mpt_solver_module_value_rvec(&pr, 2, &me->rwork);
 	out(usr, &pr);
 	++line;
 	}
@@ -86,37 +86,37 @@ extern int mpt_mebdfi_report(const MPT_SOLVER_STRUCT(mebdfi) *me, int show, MPT_
 	
 	pr.name = "nfail";
 	pr.desc = MPT_tr("failed steps");
-	mpt_solver_module_value_ivec(&pr.val, 6, &me->iwork);
+	mpt_solver_module_value_ivec(&pr, 6, &me->iwork);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "feval";
 	pr.desc = MPT_tr("function evaluations");
-	mpt_solver_module_value_ivec(&pr.val, 7, &me->iwork);
+	mpt_solver_module_value_ivec(&pr, 7, &me->iwork);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jeval";
 	pr.desc = MPT_tr("jacobian evaluations");
-	mpt_solver_module_value_ivec(&pr.val, 8, &me->iwork);
+	mpt_solver_module_value_ivec(&pr, 8, &me->iwork);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
-	mpt_solver_module_value_ivec(&pr.val, 9, &me->iwork);
+	mpt_solver_module_value_ivec(&pr, 9, &me->iwork);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "bsol";
 	pr.desc = MPT_tr("backsolves");
-	mpt_solver_module_value_ivec(&pr.val, 10, &me->iwork);
+	mpt_solver_module_value_ivec(&pr, 10, &me->iwork);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "mform";
 	pr.desc = MPT_tr("coeff. matrix form.");
-	mpt_solver_module_value_ivec(&pr.val, 11, &me->iwork);
+	mpt_solver_module_value_ivec(&pr, 11, &me->iwork);
 	out(usr, &pr);
 	++line;
 	}

@@ -26,16 +26,16 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TY
 		
 		val[0].name = "jac_type";
 		val[0].desc = MPT_tr("jacobian type");
-		mpt_solver_module_value_string(&val[0].val, lx->jac ? "Banded" : "banded");
+		mpt_solver_module_value_string(&val[0], lx->jac ? "Banded" : "banded");
 		val[1].name = "ml";
 		val[1].desc = MPT_tr("jacobian lower band size");
-		mpt_solver_module_value_int(&val[1].val, &lx->iopt[7]);
+		mpt_solver_module_value_int(&val[1], &lx->iopt[7]);
 		val[2].name = "mu";
 		val[2].desc = MPT_tr("jacobian upper band size");
-		mpt_solver_module_value_int(&val[2].val, &lx->iopt[8]);
+		mpt_solver_module_value_int(&val[2], &lx->iopt[8]);
 		val[3].name = "jac_method";
 		val[3].desc = MPT_tr("jacobian method");
-		mpt_solver_module_value_string(&val[3].val, jac);
+		mpt_solver_module_value_string(&val[3], jac);
 		
 		mpt_solver_module_report_properties(val, 4, pr.name, pr.desc, out, usr);
 	} else {
@@ -43,10 +43,10 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TY
 		
 		val[0].name = "jac_type";
 		val[0].desc = MPT_tr("jacobian type");
-		mpt_solver_module_value_string(&val[0].val, lx->jac ? "Full" : "full");
+		mpt_solver_module_value_string(&val[0], lx->jac ? "Full" : "full");
 		val[1].name = "jac_method";
 		val[1].desc = MPT_tr("jacobian method");
-		mpt_solver_module_value_string(&val[1].val, jac);
+		mpt_solver_module_value_string(&val[1], jac);
 		
 		mpt_solver_module_report_properties(val, 2, pr.name, pr.desc, out, usr);
 	}
@@ -60,7 +60,7 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TY
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "t";
 	pr.desc = "value of independent variable";
-	mpt_solver_module_value_double(&pr.val, &lx->t);
+	mpt_solver_module_value_double(&pr, &lx->t);
 	out(usr, &pr);
 	++line;
 	}
@@ -68,7 +68,7 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TY
 	if (show & (MPT_SOLVER_ENUM(Status) | MPT_SOLVER_ENUM(Report))) {
 	pr.name = "n";
 	pr.desc = "integration steps";
-	mpt_solver_module_value_int(&pr.val, &lx->iopt[27]);
+	mpt_solver_module_value_int(&pr, &lx->iopt[27]);
 	out(usr, &pr);
 	++line;
 	}
@@ -76,7 +76,7 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TY
 	if (show & MPT_SOLVER_ENUM(Status)) {
 	pr.name = "h";
 	pr.desc = "current step size";
-	mpt_solver_module_value_double(&pr.val, &lx->h);
+	mpt_solver_module_value_double(&pr, &lx->h);
 	out(usr, &pr);
 	++line;
 	}
@@ -87,31 +87,31 @@ extern int mpt_limex_report(const MPT_SOLVER_STRUCT(limex) *lx, int show, MPT_TY
 	
 	pr.name = "feval";
 	pr.desc = MPT_tr("function evaluations");
-	mpt_solver_module_value_int(&pr.val, &lx->iopt[23]);
+	mpt_solver_module_value_int(&pr, &lx->iopt[23]);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jeval";
 	pr.desc = MPT_tr("jacobian evaluations");
-	mpt_solver_module_value_int(&pr.val, &lx->iopt[28]);
+	mpt_solver_module_value_int(&pr, &lx->iopt[28]);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "jfeval";
 	pr.desc = "jacobian f eval.";
-	mpt_solver_module_value_int(&pr.val, &lx->iopt[24]);
+	mpt_solver_module_value_int(&pr, &lx->iopt[24]);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "ludec";
 	pr.desc = MPT_tr("LU decompositions");
-	mpt_solver_module_value_int(&pr.val, &lx->iopt[25]);
+	mpt_solver_module_value_int(&pr, &lx->iopt[25]);
 	out(usr, &pr);
 	++line;
 	
 	pr.name = "lubsub";
 	pr.desc = MPT_tr("LU back-subst.");
-	mpt_solver_module_value_int(&pr.val, &lx->iopt[26]);
+	mpt_solver_module_value_int(&pr, &lx->iopt[26]);
 	out(usr, &pr);
 	++line;
 	

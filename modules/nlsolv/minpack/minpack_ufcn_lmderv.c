@@ -18,18 +18,16 @@ static void lmdif_fcn(int *m, int *n, double *x, double *f, int *flag)
 	if (!*flag) {
 		const MPT_NLS_STRUCT(output) *out;
 		if ((out = mp->out) && out->fcn) {
-			MPT_STRUCT(value) par = MPT_VALUE_INIT(0, 0), res = MPT_VALUE_INIT(0, 0);
-			struct iovec *vec;
+			MPT_STRUCT(value) par, res;
+			struct iovec pvec, rvec;
 			
-			par.type = MPT_type_toVector('d');
-			par.ptr = vec = (void *) par._buf;
-			vec->iov_base = x;
-			vec->iov_len  = mp->nls.nval * sizeof(*x);
+			pvec.iov_base = x;
+			pvec.iov_len  = mp->nls.nval * sizeof(*x);
+			MPT_value_set(&par, MPT_type_toVector('d'), &pvec);
 			
-			res.type = MPT_type_toVector('d');
-			res.ptr = vec = (void *) res._buf;
-			vec->iov_base = f;
-			vec->iov_len  = mp->nls.nval * sizeof(double);
+			rvec.iov_base = f;
+			rvec.iov_len  = mp->nls.nres * sizeof(double);
+			MPT_value_set(&res, MPT_type_toVector('d'), &rvec);
 			
 			out->fcn(out->par, &par, &res);
 		}
