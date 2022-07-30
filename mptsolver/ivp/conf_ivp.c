@@ -108,7 +108,7 @@ extern int mpt_conf_ivp(MPT_STRUCT(solver_data) *md, MPT_STRUCT(node) *conf, con
 		return 0;
 	}
 	/* require valid grid */
-	if ((len = mpt_conf_grid(&md->val, curr->_meta)) < 0) {
+	if ((len = mpt_conf_grid(&md->val, (MPT_INTERFACE(convertable) *) curr->_meta)) < 0) {
 		if (info) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s",
 			        MPT_tr("unable to get grid data"));

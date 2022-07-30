@@ -11,6 +11,8 @@
 
 #include "values.h"
 
+#include "solver.h"
+
 /*!
  * \ingroup mptSolver
  * \brief create grid data

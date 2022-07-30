@@ -361,7 +361,7 @@ extern int mpt_dassl_get(const MPT_SOLVER_STRUCT(dassl) *da, MPT_STRUCT(property
 	if (name ? (!strcasecmp(name, "info9") || !strcasecmp(name, "maxord")) : pos == ++id) {
 		prop->name = "maxord";
 		prop->desc = "maximum order";
-		pos = mpt_solver_module_value_rvec(&prop->val, 3, da ? &da->iwork : 0);
+		pos = mpt_solver_module_value_ivec(&prop->val, 3, da ? &da->iwork : 0);
 		if (!da) return id;
 		return da->info[8] ? 1 : 0;
 	}

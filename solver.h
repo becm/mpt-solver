@@ -603,7 +603,7 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 /* append user data */
 extern int mpt_conf_param(MPT_STRUCT(array) *, const MPT_STRUCT(node) *, int);
 /* set grid data */
-extern int mpt_conf_grid(MPT_STRUCT(array) *, const MPT_INTERFACE(metatype) *);
+extern int mpt_conf_grid(MPT_STRUCT(array) *, MPT_INTERFACE(convertable) *);
 
 
 /* get/initialize solver data parameters */
