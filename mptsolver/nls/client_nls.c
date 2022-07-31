@@ -557,6 +557,11 @@ static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 	MPT_STRUCT(NLS) *nls = (void *) cl;
 	int ret;
 	
+	/* ignore empty iterator */
+	if (it && !it->_vptr->value(it)) {
+		it = 0;
+	}
+	
 	if (!id || id == mpt_hash("start", 5)) {
 		MPT_STRUCT(node) *cfg;
 		if (!(cfg = configNLS(nls))) {
