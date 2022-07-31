@@ -3,8 +3,6 @@
  *   set NLS parameter and residual count
  */
 
-#include "types.h"
-
 #include "../solver.h"
 
 extern int mpt_solver_module_value_nls(MPT_STRUCT(property) *pr, const MPT_NLS_STRUCT(parameters) *par)

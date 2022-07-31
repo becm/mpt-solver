@@ -29,7 +29,7 @@ with_shared = false
 with_static = true
 
 # require core library as minimal base subset
-core = cc.find_library('mptcore', required : true, dirs : mpt_lib)
+core = cc.find_library('mptcore', required : false, dirs : mpt_lib)
 if core.found()
   # external core library exists
   core_inc = include_directories(mpt_inc)

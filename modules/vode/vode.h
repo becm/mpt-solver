@@ -7,6 +7,8 @@
 
 #include "../solver.h"
 
+#include <sys/uio.h>
+
 __MPT_SOLVER_BEGIN
 
 typedef void vode_fcn_t(int *, double *, double *, double *, double *, int *);

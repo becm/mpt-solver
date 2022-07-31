@@ -1,12 +1,11 @@
-# mpt-solver/modules/sundials/meson.build
-# build definition for SUNDIALS module library
+# mpt-solver/modules/meson.build
+# build definition for mpt solver modules
 
 modules_src_gen = files(
   'mod_consume_value.c',
   'mod_valloc.c',
   'mod_value.c',
-  'mod_report_properties.c',
-  join_paths('..', 'base', 'mptcore', 'misc', 'value_copy.c')
+  'mod_report_properties.c'
 )
 modules_src_tol = files(
   'mod_tol_set.c',

@@ -7,6 +7,8 @@
 
 #include <math.h>
 
+#include <sys/uio.h>
+
 #include <ida/ida.h>
 
 #include "version.h"

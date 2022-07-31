@@ -5,6 +5,8 @@
 
 #include <inttypes.h>
 
+#include <sys/uio.h>
+
 #include "types.h"
 #include "meta.h"
 #include "output.h"

@@ -7,6 +7,8 @@
 #include <strings.h>
 #include <ctype.h>
 
+#include <sys/uio.h>
+
 #include "limex.h"
 
 #include "version.h"

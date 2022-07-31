@@ -4,10 +4,6 @@
  */
 
 #include <string.h>
-#include <stdlib.h>
-#include <sys/uio.h>
-
-#include "types.h"
 
 #include "../solver.h"
 

@@ -9,14 +9,13 @@
 #include "object.h"
 #include "array.h"
 
-#include <sys/uio.h>
-
 #ifdef __cplusplus
-# include <stdlib.h>
+# include <cstdlib>
 #endif
 
 struct rusage;
 struct timeval;
+struct iovec;
 
 __MPT_NAMESPACE_BEGIN
 

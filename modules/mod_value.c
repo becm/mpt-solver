@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#include "types.h"
+#include <sys/uio.h>
 
 #include "../solver.h"
 
