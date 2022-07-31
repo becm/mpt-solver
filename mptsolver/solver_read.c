@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "types.h"
+#include "convert.h"
 #include "meta.h"
 #include "node.h"
 #include "parse.h"
@@ -17,11 +18,22 @@
 
 static int getArg(MPT_INTERFACE(iterator) *args, FILE **file, const char **fname, MPT_INTERFACE(logger) *log, const char *_func)
 {
+	const MPT_STRUCT(value) *val;
 	int ret;
 	/* get client config file parameters from argument */
-	if ((ret = mpt_iterator_consume(args, MPT_ENUM(TypeFilePtr), file)) > 0) {
+	if (!(val = args->_vptr->value(args))) {
+		if (log) {
+			mpt_log(log, _func, MPT_LOG(Error), "%s",
+			        MPT_tr("invalid file pointer"));
+		}
+		return MPT_ERROR(MissingData);
+	}
+	if ((ret = mpt_value_convert(val, MPT_ENUM(TypeFilePtr), file)) > 0) {
 		if (*file) {
-			return ret;
+			if ((ret = args->_vptr->advance(args)) < 0) {
+				return ret;
+			}
+			return MPT_ENUM(TypeFilePtr);
 		}
 		if (log) {
 			mpt_log(log, _func, MPT_LOG(Error), "%s",
@@ -29,7 +41,7 @@ static int getArg(MPT_INTERFACE(iterator) *args, FILE **file, const char **fname
 		}
 		return MPT_ERROR(MissingData);
 	}
-	if ((ret = mpt_iterator_consume(args, 's', fname)) < 0) {
+	if ((ret = mpt_value_convert(val, 's', fname)) < 0) {
 		const MPT_STRUCT(value) *val = args->_vptr->value(args);
 		int type = args ? val->type : 0;
 		if (log) {
@@ -56,7 +68,10 @@ static int getArg(MPT_INTERFACE(iterator) *args, FILE **file, const char **fname
 		}
 		return MPT_ERROR(BadArgument);
 	}
-	return ret;
+	if ((ret = args->_vptr->advance(args)) < 0) {
+		return ret;
+	}
+	return 's';
 }
 static int getValue(MPT_INTERFACE(metatype) *mt, FILE **file, const char **fname)
 {
