@@ -67,7 +67,7 @@ extern int mpt_minpack_report(const MPT_SOLVER_STRUCT(minpack) *mpack, int show,
 			vec = (void *) arg[1]._buf;
 			vec->iov_base = ((double *) mpack->val.iov_base) + mpack->nls.nval;
 			vec->iov_len  = mpack->nls.nres * sizeof(double);
-			MPT_value_set(&arg[0].val, MPT_type_toVector('d'), vec);
+			MPT_value_set(&arg[1].val, MPT_type_toVector('d'), vec);
 			
 			mpt_solver_module_report_properties(arg, 2, 0, desc, out, usr); 
 		}
