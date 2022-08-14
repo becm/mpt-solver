@@ -6,7 +6,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "types.h"
 #include "convert.h"
 #include "meta.h"
 #include "node.h"

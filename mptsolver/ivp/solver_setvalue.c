@@ -5,10 +5,7 @@
 
 #include <stdlib.h>
 
-#include "meta.h"
-#include "convert.h"
-
-#include "object.h"
+#include "solver.h"
 
 static int valueConv(MPT_INTERFACE(convertable) *val, int type, void *ptr)
 {

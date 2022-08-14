@@ -3,14 +3,7 @@
  *   read output parameter from configuration list
  */
 
-#include <stdio.h>
-#include <string.h>
-
-#include <sys/un.h>
-#include <netinet/in.h>
-
 #include "node.h"
-#include "message.h"
 
 #include "solver.h"
 

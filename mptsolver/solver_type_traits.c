@@ -3,19 +3,15 @@
  *   register/get solver metatype code
  */
 
-#include "message.h"
-#include "output.h"
-#include "types.h"
-
 #include "solver.h"
 
 /*!
  * \ingroup mptSolver
- * \brief get solver id
+ * \brief get solver traits
  * 
- * Get unique registered dynamic metatype ID for solver interface.
+ * Get or register unique dynamic traits for solver metatype.
  * 
- * \return solver interface ID
+ * \return solver metatype taits
  */
 extern const MPT_STRUCT(named_traits) *mpt_solver_type_traits(void)
 {

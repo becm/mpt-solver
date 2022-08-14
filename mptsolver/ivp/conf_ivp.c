@@ -3,13 +3,11 @@
  *   create solver data from config
  */
 
-#include <math.h>
-
+#include "array.h"
+#include "convert.h"
 #include "meta.h"
 #include "node.h"
-#include "array.h"
 #include "output.h"
-#include "convert.h"
 
 #include "values.h"
 

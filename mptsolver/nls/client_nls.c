@@ -11,15 +11,9 @@
 #include <string.h>
 
 #include <sys/resource.h>
-#include <sys/uio.h>
 
-#include "types.h"
-#include "meta.h"
-#include "node.h"
-#include "message.h"
-#include "array.h"
-#include "output.h"
 #include "convert.h"
+#include "node.h"
 
 #include "parse.h"
 #include "client.h"

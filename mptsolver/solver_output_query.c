@@ -3,8 +3,6 @@
  *   push IVP history header
  */
 
-#include "types.h"
-#include "meta.h"
 #include "config.h"
 #include "output.h"
 

@@ -6,9 +6,6 @@
 #include <sys/uio.h>
 #include <inttypes.h>
 
-#include "types.h"
-#include "meta.h"
-#include "array.h"
 #include "output.h"
 
 #include "solver.h"

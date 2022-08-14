@@ -3,14 +3,7 @@
  *   get solver interface from metatype
  */
 
-#include <string.h>
-#include <ctype.h>
-
-#include "types.h"
 #include "client.h"
-#include "config.h"
-
-#include "meta.h"
 
 #include "solver.h"
 

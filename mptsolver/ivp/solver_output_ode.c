@@ -3,9 +3,6 @@
  *   output ODE data
  */
 
-#include "message.h"
-#include "output.h"
-
 #include "solver.h"
 
 /*!

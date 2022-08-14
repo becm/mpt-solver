@@ -3,10 +3,7 @@
  *   get grid start and dimension.
  */
 
-#include <errno.h>
-
 #include "array.h"
-#include "types.h"
 #include "meta.h"
 
 #include "values.h"

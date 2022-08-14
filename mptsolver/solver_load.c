@@ -9,7 +9,6 @@
 #include "meta.h"
 #include "config.h"
 #include "output.h"
-#include "types.h"
 
 #include "loader.h"
 

@@ -7,8 +7,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include "array.h"
-
 #include "solver.h"
 
 /*!

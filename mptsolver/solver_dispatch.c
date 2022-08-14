@@ -3,19 +3,10 @@
  *   setup event controller for solver events
  */
 
-#include <inttypes.h>
-
-#include <string.h>
-
-#include "types.h"
-#include "array.h"
 #include "message.h"
 #include "event.h"
-#include "output.h"
 #include "client.h"
-
 #include "config.h"
-#include "meta.h"
 
 #include "solver.h"
 

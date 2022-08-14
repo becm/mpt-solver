@@ -8,13 +8,11 @@
 
 #include <sys/uio.h>
 
-#include "message.h"
+#include "client.h"
+
 #include "convert.h"
-#include "types.h"
 
 #include "solver.h"
-
-#include "client.h"
 
 struct wrap_fmt {
 	int (*log)(void *, const char *, ... );

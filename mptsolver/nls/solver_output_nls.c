@@ -5,9 +5,7 @@
 
 #include <sys/uio.h>
 
-#include "types.h"
 #include "message.h"
-#include "array.h"
 
 #include "values.h"
 #include "output.h"

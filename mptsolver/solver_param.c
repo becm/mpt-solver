@@ -3,8 +3,6 @@
  *   setting solver parameters
  */
 
-#include <string.h>
-#include <ctype.h>
 #include <stdio.h>
 
 #include "meta.h"

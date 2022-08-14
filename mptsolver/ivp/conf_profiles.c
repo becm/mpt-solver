@@ -8,10 +8,11 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include "types.h"
-#include "node.h"
-#include "meta.h"
+#include <sys/uio.h>
+
 #include "convert.h"
+#include "meta.h"
+#include "node.h"
 #include "output.h"
 
 #include "values.h"

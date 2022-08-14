@@ -5,7 +5,6 @@
 
 #include <sys/uio.h>
 
-#include "types.h"
 #include "array.h"
 #include "output.h"
 

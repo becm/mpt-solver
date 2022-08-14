@@ -9,9 +9,6 @@
 #include <math.h>
 #include <sys/uio.h>
 
-#include "types.h"
-#include "meta.h"
-#include "array.h"
 #include "output.h"
 #include "convert.h"
 

@@ -7,10 +7,9 @@
 #include <limits.h>
 #include <errno.h>
 
-#include "array.h"
 #include "convert.h"
-#include "output.h"
 #include "node.h"
+#include "output.h"
 
 #include "values.h"
 

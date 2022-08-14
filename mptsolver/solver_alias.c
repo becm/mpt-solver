@@ -8,8 +8,6 @@
 #include <errno.h>
 
 #include "config.h"
-#include "client.h"
-#include "types.h"
 
 #include "solver.h"
 

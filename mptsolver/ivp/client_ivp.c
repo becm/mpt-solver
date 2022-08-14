@@ -11,20 +11,17 @@
 #include <stdio.h>
 
 #include <sys/resource.h>
-#include <sys/uio.h>
 
-#include "types.h"
-#include "node.h"
-#include "message.h"
 #include "array.h"
+#include "message.h"
 #include "meta.h"
-#include "output.h"
+#include "node.h"
 
 #include "convert.h"
-#include "parse.h"
 #include "client.h"
 #include "config.h"
 #include "event.h"
+#include "parse.h"
 
 #include "values.h"
 

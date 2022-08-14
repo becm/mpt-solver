@@ -7,9 +7,6 @@
 
 #include <sys/uio.h>
 
-#include "types.h"
-#include "array.h"
-
 #include "solver.h"
 
 /*!

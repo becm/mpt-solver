@@ -3,11 +3,6 @@
  *   get PDE grid data
  */
 
-#include <errno.h>
-
-#include "node.h"
-#include "array.h"
-
 #include "solver.h"
 
 /*!

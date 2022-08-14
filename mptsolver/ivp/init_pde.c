@@ -7,8 +7,6 @@
 
 #include <sys/uio.h>
 
-#include "types.h"
-#include "meta.h"
 #include "output.h"
 
 #include "solver.h"

@@ -3,8 +3,6 @@
  *   output solver statistics
  */
 
-#include <unistd.h>
-
 #include <sys/time.h>
 
 #include "output.h"

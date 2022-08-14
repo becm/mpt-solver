@@ -3,11 +3,6 @@
  *   initialize/finalize solver data descriptor
  */
 
-#include <string.h>
-#include <errno.h>
-
-#include "array.h"
-
 #include "solver.h"
 
 /*!

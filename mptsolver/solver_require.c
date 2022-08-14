@@ -5,15 +5,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <ctype.h>
 #include <string.h>
 
 #include <unistd.h>
 
-#include "meta.h"
-#include "node.h"
-#include "event.h"
 #include "output.h"
 #include "config.h"
 

@@ -3,12 +3,8 @@
  *   read solver data user parameter from configuration
  */
 
-#include <string.h>
 #include <limits.h>
-#include <float.h>
-#include <errno.h>
 
-#include "array.h"
 #include "convert.h"
 #include "node.h"
 

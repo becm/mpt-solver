@@ -6,6 +6,7 @@
 #ifndef _MPT_SOLVER_H
 #define _MPT_SOLVER_H  @INTERFACE_VERSION@
 
+#include "types.h"
 #include "object.h"
 #include "array.h"
 
