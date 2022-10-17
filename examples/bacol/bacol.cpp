@@ -22,7 +22,7 @@ static ssize_t fw(void *ctx, const char *txt, size_t len)
 
 static int status(void *ctx, const mpt::value *val)
 {
-	mpt::mpt_tostring(val, fw, ctx);
+	mpt::mpt_print_value(val, fw, ctx);
 	fputs(mpt::mpt_newline_string(0), static_cast<FILE *>(ctx));
 	return 1;
 }

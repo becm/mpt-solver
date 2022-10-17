@@ -205,7 +205,9 @@ public:
 	
 	int step(double t)
 	{
-		int ret = mpt_object_set(this, "t", "d", t);
+		value val;
+		val = t;
+		int ret = mpt_object_set_value(this, "t", &val);
 		return ret < 0 ? ret : solve();
 	}
 	inline bool set(double t, span<const double> x)

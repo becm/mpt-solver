@@ -38,7 +38,7 @@ static int wrap_fw(void *out, const MPT_STRUCT(property) *pr)
 		fwrite(pr->name, strlen(pr->name), 1, out);
 		fwrite(" = ", 3, 1, out);
 	}
-	mpt_tostring(&pr->val, write_fd, out);
+	mpt_print_value(&pr->val, write_fd, out);
 	fputc('\n', out);
 	return 0;
 }

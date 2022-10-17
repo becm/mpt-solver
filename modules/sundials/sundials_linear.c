@@ -106,10 +106,10 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
  * \ingroup mptSundials
  * \brief setup SUNDIALS linear solver
  * 
- * Prepare SUNDIALS solver for step operation.
+ * Assign new SUNDIALS linear solver.
  * 
- * \param data  CVode solver data
- * \param val   initial values
+ * \param sd    SUNDIALS solver data
+ * \param neqs  initial values
  * 
  * \return non-zero on error
  */

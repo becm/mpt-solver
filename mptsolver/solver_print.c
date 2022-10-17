@@ -33,13 +33,13 @@ int wrapText(const MPT_STRUCT(value) *val, ssize_t (*add)(void *, const char *, 
 			if (i++ && add(ptr, " ", 1) < 0) {
 				break;
 			}
-			if (mpt_tostring(&tmp.val, add, ptr) < 0) {
+			if (mpt_print_value(&tmp.val, add, ptr) < 0) {
 				break;
 			}
 		}
 		return 2;
 	}
-	if (mpt_tostring(val, add, ptr) < 0) {
+	if (mpt_print_value(val, add, ptr) < 0) {
 		return MPT_ERROR(BadValue);
 	}
 	return 1;
