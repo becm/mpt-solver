@@ -17,7 +17,7 @@ extern int mpt_solver_module_value_rvec(MPT_STRUCT(property) *pr, long pos, cons
 	if (!pos) {
 		MPT_value_set(&pr->val, MPT_type_toVector('d'), vec);
 		if (vec && (sizeof(pr->_buf) >= sizeof(*vec))) {
-			pr->val.ptr = memcpy(&pr->_buf, vec, sizeof(*vec));
+			pr->val._addr = memcpy(&pr->_buf, vec, sizeof(*vec));
 			return vec->iov_len ? 3 : 2;
 		}
 		return (vec && vec->iov_len) ? 1 : 0;
@@ -49,7 +49,7 @@ extern int mpt_solver_module_value_ivec(MPT_STRUCT(property) *pr, long pos, cons
 	if (!pos) {
 		MPT_value_set(&pr->val, MPT_type_toVector('i'), vec);
 		if (vec && (sizeof(pr->_buf) >= sizeof(*vec))) {
-			pr->val.ptr = memcpy(&pr->_buf, vec, sizeof(*vec));
+			pr->val._addr = memcpy(&pr->_buf, vec, sizeof(*vec));
 			return vec->iov_len ? 3 : 2;
 		}
 		return (vec && vec->iov_len) ? 1 : 0;

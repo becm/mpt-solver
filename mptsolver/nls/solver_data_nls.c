@@ -30,10 +30,11 @@ extern int mpt_solver_data_nls(MPT_STRUCT(solver_data) *dat, const MPT_STRUCT(va
 	if (!val || !dat) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (val->type != MPT_type_toVector('d')) {
+	if (!MPT_value_isBaseType(val)
+	 || val->_type != MPT_type_toVector('d')) {
 		return MPT_ERROR(BadType);
 	}
-	if (!(vec = val->ptr)) {
+	if (!(vec = val->_addr)) {
 		return MPT_ERROR(BadValue);
 	}
 	if (!(par = vec->iov_base)

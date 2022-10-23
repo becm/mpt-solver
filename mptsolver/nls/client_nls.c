@@ -172,9 +172,10 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		info = loggerNLS(0);
 		path = 0;
 		if (mpt_value_convert(val, 's', &path) < 0 || path == 0) {
+			int type = val->_type;
 			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
 			        MPT_tr("invalid file name type"),
-			        val->type);
+			        type);
 			return MPT_ERROR(BadType);
 		}
 		if (!(file = fopen(path, "r"))) {

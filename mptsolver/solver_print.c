@@ -21,9 +21,13 @@ struct wrap_fmt {
 
 int wrapText(const MPT_STRUCT(value) *val, ssize_t (*add)(void *, const char *, size_t ), void *ptr)
 {
-	if (val->type == MPT_ENUM(TypeObjectPtr)) {
-		const MPT_INTERFACE(object) *obj = *((void * const *) val->ptr);
+	if (MPT_value_isBaseType(val)
+	 && val->_type == MPT_ENUM(TypeObjectPtr)) {
+		const MPT_INTERFACE(object) *obj;
 		uintptr_t i = 0;
+		if (!val->_addr || !(obj = *((void * const *) val->_addr))) {
+			return 0;
+		}
 		while (1) {
 			MPT_STRUCT(property) tmp = MPT_PROPERTY_INIT;
 			tmp.desc = (void *) i;

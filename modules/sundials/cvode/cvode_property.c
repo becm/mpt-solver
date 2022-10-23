@@ -271,8 +271,6 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 		const char *val = 0;
 		prop->name = "method";
 		prop->desc = "solver method";
-		prop->val.type = 's';
-		prop->val.ptr = 0;
 		if (!cv) {
 			MPT_value_set(&prop->val, 's', 0);
 			return id;

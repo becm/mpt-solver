@@ -50,11 +50,11 @@ static MPT_INTERFACE(logger) *loggerIVP(const MPT_STRUCT(IVP) *ivp)
 	
 	/* get local config log target */
 	if (ivp
-	    && (mt = ivp->cfg)) {
+	 && (mt = ivp->cfg)) {
 		MPT_INTERFACE(config) *cfg = 0;
 		if (MPT_metatype_convert(mt, MPT_ENUM(TypeConfigPtr), &cfg) > 0
-		    && cfg
-		    && (info = mpt_config_logger(cfg))) {
+		 && cfg
+		 && (info = mpt_config_logger(cfg))) {
 			return info;
 		}
 	}
@@ -73,14 +73,15 @@ static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 	if (!pr || pr->name) {
 		return 0;
 	}
-	if (!pr->val.ptr) {
+	if (!pr->val._addr) {
 		return MPT_ERROR(MissingData);
 	}
 	if ((ret = mpt_value_convert(&pr->val, 'd', ptr)) >= 0) {
 		return 0;
 	}
-	else if (pr->val.type == MPT_ENUM(TypeObjectPtr)) {
-		MPT_INTERFACE(object) *obj = *((void * const *) pr->val.ptr);
+	if (MPT_value_isBaseType(&pr->val)
+	 && pr->val._type == MPT_ENUM(TypeObjectPtr)) {
+		MPT_INTERFACE(object) *obj = *((void * const *) pr->val._addr);
 		MPT_STRUCT(property) tmp = MPT_PROPERTY_INIT;
 		tmp.name = "t";
 		if (!obj || (ret = obj->_vptr->property(obj, &tmp)) < 0) {
@@ -113,15 +114,16 @@ static int nextTime(MPT_INTERFACE(iterator) *src, double *end, const char *fcn, 
 			return MPT_ERROR(MissingData);
 		}
 		if ((ret = mpt_value_convert(curr, 'd', &next)) < 0) {
+			int type = curr->_type;
 			mpt_log(info, fcn, MPT_LOG(Error), "%s (%s): %d",
 			        MPT_tr("bad type on time source"),
 			        arg ? MPT_tr("argument") : MPT_tr("internal"),
-			        curr->type);
+			        type);
 			return ret;
 		}
 		if (ref < next) {
 			*end = next;
-			return curr->type;
+			return curr->_type;
 		}
 		mpt_log(info, fcn, MPT_LOG(Info), "%s (%g <= %g)",
 		        MPT_tr("skip time value argument"), next, ref);
@@ -243,8 +245,8 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		path = 0;
 		if (mpt_value_convert(val, 's', &path) < 0 || path == 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
-			        MPT_tr("invalid file name type"),
-			        val->type);
+			        MPT_tr("invalid filename type"),
+			        val->_type);
 			return MPT_ERROR(BadType);
 		}
 		if (!(file = fopen(path, "r"))) {

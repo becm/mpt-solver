@@ -42,10 +42,11 @@ static int getArg(MPT_INTERFACE(iterator) *args, FILE **file, const char **fname
 	}
 	if ((ret = mpt_value_convert(val, 's', fname)) < 0) {
 		const MPT_STRUCT(value) *val = args->_vptr->value(args);
-		int type = args ? val->type : 0;
 		if (log) {
-			mpt_log(log, _func, MPT_LOG(Error), "%s (%d)",
-			        MPT_tr("invalid file argument type"), type);
+			int type = args ? val->_type : 0;
+			int namespace = args ? val->_namespace : 0;
+			mpt_log(log, _func, MPT_LOG(Error), "%s (%d@$d)",
+			        MPT_tr("invalid file argument type"), type, namespace);
 			
 		}
 		return ret;

@@ -18,16 +18,19 @@
 
 static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 {
-	if (!pr || pr->name || !pr->val.ptr) {
+	if (!pr || pr->name || !pr->val._addr) {
 		return 0;
 	}
-	if (pr->val.type == 'd') {
-		*((double *) ptr) = *((double *) pr->val.ptr);
-		return pr->val.type;
+	if (!MPT_value_isBaseType(&pr->val)) {
+		return MPT_ERROR(BadType);
 	}
-	if (pr->val.type == MPT_ENUM(TypeObjectPtr)) {
+	if (pr->val._type == 'd') {
+		*((double *) ptr) = *((double *) pr->val._addr);
+		return pr->val._type;
+	}
+	if (pr->val._type == MPT_ENUM(TypeObjectPtr)) {
 		MPT_STRUCT(property) pt;
-		const MPT_INTERFACE(object) *obj = *((void * const *) pr->val.ptr);
+		const MPT_INTERFACE(object) *obj = *((void * const *) pr->val._addr);
 		pt.name = "t";
 		if (obj && obj->_vptr->property(obj, &pt) >= 0) {
 			if (mpt_value_convert(&pt.val, 'd', ptr) >= 0) {
@@ -36,7 +39,7 @@ static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 		}
 	}
 	if (mpt_value_convert(&pr->val, 'd', ptr) >= 0) {
-		return pr->val.type;
+		return pr->val._type;
 	}
 	return MPT_ERROR(BadType);
 }
@@ -59,13 +62,14 @@ static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 	if (!(dat = ctx)) {
 		return 0;
 	}
-	if (!val->ptr) {
+	if (!val->_addr) {
 		return MPT_ERROR(BadValue);
 	}
-	if (val->type != MPT_ENUM(TypeObjectPtr)) {
+	if (!MPT_value_isBaseType(val)
+	 || val->_type != MPT_ENUM(TypeObjectPtr)) {
 		return MPT_ERROR(BadType);
 	}
-	if (!(obj = *(void * const *) val->ptr)) {
+	if (!(obj = *(void * const *) val->_addr)) {
 		return MPT_ERROR(BadValue);
 	}
 	/* add space for new data */
@@ -81,14 +85,18 @@ static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 	
 	pr.name = "t";
 	if (obj->_vptr->property(obj, &pr) >= 0) {
-		if (pr.val.type == 'd' && pr.val.ptr) {
-			*add = *((const double *) pr.val.ptr);
+		if (MPT_value_isBaseType(val)
+		 && pr.val._type == 'd'
+		 && pr.val._addr) {
+			*add = *((const double *) pr.val._addr);
 		}
 	}
 	pr.name = "y";
 	if (obj->_vptr->property(obj, &pr) >= 0) {
-		if (pr.val.type == MPT_type_toVector('d') && pr.val.ptr) {
-			const struct iovec *vec = pr.val.ptr;
+		if (MPT_value_isBaseType(val)
+		 && pr.val._type == MPT_type_toVector('d')
+		 && pr.val._addr) {
+			const struct iovec *vec = pr.val._addr;
 			ssize_t len = vec->iov_len;
 			if (len > take) {
 				len = take;
@@ -208,8 +216,9 @@ extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *val, MPT_INTERFACE(i
 				return MPT_ERROR(BadOperation);
 			}
 			if ((ret = mpt_value_convert(t, 'd', &end)) < 0) {
+				int type = t->_type;
 				mpt_log(info, __func__, MPT_LOG(Warning), "%s: %d",
-				        MPT_tr("bad time step type"), t->type);
+				        MPT_tr("bad time step type"), type);
 				return ret;
 			}
 		} while (end <= curr);

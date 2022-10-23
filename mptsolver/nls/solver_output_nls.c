@@ -103,31 +103,38 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	size_t passlen;
 	int nr, np;
 	
-	if (!val || !(vec = val->ptr)) {
+	if (!val || !(vec = val->_addr)) {
 		return MPT_ERROR(BadArgument);
+	}
+	if (!MPT_value_isBaseType(val)) {
+		return MPT_ERROR(BadType);
 	}
 	par = 0;
 	res = 0;
 	
-	if (val->type == MPT_type_toVector('d')) {
+	if (val->_type == MPT_type_toVector('d')) {
 		par = vec->iov_base;
 		np  = vec->iov_len / sizeof (*par);
 	}
-	else if (val->type == MPT_ENUM(TypeObjectPtr)) {
+	else if (val->_type == MPT_ENUM(TypeObjectPtr)) {
 		MPT_STRUCT(property) pr;
-		const MPT_INTERFACE(object) *obj = *((void * const *) val->ptr);
+		const MPT_INTERFACE(object) *obj = *((void * const *) val->_addr);
 		
 		pr.name = "param";
 		if (obj->_vptr->property(obj, &pr) >= 0
-		 && pr.val.type == MPT_type_toVector('d')) {
-			vec = pr.val.ptr;
+		 && MPT_value_isBaseType(&pr.val)
+		 && pr.val._type == MPT_type_toVector('d')
+		 && pr.val._addr) {
+			vec = pr.val._addr;
 			par = vec->iov_base;
 			np  = vec->iov_len / sizeof (*par);
 		}
 		pr.name = "res";
 		if (obj->_vptr->property(obj, &pr) >= 0
-		 && pr.val.type == MPT_type_toVector('d')) {
-			vec = pr.val.ptr;
+		 && MPT_value_isBaseType(&pr.val)
+		 && pr.val._type == MPT_type_toVector('d')
+		 && pr.val._addr) {
+			vec = pr.val._addr;
 			res = vec->iov_base;
 			nr  = vec->iov_len / sizeof (*par);
 		}

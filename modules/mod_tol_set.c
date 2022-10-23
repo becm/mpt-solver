@@ -41,18 +41,18 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFAC
 			const MPT_STRUCT(value) *val;
 			
 			if (!(val = it->_vptr->value(it))
-			 || !val->type
-			 || !val->ptr) {
+			 || !MPT_value_isBaseType(val)
+			 || !val->_addr) {
 				break;
 			}
-			if (val->type == 'd') {
-				d = *((const double *) val->ptr);
+			if (val->_type == 'd') {
+				d = *((const double *) val->_addr);
 			}
-			else if (!MPT_type_isConvertable(val->type)) {
+			else if (!MPT_type_isConvertable(val->_type)) {
 				break;
 			}
 			else {
-				MPT_INTERFACE(convertable) *conv = *((void * const *) val->ptr);
+				MPT_INTERFACE(convertable) *conv = *((void * const *) val->_addr);
 				
 				if (!conv) {
 					break;

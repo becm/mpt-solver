@@ -62,13 +62,14 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFA
 	else if (ret && it) {
 		const MPT_STRUCT(value) *val = it->_vptr->value(it);
 		
-		if (!val
-		 || !val->type
-		 || !val->ptr) {
+		if (!val || !val->_addr) {
 			return MPT_ERROR(MissingData);
 		}
-		if (MPT_type_isConvertable(val->type)) {
-			MPT_INTERFACE(convertable) *conv = *((void * const *) val->ptr);
+		if (!MPT_value_isBaseType(val)) {
+			return MPT_ERROR(BadType);
+		}
+		if (MPT_type_isConvertable(val->_type)) {
+			MPT_INTERFACE(convertable) *conv = *((void * const *) val->_addr);
 			
 			if (!conv) {
 				return MPT_ERROR(BadValue);
@@ -77,8 +78,8 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFA
 				return ret;
 			}
 		}
-		else if (val->type == 'i') {
-			neqs = *((const int32_t *) val->ptr);
+		else if (val->_type == 'i') {
+			neqs = *((const int32_t *) val->_addr);
 		}
 		else {
 			return MPT_ERROR(BadType);
@@ -93,28 +94,28 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFA
 		if (!ret || !(val = it->_vptr->value(it))) {
 			/* iterator has no further data */
 		}
-		else if (!val->type) {
+		else if (!MPT_value_isBaseType(val)) {
 			return MPT_ERROR(BadType);
 		}
-		else if (!val->ptr) {
+		else if (!val->_addr) {
 			return MPT_ERROR(MissingData);
 		}
 		/* actual grid data */
-		else if (val->type == MPT_type_toVector('d')) {
-			const struct iovec *vec = val->ptr;
+		else if (val->_type == MPT_type_toVector('d')) {
+			const struct iovec *vec = val->_addr;
 			grid = *vec;
 			part = grid.iov_len / sizeof(double);
 		}
 		/* scalar interval values */
-		else if (val->type == 'i') {
-			pint = *((const int32_t *) val->ptr);
+		else if (val->_type == 'i') {
+			pint = *((const int32_t *) val->_addr);
 		}
-		else if (val->type == 'u') {
-			pint = *((const uint32_t *) val->ptr);
+		else if (val->_type == 'u') {
+			pint = *((const uint32_t *) val->_addr);
 		}
 		/* convertable value */
-		else if (!MPT_type_isConvertable(val->type)) {
-			MPT_INTERFACE(convertable) *conv = *((void * const *) val->ptr);
+		else if (!MPT_type_isConvertable(val->_type)) {
+			MPT_INTERFACE(convertable) *conv = *((void * const *) val->_addr);
 			
 			if (!conv) {
 				return MPT_ERROR(BadValue);

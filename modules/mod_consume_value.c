@@ -11,7 +11,7 @@
 
 /*!
  * \ingroup mptSolver
- * \brief process nested properties
+ * \brief consume iterator value
  * 
  * Use opbect interface to nest multiple properties in single value.
  * 
@@ -31,20 +31,23 @@ extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, int type
 	if (!it || !(val = it->_vptr->value(it))) {
 		return MPT_ERROR(MissingData);
 	}
-	if (len && val->type == type) {
+	if (!MPT_value_isBaseType(val)) {
+		return MPT_ERROR(BadType);
+	}
+	if (len && val->_type == type) {
 		if (ptr) {
-			if (val->ptr) {
-				memcpy(ptr, val->ptr, len);
+			if (val->_addr) {
+				memcpy(ptr, val->_addr, len);
 			} else {
 				memset(ptr, 0, len);
 			}
 		}
 		return it->_vptr->advance(it);
 	}
-	if (!MPT_type_isConvertable(val->type)) {
+	if (!MPT_type_isConvertable(val->_type)) {
 		return MPT_ERROR(BadType);
 	}
-	if (!(src = *((void * const *) val->ptr))) {
+	if (!(src = *((void * const *) val->_addr))) {
 		return MPT_ERROR(MissingData);
 	}
 	if ((ret = src->_vptr->convert(src, type, ptr)) < 0) {

@@ -44,14 +44,17 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 		if ((ret = src->_vptr->convert(src, MPT_SOLVER_MODULE_DATA_ID, &tmp)) < 0) {
 			const MPT_STRUCT(value) *val;
 			if (!(val = it->_vptr->value(it))
-			 || !val->ptr) {
+			 || !val->_addr) {
 				return MPT_ERROR(BadValue);
 			}
-			if (val->type == MPT_SOLVER_MODULE_DATA_ID) {
-				tmp = *((MPT_SOLVER_MODULE_DATA_TYPE *) val->ptr);
+			if (!MPT_value_isBaseType(val)) {
+				return MPT_ERROR(BadType);
 			}
-			else if (MPT_type_isConvertable(val->type)) {
-				MPT_INTERFACE(convertable) *conv = *((void * const *) val->ptr);
+			if (val->_type == MPT_SOLVER_MODULE_DATA_ID) {
+				tmp = *((MPT_SOLVER_MODULE_DATA_TYPE *) val->_addr);
+			}
+			else if (MPT_type_isConvertable(val->_type)) {
+				MPT_INTERFACE(convertable) *conv = *((void * const *) val->_addr);
 				if (!conv) {
 					return MPT_ERROR(BadValue);
 				}
