@@ -27,7 +27,7 @@
 
 static ssize_t write_fd(void *out, const char *s, size_t len)
 {
-	return fwrite(s, len, 1, out);
+	return fwrite(s, 1, len, out);
 }
 static int wrap_fw(void *out, const MPT_STRUCT(property) *pr)
 {
