@@ -1,14 +1,16 @@
 # mpt.solver.mk: solver library creation template
-DIR_TOP  ?= ${MPT_PREFIX}
-DIR_INC  ?= ${DIR_TOP}/include/mpt/solver
-DIR_MATH ?= ${DIR_TOP}/math
+DIR_SOLVER_MODULES := $(dir $(lastword $(MAKEFILE_LIST)))
+#
+# default source directories
+DIR_BASE ?= ${DIR_SOLVER_MODULES}../base/
+DIR_MATH ?= ${DIR_SOLVER_MODULES}../math/
+#
+# relative default target directories
+PREFIX   ?= ${DIR_SOLVER_MODULES}../build
+DIR_INC  ?= ${PREFIX}/include/mpt/solver/
 #
 # default header to export
 HEADER ?= ${LIB}.h
-#
-# current directory
-DIR_SOLVER_MODULES := $(dir $(lastword $(MAKEFILE_LIST)))
-DIR_BASE ?= ${DIR_SOLVER_MODULES}../base/
 #
 # add directories to global include
 INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
@@ -50,8 +52,8 @@ libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
 # solver module configuration
 .PHONY : module_config
 install : module_config
-module_config : ${CONFIG}; $(call install_files,${DIR_TOP}/etc/mpt.conf.d,${CONFIG})
-CLEAR_FILES += $(CONFIG:%=${DIR_TOP}/etc/mpt.conf.d/%) libinfo.o
+module_config : ${CONFIG}; $(call install_files,${PREFIX}/etc/mpt.conf.d,${CONFIG})
+CLEAR_FILES += $(CONFIG:%=${PREFIX}/etc/mpt.conf.d/%) libinfo.o
 #
 # module helper dependencies
 *_modfcn.o : $(src_modfcn:%=${DIR_SOLVER_MODULES}%)

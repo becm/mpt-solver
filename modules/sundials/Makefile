@@ -3,13 +3,13 @@ LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
 sundials_version = 6.3.0
-DIR_SUNDIALS ?= ${MPT_PREFIX}/math/sundials-${sundials_version}
+DIR_SUNDIALS ?= $(dir ${MAKEFILE})../../math/sundials-${sundials_version}/
 #
 # precompiled object location
-DIR_SUNDIALS_OBJ ?= ${DIR_SUNDIALS}/build
+DIR_SUNDIALS_OBJ ?= ${DIR_SUNDIALS}build/
 # include directories (generated, public)
-DIR_SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}/include ${DIR_SUNDIALS}/include
-INC = . ${DIR_SUNDIALS_INC}
+SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}include ${DIR_SUNDIALS}include/
+INC = . ${SUNDIALS_INC}
 #
 # SUNDIALS modules to include in shared library
 sundials_direct = band dense
@@ -49,6 +49,7 @@ SRCS := ${sources} ${sources_cvode} ${sources_ida}
 
 MATH_OBJS_STATIC != env DIR_SUNDIALS="${DIR_SUNDIALS_OBJ}" LIBRARY_TYPE=static ./sundials_collect.sh ${sundials_modules}
 MATH_OBJS_SHARED != env DIR_SUNDIALS="${DIR_SUNDIALS_OBJ}" LIBRARY_TYPE=shared ./sundials_collect.sh ${sundials_modules}
+
 #
 # headers to export
 HEADER = sundials.h

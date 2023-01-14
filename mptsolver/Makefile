@@ -21,9 +21,9 @@ SRCS := $(wildcard conf_*.c output_*.c solver_*.c) \
 	timeradd.c
 #
 # import library creation settings
-DIR_TOP = ${MPT_PREFIX}
-DIR_INC = ${DIR_TOP}/include/mpt
-DIR_BASE = ../base/
+PREFIX  ?= $(dir $(MAKEFILE))../build
+DIR_INC ?= ${PREFIX}/include/mpt/
+DIR_BASE = $(dir $(MAKEFILE))../base/
 include ${DIR_BASE}mpt.lib.mk
 #
 # additional dependencies

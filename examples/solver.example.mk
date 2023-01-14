@@ -2,11 +2,11 @@
 #
 TESTS ?= ${PROGS}
 #
-# include general example rules
-DIR_TOP = ${MPT_PREFIX}
+# specify and extend generic example rules
 DIR_EXAMPLES := $(dir $(lastword $(MAKEFILE_LIST)))
-DIR_BASE ?= ${DIR_EXAMPLES}../base/
 DIR_SOLVER ?= ${DIR_EXAMPLES}../
+DIR_BASE ?= ${DIR_SOLVER}base/
+PREFIX ?= ${DIR_SOLVER}build
 include ${DIR_BASE}/mpt.example.mk
 
 INC ?= '${DIR_EXAMPLES}' '${DIR_SOLVER}' '${DIR_BASE}mptcore'
