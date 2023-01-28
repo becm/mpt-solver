@@ -5,9 +5,12 @@ Use solvers from [SUNDIALS](https://computation.llnl.gov/projects/sundials)
 library
 
 ## Local Build
-To use *SUNDIALS* libraries with `Makefile` build
-set `DIR_SUNDIALS_OBJ` to *SUNDIALS* CMake build directory
-and `DIR_SUNDIALS_INC` to *SUNDIALS* install include directory.
+To use *SUNDIALS* libraries with `Makefile` build,
+set `SUNDIALS` to *SUNDIALS* source directory
+and `SUNDIALS_BUILD` to *SUNDIALS* CMake build directory.
+
+The default config expects a (versioned) subdirectory
+in the general `DIR_MATH` location.
 
 ### Alternative `Makfile` build modes
 To use shared *SUNDIALS* libraries remove `MATH_OBJS_{SHARED,STATIC}`

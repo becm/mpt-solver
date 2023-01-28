@@ -29,7 +29,7 @@ src_modfcn = \
 	modfcn_ivp_values.c
 #
 # math objects in different location
-MATH_OBJS ?= $(MATH:%=${DIR_MATH}/%)
+MATH_OBJS ?= $(MATH:%=${DIR_MATH}%)
 MATH_OBJS_STATIC ?= ${MATH_OBJS}
 MATH_OBJS_SHARED ?= ${MATH_OBJS}
 # object collections

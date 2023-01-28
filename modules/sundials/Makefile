@@ -2,14 +2,10 @@
 LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
-sundials_version = 6.3.0
-DIR_SUNDIALS ?= $(dir ${MAKEFILE})../../math/sundials-${sundials_version}/
+sundials_version = 6.5.0
 #
-# precompiled object location
-DIR_SUNDIALS_OBJ ?= ${DIR_SUNDIALS}build/
 # include directories (generated, public)
-SUNDIALS_INC ?= ${DIR_SUNDIALS_OBJ}include ${DIR_SUNDIALS}include/
-INC = . ${SUNDIALS_INC}
+INC = . ${SUNDIALS_BUILD}/include ${SUNDIALS}/include
 #
 # SUNDIALS modules to include in shared library
 sundials_direct = band dense
@@ -47,9 +43,6 @@ sources = $(wildcard sundials_*.c)
 
 SRCS := ${sources} ${sources_cvode} ${sources_ida}
 
-MATH_OBJS_STATIC != env DIR_SUNDIALS="${DIR_SUNDIALS_OBJ}" LIBRARY_TYPE=static ./sundials_collect.sh ${sundials_modules}
-MATH_OBJS_SHARED != env DIR_SUNDIALS="${DIR_SUNDIALS_OBJ}" LIBRARY_TYPE=shared ./sundials_collect.sh ${sundials_modules}
-
 #
 # headers to export
 HEADER = sundials.h
@@ -57,6 +50,14 @@ CONFIG = sundials.conf
 #
 # general library rules
 include ../mpt.solver.mk
+#
+# SUNDIALS source location
+SUNDIALS ?= ${DIR_MATH}sundials-${sundials_version}
+#
+# SUNDIALS precompiled object location
+SUNDIALS_BUILD ?= ${SUNDIALS}/build
+MATH_OBJS_STATIC != env LIBRARY_TYPE=static ./sundials_collect.sh "${SUNDIALS_BUILD}" ${sundials_modules}
+MATH_OBJS_SHARED != env LIBRARY_TYPE=shared ./sundials_collect.sh "${SUNDIALS_BUILD}" ${sundials_modules}
 #
 # object dependencies
 ${OBJS} : sundials.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
