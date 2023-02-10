@@ -12,3 +12,5 @@ $(PROGS:%=%.o) : ../solver_run.h
 
 crackoil : crackoil.o
 test_crackoil : ARGS=crackoil.conf
+
+test_% : MPT_FLAGS=e

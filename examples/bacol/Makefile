@@ -21,3 +21,5 @@ test_sys4 : ARGS=sys4.conf
 bacol : bacol.o sys4_fcn.o
 bacol : LDLIBS=-lmpt_bacol -lmptsolver -lmptcore
 bacol.o : INC+='${DIR_SOLVER}modules/bacol'
+
+test_% : MPT_FLAGS=e

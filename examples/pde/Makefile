@@ -27,3 +27,5 @@ test_twoeq : ARGS=twoeq.conf
 
 makzo : makzo.o
 test_makzo : ARGS=makzo.conf
+
+test_% : MPT_FLAGS=e

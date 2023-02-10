@@ -16,3 +16,5 @@ test_cakzo : ARGS=cakzo.conf
 
 robertson : robertson.o
 test_robertson : ARGS=robertson.conf
+
+test_% : MPT_FLAGS=e
