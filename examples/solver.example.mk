@@ -3,20 +3,20 @@
 TESTS ?= ${PROGS}
 #
 # specify and extend generic example rules
-DIR_EXAMPLES := $(dir $(lastword $(MAKEFILE_LIST)))
-DIR_SOLVER ?= ${DIR_EXAMPLES}../
-DIR_BASE ?= ${DIR_SOLVER}base/
-PREFIX ?= ${DIR_SOLVER}build
-include ${DIR_BASE}/mpt.example.mk
+EXAMPLES_BASE := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+SOLVER_BASE ?= ${EXAMPLES_BASE}/..
+SOLVER_MODULES_BASE ?= ${SOLVER_BASE}/modules
+PREFIX ?= ${SOLVER_BASE}/build
+include ${SOLVER_BASE}/base/mpt.example.mk
 
-INC ?= '${DIR_EXAMPLES}' '${DIR_SOLVER}' '${DIR_BASE}mptcore'
+INC ?= '${EXAMPLES_BASE}' '${SOLVER_BASE}' '${MPT_BASE}/mptcore'
 
 CLEAR_FILES += $(TESTS:%=%.out)
 CLEAN_FILES += ${CLEAR_FILES}
 #
 # objects used in multiple binaries
-${DIR_EXAMPLES}solver_run.o : ${DIR_EXAMPLES}solver_run.h
-${DIR_EXAMPLES}solver_run.o : INC+='${DIR_BASE}mptio'
+${EXAMPLES_BASE}/solver_run.o : ${EXAMPLES_BASE}/solver_run.h
+${EXAMPLES_BASE}/solver_run.o : INC+='${MPT_BASE}/mptio'
 #
 # default libraries for static/shared builds
 ${STATIC} : libs=mptsolver mpt dl

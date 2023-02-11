@@ -27,14 +27,14 @@ output output_static : output.o
 output : LDLIBS=-lmpt++
 output_static : LDLIBS=-lmpt++ -lmpt
 output.o : CPPFLAGS+=-std=c++11
-output.o : INC+='${DIR_BASE}mptplot'
+output.o : INC+='${MPT_BASE}/mptplot'
 
 solvers solvers_static : solvers.o
 solvers : LDLIBS=-lmpt++ -lmptcore $(solvers:%=-lmpt_%)
 solvers_static : LDLIBS=-lmpt++ -lmpt -lmpt_solvers
 solvers.o : CPPFLAGS+=-std=c++11 $(solvers:%=-Dwith_%)
-solvers.o : INC+=$(ivp_solvers:%='${DIR_SOLVER}modules/%')
-solvers.o : INC+=$(nl_solvers:%='${DIR_SOLVER}modules/nlsolv/%')
+solvers.o : INC+=$(ivp_solvers:%='${SOLVER_MODULES_BASE}/%')
+solvers.o : INC+=$(nl_solvers:%='${SOLVER_MODULES_BASE}/nlsolv/%')
 
 loadsol :  LDLIBS=-lmptsolver -lmptloader -lmptcore
 loadsol.o :

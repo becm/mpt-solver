@@ -1,19 +1,19 @@
-# mpt.solver.mk: solver library creation template
-DIR_SOLVER_MODULES := $(dir $(lastword $(MAKEFILE_LIST)))
+# mpt.solver.mk: solver module creation template
+SOLVER_MODULES_BASE := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 #
 # default source directories
-DIR_BASE ?= ${DIR_SOLVER_MODULES}../base/
-DIR_MATH ?= ${DIR_SOLVER_MODULES}../math/
+MPT_BASE ?= ${SOLVER_MODULES_BASE}/../base
+MATH_BASE ?= ${SOLVER_MODULES_BASE}/math
 #
 # relative default target directories
-PREFIX   ?= ${DIR_SOLVER_MODULES}../build
-DIR_INC  ?= ${PREFIX}/include/mpt/solver/
+PREFIX ?= ${SOLVER_MODULES_BASE}/../build
+PREFIX_INC ?= ${PREFIX}/include/mpt/solver
 #
 # default header to export
 HEADER ?= ${LIB}.h
 #
 # add directories to global include
-INC += ${DIR_SOLVER_MODULES} ${DIR_BASE} ${DIR_BASE}mptcore
+INC += '${SOLVER_MODULES_BASE}' '${MPT_BASE}' '${MPT_BASE}/mptcore'
 #
 # vecpar and other shared operations
 mod_tol = tol_check tol_set tol_get
@@ -24,30 +24,32 @@ mod_sol = nlsset ${mod_ivp}
 # module function templates
 src_modfcn = \
 	modfcn_solver_conv.c \
-	modfcn_data_new.c modfcn_data_set.c \
-	modfcn_ivp_state.c modfcn_ivp_vecset.c \
+	modfcn_data_new.c \
+	modfcn_data_set.c \
+	modfcn_ivp_state.c \
+	modfcn_ivp_vecset.c \
 	modfcn_ivp_values.c
 #
 # math objects in different location
-MATH_OBJS ?= $(MATH:%=${DIR_MATH}%)
+MATH_OBJS ?= $(MATH:%=${MATH_BASE}/%)
 MATH_OBJS_STATIC ?= ${MATH_OBJS}
 MATH_OBJS_SHARED ?= ${MATH_OBJS}
 # object collections
 STATIC_OBJS ?= ${OBJS} ${MATH_OBJS_STATIC}
 SHLIB_OBJS ?= libinfo.o \
 	${OBJS} ${MATH_OBJS_SHARED} \
-	$(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o)
+	$(mod_require:%=${SOLVER_MODULES_BASE}/mod_%.o)
 #
 # import library creation
-include ${DIR_BASE}/mpt.lib.mk
+include ${MPT_BASE}/mpt.lib.mk
 CLEAN_FILES += libinfo.o
 # compiler flags for FORTRAN math objects
 FFLAGS ?= -fpic -O5 -Wall -fstack-protector
 #
 # additional object dependancies
-$(mod_require:%=${DIR_SOLVER_MODULES}mod_%.o) \
-${OBJS} : ${DIR_SOLVER_MODULES}../solver.h ${DIR_BASE}mptcore/meta.h ${MAKEFILE_LIST}
-libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
+$(mod_require:%=${SOLVER_MODULES_BASE}/mod_%.o) \
+${OBJS} : ${SOLVER_MODULES_BASE}/../solver.h ${MPT_BASE}/mptcore/meta.h ${MAKEFILE_LIST}
+libinfo.o : ${MPT_BASE}/libinfo.h ${MPT_BASE}/version.h
 #
 # solver module configuration
 .PHONY : module_config
@@ -56,8 +58,8 @@ module_config : ${CONFIG}; $(call install_files,${PREFIX}/etc/mpt.conf.d,${CONFI
 CLEAR_FILES += $(CONFIG:%=${PREFIX}/etc/mpt.conf.d/%) libinfo.o
 #
 # module helper dependencies
-*_modfcn.o : $(src_modfcn:%=${DIR_SOLVER_MODULES}%)
-module_function.h : ${DIR_SOLVER_MODULES}solver_modfcn.h
+*_modfcn.o : $(src_modfcn:%=${SOLVER_MODULES_BASE}/%)
+module_function.h : ${SOLVER_MODULES_BASE}/solver_modfcn.h
 #
 # additional service targets
 .PHONY : clean_math

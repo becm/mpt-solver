@@ -40,8 +40,8 @@ CONFIG = daesolv.conf
 include ../mpt.solver.mk
 #
 # object dependencies
-${OBJS} : module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
-*/*_property.o : ${DIR_BASE}version.h
+${OBJS} : module_functions.h ${SOLVER_MODULES_BASE}/solver_modfcn.h
+*/*_property.o : ${MPT_BASE}/version.h
 dassl/*.o : dassl.h
 radau/*.o : radau.h
 mebdfi/*.o : mebdfi.h

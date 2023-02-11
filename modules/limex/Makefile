@@ -20,5 +20,5 @@ CONFIG = limex.conf
 include ../mpt.solver.mk
 #
 # local dependencies
-${OBJS} : limex.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
-limex_property.o : ${DIR_BASE}version.h
+${OBJS} : limex.h module_functions.h ${SOLVER_MODULES_BASE}/solver_modfcn.h
+limex_property.o : ${MPT_BASE}/version.h

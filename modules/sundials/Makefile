@@ -5,7 +5,7 @@ LIB ?= mpt_sundials
 sundials_version = 6.5.0
 #
 # include directories (generated, public)
-INC = . ${SUNDIALS_BUILD}/include ${SUNDIALS}/include
+INC = . '${SUNDIALS_BUILD}/include' '${SUNDIALS}/include'
 #
 # SUNDIALS modules to include in shared library
 sundials_direct = band dense
@@ -52,7 +52,7 @@ CONFIG = sundials.conf
 include ../mpt.solver.mk
 #
 # SUNDIALS source location
-SUNDIALS ?= ${DIR_MATH}sundials-${sundials_version}
+SUNDIALS ?= ${MATH_BASE}/sundials-${sundials_version}
 #
 # SUNDIALS precompiled object location
 SUNDIALS_BUILD ?= ${SUNDIALS}/build
@@ -60,7 +60,7 @@ MATH_OBJS_STATIC != env LIBRARY_TYPE=static ./sundials_collect.sh "${SUNDIALS_BU
 MATH_OBJS_SHARED != env LIBRARY_TYPE=shared ./sundials_collect.sh "${SUNDIALS_BUILD}" ${sundials_modules}
 #
 # object dependencies
-${OBJS} : sundials.h module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
-ida/ida_property.o cvode/cvode_property.o : ${DIR_BASE}version.h
+${OBJS} : sundials.h module_functions.h ${SOLVER_MODULES_BASE}/solver_modfcn.h
+ida/ida_property.o cvode/cvode_property.o : ${MPT_BASE}/version.h
 # target dependencies
 ${LIB_STATIC} ${LIB_SHARED} : sundials_collect.sh

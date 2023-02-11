@@ -37,7 +37,7 @@ CONFIG = nlsolv.conf
 include ../mpt.solver.mk
 #
 # local object dependencies
-${OBJS} : module_functions.h ${DIR_SOLVER_MODULES}solver_modfcn.h
+${OBJS} : module_functions.h ${SOLVER_MODULES_BASE}/solver_modfcn.h
 $(portn2_wrapper:%=portn2/%)   : portn2/portn2.h
 $(minpack_wrapper:%=minpack/%) : minpack/minpack.h
-minpack/minpack_property.o portn2/portn2_property.o  : ${DIR_BASE}version.h
+minpack/minpack_property.o portn2/portn2_property.o  : ${MPT_BASE}/version.h

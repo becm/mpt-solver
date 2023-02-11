@@ -3,7 +3,7 @@ LIB = mptsolver
 #
 # additional header directories
 base_inc = . mptcore mptplot mptloader
-INC = .. $(base_inc:%=${DIR_BASE}%)
+INC = .. $(base_inc:%='${MPT_BASE}/%')
 #
 # header to export
 HEADER = ../solver.h
@@ -21,12 +21,11 @@ SRCS := $(wildcard conf_*.c output_*.c solver_*.c) \
 	timeradd.c
 #
 # import library creation settings
-PREFIX  ?= $(dir $(MAKEFILE))../build
-DIR_INC ?= ${PREFIX}/include/mpt/
-DIR_BASE = $(dir $(MAKEFILE))../base/
-include ${DIR_BASE}mpt.lib.mk
+PREFIX ?= $(dir $(MAKEFILE))../build
+PREFIX_INC ?= ${PREFIX}/include/mpt
+include $(dir $(MAKEFILE))../base/mpt.lib.mk
 #
 # additional dependencies
-libinfo.o : ${DIR_BASE}libinfo.h ${DIR_BASE}version.h
+libinfo.o : ${MPT_BASE}/libinfo.h ${MPT_BASE}/version.h
 CLEAR_FILES += libinfo.o
 CLEAN_FILES += libinfo.o

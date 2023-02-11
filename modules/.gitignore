@@ -1,0 +1,2 @@
+# exclude 3rd party imported sources
+/math

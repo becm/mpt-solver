@@ -29,6 +29,9 @@ CONFIG = bacol.conf
 #
 # general library rules
 include ../mpt.solver.mk
+#
+# object dependencies
+${OBJS} : module_functions.h ${SOLVER_MODULES_BASE}/solver_modfcn.h
 bacol_*.o : bacol.h
-bacol_property.o : ${DIR_BASE}version.h
+bacol_property.o : ${MPT_BASE}/version.h
 

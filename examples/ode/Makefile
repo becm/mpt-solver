@@ -6,9 +6,9 @@ OBJS  = $(PROGS:%=%.o)
 # general targets and definitions
 include ../solver.example.mk
 
-${PROGS} ${STATIC} : ${DIR_EXAMPLES}solver_run.o
+${PROGS} ${STATIC} : ${EXAMPLES_BASE}/solver_run.o
 
-$(PROGS:%=%.o) : ../solver_run.h
+$(PROGS:%=%.o) : ${EXAMPLES_BASE}/solver_run.h
 
 crackoil : crackoil.o
 test_crackoil : ARGS=crackoil.conf

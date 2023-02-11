@@ -3,8 +3,5 @@
 *.py[co]
 *~
 
-# exclude internal build destination
+# exclude local build destination
 /build
-
-# exclude 3rd party source directory
-/math
