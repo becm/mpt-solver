@@ -4,6 +4,7 @@
 LIB = mpt_solvers
 #
 # include global configuration
+PREFIX ?= $(abspath ../build)
 include ../base/mpt.config.mk
 #
 SOLIVP = vode daesolv limex bacol
@@ -19,13 +20,13 @@ clean_objects :
 	${RM} mod_*.o
 
 clear_static :
-	${RM} "${DIR_LIB}/lib${LIB}.a"
+	${RM} "${PREFIX_LIB}/lib${LIB}.a"
 
 static :
 	@for s in ${SOLVER}; do \
-		if ! ${MAKE} -C "$${s}" "${DIR_LIB}/lib${LIB}.a" LIB=${LIB}; then break ; fi ; \
+		if ! ${MAKE} -C "$${s}" "${PREFIX_LIB}/lib${LIB}.a" LIB=${LIB} PREFIX_LIB=${PREFIX_LIB}; then break ; fi ; \
 	done
-	${AR} s "${DIR_LIB}/lib${LIB}.a"
+	${AR} s "${PREFIX_LIB}/lib${LIB}.a"
 #
 # pass target to solver makefiles
 .PHONY : install header clear clean

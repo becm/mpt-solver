@@ -108,8 +108,8 @@ MPT_SOLVER_STRUCT(sundials_step)
 	
 	realtype hin;   /* initial stepsize */
 	
-	realtype hmin;  /* minimal stapsize */
-	realtype hmax;  /* maximal stapsize */
+	realtype hmin;  /* minimal stepsize */
+	realtype hmax;  /* maximal stepsize */
 }
 #endif  /* _SUNDIALS_TYPES_H */
 ;

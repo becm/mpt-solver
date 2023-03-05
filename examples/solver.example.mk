@@ -4,7 +4,7 @@ TESTS ?= ${PROGS}
 #
 # specify and extend generic example rules
 EXAMPLES_BASE := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-SOLVER_BASE ?= ${EXAMPLES_BASE}/..
+SOLVER_BASE ?= $(abspath ${EXAMPLES_BASE}/..)
 SOLVER_MODULES_BASE ?= ${SOLVER_BASE}/modules
 PREFIX ?= ${SOLVER_BASE}/build
 include ${SOLVER_BASE}/base/mpt.example.mk

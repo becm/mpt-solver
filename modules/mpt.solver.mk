@@ -1,12 +1,13 @@
 # mpt.solver.mk: solver module creation template
 SOLVER_MODULES_BASE := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+SOLVER_BASE ?= $(abspath ${SOLVER_MODULES_BASE}/..)
 #
 # default source directories
-MPT_BASE ?= ${SOLVER_MODULES_BASE}/../base
+MPT_BASE ?= ${SOLVER_BASE}/base
 MATH_BASE ?= ${SOLVER_MODULES_BASE}/math
 #
 # relative default target directories
-PREFIX ?= ${SOLVER_MODULES_BASE}/../build
+PREFIX ?= ${SOLVER_BASE}/build
 PREFIX_INC ?= ${PREFIX}/include/mpt/solver
 #
 # default header to export
