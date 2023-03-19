@@ -5,3 +5,6 @@
 
 # exclude local build destination
 /build
+
+# exclude 3rd party imported sources
+/math

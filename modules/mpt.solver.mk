@@ -4,7 +4,7 @@ SOLVER_BASE ?= $(abspath ${SOLVER_MODULES_BASE}/..)
 #
 # default source directories
 MPT_BASE ?= ${SOLVER_BASE}/base
-MATH_BASE ?= ${SOLVER_MODULES_BASE}/math
+MATH_BASE ?= ${SOLVER_BASE}/math
 #
 # relative default target directories
 PREFIX ?= ${SOLVER_BASE}/build
