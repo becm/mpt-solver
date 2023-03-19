@@ -47,9 +47,6 @@ extern int MPT_SOLVER_MODULE_FCN(ivp_state)(const MPT_IVP_STRUCT(parameters) *iv
 			 || !val->_addr) {
 				return MPT_ERROR(BadValue);
 			}
-			if (!MPT_value_isBaseType(val)) {
-				return MPT_ERROR(BadType);
-			}
 			if (val->_type == MPT_SOLVER_MODULE_DATA_ID) {
 				tmp = *((MPT_SOLVER_MODULE_DATA_TYPE *) val->_addr);
 			}

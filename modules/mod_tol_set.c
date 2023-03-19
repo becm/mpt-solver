@@ -41,7 +41,6 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFAC
 			const MPT_STRUCT(value) *val;
 			
 			if (!(val = it->_vptr->value(it))
-			 || !MPT_value_isBaseType(val)
 			 || !val->_addr) {
 				break;
 			}
@@ -61,6 +60,7 @@ extern int mpt_solver_module_tol_set(MPT_SOLVER_TYPE(dvecpar) *vec, MPT_INTERFAC
 					return ret;
 				}
 			}
+			
 			if ((ret = it->_vptr->advance(it)) < 0) {
 				break;
 			}

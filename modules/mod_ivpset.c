@@ -65,9 +65,6 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFA
 		if (!val || !val->_addr) {
 			return MPT_ERROR(MissingData);
 		}
-		if (!MPT_value_isBaseType(val)) {
-			return MPT_ERROR(BadType);
-		}
 		if (MPT_type_isConvertable(val->_type)) {
 			MPT_INTERFACE(convertable) *conv = *((void * const *) val->_addr);
 			
@@ -84,18 +81,17 @@ extern int mpt_solver_module_ivpset(MPT_IVP_STRUCT(parameters) *ivp, MPT_INTERFA
 		else {
 			return MPT_ERROR(BadType);
 		}
+		
 		if (neqs < 1) {
 			return MPT_ERROR(BadValue);
 		}
 		if ((ret = it->_vptr->advance(it)) < 0) {
 			return ret;
 		}
+		
 		len = 1;
 		if (!ret || !(val = it->_vptr->value(it))) {
 			/* iterator has no further data */
-		}
-		else if (!MPT_value_isBaseType(val)) {
-			return MPT_ERROR(BadType);
 		}
 		else if (!val->_addr) {
 			return MPT_ERROR(MissingData);

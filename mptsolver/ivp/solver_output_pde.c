@@ -58,7 +58,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 	long i, len, passlen, ld;
 	int type;
 	
-	if (!val || !MPT_value_isBaseType(val) || !val->_addr) {
+	if (!val || !val->_addr) {
 		return MPT_ERROR(BadArgument);
 	}
 	if (!out->_data && !out->_graphic) {
@@ -90,14 +90,12 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 		pr.name = "t";
 		if (obj->_vptr->property(obj, &pr) > 0
 		 && pr.val._addr
-		 && MPT_value_isBaseType(&pr.val)
 		 && pr.val._type == 'd') {
 			t = memcpy(&_t, pr.val._addr, sizeof(*t));
 		}
 		pr.name = "y";
 		if (obj->_vptr->property(obj, &pr) > 0
 		 && pr.val._addr
-		 && MPT_value_isBaseType(&pr.val)
 		 && pr.val._type == MPT_type_toVector('d')) {
 			memcpy(&y, pr.val._addr, sizeof(y));
 			len = y.iov_len / sizeof(double);
@@ -105,7 +103,6 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 		pr.name = "grid";
 		if (obj->_vptr->property(obj, &pr) > 0
 		 && pr.val._addr
-		 && MPT_value_isBaseType(&pr.val)
 		 && pr.val._type == MPT_type_toVector('d')) {
 			memcpy(&grid, pr.val._addr, sizeof(grid));
 		}
@@ -143,7 +140,7 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 			mpt_output_solver_history(out->_data, grid.iov_base, len, y.iov_base, ld);
 		}
 		if (out->_graphic
-		    && (!pass || (passlen && (pass[0] & state)))) {
+		 && (!pass || (passlen && (pass[0] & state)))) {
 			mpt_output_solver_data(out->_graphic, state, 0, len, grid.iov_base, 1);
 		}
 	}
@@ -157,7 +154,8 @@ extern int mpt_solver_output_pde(const MPT_STRUCT(solver_output) *out, int state
 	for (i = 0; i < ld; i++) {
 		const double *curr = y.iov_base;
 		int pos = i + 1;
-		if (!pass || (pos < passlen && pass[pos] & state)) {
+		if (!pass
+		 || (pos < passlen && pass[pos] & state)) {
 			mpt_output_solver_data(out->_graphic, state, pos, len, curr + i, ld);
 			++type;
 		}

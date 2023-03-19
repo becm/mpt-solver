@@ -79,8 +79,7 @@ static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 	if ((ret = mpt_value_convert(&pr->val, 'd', ptr)) >= 0) {
 		return 0;
 	}
-	if (MPT_value_isBaseType(&pr->val)
-	 && pr->val._type == MPT_ENUM(TypeObjectPtr)) {
+	if (pr->val._type == MPT_ENUM(TypeObjectPtr)) {
 		MPT_INTERFACE(object) *obj = *((void * const *) pr->val._addr);
 		MPT_STRUCT(property) tmp = MPT_PROPERTY_INIT;
 		tmp.name = "t";

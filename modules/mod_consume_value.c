@@ -31,10 +31,7 @@ extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, int type
 	if (!it || !(val = it->_vptr->value(it))) {
 		return MPT_ERROR(MissingData);
 	}
-	if (!MPT_value_isBaseType(val)) {
-		return MPT_ERROR(BadType);
-	}
-	if (len && val->_type == type) {
+	if (len && (int) val->_type == type) {
 		if (ptr) {
 			if (val->_addr) {
 				memcpy(ptr, val->_addr, len);

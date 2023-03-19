@@ -21,9 +21,6 @@ static int setTime(void *ptr, const MPT_STRUCT(property) *pr)
 	if (!pr || pr->name || !pr->val._addr) {
 		return 0;
 	}
-	if (!MPT_value_isBaseType(&pr->val)) {
-		return MPT_ERROR(BadType);
-	}
 	if (pr->val._type == 'd') {
 		*((double *) ptr) = *((double *) pr->val._addr);
 		return pr->val._type;
@@ -65,8 +62,7 @@ static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 	if (!val->_addr) {
 		return MPT_ERROR(BadValue);
 	}
-	if (!MPT_value_isBaseType(val)
-	 || val->_type != MPT_ENUM(TypeObjectPtr)) {
+	if (val->_type != MPT_ENUM(TypeObjectPtr)) {
 		return MPT_ERROR(BadType);
 	}
 	if (!(obj = *(void * const *) val->_addr)) {
@@ -85,16 +81,14 @@ static int updateIvpData(void *ctx, const MPT_STRUCT(value) *val)
 	
 	pr.name = "t";
 	if (obj->_vptr->property(obj, &pr) >= 0) {
-		if (MPT_value_isBaseType(val)
-		 && pr.val._type == 'd'
+		if (pr.val._type == 'd'
 		 && pr.val._addr) {
 			*add = *((const double *) pr.val._addr);
 		}
 	}
 	pr.name = "y";
 	if (obj->_vptr->property(obj, &pr) >= 0) {
-		if (MPT_value_isBaseType(val)
-		 && pr.val._type == MPT_type_toVector('d')
+		if (pr.val._type == MPT_type_toVector('d')
 		 && pr.val._addr) {
 			const struct iovec *vec = pr.val._addr;
 			ssize_t len = vec->iov_len;
@@ -152,7 +146,7 @@ extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *val, MPT_INTERFACE(i
 	}
 	obj = 0;
 	if ((ret = val->_vptr->convert(val, MPT_ENUM(TypeObjectPtr), &obj)) < 0
-	    || !obj) {
+	 || !obj) {
 		mpt_log(info, __func__, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		        MPT_tr("missing object interface"), val);
 		return MPT_ERROR(BadArgument);
@@ -162,7 +156,7 @@ extern int mpt_solver_steps_ode(MPT_INTERFACE(convertable) *val, MPT_INTERFACE(i
 	}
 	sol = 0;
 	if ((ret = val->_vptr->convert(val, MPT_ENUM(TypeSolverPtr), &sol)) < 0
-	    || !sol) {
+	 || !sol) {
 		mpt_log(info, __func__, MPT_LOG(Error), "%s: %s (%" PRIxPTR ")",
 		        name, MPT_tr("missing solver interface"), val);
 		return MPT_ERROR(BadArgument);

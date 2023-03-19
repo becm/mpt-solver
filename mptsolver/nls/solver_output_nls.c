@@ -106,9 +106,6 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	if (!val || !(vec = val->_addr)) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (!MPT_value_isBaseType(val)) {
-		return MPT_ERROR(BadType);
-	}
 	par = 0;
 	res = 0;
 	
@@ -122,7 +119,6 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		
 		pr.name = "param";
 		if (obj->_vptr->property(obj, &pr) >= 0
-		 && MPT_value_isBaseType(&pr.val)
 		 && pr.val._type == MPT_type_toVector('d')
 		 && pr.val._addr) {
 			vec = pr.val._addr;
@@ -131,7 +127,6 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		}
 		pr.name = "res";
 		if (obj->_vptr->property(obj, &pr) >= 0
-		 && MPT_value_isBaseType(&pr.val)
 		 && pr.val._type == MPT_type_toVector('d')
 		 && pr.val._addr) {
 			vec = pr.val._addr;
@@ -139,6 +134,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 			nr  = vec->iov_len / sizeof (*par);
 		}
 	}
+	
 	if (!par) {
 		return MPT_ERROR(BadValue);
 	}
@@ -146,13 +142,13 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		return 0;
 	}
 	/* output parameters */
-	if (par &&
-	    (state & (MPT_DATASTATE(Init) | MPT_DATASTATE(Step) | MPT_DATASTATE(Fini)))) {
+	if (par
+	 && (state & (MPT_DATASTATE(Init) | MPT_DATASTATE(Step) | MPT_DATASTATE(Fini)))) {
 		if (out->_data) {
 			outputParam(out->_data, state, par, np);
 		}
 		if (out->_graphic
-		    && out->_graphic != out->_data) {
+		 && out->_graphic != out->_data) {
 			/* pass state via dimension */
 			outputParam(out->_graphic, state, par, np);
 		}
@@ -169,22 +165,23 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	}
 	/* output residuals */
 	if (out->_graphic
-	    && state & MPT_DATASTATE(Step)) {
-		if (!pass || (passlen && (pass[0] & state))) {
+	 && state & MPT_DATASTATE(Step)) {
+		if (!pass
+		 || (passlen && (pass[0] & state))) {
 			outputValues(out->_graphic, state, 0, nr, res, 1);
 		}
 	}
 	if (out->_data
-	    && state & MPT_DATASTATE(Fini)) {
+	 && state & MPT_DATASTATE(Fini)) {
 		outputSize(out->_data, nr);
 		mpt_output_solver_history(out->_data, res, nr, 0, 0);
 	}
 	/* output user data */
 	if (out->_graphic
-	    && (state & MPT_DATASTATE(Init))
-	    && sd
-	    && (buf = sd->val._buf)
-	    && (np = buf->_used / sizeof(double))) {
+	 && (state & MPT_DATASTATE(Init))
+	 && sd
+	 && (buf = sd->val._buf)
+	 && (np = buf->_used / sizeof(double))) {
 		const double *val = (double *) (buf + 1);
 		int i, nv, add;
 		if ((nv = sd->nval) < 0) {
@@ -198,7 +195,8 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		add = 0;
 		for (i = 0; i < np; ++i) {
 			size_t pos = i + 1;
-			if (!pass || (pos < passlen && pass[pos] & state)) {
+			if (!pass
+			 || (pos < passlen && pass[pos] & state)) {
 				outputValues(out->_graphic, state, pos, np, val + i, nv);
 				++add;
 			}

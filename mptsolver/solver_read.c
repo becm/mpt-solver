@@ -3,6 +3,8 @@
  *   read config files
  */
 
+#include <inttypes.h>
+
 #include <string.h>
 #include <stdio.h>
 
@@ -42,10 +44,9 @@ static int getArg(MPT_INTERFACE(iterator) *args, FILE **file, const char **fname
 	}
 	if ((ret = mpt_value_convert(val, 's', fname)) < 0) {
 		if (log) {
-			int type = val->_type;
-			int namespace = val->_namespace;
-			mpt_log(log, _func, MPT_LOG(Error), "%s (%d@%d)",
-			        MPT_tr("invalid file argument type"), type, namespace);
+			uintptr_t type = val->_type;
+			mpt_log(log, _func, MPT_LOG(Error), "%s (id=%" PRIdPTR ")",
+			        MPT_tr("invalid file argument type"), type);
 			
 		}
 		return ret;
