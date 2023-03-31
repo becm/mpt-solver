@@ -104,7 +104,7 @@ static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 	return p->len + 1;
 }
 /* convertable interface */
-static int iterProfileConv(MPT_INTERFACE(convertable) *val, int type, void *ptr)
+static int iterProfileConv(MPT_INTERFACE(convertable) *val, MPT_TYPE(value) type, void *ptr)
 {
 	const MPT_STRUCT(iterProfile) *p = (void *) val;
 	
@@ -191,13 +191,13 @@ extern MPT_INTERFACE(metatype) *mpt_conf_profiles(const MPT_STRUCT(solver_data) 
 	int i, neqs;
 	
 	if (!(buf = dat->val._buf)
-	    || !(len = buf->_used / sizeof(*val))) {
+	 || !(len = buf->_used / sizeof(*val))) {
 		mpt_log(out, __func__, MPT_LOG(Error), "%s",
 		        MPT_tr("empty buffer"));
 		return 0;
 	}
 	if (!(info = buf->_content_traits)
-	    || (info != mpt_type_traits('d'))) {
+	 || (info != mpt_type_traits('d'))) {
 		mpt_log(out, __func__, MPT_LOG(Error), "%s ('d')",
 		        MPT_tr("bad grid content"));
 		return 0;

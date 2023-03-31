@@ -308,7 +308,7 @@ MPT_IVP_STRUCT(jacobian)
 # define MPT_IVP_JAC_INIT { 0, 0 }
 #endif
 	MPT_SOLVER_IVP(Jac) fcn;  /* (full/banded) jacobi matrix */
-	void  *par;
+	void *par;
 };
 /*! initial value problem functions */
 MPT_IVP_STRUCT(odefcn)
@@ -689,7 +689,7 @@ extern int mpt_solver_module_ufcn_nls(const MPT_NLS_STRUCT(parameters) *, MPT_NL
 /* wrap multiple proprties in intermediate object */
 extern int mpt_solver_module_report_properties(const MPT_STRUCT(property) *, int , const char *, const char *, MPT_TYPE(property_handler) , void *);
 /* consume value from iterator, allow primitive copy on non-zero size */
-extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, int , void * , size_t);
+extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, MPT_TYPE(value) , void * , size_t);
 
 /* id for registered solver metatype */
 extern const MPT_STRUCT(named_traits) *mpt_solver_type_traits(void);

@@ -24,7 +24,7 @@ MPT_STRUCT(RadauData) {
 	double next;
 };
 /* convertable interface */
-static int rdConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
+static int rdConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(value) type, void *ptr)
 {
 	MPT_STRUCT(RadauData) *rd = (void *) sol;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&rd->_sol, &rd->_obj, type, ptr);

@@ -22,7 +22,7 @@
  * 
  * \return result of iterator advance operation
  */
-extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, int type, void *ptr, size_t len)
+extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, MPT_TYPE(value) type, void *ptr, size_t len)
 {
 	const MPT_STRUCT(value) *val;
 	MPT_INTERFACE(convertable) *src;
@@ -31,7 +31,7 @@ extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, int type
 	if (!it || !(val = it->_vptr->value(it))) {
 		return MPT_ERROR(MissingData);
 	}
-	if (len && (int) val->_type == type) {
+	if (len && val->_type == type) {
 		if (ptr) {
 			if (val->_addr) {
 				memcpy(ptr, val->_addr, len);

@@ -20,7 +20,7 @@
  * 
  * \return conversion result
  */
-extern int MPT_SOLVER_MODULE_FCN(solver_conv)(const MPT_SOLVER(interface) *sol, const MPT_INTERFACE(object) *obj, int type, void *ptr)
+extern int MPT_SOLVER_MODULE_FCN(solver_conv)(const MPT_SOLVER(interface) *sol, const MPT_INTERFACE(object) *obj, MPT_TYPE(value) type, void *ptr)
 {
 	if (!type) {
 		static const uint8_t fmt[] = { MPT_ENUM(TypeSolverPtr), MPT_ENUM(TypeObjectPtr), 0 };

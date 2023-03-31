@@ -24,7 +24,7 @@ MPT_STRUCT(DasslData) {
 	double next;
 };
 /* convertable interface */
-static int ddConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
+static int ddConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(value) type, void *ptr)
 {
 	MPT_STRUCT(DasslData) *da = (void *) sol;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&da->_sol, &da->_obj, type, ptr);

@@ -239,13 +239,13 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	return 1;
 }
 /* convertable interface */
-static int convNLS(MPT_INTERFACE(convertable) *val, int type, void *ptr)
+static int convNLS(MPT_INTERFACE(convertable) *val, MPT_TYPE(value) type, void *ptr)
 {
 	MPT_STRUCT(NLS) *nls = (void *) val;
 	const MPT_STRUCT(named_traits) *traits = mpt_client_type_traits();
-	int me = traits ? traits->type : MPT_ENUM(TypeMetaPtr);
+	MPT_TYPE(value) me = traits ? traits->type : MPT_ENUM(TypeMetaPtr);
 	
-	if (traits && (int) traits->type == type) {
+	if (traits && traits->type == type) {
 		if (ptr) *((const void **) ptr) = &nls->_cl;
 		return MPT_ENUM(TypeConfigPtr);
 	}

@@ -21,7 +21,7 @@ __MPT_SOLVER_BEGIN
 
 __MPT_EXTDECL_BEGIN
 
-extern int MPT_SOLVER_MODULE_FCN(solver_conv)(const MPT_SOLVER(interface) *, const MPT_INTERFACE(object) *, int , void *);
+extern int MPT_SOLVER_MODULE_FCN(solver_conv)(const MPT_SOLVER(interface) *, const MPT_INTERFACE(object) *, MPT_TYPE(value) , void *);
 
 extern int MPT_SOLVER_MODULE_FCN(ivp_vecset)(const MPT_IVP_STRUCT(parameters) *, MPT_SOLVER_MODULE_DATA_CONTAINER *, MPT_INTERFACE(convertable) *);
 extern int MPT_SOLVER_MODULE_FCN(ivp_values)(const MPT_IVP_STRUCT(parameters) *, MPT_SOLVER_MODULE_DATA_TYPE , const MPT_SOLVER_MODULE_DATA_TYPE *, const char *, MPT_TYPE(property_handler) , void *);

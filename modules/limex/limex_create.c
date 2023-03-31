@@ -73,7 +73,7 @@ static uintptr_t lxAddref()
 	return 0;
 }
 /* metatype interface */
-static int lxConv(MPT_INTERFACE(convertable) *val, int type, void *ptr)
+static int lxConv(MPT_INTERFACE(convertable) *val, MPT_TYPE(value) type, void *ptr)
 {
 	static const MPT_INTERFACE_VPTR(object) limexObj = {
 		lxGet, lxSet

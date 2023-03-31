@@ -310,13 +310,13 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	return 1;
 }
 /* convertable interface */
-static int convIVP(MPT_INTERFACE(convertable) *val, int type, void *ptr)
+static int convIVP(MPT_INTERFACE(convertable) *val, MPT_TYPE(value) type, void *ptr)
 {
 	MPT_STRUCT(IVP) *ivp = (void *) val;
 	const MPT_STRUCT(named_traits) *traits = mpt_client_type_traits();
-	int me = traits ? traits->type : MPT_ENUM(TypeMetaPtr);
+	MPT_TYPE(value) me = traits ? traits->type : MPT_ENUM(TypeMetaPtr);
 	
-	if (traits && (int) traits->type == type) {
+	if (traits && traits->type == type) {
 		if (ptr) *((const void **) ptr) = &ivp->_cl;
 		return MPT_ENUM(TypeConfigPtr);
 	}
@@ -412,8 +412,8 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	/* get time source from config */
 	if (!args
-	    && (curr = mpt_node_next(conf->children, "times"))
-	    && (mt = curr->_meta)) {
+	 && (curr = mpt_node_next(conf->children, "times"))
+	 && (mt = curr->_meta)) {
 		ret = MPT_metatype_convert(mt, MPT_ENUM(TypeIteratorPtr), &args);
 	}
 	/* query and advance time source */
@@ -443,8 +443,8 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	obj = 0;
 	if (!(mt = ivp->sol)
-	    || MPT_metatype_convert(mt, MPT_ENUM(TypeObjectPtr), &obj) < 0
-	    || !obj) {
+	 || MPT_metatype_convert(mt, MPT_ENUM(TypeObjectPtr), &obj) < 0
+	 || !obj) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		        MPT_tr("solver without object interface"), sol);
 		return MPT_ERROR(BadValue);
@@ -516,7 +516,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	sol = 0;
 	if ((err = MPT_metatype_convert(mt, MPT_ENUM(TypeSolverPtr), &sol)) < 0
-	    || !sol) {
+	 || !sol) {
 		err = MPT_metatype_convert(mt, 0, 0);
 		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
 		        MPT_tr("no solver interface"), MPT_tr("type"), err);
@@ -524,7 +524,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	obj = 0;
 	if ((err = MPT_metatype_convert(mt, MPT_ENUM(TypeObjectPtr), &obj)) < 0
-	    || !obj) {
+	 || !obj) {
 		err = MPT_metatype_convert(mt, 0, 0);
 		mpt_log(info, _func, MPT_LOG(Warning), "%s (%s = %d)",
 		        MPT_tr("solver without object interface"), MPT_tr("type"), err);
@@ -534,7 +534,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	
 	/* set solver parameters from config */
 	if ((cfg = configIVP(ivp))
-	    && (cfg = cfg->children)) {
+	 && (cfg = cfg->children)) {
 		mpt_solver_param(obj, cfg, hist);
 	}
 	/* set solver parameters from args */
@@ -590,7 +590,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	info = loggerIVP(0);
 	
 	if (!(mt = ivp->sol)
-	    || !(ctx.dat = ivp->sd)) {
+	 || !(ctx.dat = ivp->sd)) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("client not prepared for step operation"));
 		return MPT_ERROR(BadOperation);
@@ -598,15 +598,15 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	if (!(steps = args)) {
 		MPT_INTERFACE(convertable) *src;
 		if (!(src = mpt_config_get(&ivp->_cfg, "times", 0, 0))
-		    || (ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &steps)) < 0
-		    || !steps) {
+		 || (ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &steps)) < 0
+		 || !steps) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("no default time step source"));
 			return MPT_ERROR(BadArgument);
 		}
 	}
 	if ((ret = MPT_metatype_convert(mt, MPT_ENUM(TypeSolverPtr), &sol)) < 0
-	    || !sol) {
+	 || !sol) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s (%d)",
 		        MPT_tr("unable to get solver interface"), ret);
 		return MPT_ERROR(BadOperation);
@@ -647,7 +647,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	}
 	obj = 0;
 	if ((ret = MPT_metatype_convert(mt, MPT_ENUM(TypeObjectPtr), &obj)) < 0
-	    || !obj) {
+	 || !obj) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s (%" PRIxPTR ")",
 		        MPT_tr("no object interface for solver"), sol);
 		return ret;

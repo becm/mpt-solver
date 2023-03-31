@@ -23,7 +23,7 @@ MPT_STRUCT(VodeData) {
 	double next;
 };
 /* convertable interface */
-static int vdConv(MPT_INTERFACE(convertable) *sol, int type, void *ptr)
+static int vdConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(value) type, void *ptr)
 {
 	MPT_STRUCT(VodeData) *vd = (void *) sol;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&vd->_sol, &vd->_obj, type, ptr);
