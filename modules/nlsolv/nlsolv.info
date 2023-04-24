@@ -1,5 +1,0 @@
-Source Information
-  sources for MINPACK (www.netlib.org/minpack)
-    see minpack/make.minpack for selected routines
-  sources and dependancys for N2 family of PORT (www.netlib.org/port)
-    see portdn2/make.portdn2 for selected routines

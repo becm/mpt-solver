@@ -1,23 +1,27 @@
 # MPT solver extensions
+This is a collection of interfaces to various numeric solvers using a unified
+configuration approach and calling conventions.
 
-Configure numeric solvers via MPT object operations.
+Supported solver instances use [MPT](https://github.com/becm/mpt-base)
+interfaces for configuration and resource management.
 
-Further abstractions allow unification of user implementations
-for various IVP and nonlinear solver types.
+The standardized data and user interaction layers for IVP and nonlinear solvers
+are designed to support high reusability and reasonable accessibility for
+a broad user base.
 
 
 ## Solver utility library
-Operations for solvers conforming to MPT interfaces.
+The solver runtime uses specific MPT data types
+or their generic representation for most interactions.
 
-Create solver instances from runtime-loadable shared
-libraries with aliases supplied by solver modules.
+Solver implementaions are taken from runtime-loadable shared libraries.
 
-Set up solvers for specific problems with
-data read from configuration files.
+Setting up solvers for specific problems is done via configuration files.
+
 
 ### Client implementations
-Control solver processes for nonlinear and IVP problems via
-command line or remote connection using `mpt::client` as
+User processes to solve nonlinear and IVP problems can be controlled via
+command line or remote connection using `mpt::client` as generic
 interface abstraction.
 
 Both suppliend client implementations use dynamic loading of
@@ -25,22 +29,22 @@ suitable solver modules and read problem and solver
 configuration from files.
 
 The client config root node is placed into the global MPT configuration.
-Use `"mpt.client"` as config location to accept the default filename
-set by `mpt_init()` from command line arguments.
+By default, the location `"mpt.client"` is used as the main problem setup file.
+See documentation of `mpt_init()` for additional command line handling.
 
 
 ## Solver modules
-Each module library supports creation of instances conforming
-to generic MPT solver interface.
+Each module library supports creation of metatype references with interfaces
+for generic MPT object and solver operations.
 
-To create solver modules additional `math` sources/objects
-are required, infos on how to obtain these files, special build instructions
-and further info can be found in `modules/<name>/<name>.info`.
+To build solver modules, additional `math` sources/objects
+are required. Where to obtain 3rd party files, library build instructions
+and further information can be found in `modules/<name>/README.md`.
 
-Solvers module aliases installed to `${MPT_PREFIX}/etc/mpt.conf.d`
-are used by standard resolution methods.
+Files installed to `${MPT_PREFIX}/etc/mpt.conf.d` are used to map named aliases
+to solver instance builder methods.
 
-The generated modules are subject to licences from this project and
+The generated solver libraries are subject to licences from this project and
 the ones covering their `math` sources!
 Make shure to understand all license implications before redistribution
 in any form.
