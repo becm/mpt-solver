@@ -1,35 +1,33 @@
 # MPT solver extensions
-This is a collection of interfaces to various numeric solvers using a unified
-configuration approach and calling conventions.
+This is a collection of bindings to various numeric solvers using consistent
+calling conventions to allow code reuse of user problem formulations.
 
-Supported solver instances use [MPT](https://github.com/becm/mpt-base)
-interfaces for configuration and resource management.
+Solvers can be set up using simple text configuration files.
+Wrapper instances conform to interfaces and use resource management compatible
+with basic [MPT](https://github.com/becm/mpt-base) types.
 
-The standardized data and user interaction layers for IVP and nonlinear solvers
-are designed to support high reusability and reasonable accessibility for
-a broad user base.
+Please have a look at the [examples](./examples) folder to see some simple use
+cases and also full user code for well-known numeric problems utilizing the
+whole stack of supplied routines.
 
 
 ## Solver utility library
-The solver runtime uses specific MPT data types
-or their generic representation for most interactions.
+An optional runtime is provided for easy adjustment of problem and solver setups
+by applying configuration values from user-readable structured text files:
+- solver binding and settings to be used
+- initial values or profile for 1D-PDE distribution
+- data export filters
 
-Solver implementaions are taken from runtime-loadable shared libraries.
-
-Setting up solvers for specific problems is done via configuration files.
+User processes are controlled via command line or remote connection
+using `mpt::client` as a generic interface abstraction.
 
 
 ### Client implementations
-User processes to solve nonlinear and IVP problems can be controlled via
-command line or remote connection using `mpt::client` as generic
-interface abstraction.
+The suppliend implementations for nonlinear and IVP problems use
+dynamic loading of suitable solver modules and use differently structured
+configuration files for problem and solver settings by default.
 
-Both suppliend client implementations use dynamic loading of
-suitable solver modules and read problem and solver
-configuration from files.
-
-The client config root node is placed into the global MPT configuration.
-By default, the location `"mpt.client"` is used as the main problem setup file.
+Config file content is made available at `"mpt.client"` in the config tree.
 See documentation of `mpt_init()` for additional command line handling.
 
 
@@ -37,14 +35,15 @@ See documentation of `mpt_init()` for additional command line handling.
 Each module library supports creation of metatype references with interfaces
 for generic MPT object and solver operations.
 
-To build solver modules, additional `math` sources/objects
-are required. Where to obtain 3rd party files, library build instructions
-and further information can be found in `modules/<name>/README.md`.
+Named aliases for methods to create solver instances are defined by adding
+entries to the `"mpt.loader.alias"` config hierarchy.
+This can be done by placing config files in `${MPT_PREFIX}/etc/mpt.conf.d`.
 
-Files installed to `${MPT_PREFIX}/etc/mpt.conf.d` are used to map named aliases
-to solver instance builder methods.
+Additional 3rd party files are required to build solver modules from source.
+Where to obtain these files, additional requirements and further information
+can be found in the respective `modules/<name>/README.md`.
 
-The generated solver libraries are subject to licences from this project and
-the ones covering their `math` sources!
-Make shure to understand all license implications before redistribution
+The resulting solver libraries are subject to licence terms of this project
+as well as their respective 3rd party `math` sources.
+Make sure to understand all license implications before redistring
 in any form.
