@@ -24,7 +24,7 @@ MPT_STRUCT(BacolData) {
 	double next;
 };
 /* convertable interface */
-static int bacConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(value) type, void *ptr)
+static int bacConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(type) type, void *ptr)
 {
 	MPT_STRUCT(BacolData) *bac = (void *) sol;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&bac->_sol, &bac->_obj, type, ptr);

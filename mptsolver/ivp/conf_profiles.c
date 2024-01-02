@@ -104,7 +104,7 @@ static int iterProfileReset(MPT_INTERFACE(iterator) *it)
 	return p->len + 1;
 }
 /* convertable interface */
-static int iterProfileConv(MPT_INTERFACE(convertable) *val, MPT_TYPE(value) type, void *ptr)
+static int iterProfileConv(MPT_INTERFACE(convertable) *val, MPT_TYPE(type) type, void *ptr)
 {
 	const MPT_STRUCT(iterProfile) *p = (void *) val;
 	

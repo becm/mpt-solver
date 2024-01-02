@@ -25,7 +25,7 @@ MPT_STRUCT(SundialsIDA) {
 	double next;
 };
 /* convertable interface */
-static int idaConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(value) type, void *ptr)
+static int idaConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(type) type, void *ptr)
 {
 	const MPT_STRUCT(SundialsIDA) *ida = (void *) sol;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&ida->_sol, &ida->_obj, type, ptr);

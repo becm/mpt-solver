@@ -309,12 +309,31 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	mpt_node_clear(conf);
 	return 1;
 }
+static int processConfigIVP(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *p, int (*fcn)(void *, const MPT_INTERFACE(collection) *), void *arg)
+{
+	MPT_STRUCT(IVP) *ivp = MPT_baseaddr(IVP, gen, _cfg);
+	MPT_STRUCT(node) *conf;
+	MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(config) *cfg;
+	
+	if (!(conf = configIVP(ivp)) || !(mt = ivp->cfg)) {
+		return MPT_ERROR(BadValue);
+	}
+	cfg = 0;
+	if (MPT_metatype_convert(mt, MPT_ENUM(TypeConfigPtr), &cfg) < 0) {
+		return 0;
+	}
+	if (!cfg) {
+		return 0;
+	}
+	return cfg->_vptr->process(cfg, p, fcn, arg);
+}
 /* convertable interface */
-static int convIVP(MPT_INTERFACE(convertable) *val, MPT_TYPE(value) type, void *ptr)
+static int convIVP(MPT_INTERFACE(convertable) *val, MPT_TYPE(type) type, void *ptr)
 {
 	MPT_STRUCT(IVP) *ivp = (void *) val;
 	const MPT_STRUCT(named_traits) *traits = mpt_client_type_traits();
-	MPT_TYPE(value) me = traits ? traits->type : MPT_ENUM(TypeMetaPtr);
+	MPT_TYPE(type) me = traits ? traits->type : MPT_ENUM(TypeMetaPtr);
 	
 	if (traits && traits->type == type) {
 		if (ptr) *((const void **) ptr) = &ivp->_cl;
@@ -842,7 +861,7 @@ static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit)
 {
 	static const MPT_INTERFACE_VPTR(config) configIVP = {
-		queryIVP, assignIVP, removeIVP
+		queryIVP, assignIVP, removeIVP, processConfigIVP
 	};
 	static const MPT_INTERFACE_VPTR(client) clientIVP = {
 		{ { convIVP }, deleteIVP, addrefIVP, cloneIVP },

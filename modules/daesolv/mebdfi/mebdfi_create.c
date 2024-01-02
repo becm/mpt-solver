@@ -24,7 +24,7 @@ MPT_STRUCT(MebdfiData) {
 	double next;
 };
 /* metatype interface */
-static int meConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(value) type, void *ptr)
+static int meConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(type) type, void *ptr)
 {
 	MPT_STRUCT(MebdfiData) *md = (void *) sol;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&md->_sol, &md->_obj, type, ptr);

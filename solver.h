@@ -689,7 +689,7 @@ extern int mpt_solver_module_ufcn_nls(const MPT_NLS_STRUCT(parameters) *, MPT_NL
 /* wrap multiple proprties in intermediate object */
 extern int mpt_solver_module_report_properties(const MPT_STRUCT(property) *, int , const char *, const char *, MPT_TYPE(property_handler) , void *);
 /* consume value from iterator, allow primitive copy on non-zero size */
-extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, MPT_TYPE(value) , void * , size_t);
+extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, MPT_TYPE(type) , void * , size_t);
 
 /* id for registered solver metatype */
 extern const MPT_STRUCT(named_traits) *mpt_solver_type_traits(void);

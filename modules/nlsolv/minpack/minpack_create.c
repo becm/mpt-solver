@@ -21,7 +21,7 @@ MPT_STRUCT(MinpackData) {
 	MPT_NLS_STRUCT(functions)  uf;
 };
 /* convertable interface */
-static int mpConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(value) type, void *ptr)
+static int mpConv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(type) type, void *ptr)
 {
 	const MPT_STRUCT(MinpackData) *mp = (void *) sol;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&mp->_sol, &mp->_obj, type, ptr);

@@ -238,12 +238,31 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	mpt_node_clear(conf);
 	return 1;
 }
+static int processConfigNLS(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *p, int (*fcn)(void *, const MPT_INTERFACE(collection) *), void *arg)
+{
+	MPT_STRUCT(NLS) *nls = MPT_baseaddr(NLS, gen, _cfg);
+	MPT_STRUCT(node) *conf;
+	MPT_INTERFACE(metatype) *mt;
+	MPT_INTERFACE(config) *cfg;
+	
+	if (!(conf = configNLS(nls)) || !(mt = nls->cfg)) {
+		return MPT_ERROR(BadValue);
+	}
+	cfg = 0;
+	if (MPT_metatype_convert(mt, MPT_ENUM(TypeConfigPtr), &cfg) < 0) {
+		return 0;
+	}
+	if (!cfg) {
+		return 0;
+	}
+	return cfg->_vptr->process(cfg, p, fcn, arg);
+}
 /* convertable interface */
-static int convNLS(MPT_INTERFACE(convertable) *val, MPT_TYPE(value) type, void *ptr)
+static int convNLS(MPT_INTERFACE(convertable) *val, MPT_TYPE(type) type, void *ptr)
 {
 	MPT_STRUCT(NLS) *nls = (void *) val;
 	const MPT_STRUCT(named_traits) *traits = mpt_client_type_traits();
-	MPT_TYPE(value) me = traits ? traits->type : MPT_ENUM(TypeMetaPtr);
+	MPT_TYPE(type) me = traits ? traits->type : MPT_ENUM(TypeMetaPtr);
 	
 	if (traits && traits->type == type) {
 		if (ptr) *((const void **) ptr) = &nls->_cl;
@@ -645,7 +664,7 @@ static int dispatchNLS(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) uinit)
 {
 	static MPT_INTERFACE_VPTR(config) configNLS = {
-		queryNLS, assignNLS, removeNLS
+		queryNLS, assignNLS, removeNLS, processConfigNLS
 	};
 	static MPT_INTERFACE_VPTR(client) clientNLS = {
 		{ { convNLS }, deleteNLS, addrefNLS, cloneNLS },

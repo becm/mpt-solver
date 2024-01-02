@@ -22,7 +22,7 @@
  * 
  * \return result of iterator advance operation
  */
-extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, MPT_TYPE(value) type, void *ptr, size_t len)
+extern int mpt_solver_module_consume_value(MPT_INTERFACE(iterator) *it, MPT_TYPE(type) type, void *ptr, size_t len)
 {
 	const MPT_STRUCT(value) *val;
 	MPT_INTERFACE(convertable) *src;

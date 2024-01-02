@@ -26,7 +26,7 @@ MPT_STRUCT(SundialsCVode) {
 	double next;
 };
 /* metatype interface */
-static int cVodeConv(MPT_INTERFACE(convertable) *mt, MPT_TYPE(value) type, void *ptr)
+static int cVodeConv(MPT_INTERFACE(convertable) *mt, MPT_TYPE(type) type, void *ptr)
 {
 	const MPT_STRUCT(SundialsCVode) *cv = (void *) mt;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&cv->_sol, &cv->_obj, type, ptr);

@@ -21,7 +21,7 @@ MPT_STRUCT(PortN2Data) {
 	MPT_NLS_STRUCT(functions) uf;
 };
 /* convertable interface */
-static int n2Conv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(value) type, void *ptr)
+static int n2Conv(MPT_INTERFACE(convertable) *sol, MPT_TYPE(type) type, void *ptr)
 {
 	const MPT_STRUCT(PortN2Data) *n2 = (void *) sol;
 	return MPT_SOLVER_MODULE_FCN(solver_conv)(&n2->_sol, &n2->_obj, type, ptr);

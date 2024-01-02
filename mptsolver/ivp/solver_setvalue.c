@@ -7,7 +7,7 @@
 
 #include "solver.h"
 
-static int valueConv(MPT_INTERFACE(convertable) *val, MPT_TYPE(value) type, void *ptr)
+static int valueConv(MPT_INTERFACE(convertable) *val, MPT_TYPE(type) type, void *ptr)
 {
 	const double *v = (void *) (val + 1);
 	

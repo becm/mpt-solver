@@ -20,7 +20,7 @@ public:
 	virtual ~client()
 	{ }
 	
-	int convert(mpt::value_t type, void *ptr) __MPT_OVERRIDE
+	int convert(mpt::type_t type, void *ptr) __MPT_OVERRIDE
 	{
 		std::cout << __func__ << " " << type << std::endl;
 		if (type == mpt::type_properties<mpt::config *>::id(true)) {
