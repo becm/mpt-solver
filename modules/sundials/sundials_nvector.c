@@ -2,7 +2,9 @@
  * Sundials N_Vector creation
  */
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <nvector/nvector_serial.h>
+#pragma GCC diagnostic pop
 
 #include "sundials.h"
 

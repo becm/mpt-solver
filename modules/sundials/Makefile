@@ -2,8 +2,8 @@
 LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
-sundials_version = 6.7.0
-sundials_core_name = generic
+sundials_version = 7.0.0
+sundials_core_name = core
 #
 # include directories (generated, public)
 INC = . '${SUNDIALS_BUILD}/include' '${SUNDIALS}/include'

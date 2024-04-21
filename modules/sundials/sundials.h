@@ -39,8 +39,10 @@ typedef void * SUNMatrix;
 typedef void * SUNLinearSolver;
 # endif
 
-# ifndef _SUNDIALS_CONTEXT_H
+# if SUNDIALS_VERSION_MAJOR < 7
+#  ifndef _SUNDIALS_CONTEXT_H
 typedef void * SUNContext;
+#  endif
 # endif
 #endif /* _SUNDIALS_TYPES_H */
 
@@ -77,22 +79,22 @@ MPT_SOLVER_STRUCT(sundials)
 	sundials();
 	~sundials();
 # endif
-	N_Vector y;  /* output container */
+	N_Vector y;             /* output container */
 	
-	SUNLinearSolver LS;  /* linear solver backend */
+	SUNLinearSolver LS;     /* linear solver backend */
 	
 # if SUNDIALS_VERSION_MAJOR >= 6
-	SUNContext _sun_ctx; /* simulation context */
-	void *_sun_ctx_ref;  /* context cookie */
+	SUNContext _sun_ctx;    /* simulation context */
+	void *_sun_ctx_comm;    /* MPI communicator (optional) */
 # endif
 	
-	SUNMatrix A;          /* solver matrix */
-	sunindextype ml, mu;  /* band matrix dimensions */
+	SUNMatrix A;            /* solver matrix */
+	sunindextype ml, mu;    /* band matrix dimensions */
 	
-	int8_t jacobian,  /* jacobian flags */
-	       linsol,    /* linear solver type */
-	       prec,      /* preconditioner mode */
-	       kmax;      /* max. Krylov subspace size */
+	int8_t jacobian,        /* jacobian flags */
+	       linsol,          /* linear solver type */
+	       prec,            /* preconditioner mode */
+	       kmax;            /* max. Krylov subspace size */
 }
 #endif /* _SUNDIALS_TYPES_H */
 ;
@@ -108,12 +110,12 @@ MPT_SOLVER_STRUCT(sundials_step)
 #   define MPT_SOLVER_SUNDIALS_STEP_INIT { INFINITY, 0.0, 0.0, 0.0 }
 #  endif
 # endif
-	sunrealtype tstop; /* final limit of independent variable */
+	sunrealtype tstop;      /* final limit of independent variable */
 	
-	sunrealtype hin;   /* initial stepsize */
+	sunrealtype hin;        /* initial stepsize */
 	
-	sunrealtype hmin;  /* minimal stepsize */
-	sunrealtype hmax;  /* maximal stepsize */
+	sunrealtype hmin;       /* minimal stepsize */
+	sunrealtype hmax;       /* maximal stepsize */
 }
 #endif  /* _SUNDIALS_TYPES_H */
 ;
@@ -134,14 +136,14 @@ public:
 	MPT_SOLVER_STRUCT(sundials) sd; /* general sundials data */
 	void *mem;                      /* CVode memory block */
 	
-	sunrealtype t;   /* current time step */
+	sunrealtype t;  /* current time step */
 	
 	MPT_SOLVER_STRUCT(sundials_step) step;
-	long    mxstep;  /* maximum iterations per solver step call */
-	int     mxhnil;  /* threshold for (t + h = t) warnings */
+	long    mxstep; /* maximum iterations per solver step call */
+	int     mxhnil; /* threshold for (t + h = t) warnings */
 	
-	int     maxord;  /* maximum order of method */
-	uint8_t method;  /* history array adjustment mode */
+	int     maxord; /* maximum order of method */
+	uint8_t method; /* history array adjustment mode */
 	
 	const MPT_IVP_STRUCT(odefcn) *ufcn;
 }

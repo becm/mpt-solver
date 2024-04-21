@@ -33,7 +33,11 @@ extern void mpt_sundials_init(MPT_SOLVER_STRUCT(sundials) *sd)
 extern SUNContext mpt_sundials_context(MPT_SOLVER_STRUCT(sundials) *sd)
 {
 	if (!sd->_sun_ctx) {
-		SUNContext_Create(sd->_sun_ctx_ref, &sd->_sun_ctx);
+#if SUNDIALS_MPI_ENABLED
+		SUNContext_Create(sd->_sun_ctx_comm, &sd->_sun_ctx);
+#else
+		SUNContext_Create(0, &sd->_sun_ctx);
+#endif
 	}
 	return sd->_sun_ctx;
 }

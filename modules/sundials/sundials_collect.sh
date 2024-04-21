@@ -24,6 +24,7 @@ fi
     nvector_*)  s="nvec${d#nvector_}"; d="nvector/${d#nvector_}";;
     sun*)       s="${d%%_*}${d#*_}";   d="${d%%_*}/${d#*_}";;
     generic)    s="generic";           d="sundials";;
+    core)       s="core";              d="sundials";;
     *)          s="$d";;
   esac
   # loop over module objects
