@@ -15,7 +15,7 @@
  * 
  * \return result of user function
  */
-extern int mpt_sundials_ida_fcn(realtype t, N_Vector y, N_Vector yp, N_Vector f, MPT_SOLVER_STRUCT(ida) *ida)
+extern int mpt_sundials_ida_fcn(sunrealtype t, N_Vector y, N_Vector yp, N_Vector f, MPT_SOLVER_STRUCT(ida) *ida)
 {
 	const MPT_IVP_STRUCT(daefcn) *dae;
 	const MPT_IVP_STRUCT(pdefcn) *pde;

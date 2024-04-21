@@ -3,6 +3,7 @@ LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
 sundials_version = 6.7.0
+sundials_core_name = generic
 #
 # include directories (generated, public)
 INC = . '${SUNDIALS_BUILD}/include' '${SUNDIALS}/include'
@@ -18,7 +19,7 @@ sundials_nonlinear = fixedpoint newton
 sundials_matrix = band dense
 
 sundials_solvers = $(sundials_linear:%=sunlinsol_%) $(sundials_nonlinear:%=sunnonlinsol_%)
-sundials_auxiliary = ${sundials_matrix:%=sunmatrix_%} nvector_serial generic
+sundials_auxiliary = ${sundials_matrix:%=sunmatrix_%} nvector_serial ${sundials_core_name}
 
 sundials_modules = cvode ida kinsol ${sundials_solvers} ${sundials_auxiliary}
 #

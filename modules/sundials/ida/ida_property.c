@@ -24,7 +24,7 @@ static int setYP(MPT_SOLVER_STRUCT(ida) *ida, MPT_INTERFACE(convertable) *src)
 {
 	MPT_INTERFACE(iterator) *it;
 	N_Vector yprime;
-	realtype *yp;
+	sunrealtype *yp;
 	long pos, len;
 	
 	it = 0;
@@ -278,7 +278,7 @@ extern int mpt_sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(pr
 		return (ida->mxstep >= 0) ? 1 : 0;
 	}
 	if (name ? !strcasecmp(name, "tstop") : (pos == id++)) {
-		const realtype *ptr = &ida->step.tstop;
+		const sunrealtype *ptr = &ida->step.tstop;
 		const int type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->name = "tstop";
 		prop->desc = "end time limit";
@@ -290,7 +290,7 @@ extern int mpt_sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(pr
 		return (ida->step.tstop != INFINITY) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hin") || !strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(prop->name, "h0")) : (pos == id++)) {
-		const realtype *ptr = &ida->step.hin;
+		const sunrealtype *ptr = &ida->step.hin;
 		const int type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->name = "hin";
 		prop->desc = "initial stepsize";
@@ -302,7 +302,7 @@ extern int mpt_sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(pr
 		return (ida->step.hin != 0.0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) : (pos == id++)) {
-		const realtype *ptr = &ida->step.hmax;
+		const sunrealtype *ptr = &ida->step.hmax;
 		const int type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->name = "hmax";
 		prop->desc = "maximal stepsize";
@@ -316,7 +316,7 @@ extern int mpt_sundials_ida_get(const MPT_SOLVER_STRUCT(ida) *ida, MPT_STRUCT(pr
 	/* user supplied initial (dy/dt) */
 	if (name ? !strncasecmp(name, "yp", 2) : (pos == id++)) {
 		const int type = MPT_type_toVector((int) MPT_SOLVER_SUNDIALS(Realtype));
-		const realtype *ptr;
+		const sunrealtype *ptr;
 		
 		prop->name = "yp";
 		prop->desc = "deviation at current time";

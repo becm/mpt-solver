@@ -314,7 +314,7 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 		return (cv->mxhnil >= 0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "tstop") || !strcasecmp(name, "tend")) : (pos == ++id)) {
-		const realtype *ptr = &cv->step.tstop;
+		const sunrealtype *ptr = &cv->step.tstop;
 		const int type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->name = "tstop";
 		prop->desc = "final independent variable value";
@@ -326,7 +326,7 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 		return (cv->step.tstop != INFINITY) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "stepinit") || !strcasecmp(name, "h") || !strcasecmp(name, "hin") || !strcasecmp(name, "h0")) : (pos == ++id)) {
-		const realtype *ptr = &cv->step.hin;
+		const sunrealtype *ptr = &cv->step.hin;
 		const int type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->name = "hin";
 		prop->desc = "initial stepsize";
@@ -338,7 +338,7 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 		return (cv->step.hin != 0.0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hmin") || !strcasecmp(name, "stepmin")) : (pos == ++id)) {
-		const realtype *ptr = &cv->step.hmin;
+		const sunrealtype *ptr = &cv->step.hmin;
 		const int type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->name = "hmin";
 		prop->desc = "minimal stepsize";
@@ -350,7 +350,7 @@ extern int mpt_sundials_cvode_get(const MPT_SOLVER_STRUCT(cvode) *cv, MPT_STRUCT
 		return (cv->step.hmin != 0.0) ? 1 : 0;
 	}
 	if (name ? (!strcasecmp(name, "hmax") || !strcasecmp(name, "stepmax")) : (pos == ++id)) {
-		const realtype *ptr = &cv->step.hmax;
+		const sunrealtype *ptr = &cv->step.hmax;
 		const int type = MPT_SOLVER_SUNDIALS(Realtype);
 		prop->name = "hmax";
 		prop->desc = "maximal stepsize";

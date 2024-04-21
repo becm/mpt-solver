@@ -68,7 +68,7 @@ static int sundials_ida_jacobian(MPT_SOLVER_STRUCT(ida) *ida, long int n, double
  * 
  * \return result of user jacobian function
  */
-extern int mpt_sundials_ida_jac(realtype t, realtype cj,
+extern int mpt_sundials_ida_jac(sunrealtype t, sunrealtype cj,
                                 N_Vector y, N_Vector yp, N_Vector f,
                                 SUNMatrix Jac, MPT_SOLVER_STRUCT(ida) *ida,
                                 N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)

@@ -38,7 +38,7 @@ extern int mpt_sundials_ida_report(const MPT_SOLVER_STRUCT(ida) *ida, int show, 
 	}
 	
 	if (show & MPT_SOLVER_ENUM(Values)) {
-	realtype *val = ida->sd.y ? N_VGetArrayPointer(ida->sd.y) : 0;
+	sunrealtype *val = ida->sd.y ? N_VGetArrayPointer(ida->sd.y) : 0;
 	MPT_SOLVER_MODULE_FCN(ivp_values)(&ida->ivp, ida->t, val, MPT_tr("IDA solver state"), out, usr);
 	}
 	

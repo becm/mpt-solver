@@ -48,11 +48,15 @@ static void resetContext(MPT_SOLVER_STRUCT(ida) *data)
  */
 extern void mpt_sundials_ida_reset(MPT_SOLVER_STRUCT(ida) *data)
 {
+#if SUNDIALS_VERSION_MAJOR >= 6
 	void *ctx = data->sd._sun_ctx_ref;
+#endif
 	resetValues(data);
 	resetContext(data);
 	mpt_sundials_init(&data->sd);
+#if SUNDIALS_VERSION_MAJOR >= 6
 	data->sd._sun_ctx_ref = ctx;
+#endif
 }
 
 /*!

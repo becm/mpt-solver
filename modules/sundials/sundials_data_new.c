@@ -10,7 +10,7 @@
 
 #include "module_functions.h"
 
-extern realtype *MPT_SOLVER_MODULE_FCN(data_new)(const MPT_SOLVER_STRUCT(sundials_vector_context) *vctx, long len, const realtype *from)
+extern sunrealtype *MPT_SOLVER_MODULE_FCN(data_new)(const MPT_SOLVER_STRUCT(sundials_vector_context) *vctx, long len, const sunrealtype *from)
 {
 	MPT_SOLVER_MODULE_DATA_TYPE *dest;
 	N_Vector nv, ov;

@@ -15,7 +15,7 @@
  * 
  * \return result of user function
  */
-extern int mpt_sundials_cvode_fcn(realtype t, N_Vector y, N_Vector f, const MPT_SOLVER_STRUCT(cvode) *cv)
+extern int mpt_sundials_cvode_fcn(sunrealtype t, N_Vector y, N_Vector f, const MPT_SOLVER_STRUCT(cvode) *cv)
 {
 	const MPT_IVP_STRUCT(pdefcn) *pde;
 	double *fd, *yd;

@@ -57,7 +57,7 @@ extern int mpt_sundials_cvode_prepare(MPT_SOLVER_STRUCT(cvode) *cv)
 	
 	/* prepare initial vector */
 	if (!cv->sd.y) {
-		realtype *y;
+		sunrealtype *y;
 #if SUNDIALS_VERSION_MAJOR >= 6
 		if (!(cv->sd.y = mpt_sundials_nvector(neqs, mpt_sundials_context(&cv->sd)))) {
 #else

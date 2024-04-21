@@ -18,6 +18,10 @@
 # ifndef _SUNDIALS_TYPES_H
 #  define _SUNDIALS_TYPES_H _SUNDIALSTYPES_H
 # endif
+# if SUNDIALS_VERSION_MAJOR < 6
+/* add alias for deprecated SUNDIALS float type */
+typedef realtype sunrealtype;
+# endif
 #endif
 
 __MPT_SOLVER_BEGIN
@@ -104,12 +108,12 @@ MPT_SOLVER_STRUCT(sundials_step)
 #   define MPT_SOLVER_SUNDIALS_STEP_INIT { INFINITY, 0.0, 0.0, 0.0 }
 #  endif
 # endif
-	realtype tstop; /* final limit of independent variable */
+	sunrealtype tstop; /* final limit of independent variable */
 	
-	realtype hin;   /* initial stepsize */
+	sunrealtype hin;   /* initial stepsize */
 	
-	realtype hmin;  /* minimal stepsize */
-	realtype hmax;  /* maximal stepsize */
+	sunrealtype hmin;  /* minimal stepsize */
+	sunrealtype hmax;  /* maximal stepsize */
 }
 #endif  /* _SUNDIALS_TYPES_H */
 ;
@@ -130,7 +134,7 @@ public:
 	MPT_SOLVER_STRUCT(sundials) sd; /* general sundials data */
 	void *mem;                      /* CVode memory block */
 	
-	realtype t;      /* current time step */
+	sunrealtype t;   /* current time step */
 	
 	MPT_SOLVER_STRUCT(sundials_step) step;
 	long    mxstep;  /* maximum iterations per solver step call */
@@ -161,7 +165,7 @@ protected:
 	MPT_SOLVER_STRUCT(sundials) sd; /* general sundials data */
 	void *mem;                      /* IDA memory block */
 	
-	realtype t;     /* current time step */
+	sunrealtype t;  /* current time step */
 	
 	MPT_SOLVER_STRUCT(sundials_step) step;
 	long mxstep;    /* maximum iterations per solver step call */
@@ -258,19 +262,19 @@ extern int mpt_sundials_ewtfcn(N_Vector , N_Vector , void *);
 #  define _SUNDIALS_GENERIC_TYPE(x) x
 # endif
 /* wrapper for CVode user functions */
-extern int mpt_sundials_cvode_fcn(realtype , N_Vector , N_Vector , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *);
+extern int mpt_sundials_cvode_fcn(sunrealtype , N_Vector , N_Vector , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *);
 /* wrapper for IDA user functions */
-extern int mpt_sundials_ida_fcn(realtype , N_Vector , N_Vector , N_Vector , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *);
+extern int mpt_sundials_ida_fcn(sunrealtype , N_Vector , N_Vector , N_Vector , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *);
 
 # ifdef _SUNMATRIX_H
 #  ifdef _SUNDIALS_DIRECT_H
 /* Dense/Banded wrapper for CVode jacobian */
-extern int mpt_sundials_cvode_jac(realtype , N_Vector , N_Vector ,
+extern int mpt_sundials_cvode_jac(sunrealtype , N_Vector , N_Vector ,
                                   SUNMatrix , _SUNDIALS_GENERIC_TYPE(const MPT_SOLVER_STRUCT(cvode)) *,
                                   N_Vector , N_Vector , N_Vector);
 
 /* Dense/Banded wrapper for IDA jacobian */
-extern int mpt_sundials_ida_jac(realtype , realtype , N_Vector , N_Vector , N_Vector ,
+extern int mpt_sundials_ida_jac(sunrealtype , sunrealtype , N_Vector , N_Vector , N_Vector ,
                                 SUNMatrix , _SUNDIALS_GENERIC_TYPE(MPT_SOLVER_STRUCT(ida)) *,
                                 N_Vector , N_Vector , N_Vector);
 #  endif
