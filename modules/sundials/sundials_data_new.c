@@ -4,9 +4,7 @@
 
 #include <string.h>
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <nvector/nvector_serial.h>
-#pragma GCC diagnostic pop
+#include <sundials/sundials_nvector.h>
 
 #include "sundials.h"
 
