@@ -2,7 +2,7 @@
  * set Sundials jacobian parameters
  */
 
-#include <sundials/sundials_direct.h>
+#include <sundials/sundials_matrix.h>
 
 #include "types.h"
 #include "meta.h"
@@ -48,7 +48,7 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, MPT_INTERFACE(
 			return it ? 1 : 0;
 		case 'f': case 'F':
 			sd->linsol = MPT_SOLVER_SUNDIALS(Direct);
-			sd->jacobian = SUNDIALS_DENSE;
+			sd->jacobian = SUNMATRIX_DENSE;
 			if (mode != 'F') {
 				sd->linsol |= MPT_SOLVER_SUNDIALS(Numeric);
 			}
@@ -78,7 +78,7 @@ extern int mpt_sundials_jacobian(MPT_SOLVER_STRUCT(sundials) *sd, MPT_INTERFACE(
 			sd->ml = ml;
 			sd->mu = mu;
 			sd->linsol = MPT_SOLVER_SUNDIALS(Direct);
-			sd->jacobian = SUNDIALS_BAND;
+			sd->jacobian = SUNMATRIX_BAND;
 			if (mode != 'B') {
 				sd->linsol |= MPT_SOLVER_SUNDIALS(Numeric);
 			}

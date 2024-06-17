@@ -47,7 +47,7 @@ static int setLapack(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 	SUNMatrix A;
 	SUNLinearSolver LS;
 	
-	if (sd->jacobian == SUNDIALS_DENSE) {
+	if (sd->jacobian == SUNMATRIX_DENSE) {
 		if (!(A = SUNDenseMatrix(neqs, neqs CTX))) {
 			return MPT_ERROR(BadValue);
 		}
@@ -57,7 +57,7 @@ static int setLapack(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 		}
 		return setLS(sd, LS, A);
 	}
-	if (sd->jacobian == SUNDIALS_BAND) {
+	if (sd->jacobian == SUNMATRIX_BAND) {
 		/* direct solver; matrix WILL be LU factored! */
 		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml CTX))) {
 			return MPT_ERROR(BadValue);
@@ -78,7 +78,7 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 	SUNMatrix A;
 	SUNLinearSolver LS;
 	
-	if (sd->jacobian == SUNDIALS_DENSE) {
+	if (sd->jacobian == SUNMATRIX_DENSE) {
 		if (!(A = SUNDenseMatrix(neqs, neqs CTX))) {
 			return MPT_ERROR(BadValue);
 		}
@@ -88,7 +88,7 @@ static int setDls(MPT_SOLVER_STRUCT(sundials) *sd, sunindextype neqs)
 		}
 		return setLS(sd, LS, A);
 	}
-	if (sd->jacobian == SUNDIALS_BAND) {
+	if (sd->jacobian == SUNMATRIX_BAND) {
 		/* direct solver; matrix WILL be LU factored! */
 		if (!(A = SUNBandMatrix(neqs, sd->mu, sd->ml CTX))) {
 			return MPT_ERROR(BadValue);

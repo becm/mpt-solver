@@ -89,9 +89,9 @@ extern int mpt_sundials_ida_prepare(MPT_SOLVER_STRUCT(ida) *ida)
 	}
 	if (!ida->sd.jacobian) {
 		if (!ida->ivp.pint || ida->sd.ml >= neqs || ida->sd.mu >= neqs) {
-			ida->sd.jacobian = SUNDIALS_DENSE;
+			ida->sd.jacobian = SUNMATRIX_DENSE;
 		} else {
-			ida->sd.jacobian = SUNDIALS_BAND;
+			ida->sd.jacobian = SUNMATRIX_BAND;
 		}
 	}
 	if (ida->sd.mu < 0) {
