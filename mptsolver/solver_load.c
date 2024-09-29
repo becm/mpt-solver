@@ -128,15 +128,13 @@ extern MPT_SOLVER(interface) *mpt_solver_load(MPT_INTERFACE(metatype) **ref, int
 	}
 	/* change library symbol */
 	else {
-		MPT_INTERFACE(convertable) *cfg;
 		MPT_INTERFACE(metatype) *next;
 		MPT_STRUCT(property) pr = MPT_PROPERTY_INIT;
 		const char *lpath = 0;
 		int type;
 		
-		if ((cfg = mpt_config_get(0, "mpt.prefix.lib", '.', 0))) {
-			cfg->_vptr->convert(cfg, 's', &lpath);
-		}
+		mpt_config_get(0, "mpt.prefix.lib", 's', &lpath);
+		
 		if (!(next = mpt_library_meta(traits->type, conf, lpath, log))) {
 			if (!log) {
 				mpt_log(0, __func__, MPT_LOG(Error), "%s: %s",

@@ -155,10 +155,10 @@ static int outPDE(void *ptr, const MPT_STRUCT(value) *val)
 	return mpt_solver_output_pde(ctx->out, ctx->state, val, ctx->dat);
 }
 /* config interface */
-static MPT_STRUCT(node) *configIVP(MPT_STRUCT(IVP) *ivp)
+static MPT_INTERFACE(config) *configIVP(MPT_STRUCT(IVP) *ivp)
 {
 	MPT_INTERFACE(metatype) *cfg;
-	MPT_STRUCT(node) *n;
+	MPT_INTERFACE(config) *sub;
 	
 	if (!(cfg = ivp->cfg)) {
 		MPT_STRUCT(path) p = MPT_PATH_INIT;
@@ -168,47 +168,37 @@ static MPT_STRUCT(node) *configIVP(MPT_STRUCT(IVP) *ivp)
 		}
 		ivp->cfg = cfg;
 	}
-	n = 0;
-	if (MPT_metatype_convert(cfg, MPT_ENUM(TypeNodePtr), &n) < 0) {
+	/* mitigation: trigger node creation */
+	if (MPT_metatype_convert(cfg, MPT_ENUM(TypeNodePtr), 0) < 0) {
 		return 0;
 	}
-	return n;
+	
+	sub = 0;
+	if (MPT_metatype_convert(cfg, MPT_ENUM(TypeConfigPtr), &sub) < 0) {
+		return 0;
+	}
+	return sub;
 }
-static MPT_INTERFACE(convertable) *queryIVP(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
+static int queryIVP(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *p, MPT_TYPE(config_handler) fcn, void *ctx)
 {
 	MPT_STRUCT(IVP) *ivp = MPT_baseaddr(IVP, gen, _cfg);
-	MPT_STRUCT(node) *conf;
-	MPT_STRUCT(path) p;
+	MPT_INTERFACE(config) *conf;
 	
+	if (!p) {
+		return fcn ? fcn(ctx, (MPT_INTERFACE(convertable) *) ivp->sol, 0) : 0;
+	}
 	if (!(conf = configIVP(ivp))) {
-		return 0;
+		return MPT_ERROR(BadValue);
 	}
-	if (!porg) {
-		return (MPT_INTERFACE(convertable) *) ivp->sol;
-	}
-	if (!porg->len) {
-		return (MPT_INTERFACE(convertable) *) conf->_meta;
-	}
-	if (!(conf = conf->children)) {
-		return 0;
-	}
-	p = *porg;
-	p.flags &= ~MPT_PATHFLAG(HasArray);
-	
-	if (!(conf = mpt_node_query(conf, &p))) {
-		return 0;
-	}
-	if (!conf->_meta) {
-		return (MPT_INTERFACE(convertable) *) mpt_metatype_default();
-	}
-	return (MPT_INTERFACE(convertable) *) conf->_meta;
+	return conf->_vptr->query(conf, p, fcn, ctx);
 }
 static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, const MPT_STRUCT(value) *val)
 {
 	static const char _func[] = "mpt::client<IVP>::assign";
 	MPT_STRUCT(IVP) *ivp = MPT_baseaddr(IVP, gen, _cfg);
-	MPT_STRUCT(node) *conf;
+	MPT_INTERFACE(config) *conf;
 	const char *path;
+	int ret;
 	
 	if (!porg) {
 		MPT_STRUCT(path) p = MPT_PATH_INIT;
@@ -222,7 +212,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 		if (mpt_value_convert(val, 's', &path) < 0) {
 			return MPT_ERROR(BadType);
 		}
-		if (!mpt_path_set(&p, path, -1)) {
+		if (mpt_path_set(&p, path, -1) < 0) {
 			return MPT_ERROR(BadValue);
 		}
 		if (!(ivp->cfg = mpt_config_global(&p))) {
@@ -235,11 +225,20 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	}
 	if (!porg->len) {
 		MPT_INTERFACE(logger) *info;
+		MPT_STRUCT(node) *root;
 		FILE *file;
-		int ret;
 		
 		/* external log target only */
 		info = loggerIVP(0);
+		
+		root = 0;
+		if (MPT_metatype_convert(ivp->cfg, MPT_ENUM(TypeNodePtr), &root) < 0
+		 || !root) {
+			mpt_log(info, _func, MPT_LOG(Critical), "%s: %s",
+			        MPT_tr("missing node structure"),
+			        val->_type);
+			return MPT_ERROR(BadType);
+		}
 		
 		path = 0;
 		if (mpt_value_convert(val, 's', &path) < 0 || path == 0) {
@@ -254,7 +253,7 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			        path);
 			return MPT_ERROR(BadValue);
 		}
-		ret = mpt_node_parse(conf, file, 0, 0, info);
+		ret = mpt_node_parse(root, file, 0, 0, info);
 		fclose(file);
 		if (ret < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
@@ -264,24 +263,22 @@ static int assignIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			MPT_STRUCT(value) val = MPT_VALUE_INIT('s', &path);
 			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
 			        MPT_tr("loaded client config file"), path);
-			mpt_meta_set(&conf->_meta, &val);
+			mpt_meta_set(&root->_meta, &val);
 		}
 		return ret;
 	}
-	if (!(conf = mpt_node_assign(&conf->children, porg, val))) {
+	if ((ret = conf->_vptr->assign(conf, porg, val)) < 0) {
 		mpt_log(loggerIVP(ivp), _func, MPT_LOG(Critical), "%s",
 		        MPT_tr("unable to assign client element"));
-		return MPT_ERROR(BadOperation);
 	}
-	return 0;
+	return ret;
 }
-static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
+static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *p)
 {
 	MPT_STRUCT(IVP) *ivp = MPT_baseaddr(IVP, gen, _cfg);
-	MPT_STRUCT(node) *conf;
-	MPT_STRUCT(path) p;
+	MPT_STRUCT(config) *conf;
 	
-	if (!porg) {
+	if (!p) {
 		MPT_INTERFACE(metatype) *mt;
 		if (ivp->sd) {
 			mpt_solver_data_clear(ivp->sd);
@@ -296,37 +293,7 @@ static int removeIVP(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	if (!(conf = configIVP(ivp))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!porg->len) {
-		mpt_node_clear(conf);
-		return 1;
-	}
-	p = *porg;
-	p.flags &= ~MPT_PATHFLAG(HasArray);
-	
-	if (!(conf = mpt_node_query(conf->children, &p))) {
-		return MPT_ERROR(BadArgument);
-	}
-	mpt_node_clear(conf);
-	return 1;
-}
-static int processConfigIVP(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *p, int (*fcn)(void *, const MPT_INTERFACE(collection) *), void *arg)
-{
-	MPT_STRUCT(IVP) *ivp = MPT_baseaddr(IVP, gen, _cfg);
-	MPT_STRUCT(node) *conf;
-	MPT_INTERFACE(metatype) *mt;
-	MPT_INTERFACE(config) *cfg;
-	
-	if (!(conf = configIVP(ivp)) || !(mt = ivp->cfg)) {
-		return MPT_ERROR(BadValue);
-	}
-	cfg = 0;
-	if (MPT_metatype_convert(mt, MPT_ENUM(TypeConfigPtr), &cfg) < 0) {
-		return 0;
-	}
-	if (!cfg) {
-		return 0;
-	}
-	return cfg->_vptr->process(cfg, p, fcn, arg);
+	return conf->_vptr->remove(conf, p);
 }
 /* convertable interface */
 static int convIVP(MPT_INTERFACE(convertable) *val, MPT_TYPE(type) type, void *ptr)
@@ -396,11 +363,18 @@ static int initIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	
 	info = hist = loggerIVP(0);
 	
-	if (!(conf = configIVP(ivp))) {
+	if (!configIVP(ivp)) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s: %s",
 		        MPT_tr("failed to query"), MPT_tr("client configuration"));
 		return MPT_ERROR(BadOperation);
 	}
+	if (MPT_metatype_convert(ivp->cfg, MPT_ENUM(TypeNodePtr), &conf) < 0
+	 || !conf) {
+		mpt_log(info, _func, MPT_LOG(Critical), "%s: %s",
+		        MPT_tr("failed query"), MPT_tr("IVP config node"));
+		return MPT_ERROR(BadOperation);
+	}
+	
 	if ((curr = mpt_node_find(conf, "output", 1))) {
 		MPT_INTERFACE(metatype) *old;
 		mt = mpt_output_local();
@@ -523,7 +497,7 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	MPT_INTERFACE(logger) *info, *hist;
 	MPT_INTERFACE(object) *obj;
 	MPT_SOLVER(interface) *sol;
-	MPT_STRUCT(node) *cfg;
+	MPT_STRUCT(node) *cfg = 0;
 	int ret, err;
 	
 	info = loggerIVP(0);
@@ -552,7 +526,9 @@ static int prepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 	hist = loggerIVP(ivp);
 	
 	/* set solver parameters from config */
-	if ((cfg = configIVP(ivp))
+	if (configIVP(ivp)
+	 && MPT_metatype_convert(ivp->cfg, MPT_ENUM(TypeNodePtr), &cfg)
+	 && cfg
 	 && (cfg = cfg->children)) {
 		mpt_solver_param(obj, cfg, hist);
 	}
@@ -615,9 +591,7 @@ static int stepIVP(MPT_STRUCT(IVP) *ivp, MPT_INTERFACE(iterator) *args)
 		return MPT_ERROR(BadOperation);
 	}
 	if (!(steps = args)) {
-		MPT_INTERFACE(convertable) *src;
-		if (!(src = mpt_config_get(&ivp->_cfg, "times", 0, 0))
-		 || (ret = src->_vptr->convert(src, MPT_ENUM(TypeIteratorPtr), &steps)) < 0
+		if (mpt_config_get(&ivp->_cfg, "times", MPT_ENUM(TypeIteratorPtr), &steps) < 0
 		 || !steps) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
 			        MPT_tr("no default time step source"));
@@ -770,8 +744,10 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 	}
 	
 	if (!id || id == mpt_hash("start", 5)) {
-		MPT_STRUCT(node) *cfg;
-		if (!(cfg = configIVP(ivp))) {
+		MPT_STRUCT(node) *cfg = 0;
+		if (!configIVP(ivp)
+		 || MPT_metatype_convert(ivp->cfg, MPT_ENUM(TypeNodePtr), &cfg) < 0
+		 || !cfg) {
 			return MPT_ERROR(BadOperation);
 		}
 		if (id && (ret = mpt_solver_read(cfg, it, loggerIVP(0))) < 0) {
@@ -786,8 +762,10 @@ static int processIVP(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		return MPT_EVENTFLAG(Default);
 	}
 	else if (id == mpt_hash("read", 4)) {
-		MPT_STRUCT(node) *cfg;
-		if (!(cfg = configIVP(ivp))) {
+		MPT_STRUCT(node) *cfg = 0;
+		if (!configIVP(ivp)
+		 || MPT_metatype_convert(ivp->cfg, MPT_ENUM(TypeNodePtr), &cfg) < 0
+		 || !cfg) {
 			return MPT_ERROR(BadOperation);
 		}
 		ret = mpt_solver_read(cfg, it, loggerIVP(0));
@@ -861,7 +839,7 @@ static int dispatchIVP(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 extern MPT_INTERFACE(client) *mpt_client_ivp(MPT_SOLVER_TYPE(UserInit) uinit)
 {
 	static const MPT_INTERFACE_VPTR(config) configIVP = {
-		queryIVP, assignIVP, removeIVP, processConfigIVP
+		queryIVP, assignIVP, removeIVP
 	};
 	static const MPT_INTERFACE_VPTR(client) clientIVP = {
 		{ { convIVP }, deleteIVP, addrefIVP, cloneIVP },

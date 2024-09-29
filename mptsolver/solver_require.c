@@ -67,19 +67,16 @@ extern int mpt_solver_require(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(logger) 
 {
 	/* problem config filename from configuration/terminal */
 	static const char defExt[] = "conf\0";
-	MPT_INTERFACE(convertable) *val;
-	const char *fname, *cname;
+	const char *fname = 0, *cname = 0;
 	char *rname, buf[128];
 	int ret;
 	
 	/* check for existing config file */
-	val = mpt_config_get(cfg, 0, 0, 0);
-	fname = val ? mpt_convertable_data(val, 0) : 0;
+	mpt_config_get(cfg, 0, 's', &fname);
 	
 	cname = 0;
-	if ((val = mpt_config_get(0, "mpt", 0, 0))
-	    && val->_vptr->convert(val, 's', &cname) > 0
-	    && cname) {
+	if ((mpt_config_get(0, "mpt", 's', &cname) > 0)
+	 && cname) {
 		const char *sep = strrchr(cname, '/');
 		if (sep) {
 			cname = sep + 1;
@@ -108,17 +105,15 @@ extern int mpt_solver_require(MPT_INTERFACE(config) *cfg, MPT_INTERFACE(logger) 
 			return ret;
 		}
 	}
-	/* config file has solver settings */
-	val = mpt_config_get(cfg, "solconf", 0, 0);
-	
-	if (!val) {
+	/* config needs solver settings */
+	if (mpt_config_get(cfg, "solconf", 0, 0) < 0) {
 		static const char defName[] = "solver\0", defPost[] = "sol\0";
 		const char *sol = cname ? cname : defName;
 		snprintf(buf, sizeof(buf), "%s [%s_%s.%s]: ",
 		         MPT_tr("solver config"), sol, defPost, defExt);
 		if (!(rname = mpt_readline(buf))) {
 			mpt_log(info, __func__, MPT_LOG(Error), "%s (%s)",
-			        MPT_tr("user interrupt"), MPT_tr("soler config"));
+			        MPT_tr("user interrupt"), MPT_tr("solver config"));
 			return MPT_ERROR(MissingData);
 		}
 		if (!(fname = stripFilename(rname))) {
