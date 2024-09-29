@@ -2,7 +2,7 @@
 LIB ?= mpt_sundials
 #
 # base location of SUNDIALS artifacts
-sundials_version = 7.0.0
+sundials_version = 7.1.1
 sundials_core_name = core
 #
 # include directories (generated, public)
