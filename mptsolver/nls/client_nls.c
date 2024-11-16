@@ -83,10 +83,10 @@ static MPT_INTERFACE(logger) *loggerNLS(const MPT_STRUCT(NLS) *nls)
 	return info;
 }
 
-static MPT_STRUCT(node) *configNLS(MPT_STRUCT(NLS) *nls)
+static MPT_INTERFACE(config) *configNLS(MPT_STRUCT(NLS) *nls)
 {
 	MPT_INTERFACE(metatype) *cfg;
-	MPT_STRUCT(node) *n;
+	MPT_INTERFACE(config) *sub = 0;
 	
 	if (!(cfg = nls->cfg)) {
 		MPT_STRUCT(path) p = MPT_PATH_INIT;
@@ -96,49 +96,38 @@ static MPT_STRUCT(node) *configNLS(MPT_STRUCT(NLS) *nls)
 		}
 		nls->cfg = cfg;
 	}
-	n = 0;
-	if (MPT_metatype_convert(cfg, MPT_ENUM(TypeNodePtr), &n) < 0) {
+	/* mitigation: trigger node creation */
+	if (MPT_metatype_convert(cfg, MPT_ENUM(TypeNodePtr), 0) < 0) {
 		return 0;
 	}
-	return n;
+	
+	if (MPT_metatype_convert(cfg, MPT_ENUM(TypeConfigPtr), &sub) < 0) {
+		return 0;
+	}
+	return sub;
 }
 /* config interface */
-static MPT_INTERFACE(convertable) *queryNLS(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
+static int queryNLS(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *p, MPT_TYPE(config_handler) fcn, void *ctx)
 {
 	MPT_STRUCT(NLS) *nls = MPT_baseaddr(NLS, gen, _cfg);
-	MPT_STRUCT(node) *conf;
-	MPT_STRUCT(path) p;
+	MPT_INTERFACE(config) *conf;
 	
-	if (!porg) {
-		return (MPT_INTERFACE(convertable) *) nls->sol;
+	if (!p) {
+		return fcn ? fcn(ctx, (MPT_INTERFACE(convertable) *) nls->sol, 0) : 0;
 	}
 	if (!(conf = configNLS(nls))) {
-		return 0;
+		return MPT_ERROR(BadValue);
 	}
-	if (!porg->len) {
-		return (MPT_INTERFACE(convertable) *) conf->_meta;
-	}
-	if (!(conf = conf->children)) {
-		return 0;
-	}
-	p = *porg;
-	p.flags &= ~MPT_PATHFLAG(HasArray);
-	
-	if (!(conf = mpt_node_query(conf, &p))) {
-		return 0;
-	}
-	if (!conf->_meta) {
-		return (MPT_INTERFACE(convertable) *) mpt_metatype_default();
-	}
-	return (MPT_INTERFACE(convertable) *) conf->_meta;
+	return conf->_vptr->query(conf, p, fcn, ctx);
 }
 static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, const MPT_STRUCT(value) *val)
 {
 	static const char _func[] = "mpt::client<NLS>::assign";
 	
 	MPT_STRUCT(NLS) *nls = MPT_baseaddr(NLS, gen, _cfg);
-	MPT_STRUCT(node) *conf;
+	MPT_INTERFACE(config) *conf;
 	const char *path;
+	int ret;
 	
 	if (!porg) {
 		MPT_STRUCT(path) p = MPT_PATH_INIT;
@@ -165,11 +154,21 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 	}
 	if (!porg->len) {
 		MPT_INTERFACE(logger) *info;
+		MPT_STRUCT(node) *root;
 		FILE *file;
-		int ret;
 		
 		/* external log target only */
 		info = loggerNLS(0);
+		
+		root = 0;
+		if (MPT_metatype_convert(nls->cfg, MPT_ENUM(TypeNodePtr), &root) < 0
+		 || !root) {
+			mpt_log(info, _func, MPT_LOG(Critical), "%s: %s",
+			        MPT_tr("missing node structure"),
+			        val->_type);
+			return MPT_ERROR(BadType);
+		}
+		
 		path = 0;
 		if (mpt_value_convert(val, 's', &path) < 0 || path == 0) {
 			int type = val->_type;
@@ -184,7 +183,7 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			        path);
 			return MPT_ERROR(BadValue);
 		}
-		ret = mpt_node_parse(conf, file, 0, 0, info);
+		ret = mpt_node_parse(root, file, 0, 0, info);
 		fclose(file);
 		if (ret < 0) {
 			mpt_log(info, _func, MPT_LOG(Error), "%s",
@@ -193,24 +192,22 @@ static int assignNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg, c
 			MPT_STRUCT(value) val = MPT_VALUE_INIT('s', &path);
 			mpt_log(info, _func, MPT_CLIENT_LOG_STATUS, "%s: %s",
 			        MPT_tr("loaded client config file"), path);
-			mpt_meta_set(&conf->_meta, &val);
+			mpt_meta_set(&root->_meta, &val);
 		}
 		return ret;
 	}
-	if (!(conf = mpt_node_assign(&conf->children, porg, val))) {
+	if ((ret = conf->_vptr->assign(conf, porg, val)) < 0) {
 		mpt_log(loggerNLS(nls), _func, MPT_LOG(Critical), "%s",
 		        MPT_tr("unable to assign client element"));
-		return MPT_ERROR(BadOperation);
 	}
-	return 0;
+	return ret;
 }
-static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
+static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *p)
 {
 	MPT_STRUCT(NLS) *nls = MPT_baseaddr(NLS, gen, _cfg);
-	MPT_STRUCT(node) *conf;
-	MPT_STRUCT(path) p;
+	MPT_STRUCT(config) *conf;
 	
-	if (!porg) {
+	if (!p) {
 		MPT_INTERFACE(metatype) *mt;
 		if (nls->sd) {
 			mpt_solver_data_clear(nls->sd);
@@ -225,37 +222,7 @@ static int removeNLS(MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *porg)
 	if (!(conf = configNLS(nls))) {
 		return MPT_ERROR(BadOperation);
 	}
-	if (!porg->len) {
-		mpt_node_clear(conf);
-		return 1;
-	}
-	p = *porg;
-	p.flags &= ~MPT_PATHFLAG(HasArray);
-
-	if (!(conf = mpt_node_query(conf->children, &p))) {
-		return MPT_ERROR(BadArgument);
-	}
-	mpt_node_clear(conf);
-	return 1;
-}
-static int processConfigNLS(const MPT_INTERFACE(config) *gen, const MPT_STRUCT(path) *p, int (*fcn)(void *, const MPT_INTERFACE(collection) *), void *arg)
-{
-	MPT_STRUCT(NLS) *nls = MPT_baseaddr(NLS, gen, _cfg);
-	MPT_STRUCT(node) *conf;
-	MPT_INTERFACE(metatype) *mt;
-	MPT_INTERFACE(config) *cfg;
-	
-	if (!(conf = configNLS(nls)) || !(mt = nls->cfg)) {
-		return MPT_ERROR(BadValue);
-	}
-	cfg = 0;
-	if (MPT_metatype_convert(mt, MPT_ENUM(TypeConfigPtr), &cfg) < 0) {
-		return 0;
-	}
-	if (!cfg) {
-		return 0;
-	}
-	return cfg->_vptr->process(cfg, p, fcn, arg);
+	return conf->_vptr->remove(conf, p);
 }
 /* convertable interface */
 static int convNLS(MPT_INTERFACE(convertable) *val, MPT_TYPE(type) type, void *ptr)
@@ -326,11 +293,18 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	
 	info = hist = loggerNLS(0);
 	
-	if (!(conf = configNLS(nls))) {
+	if (!configNLS(nls)) {
 		mpt_log(info, _func, MPT_LOG(Error), "%s",
 		        MPT_tr("unable to get NLS client config"));
 		return MPT_ERROR(BadOperation);
 	}
+	if (MPT_metatype_convert(nls->cfg, MPT_ENUM(TypeNodePtr), &conf) < 0
+	 || !conf) {
+		mpt_log(info, _func, MPT_LOG(Critical), "%s: %s",
+		        MPT_tr("failed query"), MPT_tr("IVP config node"));
+		return MPT_ERROR(BadOperation);
+	}
+	
 	if ((curr = mpt_node_find(conf, "output", 1))) {
 		MPT_INTERFACE(metatype) *old;
 		mt = mpt_output_local();
@@ -447,8 +421,10 @@ static int prepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 	hist = loggerNLS(nls);
 	
 	/* set solver parameters from config */
-	if ((cfg = configNLS(nls))
-	    && (cfg = cfg->children)) {
+	if (configNLS(nls)
+	 && MPT_metatype_convert(nls->cfg, MPT_ENUM(TypeNodePtr), &cfg)
+	 && cfg
+	 && (cfg = cfg->children)) {
 		mpt_solver_param(obj, cfg, hist);
 	}
 	/* set solver parameters from args */
@@ -537,8 +513,11 @@ static int stepNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		return res;
 	}
 	
-	if ((names = configNLS(nls))
-	    && (names = mpt_node_find(names, "param", 1))) {
+	names = 0;
+	if (configNLS(nls)
+	 && (MPT_metatype_convert(nls->cfg, MPT_ENUM(TypeNodePtr), &names) >= 0)
+	 && names
+	 && (names = mpt_node_find(names, "param", 1))) {
 		names = names->children;
 	}
 	if ((par = mpt_solver_data_param(dat))) {
@@ -577,8 +556,10 @@ static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 	}
 	
 	if (!id || id == mpt_hash("start", 5)) {
-		MPT_STRUCT(node) *cfg;
-		if (!(cfg = configNLS(nls))) {
+		MPT_STRUCT(node) *cfg = 0;
+		if (!configNLS(nls)
+		 || MPT_metatype_convert(nls->cfg, MPT_ENUM(TypeNodePtr), &cfg) < 0
+		 || !cfg) {
 			return MPT_ERROR(BadOperation);
 		}
 		if (id && (ret = mpt_solver_read(cfg, it, loggerNLS(0))) < 0) {
@@ -593,8 +574,10 @@ static int processNLS(MPT_INTERFACE(client) *cl, uintptr_t id, MPT_INTERFACE(ite
 		return MPT_EVENTFLAG(Default);
 	}
 	else if (id == mpt_hash("read", 4)) {
-		MPT_STRUCT(node) *cfg;
-		if (!(cfg = configNLS(nls))) {
+		MPT_STRUCT(node) *cfg = 0;
+		if (!configNLS(nls)
+		 || MPT_metatype_convert(nls->cfg, MPT_ENUM(TypeNodePtr), &cfg) < 0
+		 || !cfg) {
 			return MPT_ERROR(BadOperation);
 		}
 		ret = mpt_solver_read(cfg, it, loggerNLS(0));
@@ -664,7 +647,7 @@ static int dispatchNLS(MPT_INTERFACE(client) *cl, MPT_STRUCT(event) *ev)
 extern MPT_INTERFACE(client) *mpt_client_nls(MPT_SOLVER_TYPE(UserInit) uinit)
 {
 	static MPT_INTERFACE_VPTR(config) configNLS = {
-		queryNLS, assignNLS, removeNLS, processConfigNLS
+		queryNLS, assignNLS, removeNLS
 	};
 	static MPT_INTERFACE_VPTR(client) clientNLS = {
 		{ { convNLS }, deleteNLS, addrefNLS, cloneNLS },
