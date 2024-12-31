@@ -13,7 +13,7 @@
  * \ingroup mptSolver
  * \brief save nonlinear system parameters
  * 
- * Save content of first value element to solver data parameters.
+ * Save parameter state to solver data parameters.
  * 
  * \param dat  solver data
  * \param val  current nonlinear solver values
@@ -30,11 +30,26 @@ extern int mpt_solver_data_nls(MPT_STRUCT(solver_data) *dat, const MPT_STRUCT(va
 	if (!val || !dat) {
 		return MPT_ERROR(BadArgument);
 	}
-	if (val->_type != MPT_type_toVector('d')) {
-		return MPT_ERROR(BadType);
+	if (val->_type == MPT_type_toVector('d')) {
+		if (!(vec = val->_addr)) {
+			return MPT_ERROR(BadValue);
+		}
 	}
-	if (!(vec = val->_addr)) {
-		return MPT_ERROR(BadValue);
+	else if (val->_type == MPT_ENUM(TypeObjectPtr)) {
+		MPT_STRUCT(property) pr;
+		const MPT_INTERFACE(object) *obj = *((void * const *) val->_addr);
+		
+		pr.name = "parameters";
+		if (obj->_vptr->property(obj, &pr) < 0
+		 || !(vec = pr.val._addr)) {
+			return MPT_ERROR(MissingData);
+		}
+		if (pr.val._type != MPT_type_toVector('d')) {
+			return MPT_ERROR(BadType);
+		}
+	}
+	else {
+		return MPT_ERROR(BadType);
 	}
 	if (!(par = vec->iov_base)
 	 || !(np = vec->iov_len / sizeof (*par))) {
