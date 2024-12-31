@@ -85,22 +85,18 @@ static void outputValues(MPT_STRUCT(output) *out, int state, int dim, int len, c
  * \ingroup mptSolver
  * \brief NLS data output
  * 
- * Push data state message to output.
+ * Push data to solver output and graphic.
  * 
  * \param out    nonlinear solver descriptor
- * \param state  state of nonlinear solver data 
+ * \param state  state of nonlinear solver data
  * \param val    nonlinear solver parameters (and residuals)
- * \param dat    solver data for residial dimension mask
  * 
  * \return message push result
  */
-extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val, const MPT_STRUCT(solver_data) *sd)
+extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(value) *val)
 {
-	const MPT_STRUCT(buffer) *buf;
-	const uint8_t *pass;
 	const struct iovec *vec;
 	const double *res, *par;
-	size_t passlen;
 	int nr, np;
 	
 	if (!val || !(vec = val->_addr)) {
@@ -117,7 +113,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		MPT_STRUCT(property) pr;
 		const MPT_INTERFACE(object) *obj = *((void * const *) val->_addr);
 		
-		pr.name = "param";
+		pr.name = "parameters";
 		if (obj->_vptr->property(obj, &pr) >= 0
 		 && pr.val._type == MPT_type_toVector('d')
 		 && pr.val._addr) {
@@ -125,7 +121,7 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 			par = vec->iov_base;
 			np  = vec->iov_len / sizeof (*par);
 		}
-		pr.name = "res";
+		pr.name = "residuals";
 		if (obj->_vptr->property(obj, &pr) >= 0
 		 && pr.val._type == MPT_type_toVector('d')
 		 && pr.val._addr) {
@@ -156,18 +152,16 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 	if (!res) {
 		return 1;
 	}
-	if ((buf = out->_pass._buf)) {
-		pass = (void *) (buf + 1);
-		passlen = buf->_used / sizeof(uint8_t);
-	} else {
-		pass = 0;
-		passlen = 0;
-	}
 	/* output residuals */
-	if (out->_graphic
-	 && state & MPT_DATASTATE(Step)) {
-		if (!pass
-		 || (passlen && (pass[0] & state))) {
+	if (out->_graphic) {
+		const MPT_STRUCT(buffer) *buf;
+		if ((buf = out->_pass._buf)) {
+			const uint8_t *pass = (void *) (buf + 1);
+			size_t passlen = buf->_used / sizeof(uint8_t);
+			if (!pass || !passlen || (pass[0] & state)) {
+				outputValues(out->_graphic, state, 0, nr, res, 1);
+			}
+		} else if (state & (MPT_DATASTATE(Init) & MPT_DATASTATE(Step) & MPT_DATASTATE(Fini))) {
 			outputValues(out->_graphic, state, 0, nr, res, 1);
 		}
 	}
@@ -176,32 +170,64 @@ extern int mpt_solver_output_nls(const MPT_STRUCT(solver_output) *out, int state
 		outputSize(out->_data, nr);
 		mpt_output_solver_history(out->_data, res, nr, 0, 0);
 	}
-	/* output user data */
-	if (out->_graphic
-	 && (state & MPT_DATASTATE(Init))
-	 && sd
-	 && (buf = sd->val._buf)
-	 && (np = buf->_used / sizeof(double))) {
-		const double *val = (double *) (buf + 1);
-		int i, nv, add;
-		if ((nv = sd->nval) < 0) {
-			np = 0;
-		}
-		else if (nv) {
-			np /= nv;
-		} else {
-			nv = 1;
-		}
-		add = 0;
-		for (i = 0; i < np; ++i) {
-			size_t pos = i + 1;
-			if (!pass
-			 || (pos < passlen && pass[pos] & state)) {
-				outputValues(out->_graphic, state, pos, np, val + i, nv);
-				++add;
-			}
-		}
-		return add;
-	}
 	return 0;
+}
+
+/*!
+ * \ingroup mptSolver
+ * \brief plot NLS input data
+ * 
+ * Push reference data to graphic output.
+ * 
+ * \param out    nonlinear solver descriptor
+ * \param state  state for reference data
+ * \param sd     solver data storage
+ * 
+ * \return message push result
+ */
+extern int mpt_solver_output_nlsdata(const MPT_STRUCT(solver_output) *out, int state, const MPT_STRUCT(solver_data) *sd)
+{
+	const MPT_STRUCT(buffer) *buf;
+	const uint8_t *pass;
+	const double *val;
+	size_t passlen, all, i;
+	int add, nv;
+	
+	if (!out->_graphic || !sd) {
+		return 0;
+	}
+	
+	if ((buf = out->_pass._buf)) {
+		pass = (void *) (buf + 1);
+		passlen = buf->_used / sizeof(uint8_t);
+	} else {
+		pass = 0;
+		passlen = 0;
+	}
+	add = 0;
+	if (!(buf = sd->val._buf)
+	 || !(val = (double *) (buf + 1))
+	 || !(all = buf->_used / sizeof(double))) {
+		 return 0;
+	 }
+	
+	/* segment and/or align dimensions */
+	if ((nv = sd->nval) < 0) {
+		all = 0;
+	}
+	else if (nv) {
+		all /= nv;
+	} else {
+		nv = 1;
+	}
+	
+	/* output reference data at dimension 1..n */
+	for (i = 0; i < all; ++i) {
+		size_t pos = i + 1;
+		if (!pass || (pos < passlen && pass[pos] & state)) {
+			outputValues(out->_graphic, state, pos, all, val + i, nv);
+			++add;
+		}
+	}
+	return add;
 }

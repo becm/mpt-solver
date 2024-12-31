@@ -57,7 +57,7 @@ static int outNLS(void *ptr, const MPT_STRUCT(value) *val)
 	}
 	/* output of user data and residuals */
 	if (ctx->out) {
-		return mpt_solver_output_nls(ctx->out, ctx->state, val, ctx->dat);
+		return mpt_solver_output_nls(ctx->out, ctx->state, val);
 	}
 	return ret;
 }
@@ -344,6 +344,7 @@ static int initNLS(MPT_STRUCT(NLS) *nls, MPT_INTERFACE(iterator) *args)
 		mpt_solver_output_query(&out, 0);
 		if (out._graphic) {
 			mpt_conf_graphic(out._graphic, conf->children, info);
+			mpt_solver_output_nlsdata(&out, MPT_DATASTATE(Init), dat);
 		}
 		mpt_array_clone(&out._pass, 0);
 	}
